@@ -1,0 +1,73 @@
+realm: ${REALM}
+client-id: ${CLIENT_ID}
+client-secret: ${CLIENT_SECRET}
+google:
+  client-id: ${GOOGLE_CLIENT_ID}
+  client-secret: ${GOOGLE_CLIENT_SECRET}
+keycloak-url: ${KEYCLOAK_URL}
+frontend-url: ${FRONTEND_URL}
+db-url: ${DB_URL}
+
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${KEYCLOAK_URL}/realms/${REALM}/protocol/openid-connect/certs
+          issuer-uri: ${KEYCLOAK_URL}/realms/${REALM}
+      client:
+        registration:
+          coffee-programmers-client:
+            client-id: ${CLIENT_ID}
+            client-secret: ${CLIENT_SECRET}
+            scope: openid, profile, roles
+            authorization-grant-type: authorization_code
+            redirect-uri: ${FRONTEND_URL}/callback
+            provider: coffee-programmers-provider
+        provider:
+          coffee-programmers-provider:
+            authorization-uri: ${KEYCLOAK_URL}/realms/${REALM}/protocol/openid-connect/auth
+            token-uri: ${KEYCLOAK_URL}/realms/${REALM}/protocol/openid-connect/token
+            jwk-set-uri: ${KEYCLOAK_URL}/realms/${REALM}/protocol/openid-connect/certs
+            issuer-uri: ${KEYCLOAK_URL}/realms/${REALM}
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    database: POSTGRESQL
+    show-sql: true
+    generate-ddl: false
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        jdbc:
+          lob:
+            non_contextual_creation: true
+  session:
+    jdbc:
+      initialize-schema: never
+  liquibase:
+    default-schema: liquibase
+    change-log: classpath:db/master.yaml
+
+
+file:
+  upload-dir: uploads
+
+supabase:
+  url: https://xwlmwzelokisivmoprgh.supabase.co
+  key: ${CLOUD_KEY}
+  bucket: small
+
+server:
+  port: ${PORT}
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+    org.springframework.security.oauth2: DEBUG
+    com.project.backend.repositories.specifications: DEBUG
