@@ -23,21 +23,9 @@
             <organization>CoffeeProgrammers</organization>
         </developer>
         <developer>
-            <id>aliakravets</id>
-            <name>Kravets Albina</name>
-            <email>aliakravets2008@gmail.com</email>
-            <organization>CoffeeProgrammers</organization>
-        </developer>
-        <developer>
             <id>Vladobrod</id>
             <name>Vladyslav Bulakovskyi</name>
             <email>bulakovskijvladislav@gmail.com</email>
-            <organization>CoffeeProgrammers</organization>
-        </developer>
-        <developer>
-            <id>Yaroslav-Holobyn</id>
-            <name>Yaroslav Holobyn</name>
-            <email>slavaholobyn@gmail.com</email>
             <organization>CoffeeProgrammers</organization>
         </developer>
     </developers>
