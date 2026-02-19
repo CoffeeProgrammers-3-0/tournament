@@ -1,0 +1,453 @@
+databaseChangeLog:
+  - changeSet:
+      id: create_schema
+      author: vladobrod
+      changes:
+        - createTable:
+            schemaName: tournament
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: email
+                  type: varchar(255)
+                  constraints:
+                    unique: true
+                    nullable: false
+
+              - column:
+                  name: full_name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: role
+                  type: varchar(255)
+
+        - createTable:
+            schemaName: tournament
+            tableName: tournaments
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: description
+                  type: text
+
+              - column:
+                  name: status
+                  type: bigint
+
+              - column:
+                  name: start_tournament
+                  type: timestamp
+
+              - column:
+                  name: start_registration
+                  type: timestamp
+
+              - column:
+                  name: end_registration
+                  type: timestamp
+
+              - column:
+                  name: max_count_of_team
+                  type: bigint
+
+              - column:
+                  name: count_of_rounds
+                  type: bigint
+
+        - createTable:
+            schemaName: tournament
+            tableName: teams
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: email
+                  type: varchar(255)
+
+              - column:
+                  name: organization
+                  type: varchar(255)
+
+              - column:
+                  name: contact
+                  type: varchar(255)
+
+        - createTable:
+            schemaName: tournament
+            tableName: rounds
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: name
+                  type: varchar(255)
+
+              - column:
+                  name: tournament_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: requirements
+                  type: text
+
+              - column:
+                  name: task
+                  type: text
+
+              - column:
+                  name: start_date
+                  type: timestamp
+
+              - column:
+                  name: end_date
+                  type: timestamp
+
+        - addForeignKeyConstraint:
+            constraintName: fk_rounds_tournament
+            baseTableSchemaName: tournament
+            baseTableName: rounds
+            baseColumnNames: tournament_id
+            referencedTableSchemaName: tournament
+            referencedTableName: tournaments
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+        - createTable:
+            schemaName: tournament
+            tableName: team_participants
+            columns:
+              - column:
+                  name: team_id
+                  type: bigint
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: user_id
+                  type: bigint
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: tournament_id
+                  type: bigint
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: is_leader
+                  type: boolean
+                  defaultValueBoolean: false
+
+        - addForeignKeyConstraint:
+            constraintName: fk_tp_team
+            baseTableSchemaName: tournament
+            baseTableName: team_participants
+            baseColumnNames: team_id
+            referencedTableSchemaName: tournament
+            referencedTableName: teams
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+        - addForeignKeyConstraint:
+            constraintName: fk_tp_user
+            baseTableSchemaName: tournament
+            baseTableName: team_participants
+            baseColumnNames: user_id
+            referencedTableSchemaName: tournament
+            referencedTableName: users
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+        - addForeignKeyConstraint:
+            constraintName: fk_tp_tournament
+            baseTableSchemaName: tournament
+            baseTableName: team_participants
+            baseColumnNames: tournament_id
+            referencedTableSchemaName: tournament
+            referencedTableName: tournaments
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+        - createTable:
+            schemaName: tournament
+            tableName: jury
+            columns:
+              - column:
+                  name: user_id
+                  type: bigint
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: tournament_id
+                  type: bigint
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+        - addForeignKeyConstraint:
+            constraintName: fk_jury_tournament
+            baseTableSchemaName: tournament
+            baseTableName: jury
+            baseColumnNames: tournament_id
+            referencedTableSchemaName: tournament
+            referencedTableName: tournaments
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+        - addForeignKeyConstraint:
+            constraintName: fk_jury_user
+            baseTableSchemaName: tournament
+            baseTableName: jury
+            baseColumnNames: user_id
+            referencedTableSchemaName: tournament
+            referencedTableName: users
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+        - createTable:
+            schemaName: tournament
+            tableName: categories
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: weight
+                  type: "double precision"
+
+              - column:
+                  name: title
+                  type: varchar(255)
+
+              - column:
+                  name: round_id
+                  type: bigint
+
+        - addForeignKeyConstraint:
+            constraintName: fk_cat_round
+            baseTableSchemaName: tournament
+            baseTableName: categories
+            baseColumnNames: round_id
+            referencedTableSchemaName: tournament
+            referencedTableName: rounds
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+        - createTable:
+            schemaName: tournament
+            tableName: submissions
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: team_id
+                  type: bigint
+
+              - column:
+                  name: round_id
+                  type: bigint
+
+              - column:
+                  name: github_link
+                  type: text
+
+              - column:
+                  name: video_link
+                  type: text
+
+              - column:
+                  name: description
+                  type: text
+
+        - addForeignKeyConstraint:
+            constraintName: fk_sub_team
+            baseTableSchemaName: tournament
+            baseTableName: submissions
+            baseColumnNames: team_id
+            referencedTableSchemaName: tournament
+            referencedTableName: teams
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+        - addForeignKeyConstraint:
+            constraintName: fk_sub_round
+            baseTableSchemaName: tournament
+            baseTableName: submissions
+            baseColumnNames: round_id
+            referencedTableSchemaName: tournament
+            referencedTableName: rounds
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+        - createTable:
+            schemaName: tournament
+            tableName: criteria
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: text
+                  type: varchar(255)
+
+              - column:
+                  name: category_id
+                  type: bigint
+
+        - addForeignKeyConstraint:
+            constraintName: fk_crit_cat
+            baseTableSchemaName: tournament
+            baseTableName: criteria
+            baseColumnNames: category_id
+            referencedTableSchemaName: tournament
+            referencedTableName: categories
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+        - createTable:
+            schemaName: tournament
+            tableName: jury_submission
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: submission_id
+                  type: bigint
+
+              - column:
+                  name: jury_id
+                  type: bigint
+
+        - addForeignKeyConstraint:
+            constraintName: fk_js_sub
+            baseTableSchemaName: tournament
+            baseTableName: jury_submission
+            baseColumnNames: submission_id
+            referencedTableSchemaName: tournament
+            referencedTableName: submissions
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+        - addForeignKeyConstraint:
+            constraintName: fk_js_jury
+            baseTableSchemaName: tournament
+            baseTableName: jury_submission
+            baseColumnNames: jury_id
+            referencedTableSchemaName: tournament
+            referencedTableName: users
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+        - createTable:
+            schemaName: tournament
+            tableName: jury_submission_criteria
+            columns:
+              - column:
+                  name: jury_submission_id
+                  type: bigint
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: criteria_id
+                  type: bigint
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: points
+                  type: bigint
+
+        - addForeignKeyConstraint:
+            constraintName: fk_jsc_js
+            baseTableSchemaName: tournament
+            baseTableName: jury_submission_criteria
+            baseColumnNames: jury_submission_id
+            referencedTableSchemaName: tournament
+            referencedTableName: jury_submission
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+        - addForeignKeyConstraint:
+            constraintName: fk_jsc_crit
+            baseTableSchemaName: tournament
+            baseTableName: jury_submission_criteria
+            baseColumnNames: criteria_id
+            referencedTableSchemaName: tournament
+            referencedTableName: criteria
+            referencedColumnNames: id
+            onDelete: CASCADE

@@ -1,0 +1,81 @@
+services:
+  localhost:
+    image: alpine:latest
+    command: sleep infinity
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+
+  postgres-keycloak:
+    image: postgres:17
+    container_name: postgres-keycloak
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: password
+    volumes:
+      - pgdata-keycloak:/var/lib/postgresql/data
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.2.5
+    container_name: keycloak
+    command: start-dev --import-realm --spi-theme-static-max-age=-1 --spi-theme-cache-themes=false --spi-theme-cache-templates=false
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres-keycloak:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: password
+    depends_on:
+      - postgres-keycloak
+    volumes:
+      - ./coffee-programmers-realm.json:/opt/keycloak/data/import/coffee-programmers-realm.json
+      - ./themes:/opt/keycloak/themes
+    network_mode: "service:localhost"
+
+  postgres-backend:
+    image: postgres:17
+    container_name: postgres-backend
+    environment:
+      POSTGRES_DB: backend
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - pgdata-backend:/var/lib/postgresql/data
+
+
+  backend:
+    build: ./backend
+    depends_on:
+      - postgres-backend
+      - keycloak
+    environment:
+      - PORT=8081
+      - CLOUD_KEY=${CLOUD_KEY}
+      - DB_URL=jdbc:postgresql://postgres-backend:5432/backend
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=password
+      - KEYCLOAK_URL=http://localhost:8080
+      - FRONTEND_URL=http://localhost:3000
+      - REALM=coffee-programmers
+      - CLIENT_ID=coffee-programmers-client
+      - CLIENT_SECRET=QRZGWTnEuxoXNo7eML4qXyZ3ru4xzrIY
+    command: ["sh", "-c", "mvn clean package -DskipTests && java -jar target/*.jar"]
+    network_mode: "service:localhost"
+
+  frontend:
+     build: ./frontend
+     ports:
+       - "3000:3000"
+     depends_on:
+       - backend
+     volumes:
+       - ./frontend:/app
+       - /app/node_modules
+     environment:
+       - CHOKIDAR_USEPOLLING=true
+
+volumes:
+  pgdata-keycloak:
+  pgdata-backend:
