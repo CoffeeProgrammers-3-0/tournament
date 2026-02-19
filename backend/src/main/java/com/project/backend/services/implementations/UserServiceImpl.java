@@ -56,17 +56,14 @@ public class UserServiceImpl implements UserService {
 
         User userToUpdate = findById(userId);
 
-        String newFirstName = newUser.getFirstName();
-        String newLastName = newUser.getLastName();
+        String newFullName = newUser.getFullName();
 
         String keycloakUserId = userToUpdate.getKeycloakUserId();
 
-        userToUpdate.setFirstName(newFirstName);
-        userToUpdate.setLastName(newLastName);
+        userToUpdate.setFullName(newFullName);
 
         UserRepresentation userRepresentation = realmResource.users().get(keycloakUserId).toRepresentation();
-        userRepresentation.setFirstName(newFirstName);
-        userRepresentation.setLastName(newLastName);
+        userRepresentation.singleAttribute("fullName", newFullName);
 
         realmResource.users().get(keycloakUserId).update(userRepresentation);
 
@@ -79,8 +76,7 @@ public class UserServiceImpl implements UserService {
 
         User userToUpdate = findById(userId);
 
-        userToUpdate.setFirstName(newUser.getFirstName());
-        userToUpdate.setLastName(newUser.getLastName());
+        userToUpdate.setFullName(newUser.getFullName());
         userToUpdate.setEmail(newUser.getEmail());
         userToUpdate.setRole(newUser.getRole());
 

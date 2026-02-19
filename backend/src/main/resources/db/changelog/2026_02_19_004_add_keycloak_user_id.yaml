@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: add_keycloak_use_id
+      author: vladobrod
+      changes:
+        - addColumn:
+            schemaName: tournament
+            tableName: users
+            columns:
+              - column:
+                  name: keycloak_user_id
+                  type: varchar(37)
+                  constraints:
+                    unique: true
+                    nullable: false

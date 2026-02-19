@@ -113,8 +113,7 @@ public class AuthController {
 
         User user = new User();
         user.setEmail(email);
-        user.setFirstName(idToken.getClaim("given_name"));
-        user.setLastName(idToken.getClaim("family_name"));
+        user.setFullName(idToken.getClaim("full_name"));
         user.setKeycloakUserId(idToken.getClaim("sub"));
         user.setRole(Role.valueOf(role.toUpperCase()));
 

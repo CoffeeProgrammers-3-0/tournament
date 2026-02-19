@@ -27,13 +27,9 @@ public class User {
     @Size(max = 255)
     private String email;
 
-    @Column(nullable = false, length = 100)
-    @Size(max = 100)
-    private String firstName;
-
-    @Column(nullable = false, length = 100)
-    @Size(max = 100)
-    private String lastName;
+    @Column(nullable = false)
+    @Size(max = 255)
+    private String fullName;
 
     private Role role;
 }
