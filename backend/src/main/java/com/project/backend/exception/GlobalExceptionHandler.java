@@ -1,6 +1,7 @@
 package com.project.backend.exception;
 
 import com.project.backend.dto.exception.ExceptionResponse;
+import com.project.backend.utils.JsonParserUtil;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.security.auth.message.AuthException;

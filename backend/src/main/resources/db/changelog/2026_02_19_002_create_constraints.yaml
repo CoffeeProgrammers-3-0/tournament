@@ -1,0 +1,22 @@
+databaseChangeLog:
+  - changeSet:
+      id: create_constraints
+      author: vladobrod
+      changes:
+        - createIndex:
+            schemaName: tournament
+            tableName: team_participants
+            indexName: idx_unique_leader_per_team
+            columns:
+              - column:
+                  name: team_id
+              - column:
+                  name: is_leader
+            unique: true
+            where: "is_leader = true"
+
+        - addUniqueConstraint:
+            schemaName: tournament
+            tableName: jury_submission
+            columnNames: submission_id, jury_id
+            constraintName: uk_js_single_vote
