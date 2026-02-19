@@ -1,8 +1,11 @@
 package com.project.backend.models;
 
+import com.project.backend.models.constants.Role;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Size;
-import lombok.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 
 
@@ -32,5 +35,5 @@ public class User {
     @Size(max = 100)
     private String lastName;
 
-    private String role;
+    private Role role;
 }

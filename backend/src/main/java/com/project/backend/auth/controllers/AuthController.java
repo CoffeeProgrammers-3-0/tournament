@@ -4,6 +4,7 @@ import com.project.backend.auth.utils.CookieUtil;
 import com.project.backend.auth.utils.SecurityUtil;
 import com.project.backend.dto.wrapper.PasswordRequest;
 import com.project.backend.models.User;
+import com.project.backend.models.constants.Role;
 import com.project.backend.services.interfaces.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -115,7 +116,7 @@ public class AuthController {
         user.setFirstName(idToken.getClaim("given_name"));
         user.setLastName(idToken.getClaim("family_name"));
         user.setKeycloakUserId(idToken.getClaim("sub"));
-        user.setRole(role);
+        user.setRole(Role.valueOf(role.toUpperCase()));
 
         if (userService.isNotExistByEmail(email)) {
             user = userService.createUserKeycloak(user);
