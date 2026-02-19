@@ -1,5 +1,6 @@
 package com.project.backend.dto.round;
 
+import com.project.backend.models.constants.RoundStatus;
 import lombok.Data;
 
 @Data
@@ -11,5 +12,5 @@ public class RoundFullResponse {
     private Long countOfWinners;
     private String requirements;
     private String task;
-    private String status;
+    private RoundStatus status;
 }

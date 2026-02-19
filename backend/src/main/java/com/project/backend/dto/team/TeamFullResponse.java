@@ -1,6 +1,6 @@
 package com.project.backend.dto.team;
 
-import com.project.backend.dto.user.UserCreateRequestForTeam;
+import com.project.backend.dto.user.UserResponseForTeam;
 import lombok.Data;
 
 import java.util.List;
@@ -12,5 +12,5 @@ public class TeamFullResponse {
     private String email;
     private String organization;
     private String contact;
-    private List<UserCreateRequestForTeam> users;
+    private List<UserResponseForTeam> users;
 }

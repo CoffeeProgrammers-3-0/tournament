@@ -1,5 +1,6 @@
 package com.project.backend.dto.tournament;
 
+import com.project.backend.models.constants.TournamentStatus;
 import lombok.Data;
 
 @Data
@@ -9,5 +10,5 @@ public class TournamentListResponse {
     private String startDate;
     private String startRegistration;
     private String endRegistration;
-    private String status;
+    private TournamentStatus status;
 }
