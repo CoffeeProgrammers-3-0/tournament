@@ -1,15 +1,19 @@
-import { StrictMode } from "react";
+import {StrictMode} from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
-import { ThemeProvider } from "./themes/ThemeContext";
-import "./themes/global.css";
+
+import {ThemeProvider} from "@mui/material/styles";
+import {CssBaseline, StyledEngineProvider} from "@mui/material";
+
+import {theme} from "./themes/muiTheme";
+import "./styles/tokens.css";
+import "./styles/global.css";
 import "./i18n";
-import { StyledEngineProvider, CssBaseline } from "@mui/material";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
     <StrictMode>
         <StyledEngineProvider injectFirst>
-            <ThemeProvider>
+            <ThemeProvider theme={theme}>
                 <CssBaseline />
                 <App />
             </ThemeProvider>
