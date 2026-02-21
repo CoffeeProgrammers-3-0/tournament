@@ -29,7 +29,7 @@ public class Team {
     private String contact;
 
     @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<TeamParticipant> participants = new HashSet<>();
+    private Set<TeamParticipant> teamParticipants = new HashSet<>();
 
     @OneToMany(mappedBy = "team", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Submission> submissions = new HashSet<>();

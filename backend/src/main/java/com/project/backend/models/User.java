@@ -39,7 +39,7 @@ public class User {
     private Role role;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<TeamParticipant> teamParticipations = new HashSet<>();
+    private Set<TeamParticipant> teamParticipants = new HashSet<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Jury> juries = new HashSet<>();
