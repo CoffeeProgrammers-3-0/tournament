@@ -1,6 +1,6 @@
 package com.project.backend.models.join_tables;
 
-import com.project.backend.models.Tournament;
+import com.project.backend.models.Round;
 import com.project.backend.models.User;
 import com.project.backend.models.ids.JuryId;
 import jakarta.persistence.*;
@@ -24,7 +24,7 @@ public class Jury {
     private User user;
 
     @ManyToOne
-    @MapsId("tournamentId")
-    @JoinColumn(name = "tournament_id")
-    private Tournament tournament;
+    @MapsId("roundId")
+    @JoinColumn(name = "round_id")
+    private Round round;
 }

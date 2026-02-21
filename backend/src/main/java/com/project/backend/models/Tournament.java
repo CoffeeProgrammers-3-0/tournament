@@ -1,7 +1,6 @@
 package com.project.backend.models;
 
 import com.project.backend.models.constants.TournamentStatus;
-import com.project.backend.models.join_tables.Jury;
 import com.project.backend.models.join_tables.TeamParticipant;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -46,7 +45,4 @@ public class Tournament {
 
     @OneToMany(mappedBy = "tournament", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<TeamParticipant> teamParticipants = new HashSet<>();
-
-    @OneToMany(mappedBy = "tournament", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Jury> juries = new HashSet<>();
 }

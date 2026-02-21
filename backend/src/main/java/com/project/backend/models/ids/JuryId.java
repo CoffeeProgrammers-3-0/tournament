@@ -13,5 +13,5 @@ import java.io.Serializable;
 @EqualsAndHashCode
 public class JuryId implements Serializable {
     private Long userId;
-    private Long tournamentId;
+    private Long roundId;
 }
