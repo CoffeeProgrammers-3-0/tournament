@@ -1,0 +1,16 @@
+databaseChangeLog:
+  - changeSet:
+      id: add_unique_constraint_to_team_email
+      author: vladobrod
+      changes:
+        - addUniqueConstraint:
+            schemaName: tournament
+            tableName: teams
+            columnNames: email
+            constraintName: uk_teams_email
+
+        - addNotNullConstraint:
+            schemaName: tournament
+            tableName: teams
+            columnName: email
+            columnDataType: varchar(255)
