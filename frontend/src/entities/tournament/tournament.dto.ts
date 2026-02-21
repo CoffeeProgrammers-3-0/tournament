@@ -1,6 +1,6 @@
 // ==== ENUM ====
 
-type TournamentStatus = 'CREATED' | 'REGISTRATION_OPEN' | 'REGISTRATION_CLOSED' | 'IN_PROGRESS' | 'FINISHED';
+export type TournamentStatus = 'CREATED' | 'REGISTRATION_OPEN' | 'REGISTRATION_CLOSED' | 'IN_PROGRESS' | 'FINISHED';
 
 // ==== CREATE ====
 
