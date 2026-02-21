@@ -1,12 +1,17 @@
 package com.project.backend.models;
 
 import com.project.backend.models.constants.Role;
+import com.project.backend.models.join_tables.Jury;
+import com.project.backend.models.join_tables.JurySubmission;
+import com.project.backend.models.join_tables.TeamParticipant;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.HashSet;
+import java.util.Set;
 
 
 @Entity
@@ -32,4 +37,13 @@ public class User {
     private String fullName;
 
     private Role role;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<TeamParticipant> teamParticipations = new HashSet<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Jury> juries = new HashSet<>();
+
+    @OneToMany(mappedBy = "jury", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<JurySubmission> jurySubmissions = new HashSet<>();
 }
