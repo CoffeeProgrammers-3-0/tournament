@@ -1,19 +1,16 @@
 import {Box, Typography} from "@mui/material";
 import {useTranslation} from "react-i18next";
 
-const HomePage = () => {
+const LoginPage = () => {
     const { t } = useTranslation();
+
     return (
         <Box textAlign="center">
-            <Typography variant="h3" fontWeight={600} gutterBottom>
-                {t("home.title")}
-            </Typography>
-
             <Typography variant="body1" color="text.secondary">
-                {t("home.description")}
+                {t("login.title")}
             </Typography>
         </Box>
     );
 };
 
-export default HomePage;
+export default LoginPage;

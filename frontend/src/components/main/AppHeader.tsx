@@ -10,11 +10,12 @@ import {
     ListItemIcon,
     Menu,
     MenuItem,
-    Toolbar,
+    Toolbar
 } from "@mui/material";
-import {useTranslation} from "react-i18next"; // Імпортуємо стандартний хук
+import {useTranslation} from "react-i18next";
 import Logout from "@mui/icons-material/Logout";
 import PersonIcon from "@mui/icons-material/Person";
+import LoginIcon from "@mui/icons-material/Login";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import PlayCircleOutlineIcon from "@mui/icons-material/PlayCircleOutline";
@@ -23,10 +24,14 @@ import LanguageIcon from "@mui/icons-material/Language";
 import logo from "../../assets/logo.png";
 import {Link as RouterLink} from "react-router-dom";
 import {useLanguage} from "../../i18n/useLanguage.ts";
+import Cookies from "js-cookie";
 
 export const AppHeader = () => {
-    const { t } = useTranslation(); // Функція для перекладу
+    const { t } = useTranslation();
     const { language, changeLanguage } = useLanguage();
+
+    // ЗАМІНИ ЦЕ на реальну логіку авторизації (наприклад, з контексту)
+    const isLoggedIn = Cookies.get("userId") !== undefined;
 
     const [profileAnchorEl, setProfileAnchorEl] = useState<null | HTMLElement>(null);
     const [tournamentsAnchorEl, setTournamentsAnchorEl] = useState<null | HTMLElement>(null);
@@ -69,14 +74,23 @@ export const AppHeader = () => {
                         >
                             {t("header.tournaments")}
                         </Button>
-                        <Button color="inherit" component={RouterLink} to="/teams" sx={{ textTransform: "none" }}>
-                            {t("header.teams")}
-                        </Button>
+
+                        {/* Показуємо Команди тільки авторизованим */}
+                        {isLoggedIn && (
+                            <Button color="inherit" component={RouterLink} to="/teams" sx={{ textTransform: "none" }}>
+                                {t("header.teams")}
+                            </Button>
+                        )}
                     </Box>
 
                     {/* RIGHT: Actions */}
                     <Box sx={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 1.5 }}>
-                        <Button component={RouterLink} to="https://www.sflua.org/donate-1" variant="contained" sx={{ backgroundColor: "secondary.main", color: "#000", px: 3, fontWeight: 600, borderRadius: "8px" }}>
+                        <Button
+                            href="https://www.sflua.org/donate-1"
+                            target="_blank"
+                            variant="contained"
+                            sx={{ backgroundColor: "secondary.main", color: "#000", px: 3, fontWeight: 600, borderRadius: "8px", display: { xs: 'none', sm: 'inline-flex' } }}
+                        >
                             {t("header.support")}
                         </Button>
 
@@ -91,11 +105,24 @@ export const AppHeader = () => {
                             {language}
                         </Button>
 
-                        <IconButton onClick={handleProfileClick} size="small">
-                            <Avatar sx={{ width: 40, height: 40, bgcolor: "primary.main" }}>
-                                <PersonIcon />
-                            </Avatar>
-                        </IconButton>
+                        {isLoggedIn ? (
+                            <IconButton onClick={handleProfileClick} size="small">
+                                <Avatar sx={{ width: 40, height: 40, bgcolor: "primary.main" }}>
+                                    <PersonIcon />
+                                </Avatar>
+                            </IconButton>
+                        ) : (
+                            <Button
+                                component={RouterLink}
+                                to="/login"
+                                variant="outlined"
+                                color="primary"
+                                startIcon={<LoginIcon />}
+                                sx={{ borderRadius: "8px", textTransform: "none", fontWeight: 600 }}
+                            >
+                                {t("header.login")}
+                            </Button>
+                        )}
                     </Box>
                 </Toolbar>
             </Container>
@@ -115,7 +142,7 @@ export const AppHeader = () => {
                 </MenuItem>
             </Menu>
 
-            {/* Menu: Tournaments */}
+            {/* Menu: Tournaments (Dynamic based on login) */}
             <Menu
                 anchorEl={tournamentsAnchorEl}
                 open={Boolean(tournamentsAnchorEl)}
@@ -128,42 +155,48 @@ export const AppHeader = () => {
                     <ListItemIcon><EmojiEventsIcon fontSize="small" color="primary" /></ListItemIcon>
                     {t("header.availableTournaments")}
                 </MenuItem>
-                <MenuItem component={RouterLink} to="/tournaments?tab=1" onClick={handleClose}>
-                    <ListItemIcon><PlayCircleOutlineIcon fontSize="small" color="warning" /></ListItemIcon>
-                    {t("header.myCurrentTournaments")}
-                </MenuItem>
-                <Divider />
-                <MenuItem component={RouterLink} to="/tournaments?tab=2" onClick={handleClose}>
-                    <ListItemIcon><HistoryIcon fontSize="small" /></ListItemIcon>
-                    {t("header.history")}
-                </MenuItem>
+
+                {/* Ці пункти бачить тільки залогінений юзер */}
+                {isLoggedIn && [
+                    <MenuItem key="current" component={RouterLink} to="/tournaments?tab=1" onClick={handleClose}>
+                        <ListItemIcon><PlayCircleOutlineIcon fontSize="small" color="warning" /></ListItemIcon>
+                        {t("header.myCurrentTournaments")}
+                    </MenuItem>,
+                    <Divider key="divider" />,
+                    <MenuItem key="history" component={RouterLink} to="/tournaments?tab=2" onClick={handleClose}>
+                        <ListItemIcon><HistoryIcon fontSize="small" /></ListItemIcon>
+                        {t("header.history")}
+                    </MenuItem>
+                ]}
             </Menu>
 
-            {/* Menu: Profile */}
-            <Menu
-                anchorEl={profileAnchorEl}
-                open={Boolean(profileAnchorEl)}
-                onClose={handleClose}
-                PaperProps={{
-                    elevation: 0,
-                    sx: {
-                        overflow: 'visible', filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.12))', mt: 1.5, minWidth: 180, borderRadius: "12px",
-                        '&::before': { content: '""', display: 'block', position: 'absolute', top: 0, right: 18, width: 10, height: 10, bgcolor: 'background.paper', transform: 'translateY(-50%) rotate(45deg)', zIndex: 0 }
-                    }
-                }}
-                transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-                anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-            >
-                <MenuItem component={RouterLink} to="/profile" onClick={handleClose}>
-                    <ListItemIcon><PersonIcon fontSize="small" color="primary" /></ListItemIcon>
-                    {t("header.profile")}
-                </MenuItem>
-                <Divider />
-                <MenuItem onClick={handleClose}>
-                    <ListItemIcon><Logout fontSize="small" color="error" /></ListItemIcon>
-                    {t("header.logout")}
-                </MenuItem>
-            </Menu>
+            {/* Menu: Profile (Only for logged in) */}
+            {isLoggedIn && (
+                <Menu
+                    anchorEl={profileAnchorEl}
+                    open={Boolean(profileAnchorEl)}
+                    onClose={handleClose}
+                    PaperProps={{
+                        elevation: 0,
+                        sx: {
+                            overflow: 'visible', filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.12))', mt: 1.5, minWidth: 180, borderRadius: "12px",
+                            '&::before': { content: '""', display: 'block', position: 'absolute', top: 0, right: 18, width: 10, height: 10, bgcolor: 'background.paper', transform: 'translateY(-50%) rotate(45deg)', zIndex: 0 }
+                        }
+                    }}
+                    transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                    anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+                >
+                    <MenuItem component={RouterLink} to="/profile" onClick={handleClose}>
+                        <ListItemIcon><PersonIcon fontSize="small" color="primary" /></ListItemIcon>
+                        {t("header.profile")}
+                    </MenuItem>
+                    <Divider />
+                    <MenuItem onClick={() => { handleClose(); /* setIsLoggedIn(false); */ }}>
+                        <ListItemIcon><Logout fontSize="small" color="error" /></ListItemIcon>
+                        {t("header.logout")}
+                    </MenuItem>
+                </Menu>
+            )}
         </AppBar>
     );
 };

@@ -6,6 +6,8 @@ import PrivateRoute from "./security/PrivateRoute.tsx";
 import Callback from "./security/Callback.tsx";
 import HomePage from "./pages/home/HomePage.tsx";
 import {TournamentsPage} from "./pages/tournament/TournamentsPage.tsx";
+import LoginPage from "./pages/home/LoginPage.tsx";
+import {TeamsPage} from "./pages/team/TeamsPage.tsx";
 
 
 const App: React.FC = () => {
@@ -17,6 +19,8 @@ const App: React.FC = () => {
                 <Route path="/tournaments" element={<PageContainer><TournamentsPage/></PageContainer>}/>
                 <Route path="/callback" element={<Callback />} />
                 <Route element={<PrivateRoute/>}>
+                    <Route path="/login" element={<PageContainer><LoginPage/></PageContainer>}/>
+                    <Route path="/teams" element={<PageContainer><TeamsPage/></PageContainer>}/>
                 </Route>
             </Routes>
         </Router>
