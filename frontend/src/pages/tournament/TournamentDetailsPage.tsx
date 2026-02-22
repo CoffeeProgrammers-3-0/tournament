@@ -1,5 +1,5 @@
 import {useMemo, useState} from "react";
-import {useNavigate, useParams} from "react-router-dom";
+import {useNavigate,} from "react-router-dom";
 import {useTranslation} from "react-i18next";
 import Cookies from "js-cookie";
 import {
@@ -58,7 +58,7 @@ const MOCK_TEAMS: TeamListResponseDto[] = [
 ];
 
 export const TournamentDetailsPage = () => {
-    const { id } = useParams();
+    //const { id } = useParams();
     const { t } = useTranslation();
     const navigate = useNavigate();
 

@@ -137,6 +137,46 @@ export const uk = {
             "more_info": "Детальніше"
         }
     },
+    team_details: {
+        "header": {
+            "contact": "Контакт:",
+            "organization": "Організація:"
+        },
+        "tabs": {
+            "info": "Інформація",
+            "members": "Учасники",
+            "tournaments": "Турніри"
+        },
+        "info": {
+            "contact_person": "Контактна особа",
+            "org_name": "Назва організації",
+            "email": "Електронна пошта",
+            "no_info": "Інформація про організацію відсутня"
+        },
+        "members": {
+            "title": "Склад команди",
+            "leader": "Лідер команди",
+            "member": "Учасник"
+        },
+        "tournaments": {
+            "title": "Історія турнірів",
+            "empty": "Команда ще не брала участі в турнірах"
+        },
+        "admin": {
+            "edit_info": "Редагувати профіль",
+            "add_member": "Додати учасника",
+            "member_modal": {
+                "title": "Додати нового учасника",
+                "full_name": "Повне ім'я",
+                "email": "Email учасника",
+                "is_leader": "Призначити лідером",
+                "submit": "Додати"
+            },
+            "delete_member_confirm": "Ви впевнені, що хочете видалити цього учасника?",
+            "make_leader": "Зробити лідером",
+            "remove_member": "Видалити"
+        }
+    },
     profile: {
         "title": "Мій профіль",
         "info": "Особиста інформація",

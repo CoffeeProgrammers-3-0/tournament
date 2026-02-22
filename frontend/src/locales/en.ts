@@ -137,6 +137,46 @@ export const en = {
             "more_info": "More info",
         }
     },
+    team_details: {
+        "header": {
+            "contact": "Contact:",
+            "organization": "Organization:"
+        },
+        "tabs": {
+            "info": "Info",
+            "members": "Members",
+            "tournaments": "Tournaments"
+        },
+        "info": {
+            "contact_person": "Contact person",
+            "org_name": "Organization name",
+            "email": "Email",
+            "no_info": "No additional information provided"
+        },
+        "members": {
+            "title": "Team members",
+            "leader": "Leader",
+            "member": "Member",
+        },
+        "tournaments": {
+            "title": "Tournaments participated",
+            "empty": "This team has not participated in any tournaments yet."
+        },
+        "admin": {
+            "edit_info": "Edit team info",
+            "add_member": "Add member",
+            "member_modal": {
+                "title": "Add team member",
+                "full_name": "Full name",
+                "email": "Email",
+                "is_leader": "Leader",
+                "submit": "Add",
+            },
+            "delete_member_confirm": "Are you sure you want to remove this member from the team?",
+            "make_leader": "Make leader",
+            "remove_member": "Remove from team",
+        }
+    },
     profile: {
         "title": "My Profile",
         "info": "Personal Information",
