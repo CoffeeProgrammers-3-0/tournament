@@ -90,5 +90,19 @@ export const en = {
         "card": {
             "more_info": "More info",
         }
+    },
+    profile: {
+        "title": "My Profile",
+        "info": "Personal Information",
+        "teams": "My Teams",
+        "tournaments": "My Tournaments",
+        "role": "Role",
+        "no_teams": "You are not a member of any teams yet.",
+        "no_tournaments": "There are no active tournaments.",
+        "buttons": {
+            "edit": "Edit Profile",
+            "all_teams": "All Teams",
+            "details": "Details"
+        }
     }
 }
