@@ -1,4 +1,4 @@
-import {useState} from "react";
+import {useMemo, useState} from "react";
 import {useNavigate, useParams} from "react-router-dom";
 import {useTranslation} from "react-i18next";
 import Cookies from "js-cookie";
@@ -22,10 +22,13 @@ import {
     TableBody,
     TableCell,
     TableContainer,
+    TableFooter,
     TableHead,
     TableRow,
     Tabs,
     TextField,
+    ToggleButton,
+    ToggleButtonGroup,
     Tooltip,
     Typography
 } from "@mui/material";
@@ -39,7 +42,11 @@ import TrophyIcon from "@mui/icons-material/EmojiEvents";
 import type {RoundFullResponseDto} from "../../entities/round/round.dto.ts";
 import type {CategoryResponseDto} from "../../entities/category/category.dto.ts";
 import type {UserResponseDto} from "../../entities/user/user.dto.ts";
-import type {TeamLeaderboardResponseDto} from "../../entities/team/team.dto.ts";
+import type {StatisticResponseDto, TeamLeaderboardResponseDto} from "../../entities/team/team.dto.ts";
+
+import InsertChartOutlinedIcon from "@mui/icons-material/InsertChartOutlined";
+import ViewListIcon from "@mui/icons-material/ViewList";
+import ViewModuleIcon from "@mui/icons-material/ViewModule";
 
 // ==== MOCK DATA ====
 const MOCK_ROUND: RoundFullResponseDto = {
@@ -69,6 +76,23 @@ const MOCK_LEADERBOARD: TeamLeaderboardResponseDto[] = [
     { id: 12, name: "Code Breakers", email: "code@breakers.com", points: 78.0 },
 ].sort((a, b) => b.points - a.points); // Сортуємо за балами
 
+const MOCK_TEAM_STATS: StatisticResponseDto = {
+    id: 10,
+    name: "Cyber Dragons",
+    email: "contact@cyberdragons.com",
+    pointsPerJury: {
+        "olena@jury.com": {
+            "Чистота коду": 9,
+            "Архітектура": 8,
+            "Зручність інтерфейсу": 10
+        },
+        "igor@jury.com": {
+            "Чистота коду": 7,
+            "Архітектура": 9,
+            "Зручність інтерфейсу": 8
+        }
+    }
+};
 
 export const RoundDetailsPage = () => {
     const { id } = useParams();
@@ -91,6 +115,36 @@ export const RoundDetailsPage = () => {
     const [leaderboard, setLeaderboard] = useState<TeamLeaderboardResponseDto[]>(MOCK_LEADERBOARD);
 
     const handleTabChange = (_: any, newValue: number) => setTabValue(newValue);
+
+    const [statsModalOpen, setStatsModalOpen] = useState(false);
+    const [selectedStats, setSelectedStats] = useState<StatisticResponseDto | null>(null);
+    const [statsViewMode, setStatsViewMode] = useState<"aggregated" | "detailed">("aggregated");
+
+    const handleOpenStats = (teamId: number, e: React.MouseEvent) => {
+        e.stopPropagation(); // Prevent row click navigation
+        // Here you would fetch the stats by teamId and roundId. Using mock for now:
+        setSelectedStats(MOCK_TEAM_STATS);
+        setStatsModalOpen(true);
+    };
+
+// Helper to calculate aggregated data
+    const aggregatedCriteria = useMemo(() => {
+        if (!selectedStats) return {};
+        const result: Record<string, { total: number, count: number }> = {};
+
+        Object.values(selectedStats.pointsPerJury).forEach(juryScores => {
+            Object.entries(juryScores).forEach(([criteria, points]) => {
+                if (!result[criteria]) result[criteria] = { total: 0, count: 0 };
+                result[criteria].total += points;
+                result[criteria].count += 1;
+            });
+        });
+        return result;
+    }, [selectedStats]);
+
+// Extract unique jury emails and criteria names for the table headers/rows
+    const juryList = selectedStats ? Object.keys(selectedStats.pointsPerJury) : [];
+    const criteriaList = Object.keys(aggregatedCriteria);
 
     return (
         <Box sx={{ pb: 8 }}>
@@ -285,6 +339,7 @@ export const RoundDetailsPage = () => {
                                     <TableCell><b>{t("round_details.teams.team_name")}</b></TableCell>
                                     <TableCell><b>{t("round_details.teams.email")}</b></TableCell>
                                     <TableCell align="right"><b>{t("round_details.teams.points")}</b></TableCell>
+                                    <TableCell align="center" width="100px"><b>Дії</b></TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
@@ -301,6 +356,19 @@ export const RoundDetailsPage = () => {
                                         <TableCell align="right">
                                             <Chip label={team.points} color={index < roundData.countOfWinners ? "success" : "default"} variant="filled" sx={{ fontWeight: 700 }} />
                                         </TableCell>
+                                        <TableCell align="center">
+                                            {/* ADMIN OR TEAM MEMBER CHECK HERE */}
+                                            <Tooltip title="Детальна статистика">
+                                                <IconButton
+                                                    color="primary"
+                                                    size="small"
+                                                    onClick={(e) => handleOpenStats(team.id, e)}
+                                                    sx={{ bgcolor: "primary.50" }}
+                                                >
+                                                    <InsertChartOutlinedIcon />
+                                                </IconButton>
+                                            </Tooltip>
+                                        </TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
@@ -308,6 +376,92 @@ export const RoundDetailsPage = () => {
                     </TableContainer>
                 </Box>
             )}
+
+            {/* --- MODAL: DETAILED STATISTICS --- */}
+            <Dialog open={statsModalOpen} onClose={() => setStatsModalOpen(false)} maxWidth="md" fullWidth>
+                {selectedStats && (
+                    <>
+                        <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", pb: 1 }}>
+                            <Typography variant="h6" fontWeight={700}>
+                                {t("round_details.stats_modal.title", { teamName: selectedStats.name })}
+                            </Typography>
+                            <ToggleButtonGroup
+                                value={statsViewMode}
+                                exclusive
+                                onChange={(_, newMode) => newMode && setStatsViewMode(newMode)}
+                                size="small"
+                                color="primary"
+                            >
+                                <ToggleButton value="aggregated">
+                                    <ViewListIcon fontSize="small" sx={{ mr: 1 }} />
+                                    {t("round_details.stats_modal.view_aggregated")}
+                                </ToggleButton>
+                                <ToggleButton value="detailed">
+                                    <ViewModuleIcon fontSize="small" sx={{ mr: 1 }} />
+                                    {t("round_details.stats_modal.view_detailed")}
+                                </ToggleButton>
+                            </ToggleButtonGroup>
+                        </DialogTitle>
+
+                        <DialogContent dividers sx={{ p: 0 }}>
+                            <TableContainer>
+                                <Table size="medium">
+                                    <TableHead sx={{ bgcolor: "grey.50" }}>
+                                        <TableRow>
+                                            <TableCell><b>{t("round_details.stats_modal.criteria")}</b></TableCell>
+
+                                            {/* Columns for Detailed View */}
+                                            {statsViewMode === "detailed" && juryList.map(jury => (
+                                                <TableCell key={jury} align="center"><b>{jury}</b></TableCell>
+                                            ))}
+
+                                            <TableCell align="right" sx={{ bgcolor: "primary.50" }}>
+                                                <b>{t("round_details.stats_modal.total")}</b>
+                                            </TableCell>
+                                        </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                        {criteriaList.map(criteria => (
+                                            <TableRow key={criteria} hover>
+                                                <TableCell><Typography fontWeight={600}>{criteria}</Typography></TableCell>
+
+                                                {/* Rows for Detailed View */}
+                                                {statsViewMode === "detailed" && juryList.map(jury => (
+                                                    <TableCell key={jury} align="center">
+                                                        {selectedStats.pointsPerJury[jury]?.[criteria] ?? "-"}
+                                                    </TableCell>
+                                                ))}
+
+                                                {/* Total/Sum per criteria */}
+                                                <TableCell align="right" sx={{ bgcolor: "primary.50", fontWeight: 700 }}>
+                                                    {aggregatedCriteria[criteria].total}
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                    <TableFooter>
+                                        <TableRow>
+                                            <TableCell colSpan={statsViewMode === "detailed" ? juryList.length + 1 : 1} align="right">
+                                                <Typography fontWeight={800} color="primary">ЗАГАЛЬНИЙ БАЛ:</Typography>
+                                            </TableCell>
+                                            <TableCell align="right" sx={{ bgcolor: "primary.main", color: "white" }}>
+                                                <Typography fontWeight={800} variant="h6">
+                                                    {Object.values(aggregatedCriteria).reduce((sum, curr) => sum + curr.total, 0)}
+                                                </Typography>
+                                            </TableCell>
+                                        </TableRow>
+                                    </TableFooter>
+                                </Table>
+                            </TableContainer>
+                        </DialogContent>
+                        <DialogActions sx={{ p: 2 }}>
+                            <Button onClick={() => setStatsModalOpen(false)} variant="outlined">
+                                {t("round_details.stats_modal.close")}
+                            </Button>
+                        </DialogActions>
+                    </>
+                )}
+            </Dialog>
 
             {/* --- MODALS --- */}
 

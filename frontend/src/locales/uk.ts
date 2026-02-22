@@ -176,6 +176,15 @@ export const uk = {
                 "email_search": "Email користувача",
                 "submit": "Призначити"
             }
+        },
+        "stats_modal": {
+            "title": "Детальна статистика: {{teamName}}",
+            "view_aggregated": "За критеріями",
+            "view_detailed": "По суддях",
+            "criteria": "Критерій",
+            "total": "Загально",
+            "average": "Середнє",
+            "close": "Закрити"
         }
     },
     teams: {
