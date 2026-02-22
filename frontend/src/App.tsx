@@ -11,6 +11,7 @@ import {TeamsPage} from "./pages/team/TeamsPage.tsx";
 import {ProfilePage} from "./pages/user/ProfilePage.tsx";
 import {TournamentDetailsPage} from "./pages/tournament/TournamentDetailsPage.tsx";
 import {TeamDetailsPage} from "./pages/team/TeamDetailsPage.tsx";
+import {RoundDetailsPage} from "./pages/round/RoundDetailsPage.tsx";
 
 
 const App: React.FC = () => {
@@ -21,6 +22,7 @@ const App: React.FC = () => {
                 <Route path="/" element={<PageContainer><HomePage/></PageContainer>}/>
                 <Route path="/tournaments" element={<PageContainer><TournamentsPage/></PageContainer>}/>
                 <Route path="/tournaments/:id" element={<PageContainer><TournamentDetailsPage/></PageContainer>}/>
+                <Route path="/rounds/:id" element={<PageContainer><RoundDetailsPage/></PageContainer>}/>
                 <Route path="/callback" element={<Callback />} />
                 <Route element={<PrivateRoute/>}>
                     <Route path="/login" element={<PageContainer><LoginPage/></PageContainer>}/>
