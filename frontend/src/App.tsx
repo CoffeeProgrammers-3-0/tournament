@@ -18,11 +18,11 @@ const App: React.FC = () => {
             <Routes>
                 <Route path="/" element={<PageContainer><HomePage/></PageContainer>}/>
                 <Route path="/tournaments" element={<PageContainer><TournamentsPage/></PageContainer>}/>
-                <Route path="/profile" element={<PageContainer><ProfilePage/></PageContainer>}/>
                 <Route path="/callback" element={<Callback />} />
                 <Route element={<PrivateRoute/>}>
                     <Route path="/login" element={<PageContainer><LoginPage/></PageContainer>}/>
                     <Route path="/teams" element={<PageContainer><TeamsPage/></PageContainer>}/>
+                    <Route path="/profile" element={<PageContainer><ProfilePage/></PageContainer>}/>
                 </Route>
             </Routes>
         </Router>
