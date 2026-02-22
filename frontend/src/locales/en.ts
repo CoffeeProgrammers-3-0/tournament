@@ -82,6 +82,52 @@ export const en = {
             "backToList": "Back to list"
         }
     },
+    tournament_details: {
+        "header": {
+            "registered": "You are registered",
+            "register_btn": "Register",
+            "startDate": "Start:"
+        },
+        "tabs": {
+            "info": "Info",
+            "rounds": "Rounds",
+            "teams": "Teams"
+        },
+        "info": {
+            "reg_period": "Registration period",
+            "max_teams": "Max teams",
+            "rounds_count": "Rounds count",
+            "no_description": "No description"
+        },
+        "rounds": {
+            "title": "Tournament rounds",
+            "empty": "Rounds have not started yet"
+        },
+        "admin": {
+            "edit_info": "Edit tournament info",
+            "add_round": "Add round",
+            "save": "Save",
+            "cancel": "Cancel",
+            "create_modal": {
+                "title": "New round",
+                "name": "Round name",
+                "name_placeholder": "E.g. Semifinal",
+                "start": "Start date",
+                "end": "End date",
+                "winners": "Number of teams that advance",
+                "task": "Task description",
+                "submit": "Create",
+            }
+        }
+    },
+    rounds: {
+        "statuses": {
+            "CREATED": "Created",
+            "ACTIVE": "Active",
+            "CANCELLED": "Cancelled",
+            "FINISHED": "Finished",
+        }
+    },
     teams: {
         "title": "My Teams",
         "subtitle": "List of teams you belong to or manage",
