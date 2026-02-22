@@ -82,6 +82,52 @@ export const en = {
             "backToList": "Back to list"
         }
     },
+    tournament_details: {
+        "header": {
+            "registered": "You are registered",
+            "register_btn": "Register",
+            "startDate": "Start:"
+        },
+        "tabs": {
+            "info": "Info",
+            "rounds": "Rounds",
+            "teams": "Teams"
+        },
+        "info": {
+            "reg_period": "Registration period",
+            "max_teams": "Max teams",
+            "rounds_count": "Rounds count",
+            "no_description": "No description"
+        },
+        "rounds": {
+            "title": "Tournament rounds",
+            "empty": "Rounds have not started yet"
+        },
+        "admin": {
+            "edit_info": "Edit tournament info",
+            "add_round": "Add round",
+            "save": "Save",
+            "cancel": "Cancel",
+            "create_modal": {
+                "title": "New round",
+                "name": "Round name",
+                "name_placeholder": "E.g. Semifinal",
+                "start": "Start date",
+                "end": "End date",
+                "winners": "Number of teams that advance",
+                "task": "Task description",
+                "submit": "Create",
+            }
+        }
+    },
+    rounds: {
+        "statuses": {
+            "CREATED": "Created",
+            "ACTIVE": "Active",
+            "CANCELLED": "Cancelled",
+            "FINISHED": "Finished",
+        }
+    },
     teams: {
         "title": "My Teams",
         "subtitle": "List of teams you belong to or manage",
@@ -89,6 +135,46 @@ export const en = {
         "no_data": "You are not a member of any teams yet.",
         "card": {
             "more_info": "More info",
+        }
+    },
+    team_details: {
+        "header": {
+            "contact": "Contact:",
+            "organization": "Organization:"
+        },
+        "tabs": {
+            "info": "Info",
+            "members": "Members",
+            "tournaments": "Tournaments"
+        },
+        "info": {
+            "contact_person": "Contact person",
+            "org_name": "Organization name",
+            "email": "Email",
+            "no_info": "No additional information provided"
+        },
+        "members": {
+            "title": "Team members",
+            "leader": "Leader",
+            "member": "Member",
+        },
+        "tournaments": {
+            "title": "Tournaments participated",
+            "empty": "This team has not participated in any tournaments yet."
+        },
+        "admin": {
+            "edit_info": "Edit team info",
+            "add_member": "Add member",
+            "member_modal": {
+                "title": "Add team member",
+                "full_name": "Full name",
+                "email": "Email",
+                "is_leader": "Leader",
+                "submit": "Add",
+            },
+            "delete_member_confirm": "Are you sure you want to remove this member from the team?",
+            "make_leader": "Make leader",
+            "remove_member": "Remove from team",
         }
     },
     profile: {
