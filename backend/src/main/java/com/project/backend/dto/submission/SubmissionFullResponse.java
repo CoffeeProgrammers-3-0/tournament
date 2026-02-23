@@ -8,7 +8,7 @@ import lombok.Data;
 public class SubmissionFullResponse {
     private Long id;
     private String githubLink;
-    private String youtubeLink;
+    private String videoLink;
     private String description;
     private RoundListResponse round;
     private TeamListResponse team;

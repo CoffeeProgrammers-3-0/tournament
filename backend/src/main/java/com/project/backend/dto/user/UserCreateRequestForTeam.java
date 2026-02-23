@@ -6,5 +6,5 @@ import lombok.Data;
 public class UserCreateRequestForTeam {
     private String fullName;
     private String email;
-    private boolean isLeader;
+    private Boolean isLeader;
 }

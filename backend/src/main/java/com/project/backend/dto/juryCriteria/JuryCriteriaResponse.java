@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 public class JuryCriteriaResponse {
-    private Long id;
+    private Long jurySubmissionId;
     private CriteriaResponse criteria;
     private Long points;
 }

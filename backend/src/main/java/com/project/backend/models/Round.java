@@ -1,5 +1,6 @@
 package com.project.backend.models;
 
+import com.project.backend.models.constants.RoundStatus;
 import com.project.backend.models.join_tables.Jury;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -36,6 +37,10 @@ public class Round {
     private LocalDateTime startDate;
 
     private LocalDateTime endDate;
+
+    private Long countOfWinners;
+
+    private RoundStatus status;
 
     @OneToMany(mappedBy = "round", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Category> categories = new HashSet<>();

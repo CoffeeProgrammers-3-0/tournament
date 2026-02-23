@@ -4,5 +4,6 @@ import lombok.Data;
 
 @Data
 public class CriteriaResponse {
-    private String name;
+    private Long id;
+    private String text;
 }
