@@ -7,10 +7,10 @@ import lombok.Data;
 public class TournamentUpdateRequest {
     private String name;
     private String description;
-    private String startDate;
+    private String startTournament;
     private String startRegistration;
     private String endRegistration;
-    private Long maxCountOfTeams;
+    private Long maxCountOfTeam;
     private Long countOfRounds;
     private TournamentStatus status;
 }

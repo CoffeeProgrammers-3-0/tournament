@@ -5,6 +5,6 @@ import lombok.Data;
 @Data
 public class SubmissionRequest {
     private String githubLink;
-    private String youtubeLink;
+    private String videoLink;
     private String description;
 }

@@ -8,7 +8,7 @@ import java.util.List;
 @Data
 public class CategoryResponse {
     private Long id;
-    private String name;
+    private String title;
     private Double weight;
     private List<CriteriaResponse> criteria;
 }

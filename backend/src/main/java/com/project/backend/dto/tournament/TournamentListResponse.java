@@ -7,7 +7,7 @@ import lombok.Data;
 public class TournamentListResponse {
     private Long id;
     private String name;
-    private String startDate;
+    private String startTournament;
     private String startRegistration;
     private String endRegistration;
     private TournamentStatus status;
