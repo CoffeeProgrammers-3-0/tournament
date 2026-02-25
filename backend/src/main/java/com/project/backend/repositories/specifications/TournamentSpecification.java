@@ -79,7 +79,7 @@ public class TournamentSpecification {
             Subquery<LocalDateTime> subquery = query.subquery(LocalDateTime.class);
             Root<Round> roundRoot = subquery.from(Round.class);
 
-            subquery.select(cb.greatest(roundRoot.get("endDate")))
+            subquery.select(cb.greatest(roundRoot.<LocalDateTime>get("endDate")))
                     .where(cb.equal(roundRoot.get("tournament"), root));
 
             return cb.lessThanOrEqualTo(subquery, date);
@@ -95,7 +95,7 @@ public class TournamentSpecification {
             Subquery<LocalDateTime> subquery = query.subquery(LocalDateTime.class);
             Root<Round> roundRoot = subquery.from(Round.class);
 
-            subquery.select(cb.greatest(roundRoot.get("endDate")))
+            subquery.select(cb.greatest(roundRoot.<LocalDateTime>get("endDate")))
                     .where(cb.equal(roundRoot.get("tournament"), root));
 
             return cb.greaterThanOrEqualTo(subquery, date);
@@ -114,7 +114,7 @@ public class TournamentSpecification {
             Subquery<LocalDateTime> subquery = query.subquery(LocalDateTime.class);
             Root<Round> roundRoot = subquery.from(Round.class);
 
-            subquery.select(cb.greatest(roundRoot.get("endDate")))
+            subquery.select(cb.greatest(roundRoot.<LocalDateTime>get("endDate")))
                     .where(cb.equal(roundRoot.get("tournament"), root));
 
             return cb.between(subquery, start, end);
