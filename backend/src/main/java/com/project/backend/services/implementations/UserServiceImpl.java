@@ -14,9 +14,6 @@ import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -188,11 +185,5 @@ public class UserServiceImpl implements UserService {
         userRepository.delete(user);
 
         realmResource.users().delete(user.getKeycloakUserId());
-    }
-
-    @Override
-    public Page<User> findAllByQuery(Integer page, Integer size, String query) {
-        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "lastName", "firstName"));
-        return userRepository.findAll(UserSpecification.bySearchTerm(query), pageRequest);
     }
 }
