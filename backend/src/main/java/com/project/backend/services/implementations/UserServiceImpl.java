@@ -2,6 +2,7 @@ package com.project.backend.services.implementations;
 
 import com.project.backend.dto.wrapper.PasswordRequest;
 import com.project.backend.models.User;
+import com.project.backend.models.constants.Role;
 import com.project.backend.repositories.UserRepository;
 import com.project.backend.repositories.specifications.UserSpecification;
 import com.project.backend.services.interfaces.UserService;
@@ -14,6 +15,7 @@ import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -185,5 +187,17 @@ public class UserServiceImpl implements UserService {
         userRepository.delete(user);
 
         realmResource.users().delete(user.getKeycloakUserId());
+    }
+
+    @Override
+    public User createJury(User user) {
+        // TODO add user to keycloak/Set role to jury/Send password
+        return null;
+    }
+
+    @Override
+    public Page<User> findAllByRole(Integer page, Integer size, String query, Role role) {
+        // TODO
+        return null;
     }
 }

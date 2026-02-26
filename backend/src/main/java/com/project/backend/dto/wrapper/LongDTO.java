@@ -3,6 +3,6 @@ package com.project.backend.dto.wrapper;
 import lombok.Data;
 
 @Data
-public class LongResponse {
-    private Long count;
+public class LongDTO {
+    private Long value;
 }
