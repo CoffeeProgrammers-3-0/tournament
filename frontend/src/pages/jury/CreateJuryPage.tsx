@@ -1,44 +1,38 @@
-import {type ChangeEvent, useState} from "react";
-import {useNavigate} from "react-router-dom";
-import {useTranslation} from "react-i18next";
+import { useState, type ChangeEvent } from "react";
+import { useNavigate, useParams } from "react-router-dom"; 
+import { useTranslation } from "react-i18next";
 import {
-    Box,
-    Button,
-    Divider,
-    Grid,
-    Paper,
-    TextField,
-    Typography
+    Box, Button, Divider, Grid, Paper, TextField, Typography, MenuItem
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import SaveIcon from "@mui/icons-material/Save";
-import type {UserCreateRequestDto} from "../../entities/user/user.dto.ts";
 
 export const CreateJuryPage = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
+    const { tournamentId } = useParams(); 
 
-    const [formData, setFormData] = useState<UserCreateRequestDto>({
+    const [formData, setFormData] = useState({
         fullName: "",
-        email: ""
+        email: "",
+        tournamentId: tournamentId || ""
     });
 
-    const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFormChange = (e: ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault(); 
-        
-        if (!formData.fullName || !formData.email) {
-            alert("Please fill in all fields");
-            return;
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        console.log("Submitting to backend:", formData);
+
+        try {
+            navigate(-1);
+        } catch (error) {
+            console.error("Failed to create jury", error);
         }
-
-        console.log("Creating jury:", formData);
-
-        navigate(-1);
     };
 
     return (
@@ -51,20 +45,23 @@ export const CreateJuryPage = () => {
                 {t('common.back', 'Back')}
             </Button>
 
-            <Paper 
-                component="form" // Renders as a <form>
+            <Paper
+                component="form"
                 onSubmit={handleSubmit}
                 sx={{ p: 4, borderRadius: "16px", boxShadow: "0 8px 24px rgba(0,0,0,0.05)" }}
             >
                 <Typography variant="h4" fontWeight={700} color="primary" gutterBottom>
-                    {t('jury.create_title', 'Create New Jury')}
+                    Create New Jury
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                    This will create a user and assign them to a tournament.
                 </Typography>
                 <Divider sx={{ mb: 4 }} />
 
                 <Grid container spacing={3}>
-                    <Grid item xs={12}>
+                    <Grid size={{ xs: 12 }}> 
                         <TextField
-                            label={t('user.full_name', 'Full Name')}
+                            label="Full Name"
                             name="fullName"
                             fullWidth
                             required
@@ -72,9 +69,9 @@ export const CreateJuryPage = () => {
                             onChange={handleFormChange}
                         />
                     </Grid>
-                    <Grid item xs={12}>
+                    <Grid size={{ xs: 12 }}> 
                         <TextField
-                            label={t('user.email', 'Email')}
+                            label="Email"
                             name="email"
                             type="email"
                             fullWidth
@@ -83,20 +80,36 @@ export const CreateJuryPage = () => {
                             onChange={handleFormChange}
                         />
                     </Grid>
+                    {!tournamentId && (
+                        <Grid size={{ xs: 12 }}> 
+                            <TextField
+                                select
+                                label="Assign to Tournament"
+                                name="tournamentId"
+                                fullWidth
+                                required
+                                value={formData.tournamentId}
+                                onChange={handleFormChange}
+                            >
+                                <MenuItem value="1">Spring Hackathon 2026</MenuItem>
+                                <MenuItem value="2">Winter Code Jam</MenuItem>
+                            </TextField>
+                        </Grid>
+                    )}
                 </Grid>
 
                 <Box sx={{ mt: 5, display: "flex", justifyContent: "flex-end", gap: 2 }}>
                     <Button variant="outlined" color="inherit" onClick={() => navigate(-1)}>
-                        {t('common.cancel', 'Cancel')}
+                        Cancel
                     </Button>
                     <Button
-                        type="submit" // Triggers onSubmit
+                        type="submit"
                         variant="contained"
                         color="primary"
                         startIcon={<SaveIcon />}
                         sx={{ px: 4, fontWeight: 700 }}
                     >
-                        {t('jury.save_button', 'Create Jury')}
+                        Create Jury
                     </Button>
                 </Box>
             </Paper>
