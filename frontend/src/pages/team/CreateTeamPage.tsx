@@ -60,6 +60,12 @@ export const CreateTeamPage = () => {
             setError("All required fields must be filled.");
             return false;
         }
+        // Tournament ID must be > 0
+        const tidNum = Number(formData.tournamentId);
+        if (isNaN(tidNum) || tidNum < 1) {
+            setError("Tournament ID must be greater than 0.");
+            return false;
+        }
         // Members count
         if (formData.members.length < MIN_MEMBERS) {
             setError(`At least ${MIN_MEMBERS} members required.`);
@@ -82,45 +88,21 @@ export const CreateTeamPage = () => {
         return true;
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!validate()) return;
-        // Prepare payload
-        const payload = {
-            name: formData.teamName.trim(),
-            users: [
-                {
-                    fullName: formData.captainName.trim(),
-                    email: formData.captainEmail.trim().toLowerCase(),
-                    isLeader: true
-                },
-                ...formData.members.map(m => ({
-                    fullName: m.name.trim(),
-                    email: m.email.trim().toLowerCase(),
-                    isLeader: false
-                }))
-            ]
-        };
-        try {
-            const tid = formData.tournamentId;
-            const res = await fetch(`/api/tournaments/${tid}/teams`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            });
-            if (res.status === 201) {
-                setSuccess(true);
-                navigate(-1);
-            } else if (res.status === 409) {
-                setError("A team with these members already exists.");
-            } else if (res.status === 403) {
-                setError("Registration is closed for this tournament.");
-            } else {
-                setError("Server error. Please try again later.");
-            }
-        } catch (err) {
-            setError("Network error. Please try again later.");
-        }
+        setSuccess(true);
+        setError(null);
+        setFormData({
+            teamName: "",
+            captainName: "",
+            captainEmail: "",
+            members: [
+                { name: "", email: "" },
+                { name: "", email: "" }
+            ],
+            tournamentId: tournamentId || ""
+        });
     };
 
     return (
