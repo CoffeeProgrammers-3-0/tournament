@@ -30,8 +30,10 @@ public interface UserService {
     User save(User user);
 
     void delete(Long userId);
-    
-    User createJury(User user);
+
+    User createUser(User user, Role role);
 
     Page<User> findAllByRole(Integer page, Integer size, String query, Role role);
+
+    User findUserByEmailOrNull(String email);
 }

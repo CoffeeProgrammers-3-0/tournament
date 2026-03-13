@@ -24,15 +24,17 @@ public class JuryCriteriaController {
     private final JurySubmissionCriteriaMapper jurySubmissionCriteriaMapper;
 
     @PostMapping("/submission/{submission_id}/criteria/{criteria_id}")
-    public JuryCriteriaResponse set(@PathVariable(value = "submission_id") Long submissionId, @PathVariable(value = "criteria_id") Long criteriaId, @RequestBody LongDTO longDTO) {
-        JurySubmissionCriteria jurySubmissionCriteria = jurySubmissionCriteriaService.create(submissionId, criteriaId, longDTO.getValue());
+    public JuryCriteriaResponse set(@PathVariable(value = "submission_id") Long submissionId, @PathVariable(value = "criteria_id") Long criteriaId, @RequestBody LongDTO longDTO, Authentication authentication) {
+        User jury = userService.findUserByAuth(authentication);
+        JurySubmissionCriteria jurySubmissionCriteria = jurySubmissionCriteriaService.create(submissionId, criteriaId, longDTO.getValue(), jury);
 
         return jurySubmissionCriteriaMapper.fromJurySubmissionCriteriaToResponse(jurySubmissionCriteria);
     }
 
     @PutMapping("/submission/{submission_id}/criteria/{criteria_id}")
-    public JuryCriteriaResponse update(@PathVariable(value = "submission_id") Long submissionId, @PathVariable(value = "criteria_id") Long criteriaId, @RequestBody LongDTO longDTO) {
-        JurySubmissionCriteria jurySubmissionCriteria = jurySubmissionCriteriaService.update(submissionId, criteriaId, longDTO.getValue());
+    public JuryCriteriaResponse update(@PathVariable(value = "submission_id") Long submissionId, @PathVariable(value = "criteria_id") Long criteriaId, @RequestBody LongDTO longDTO, Authentication authentication) {
+        User jury = userService.findUserByAuth(authentication);
+        JurySubmissionCriteria jurySubmissionCriteria = jurySubmissionCriteriaService.update(submissionId, criteriaId, longDTO.getValue(), jury);
 
         return jurySubmissionCriteriaMapper.fromJurySubmissionCriteriaToResponse(jurySubmissionCriteria);
     }

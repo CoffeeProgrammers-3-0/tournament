@@ -39,8 +39,8 @@ public class CategoryController {
     }
 
     @GetMapping
-    public List<CategoryResponse> getAll(@PathVariable(value = "round_id") Long roundId, @RequestParam(value = "search") String search, @RequestParam(value = "page") Integer page, @RequestParam(value = "size") Integer size) {
-        List<Category> categoryList = categoryService.findAllByRound(roundId, page, size, search);
+    public List<CategoryResponse> getAll(@PathVariable(value = "round_id") Long roundId, @RequestParam(value = "search", required = false) String search) {
+        List<Category> categoryList = categoryService.findAllByRound(roundId, search);
 
         return categoryList.stream().map(categoryMapper::fromCategoryToResponse).toList();
     }

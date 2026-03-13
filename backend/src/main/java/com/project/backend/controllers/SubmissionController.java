@@ -52,9 +52,10 @@ public class SubmissionController {
     }
 
     @GetMapping("/my")
-    public PaginationListResponse<SubmissionListResponse> getAllForJury(Authentication authentication) {
+    public PaginationListResponse<SubmissionListResponse> getAllForJury(@RequestParam(value = "page") Integer page,
+                                                                        @RequestParam(value = "size") Integer size, Authentication authentication) {
         User me = userService.findUserByAuth(authentication);
-        Page<Submission> submissionPage = submissionService.findAllForJury(me);
+        Page<Submission> submissionPage = submissionService.findAllForJury(me, page, size);
 
         PaginationListResponse<SubmissionListResponse> response = new PaginationListResponse<>();
 
@@ -65,8 +66,10 @@ public class SubmissionController {
     }
 
     @GetMapping("/rounds/{round_id}")
-    public PaginationListResponse<SubmissionListResponse> getAllByRound(@PathVariable(value = "round_id") Long roundId, Authentication authentication) {
-        Page<Submission> submissionPage = submissionService.findAllByRound(roundId);
+    public PaginationListResponse<SubmissionListResponse> getAllByRound(@RequestParam(value = "page") Integer page,
+                                                                        @RequestParam(value = "size") Integer size,
+                                                                        @PathVariable(value = "round_id") Long roundId, Authentication authentication) {
+        Page<Submission> submissionPage = submissionService.findAllByRound(roundId, page, size);
 
         PaginationListResponse<SubmissionListResponse> response = new PaginationListResponse<>();
 

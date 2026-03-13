@@ -162,6 +162,17 @@
             <scope>provided</scope>
         </dependency>
 
+        <!--        MAIL            -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+            <version>3.4.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-freemarker</artifactId>
+        </dependency>
+
         <!--        KEYCLOAK        -->
         <dependency>
             <groupId>org.keycloak</groupId>
@@ -211,6 +222,7 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.11.0</version>
                 <configuration>
+                    <parameters>true</parameters>
                     <source>21</source>
                     <target>21</target>
                     <annotationProcessorPaths>

@@ -14,9 +14,9 @@ public interface TournamentService {
 
     Page<Tournament> findAll(Integer page, Integer size, String search, TournamentStatus status);
 
-    Page<Tournament> findAllByUser(Integer page, Integer size, String search, TournamentStatus status, User me);
+    Page<Tournament> findAllByUser(Integer page, Integer size, String search, TournamentStatus status, User user);
 
-    Page<Tournament> findAllByUserNot(Integer page, Integer size, String search, Object o, User me);
+    Page<Tournament> findAllByUserNot(Integer page, Integer size, String search, TournamentStatus status, User user);
 
     Tournament findById(Long tournamentId);
 }

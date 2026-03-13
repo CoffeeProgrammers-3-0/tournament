@@ -24,7 +24,7 @@ public class UserController {
 
     @PostMapping("/juries")
     public UserResponse createJury(@RequestBody UserCreateRequest userCreateRequest, Authentication authentication) {
-        User user = userService.createJury(userMapper.fromCreateRequestToUser(userCreateRequest));
+        User user = userService.createUser(userMapper.fromCreateRequestToUser(userCreateRequest), Role.JURY);
 
         return userMapper.fromUserToResponse(user);
     }
@@ -54,7 +54,7 @@ public class UserController {
     }
 
     @GetMapping("/juries")
-    public PaginationListResponse<UserResponse> getAll(@RequestParam(value = "query") String query, @RequestParam(value = "page") Integer page, @RequestParam(value = "size") Integer size, Authentication authentication) {
+    public PaginationListResponse<UserResponse> getAll(@RequestParam(value = "query", required = false) String query, @RequestParam(value = "page") Integer page, @RequestParam(value = "size") Integer size, Authentication authentication) {
         Page<User> userPage = userService.findAllByRole(page, size, query, Role.JURY);
 
         PaginationListResponse<UserResponse> response = new PaginationListResponse<>();

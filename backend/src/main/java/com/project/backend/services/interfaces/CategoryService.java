@@ -11,5 +11,5 @@ public interface CategoryService {
 
     void delete(Long categoryId);
 
-    List<Category> findAllByRound(Long roundId, Integer page, Integer size, String search);
+    List<Category> findAllByRound(Long roundId, String search);
 }

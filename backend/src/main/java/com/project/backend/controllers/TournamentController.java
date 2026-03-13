@@ -47,7 +47,7 @@ public class TournamentController {
     }
 
     @GetMapping
-    public PaginationListResponse<TournamentListResponse> getAll(@RequestParam(value = "search") String search, @RequestParam(value = "page") Integer page, @RequestParam(value = "size") Integer size, @RequestParam(value = "status") TournamentStatus status) {
+    public PaginationListResponse<TournamentListResponse> getAll(@RequestParam(value = "search", required = false) String search, @RequestParam(value = "page") Integer page, @RequestParam(value = "size") Integer size, @RequestParam(value = "status") TournamentStatus status) {
         Page<Tournament> tournamentPage = tournamentService.findAll(page, size, search, status);
 
         PaginationListResponse<TournamentListResponse> response = new PaginationListResponse<>();
@@ -59,7 +59,7 @@ public class TournamentController {
     }
 
     @GetMapping("/my")
-    public PaginationListResponse<TournamentListResponse> getAllMy(@RequestParam(value = "search") String search,
+    public PaginationListResponse<TournamentListResponse> getAllMy(@RequestParam(value = "search", required = false) String search,
                                                                    @RequestParam(value = "page") Integer page,
                                                                    @RequestParam(value = "size") Integer size,
                                                                    @RequestParam(value = "status") TournamentStatus status,
@@ -76,12 +76,12 @@ public class TournamentController {
     }
 
     @GetMapping("/available-for-me")
-    public PaginationListResponse<TournamentListResponse> getAllAvailable(@RequestParam(value = "search") String search,
+    public PaginationListResponse<TournamentListResponse> getAllAvailable(@RequestParam(value = "search", required = false) String search,
                                                                    @RequestParam(value = "page") Integer page,
                                                                    @RequestParam(value = "size") Integer size,
                                                                    Authentication authentication) {
         User me = userService.findUserByAuth(authentication);
-        Page<Tournament> tournamentPage = tournamentService.findAllByUserNot(page, size, search, null, me);
+        Page<Tournament> tournamentPage = tournamentService.findAllByUserNot(page, size, search, TournamentStatus.ACTIVE, me);
 
         PaginationListResponse<TournamentListResponse> response = new PaginationListResponse<>();
 

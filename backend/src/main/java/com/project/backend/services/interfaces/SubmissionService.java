@@ -13,9 +13,9 @@ public interface SubmissionService {
 
     Submission findById(Long submissionId);
 
-    Page<Submission> findAllForJury(User jury);
+    Page<Submission> findAllForJury(User jury, Integer page, Integer size);
 
-    Page<Submission> findAllByRound(Long roundId);
+    Page<Submission> findAllByRound(Long roundId, Integer page, Integer size);
 
     Submission setJury(Long submissionId, Long juryId);
 }

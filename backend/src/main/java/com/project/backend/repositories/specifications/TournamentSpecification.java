@@ -1,8 +1,11 @@
 package com.project.backend.repositories.specifications;
 
 import com.project.backend.models.Round;
+import com.project.backend.models.Team;
 import com.project.backend.models.Tournament;
 import com.project.backend.models.constants.TournamentStatus;
+import com.project.backend.models.join_tables.TeamParticipant;
+import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
 import lombok.extern.slf4j.Slf4j;
@@ -203,5 +206,40 @@ public class TournamentSpecification {
 
         return (root, query, cb) ->
                 cb.greaterThanOrEqualTo(root.get("countOfRounds"), countOfRounds);
+    }
+
+    public static Specification<Tournament> byUserId(Long userId) {
+        log.debug("TournamentSpecification.byUserId called with userId={}", userId);
+        if (userId == null) return null;
+
+        return (root, query, cb) -> {
+            query.distinct(true);
+            Join<Tournament, TeamParticipant> participantsJoin = root.join("teamParticipants");
+            return cb.equal(participantsJoin.get("user").get("id"), userId);
+        };
+    }
+
+    public static Specification<Tournament> byRoundId(Long roundId) {
+        log.debug("TournamentSpecification.byRoundId called with roundId={}", roundId);
+        if (roundId == null) return null;
+
+        return (root, query, cb) -> {
+            query.distinct(true);
+            Join<Tournament, Round> roundsJoin = root.join("rounds");
+            return cb.equal(roundsJoin.get("id"), roundId);
+        };
+    }
+
+    public static Specification<Tournament> byTeamId(Long teamId) {
+        log.debug("TournamentSpecification.byTeamId called with teamId={}", teamId);
+        if (teamId == null) return null;
+
+        return (root, query, cb) -> {
+            query.distinct(true);
+
+            Join<Tournament, TeamParticipant> tpJoin = root.join("teamParticipants");
+            Join<TeamParticipant, Team> teamJoin = tpJoin.join("team");
+            return cb.equal(teamJoin.get("id"), teamId);
+        };
     }
 }

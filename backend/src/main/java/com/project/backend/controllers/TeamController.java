@@ -92,21 +92,21 @@ public class TeamController {
         return teamService.getStatisticsByRoundForUsersTeam(roundId, me);
     }
 
-    @PostMapping("/{team-id}/add-member")
+    @PostMapping("/{team_id}/add-member")
     public TeamFullResponse addMember(@PathVariable(value = "team_id") Long teamId, @RequestBody UserCreateRequestForTeam userCreateRequestForTeam, Authentication authentication) {
         Team team = teamService.addMember(teamId, userCreateRequestForTeam);
 
         return teamMapper.fromTeamToFullResponse(team);
     }
 
-    @PutMapping("/{team-id}/remove-member/{user_id}")
+    @PutMapping("/{team_id}/remove-member/{user_id}")
     public TeamFullResponse addMember(@PathVariable(value = "team_id") Long teamId, @PathVariable(value = "user_id") Long userId, Authentication authentication) {
         Team team = teamService.removeMember(teamId, userId);
 
         return teamMapper.fromTeamToFullResponse(team);
     }
 
-    @PostMapping("/{team-id}/set-leader/{user_id}")
+    @PostMapping("/{team_id}/set-leader/{user_id}")
     public TeamFullResponse setLeader(@PathVariable(value = "team_id") Long teamId, @PathVariable(value = "user_id") Long userId, Authentication authentication) {
         Team team = teamService.setLeader(teamId, userId);
 

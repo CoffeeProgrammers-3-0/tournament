@@ -53,6 +53,8 @@ services:
     environment:
       - PORT=8081
       - CLOUD_KEY=${CLOUD_KEY}
+      - EMAIL_ADDRESS=${EMAIL_ADDRESS}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
       - DB_URL=jdbc:postgresql://postgres-backend:5432/backend
       - DB_USERNAME=postgres
       - DB_PASSWORD=password
