@@ -190,5 +190,9 @@ export const en = {
             "all_teams": "All Teams",
             "details": "Details"
         }
+    },
+    common: {
+        authenticating: "Authenticating",
+        authenticatingSubtitle: "Please, wait"
     }
 }

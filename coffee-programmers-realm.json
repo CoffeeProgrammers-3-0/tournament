@@ -82,6 +82,14 @@
     } ],
     "client" : {
       "coffee-programmers-client" : [ {
+        "id" : "7d75b5de-6aff-4ae0-88ee-2ad642d1c303",
+        "name" : "JURY",
+        "description" : "",
+        "composite" : false,
+        "clientRole" : true,
+        "containerId" : "a32f5634-0d98-4c74-a651-7e494586b2dd",
+        "attributes" : { }
+      }, {
         "id" : "3f0c0bb3-605e-4479-a2a9-48d5e9f4794a",
         "name" : "ADMIN",
         "description" : "",
@@ -1351,7 +1359,7 @@
     "authType" : "basic",
     "user" : "coffee.programmers.email@gmail.com"
   },
-  "loginTheme" : "testTheme",
+  "loginTheme" : "tournament-system-theme",
   "accountTheme" : "",
   "adminTheme" : "",
   "emailTheme" : "keycloak",
@@ -1512,7 +1520,7 @@
   },
   "internationalizationEnabled" : true,
   "supportedLocales" : [ "uk", "en" ],
-  "defaultLocale" : "en",
+  "defaultLocale" : "uk",
   "authenticationFlows" : [ {
     "id" : "70dbeb41-ba0d-4960-b299-1bf5b3f39c1c",
     "alias" : "Account verification options",
