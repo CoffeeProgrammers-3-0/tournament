@@ -41,6 +41,17 @@
             padding: 0 24px;
         }
 
+        .kc-feedback {
+            text-align: center;
+            line-height: 1.4;
+            margin-bottom: 24px;
+            font-size: 16px;
+        }
+        .kc-feedback.feedback-error { color: var(--color-danger); font-weight: 500; }
+        .kc-feedback.feedback-info { color: var(--color-muted); }
+        .kc-feedback.feedback-success { color: #2e7d32; }
+        .kc-feedback.feedback-warning { color: #ed6c02; }
+
         .app-header {
             background-color: var(--color-surface);
             border-bottom: 1px solid #e0e0e0;
@@ -136,6 +147,42 @@
             .footer-grid { grid-template-columns: 1fr; }
             .desktop-only { display: none; }
         }
+
+        .kc-feedback {
+            text-align: center;
+            line-height: 1.4;
+            margin-bottom: 24px;
+            font-size: 15px;
+            padding: 16px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .kc-feedback.feedback-info,
+        .kc-feedback.feedback-warning {
+            background-color: rgba(255, 196, 0, 0.15);
+            color: #856404;
+            border: 1px solid rgba(255, 196, 0, 0.2);
+        }
+
+        .kc-feedback.feedback-error {
+            background-color: rgba(198, 40, 40, 0.1);
+            color: var(--color-danger);
+            border: 1px solid rgba(198, 40, 40, 0.15);
+            font-weight: 500;
+        }
+
+        .kc-feedback-text {
+            flex: 1;
+        }
+
+        .feedback-icon {
+            font-size: 20px;
+            opacity: 0.8;
+        }
     </style>
 </head>
 
@@ -171,6 +218,13 @@
     <main class="login-main">
         <div id="kc-content-wrapper">
             <#nested "header">
+
+            <#if displayMessage && message?has_content && (message.type != 'warning' || !isAppInitiatedAction??)>
+                <div class="kc-feedback feedback-${message.type}">
+                    <span class="kc-feedback-text">${kcSanitize(message.summary)?no_esc}</span>
+                </div>
+            </#if>
+
             <#nested "form">
         </div>
     </main>
