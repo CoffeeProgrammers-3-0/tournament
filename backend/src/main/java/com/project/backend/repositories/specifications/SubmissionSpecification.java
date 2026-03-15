@@ -3,6 +3,10 @@ package com.project.backend.repositories.specifications;
 import com.project.backend.models.Round;
 import com.project.backend.models.Submission;
 import com.project.backend.models.Team;
+import com.project.backend.models.User;
+import com.project.backend.models.join_tables.JurySubmission;
+import com.project.backend.models.join_tables.TeamParticipant;
+import jakarta.persistence.criteria.Join;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -71,5 +75,34 @@ public class SubmissionSpecification {
 
         return (root, query, cb) ->
                 cb.like(cb.lower(root.get("description")), "%" + description.toLowerCase() + "%");
+    }
+
+    public static Specification<Submission> byUserTeam(Long userId) {
+        log.debug("SubmissionSpecification.byUserTeam called with userId={}", userId);
+        if (userId == null) return null;
+
+        return (root, query, cb) -> {
+            query.distinct(true);
+
+            Join<Submission, Team> teamJoin = root.join("team");
+            Join<Team, TeamParticipant> tpJoin = teamJoin.join("teamParticipants");
+            Join<TeamParticipant, User> userJoin = tpJoin.join("user");
+
+            return cb.equal(userJoin.get("id"), userId);
+        };
+    }
+
+    public static Specification<Submission> byJuryId(Long juryId) {
+        log.debug("SubmissionSpecification.byJuryId called with juryId={}", juryId);
+        if (juryId == null) return null;
+
+        return (root, query, cb) -> {
+            query.distinct(true);
+
+            Join<Submission, JurySubmission> jurySubmissionJoin = root.join("jurySubmissions");
+            Join<JurySubmission, User> userJoin = jurySubmissionJoin.join("jury");
+
+            return cb.equal(userJoin.get("id"), juryId);
+        };
     }
 }

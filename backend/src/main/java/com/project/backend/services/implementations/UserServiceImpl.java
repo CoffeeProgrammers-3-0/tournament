@@ -1,12 +1,17 @@
 package com.project.backend.services.implementations;
 
+import com.project.backend.dto.event.SendPasswordEvent;
 import com.project.backend.dto.wrapper.PasswordRequest;
 import com.project.backend.models.User;
+import com.project.backend.models.constants.Role;
 import com.project.backend.repositories.UserRepository;
 import com.project.backend.repositories.specifications.UserSpecification;
 import com.project.backend.services.interfaces.UserService;
+import com.project.backend.utils.PasswordGenerationUtil;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
+import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.admin.client.resource.RealmResource;
@@ -14,6 +19,11 @@ import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -22,6 +32,8 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
+import java.net.URI;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -33,6 +45,8 @@ public class UserServiceImpl implements UserService {
     private final String clientUUID;
     private final Map<String, RoleRepresentation> clientRoles;
     private final WebClient webClient;
+
+    private final ApplicationEventPublisher eventPublisher;
 
     @Value("${realm}")
     private String realm;
@@ -80,7 +94,7 @@ public class UserServiceImpl implements UserService {
         return userRepository.save(userToUpdate);
     }
 
-    private boolean verifyOldPassword(String username, String password) {
+    public boolean verifyOldPassword(String username, String password) {
         log.info("Service: Verifying old password for user {}", username);
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         formData.add("grant_type", "password");
@@ -185,5 +199,67 @@ public class UserServiceImpl implements UserService {
         userRepository.delete(user);
 
         realmResource.users().delete(user.getKeycloakUserId());
+    }
+
+    @Transactional
+    @Override
+    public User createUser(User user, Role role) {
+        user.setRole(role);
+
+        log.info("Service: Saving new user {}", user.getEmail());
+        String email = user.getEmail();
+        if (userRepository.exists(UserSpecification.byEmail(email))) {
+            throw new EntityExistsException("User with email " + email + " already exists");
+        }
+
+        UserRepresentation userRepresentation = new UserRepresentation();
+
+        String tempPassword = PasswordGenerationUtil.generatePassword(12);
+        CredentialRepresentation credentialRepresentation = new CredentialRepresentation();
+        credentialRepresentation.setTemporary(true);
+        credentialRepresentation.setType(CredentialRepresentation.PASSWORD);
+        credentialRepresentation.setValue(tempPassword);
+
+        eventPublisher.publishEvent(new SendPasswordEvent(tempPassword, email));
+
+        userRepresentation.setCredentials(List.of(credentialRepresentation));
+        userRepresentation.singleAttribute("fullName", user.getFullName());
+        userRepresentation.setEmail(user.getEmail());
+        userRepresentation.setEnabled(true);
+
+        Response response = realmResource.users().create(userRepresentation);
+        if (response.getStatus() == 201) {
+            URI location = response.getLocation();
+            String path = location.getPath();
+            String userId = path.substring(path.lastIndexOf('/') + 1);
+            user.setKeycloakUserId(userId);
+        } else {
+            log.info("Service: Failed to create user. Status: " + response.getStatus());
+            String error = response.readEntity(String.class);
+            log.info("Service: Error response: " + error);
+        }
+        response.close();
+
+        realmResource.users()
+                .get(user.getKeycloakUserId())
+                .roles()
+                .clientLevel(clientUUID)
+                .add(List.of(clientRoles.get(user.getRole().name())));
+
+        return createUserKeycloak(user);
+    }
+
+    @Override
+    public Page<User> findAllByRole(Integer page, Integer size, String query, Role role) {
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "fullName"));
+        return userRepository.findAll(
+                Specification.allOf(UserSpecification.byRole(role), UserSpecification.byFullName(query)),
+                pageRequest);
+    }
+
+    @Override
+    public User findUserByEmailOrNull(String email) {
+        log.info("Service: Finding user by email {}", email);
+        return userRepository.findOne(UserSpecification.byEmail(email)).orElse(null);
     }
 }

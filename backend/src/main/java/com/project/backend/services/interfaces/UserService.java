@@ -2,6 +2,8 @@ package com.project.backend.services.interfaces;
 
 import com.project.backend.dto.wrapper.PasswordRequest;
 import com.project.backend.models.User;
+import com.project.backend.models.constants.Role;
+import org.springframework.data.domain.Page;
 import org.springframework.security.core.Authentication;
 
 public interface UserService {
@@ -28,4 +30,10 @@ public interface UserService {
     User save(User user);
 
     void delete(Long userId);
+
+    User createUser(User user, Role role);
+
+    Page<User> findAllByRole(Integer page, Integer size, String query, Role role);
+
+    User findUserByEmailOrNull(String email);
 }

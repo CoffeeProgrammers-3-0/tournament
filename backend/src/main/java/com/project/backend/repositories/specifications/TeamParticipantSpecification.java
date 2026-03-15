@@ -65,4 +65,12 @@ public class TeamParticipantSpecification {
         return (root, query, cb) ->
                 cb.equal(root.get("isLeader"), leader);
     }
+
+    public static Specification<TeamParticipant> byUserEmail(String email) {
+        log.debug("TeamParticipantSpecification.byUserEmail called with email={}", email);
+        if (email == null) return null;
+
+        return (root, query, cb) ->
+                cb.equal(root.get("user").get("email"), email);
+    }
 }
