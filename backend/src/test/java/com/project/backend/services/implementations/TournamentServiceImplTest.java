@@ -112,7 +112,7 @@ class TournamentServiceImplTest {
 
         when(tournamentRepository.findAll(specCaptor.capture(), pageRequestCaptor.capture())).thenReturn(page);
 
-        Page<Tournament> result = service.findAll(0, 10, "search", TournamentStatus.ACTIVE);
+        Page<Tournament> result = service.findAll(0, 10, "search", TournamentStatus.RUNNING);
 
         assertEquals(1, result.getTotalElements());
 
@@ -134,7 +134,7 @@ class TournamentServiceImplTest {
 
         when(tournamentRepository.findAll(specCaptor.capture(), pageRequestCaptor.capture())).thenReturn(page);
 
-        Page<Tournament> result = service.findAllByUser(1, 20, "search", TournamentStatus.ACTIVE, user);
+        Page<Tournament> result = service.findAllByUser(1, 20, "search", TournamentStatus.RUNNING, user);
 
         assertEquals(1, result.getTotalElements());
 
@@ -156,7 +156,7 @@ class TournamentServiceImplTest {
 
         when(tournamentRepository.findAll(specCaptor.capture(), pageRequestCaptor.capture())).thenReturn(page);
 
-        Page<Tournament> result = service.findAllByUserNot(2, 5, "search", TournamentStatus.ACTIVE, user);
+        Page<Tournament> result = service.findAllByUserNot(2, 5, "search", TournamentStatus.RUNNING, user);
 
         assertEquals(1, result.getTotalElements());
 

@@ -9,6 +9,7 @@ import com.project.backend.repositories.*;
 import com.project.backend.repositories.specifications.JurySubmissionSpecification;
 import com.project.backend.repositories.specifications.SubmissionSpecification;
 import com.project.backend.repositories.specifications.TeamSpecification;
+import com.project.backend.services.interfaces.EvaluationService;
 import com.project.backend.services.interfaces.SubmissionService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,7 @@ public class SubmissionServiceImpl implements SubmissionService {
     private final TeamRepository teamRepository;
     private final UserRepository userRepository;
     private final JurySubmissionRepository jurySubmissionRepository;
+    private final EvaluationService evaluationService;
 
     @Override
     public Submission create(Long roundId, User creator, Submission submission) {
@@ -83,8 +85,19 @@ public class SubmissionServiceImpl implements SubmissionService {
         JurySubmission jurySubmission = new JurySubmission();
         jurySubmission.setJury(jury);
         jurySubmission.setSubmission(submission);
+        evaluationService.fillWithZeroPoints(jurySubmission);
 
         jurySubmissionRepository.save(jurySubmission);
+        return findById(submissionId);
+    }
+
+    @Override
+    public Submission removeJury(Long submissionId, Long juryId) {
+        if(!jurySubmissionRepository.exists(Specification.allOf(JurySubmissionSpecification.bySubmissionId(submissionId), JurySubmissionSpecification.byJuryId(juryId)))) {
+            throw new IllegalStateException("Jury with id " + juryId + " is not assigned to submission with id " + submissionId);
+        }
+
+        jurySubmissionRepository.delete(JurySubmissionSpecification.bySubmissionIdAndJuryId(submissionId, juryId));
         return findById(submissionId);
     }
 }

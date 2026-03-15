@@ -18,4 +18,6 @@ public interface SubmissionService {
     Page<Submission> findAllByRound(Long roundId, Integer page, Integer size);
 
     Submission setJury(Long submissionId, Long juryId);
+
+    Submission removeJury(Long submissionId, Long juryId);
 }

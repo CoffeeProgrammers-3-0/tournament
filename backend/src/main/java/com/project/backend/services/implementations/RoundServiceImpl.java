@@ -7,14 +7,14 @@ import com.project.backend.models.constants.Role;
 import com.project.backend.models.constants.RoundStatus;
 import com.project.backend.models.ids.JuryId;
 import com.project.backend.models.join_tables.Jury;
-import com.project.backend.repositories.JuryRepository;
-import com.project.backend.repositories.RoundRepository;
-import com.project.backend.repositories.TournamentRepository;
-import com.project.backend.repositories.UserRepository;
+import com.project.backend.repositories.*;
+import com.project.backend.repositories.specifications.JurySpecification;
+import com.project.backend.repositories.specifications.JurySubmissionSpecification;
 import com.project.backend.repositories.specifications.RoundSpecification;
 import com.project.backend.repositories.specifications.TournamentSpecification;
 import com.project.backend.services.interfaces.RoundService;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -30,6 +30,7 @@ public class RoundServiceImpl implements RoundService {
     private final TournamentRepository tournamentRepository;
     private final UserRepository userRepository;
     private final JuryRepository juryRepository;
+    private final JurySubmissionRepository jurySubmissionRepository;
 
     @Override
     public Round create(Long tournamentId, Round round) {
@@ -76,6 +77,10 @@ public class RoundServiceImpl implements RoundService {
 
     @Override
     public void setJury(Long roundId, Long juryId) {
+        if(juryRepository.exists(JurySpecification.byUserIdAndRoundId(juryId, roundId))) {
+            throw new IllegalStateException("Jury with id " + juryId + " is already assigned to round with id " + roundId);
+        }
+
         Round round = findById(roundId);
         User juryUser = userRepository.findById(juryId).orElseThrow(() -> new EntityNotFoundException("User not found"));
 
@@ -93,5 +98,16 @@ public class RoundServiceImpl implements RoundService {
         jury.setUser(juryUser);
 
         juryRepository.save(jury);
+    }
+
+    @Override
+    @Transactional
+    public void removeJury(Long roundId, Long juryId) {
+        if(!juryRepository.exists(JurySpecification.byUserIdAndRoundId(juryId, roundId))) {
+            throw new IllegalStateException("Jury with id " + juryId + " is not assigned to round with id " + roundId);
+        }
+
+        juryRepository.delete(JurySpecification.byUserIdAndRoundId(juryId, roundId));
+        jurySubmissionRepository.delete(JurySubmissionSpecification.byJuryId(juryId));
     }
 }

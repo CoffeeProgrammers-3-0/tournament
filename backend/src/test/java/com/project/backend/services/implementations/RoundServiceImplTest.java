@@ -225,6 +225,7 @@ class RoundServiceImplTest {
 
         verify(roundRepository).findById(roundId);
         verify(userRepository).findById(userId);
+        verify(juryRepository).exists(any(Specification.class));
 
         verifyNoMoreInteractions(roundRepository, userRepository, juryRepository);
     }
@@ -248,7 +249,6 @@ class RoundServiceImplTest {
 
         verify(roundRepository).findById(roundId);
         verify(userRepository).findById(userId);
-
-        verifyNoInteractions(juryRepository);
+        verify(juryRepository).exists(argThat((Specification<Jury> spec) -> spec != null));
     }
 }

@@ -32,4 +32,6 @@ public interface TeamService {
     Team removeMember(Long teamId, Long userId);
 
     Team setLeader(Long teamId, Long userId);
+
+    Page<Team> findAllByTournament(Integer page, Integer size, String search, Long tournamentId);
 }

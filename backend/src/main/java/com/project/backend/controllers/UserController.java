@@ -8,6 +8,9 @@ import com.project.backend.mappers.UserMapper;
 import com.project.backend.models.User;
 import com.project.backend.models.constants.Role;
 import com.project.backend.services.interfaces.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -18,49 +21,100 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @Slf4j
 @RequestMapping("/api/users")
+@Tag(name = "Users", description = "API for managing users and juries")
 public class UserController {
     private final UserService userService;
     private final UserMapper userMapper;
 
     @PostMapping("/juries")
-    public UserResponse createJury(@RequestBody UserCreateRequest userCreateRequest, Authentication authentication) {
-        User user = userService.createUser(userMapper.fromCreateRequestToUser(userCreateRequest), Role.JURY);
+    @Operation(summary = "Create jury user", description = "Creates a new user with JURY role")
+    public UserResponse createJury(
+            @Parameter(description = "User creation data")
+            @RequestBody UserCreateRequest userCreateRequest,
+
+            @Parameter(hidden = true)
+            Authentication authentication) {
+        User user = userService.createUser(
+                userMapper.fromCreateRequestToUser(userCreateRequest),
+                Role.JURY
+        );
 
         return userMapper.fromUserToResponse(user);
     }
 
     @PutMapping("/{user_id}")
-    public UserResponse update(@PathVariable(value = "user_id") Long userId, @RequestBody UserUpdateRequest userUpdateRequest, Authentication authentication) {
-        User user = userService.updateUser(userMapper.fromUpdateRequestToUser(userUpdateRequest), userId);
+    @Operation(summary = "Update user", description = "Updates user information")
+    public UserResponse update(
+            @Parameter(description = "ID of the user to update", example = "1")
+            @PathVariable(value = "user_id") Long userId,
+
+            @Parameter(description = "Updated user data")
+            @RequestBody UserUpdateRequest userUpdateRequest,
+
+            @Parameter(hidden = true)
+            Authentication authentication) {
+        User user = userService.updateUser(
+                userMapper.fromUpdateRequestToUser(userUpdateRequest),
+                userId
+        );
 
         return userMapper.fromUserToResponse(user);
     }
 
     @DeleteMapping("/{user_id}")
-    public void delete(@PathVariable(value = "user_id") Long userId, Authentication authentication) {
+    @Operation(summary = "Delete user", description = "Deletes a user by ID")
+    public void delete(
+            @Parameter(description = "ID of the user to delete", example = "1")
+            @PathVariable(value = "user_id") Long userId,
+
+            @Parameter(hidden = true)
+            Authentication authentication) {
         userService.delete(userId);
     }
 
     @GetMapping("/my")
-    public UserResponse my(Authentication authentication) {
+    @Operation(summary = "Get my profile", description = "Returns profile of the authenticated user")
+    public UserResponse my(
+            @Parameter(hidden = true)
+            Authentication authentication) {
         User me = userService.findUserByAuth(authentication);
         return userMapper.fromUserToResponse(me);
     }
 
     @GetMapping("/{user_id}")
-    public UserResponse getByUserId(@PathVariable(value = "user_id") Long userId) {
+    @Operation(summary = "Get user by ID", description = "Returns user details by ID")
+    public UserResponse getByUserId(
+            @Parameter(description = "ID of the user", example = "1")
+            @PathVariable(value = "user_id") Long userId) {
         User user = userService.findById(userId);
         return userMapper.fromUserToResponse(user);
     }
 
     @GetMapping("/juries")
-    public PaginationListResponse<UserResponse> getAll(@RequestParam(value = "query", required = false) String query, @RequestParam(value = "page") Integer page, @RequestParam(value = "size") Integer size, Authentication authentication) {
+    @Operation(summary = "Get all juries", description = "Returns paginated list of users with JURY role")
+    public PaginationListResponse<UserResponse> getAll(
+            @Parameter(description = "Search query for jury users", example = "john")
+            @RequestParam(value = "query", required = false) String query,
+
+            @Parameter(description = "Page number (starting from 0)", example = "0")
+            @RequestParam(value = "page") Integer page,
+
+            @Parameter(description = "Page size", example = "10")
+            @RequestParam(value = "size") Integer size,
+
+            @Parameter(hidden = true)
+            Authentication authentication) {
         Page<User> userPage = userService.findAllByRole(page, size, query, Role.JURY);
 
         PaginationListResponse<UserResponse> response = new PaginationListResponse<>();
 
         response.setTotalPages(userPage.getTotalPages());
-        response.setContent(userPage.getContent().stream().map(userMapper::fromUserToResponse).toList());
+        response.setContent(
+                userPage.getContent()
+                        .stream()
+                        .map(userMapper::fromUserToResponse)
+                        .toList()
+        );
 
         return response;
     }

@@ -2,6 +2,7 @@ package com.project.backend.repositories.specifications;
 
 import com.project.backend.models.Category;
 import com.project.backend.models.Criteria;
+import com.project.backend.models.Round;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -38,5 +39,21 @@ public class CriteriaSpecification {
 
         return (root, query, cb) ->
                 cb.equal(root.get("category").get("id"), categoryId);
+    }
+
+    public static Specification<Criteria> byRound(Round round) {
+        log.debug("CriteriaSpecification.byRound called with round={}", round);
+        if (round == null) return null;
+
+        return (root, query, cb) ->
+                cb.equal(root.get("category").get("round"), round);
+    }
+
+    public static Specification<Criteria> byRoundId(Long roundId) {
+        log.debug("CriteriaSpecification.byRoundId called with roundId={}", roundId);
+        if (roundId == null) return null;
+
+        return (root, query, cb) ->
+                cb.equal(root.get("category").get("round").get("id"), roundId);
     }
 }

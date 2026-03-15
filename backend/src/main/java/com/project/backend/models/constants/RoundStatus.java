@@ -1,5 +1,5 @@
 package com.project.backend.models.constants;
 
 public enum RoundStatus {
-    ACTIVE
+    DRAFT, ACTIVE, SUBMISSION_CLOSED, EVALUATED
 }

@@ -16,4 +16,6 @@ public interface RoundService {
     Round findById(Long roundId);
 
     void setJury(Long roundId, Long juryId);
+
+    void removeJury(Long roundId, Long juryId);
 }

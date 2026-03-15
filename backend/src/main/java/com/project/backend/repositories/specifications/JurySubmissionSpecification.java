@@ -52,4 +52,12 @@ public class JurySubmissionSpecification {
     public static Specification<JurySubmission> bySubmissionIdAndJuryId(Long submissionId, Long juryId) {
         return bySubmissionId(submissionId).and(byJuryId(juryId));
     }
+
+    public static Specification<JurySubmission> byRoundId(Long roundId) {
+        log.debug("JurySubmissionSpecification.byRoundId called with roundId={}", roundId);
+        if (roundId == null) return null;
+
+        return (root, query, cb) ->
+                cb.equal(root.get("submission").get("round").get("id"), roundId);
+    }
 }
