@@ -6,6 +6,7 @@ import com.project.backend.models.Team;
 import com.project.backend.models.User;
 import com.project.backend.models.join_tables.JurySubmission;
 import com.project.backend.repositories.*;
+import com.project.backend.services.interfaces.EvaluationService;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -43,6 +44,9 @@ class SubmissionServiceImplTest {
 
     @Mock
     private JurySubmissionRepository jurySubmissionRepository;
+
+    @Mock
+    private EvaluationService evaluationService;
 
     @InjectMocks
     private SubmissionServiceImpl service;

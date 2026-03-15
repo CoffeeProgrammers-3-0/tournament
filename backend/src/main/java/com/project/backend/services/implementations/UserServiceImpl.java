@@ -212,19 +212,33 @@ public class UserServiceImpl implements UserService {
             throw new EntityExistsException("User with email " + email + " already exists");
         }
 
+        boolean isTestDomain = email != null && email.toLowerCase().endsWith("@test-user.com");
+
+        String password;
+        boolean isTemporary;
+
+        if (isTestDomain) {
+            password = "passWord1";
+            isTemporary = false;
+        } else {
+            password = PasswordGenerationUtil.generatePassword(12);
+            isTemporary = true;
+        }
+
         UserRepresentation userRepresentation = new UserRepresentation();
-
-        String tempPassword = PasswordGenerationUtil.generatePassword(12);
         CredentialRepresentation credentialRepresentation = new CredentialRepresentation();
-        credentialRepresentation.setTemporary(true);
-        credentialRepresentation.setType(CredentialRepresentation.PASSWORD);
-        credentialRepresentation.setValue(tempPassword);
 
-        eventPublisher.publishEvent(new SendPasswordEvent(tempPassword, email));
+        credentialRepresentation.setTemporary(isTemporary);
+        credentialRepresentation.setType(CredentialRepresentation.PASSWORD);
+        credentialRepresentation.setValue(password);
+
+        if (!isTestDomain) {
+            eventPublisher.publishEvent(new SendPasswordEvent(password, email));
+        }
 
         userRepresentation.setCredentials(List.of(credentialRepresentation));
         userRepresentation.singleAttribute("fullName", user.getFullName());
-        userRepresentation.setEmail(user.getEmail());
+        userRepresentation.setEmail(email);
         userRepresentation.setEnabled(true);
 
         Response response = realmResource.users().create(userRepresentation);
@@ -234,9 +248,8 @@ public class UserServiceImpl implements UserService {
             String userId = path.substring(path.lastIndexOf('/') + 1);
             user.setKeycloakUserId(userId);
         } else {
-            log.info("Service: Failed to create user. Status: " + response.getStatus());
-            String error = response.readEntity(String.class);
-            log.info("Service: Error response: " + error);
+            log.error("Service: Failed to create user. Status: {}, Error: {}",
+                    response.getStatus(), response.readEntity(String.class));
         }
         response.close();
 

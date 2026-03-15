@@ -270,4 +270,15 @@ public class TeamServiceImpl implements TeamService {
         Team team = teamRepository.findOne(Specification.allOf(TeamSpecification.byUserId(user.getId()), TeamSpecification.byRoundId(roundId))).orElseThrow(() -> new EntityNotFoundException("Team not found"));
         return getStatisticsByRoundForTeam(roundId, team.getId());
     }
+
+    @Override
+    public Page<Team> findAllByTournament(Integer page, Integer size, String search, Long tournamentId) {
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "name"));
+        return teamRepository.findAll(
+                Specification.allOf(
+                        TeamSpecification.byName(search),
+                        TeamSpecification.byTournamentId(tournamentId)
+                ),
+                pageRequest);
+    }
 }
