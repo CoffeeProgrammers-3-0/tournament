@@ -1,13 +1,13 @@
 // ==== ENUM ====
 
-export type TournamentStatus = 'CREATED' | 'REGISTRATION_OPEN' | 'REGISTRATION_CLOSED' | 'IN_PROGRESS' | 'FINISHED';
+export type TournamentStatus = 'DRAFT' | 'REGISTRATION' | 'RUNNING' | 'FINISHED';
 
 // ==== CREATE ====
 
 export interface TournamentCreateRequestDto {
     name: string;
     description: string;
-    startDate: string;
+    startTournament: string;
     startRegistration: string;
     endRegistration: string;
     maxCountOfTeams: number;
@@ -19,7 +19,7 @@ export interface TournamentCreateRequestDto {
 export interface TournamentUpdateRequestDto {
     name: string;
     description: string;
-    startDate: string;
+    startTournament: string;
     startRegistration: string;
     endRegistration: string;
     maxCountOfTeams: number;
@@ -33,7 +33,7 @@ export interface TournamentFullResponseDto {
     id: number;
     name: string;
     description: string;
-    startDate: string;
+    startTournament: string;
     startRegistration: string;
     endRegistration: string;
     maxCountOfTeams: number;
@@ -46,7 +46,7 @@ export interface TournamentFullResponseDto {
 export interface TournamentListResponseDto {
     id: number;
     name: string;
-    startDate: string;
+    startTournament: string;
     startRegistration: string;
     endRegistration: string;
     status: TournamentStatus;

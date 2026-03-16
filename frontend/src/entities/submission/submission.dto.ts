@@ -3,14 +3,14 @@ import type {TeamListResponseDto} from '../team/team.dto';
 
 export interface SubmissionRequestDto {
     githubLink: string;
-    youtubeLink: string;
+    videoLink: string;
     description: string;
 }
 
 export interface SubmissionFullResponseDto {
     id: number;
     githubLink: string;
-    youtubeLink: string;
+    videoLink: string;
     description: string;
     round: RoundListResponseDto;
     team: TeamListResponseDto;

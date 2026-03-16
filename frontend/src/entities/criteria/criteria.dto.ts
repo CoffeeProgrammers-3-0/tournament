@@ -1,3 +1,4 @@
 export interface CriteriaResponseDto {
-    name: string;
+    id: number;
+    text: string;
 }
