@@ -6,6 +6,9 @@ import com.project.backend.dto.wrapper.PasswordRequest;
 import com.project.backend.models.User;
 import com.project.backend.models.constants.Role;
 import com.project.backend.services.interfaces.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.admin.client.resource.RealmResource;
@@ -33,6 +36,7 @@ import static com.project.backend.auth.utils.SecurityUtil.extractRole;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
+@Tag(name = "Auth", description = "Authentication and Keycloak integration endpoints")
 public class AuthController {
 
     private final WebClient webClient;
@@ -49,18 +53,23 @@ public class AuthController {
     private final JwtDecoder jwtDecoder;
     private final RealmResource realmResource;
 
-
-    @PutMapping("/update/password")
-    @ResponseStatus(HttpStatus.OK)
+    @PutMapping("/update-password")
+    @Operation(summary = "Update password", description = "Updates password for the authenticated user")
     public boolean updateMyPassword(
+            @Parameter(description = "Password update request")
             @RequestBody PasswordRequest password,
+
+            @Parameter(hidden = true)
             Authentication auth) {
         log.info("Controller: Update my password");
         return userService.updatePassword(password, userService.findUserByAuth(auth));
     }
 
     @GetMapping("/callback")
-    public ResponseEntity<Void> exchangeCode(@RequestParam String code) {
+    @Operation(summary = "OAuth2 callback", description = "Exchange authorization code for access and refresh tokens")
+    public ResponseEntity<Void> exchangeCode(
+            @Parameter(description = "Authorization code from Keycloak", example = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx.xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx.xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx")
+            @RequestParam String code) {
         log.info(code);
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         formData.add("grant_type", "authorization_code");
@@ -75,7 +84,10 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<Void> refreshToken(@RequestParam String refreshToken) {
+    @Operation(summary = "Refresh token", description = "Exchanges a refresh token for new access and refresh tokens")
+    public ResponseEntity<Void> refreshToken(
+            @Parameter(description = "Refresh token string", example = "xxxx.xxxx.xxxx")
+            @RequestParam String refreshToken) {
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         formData.add("grant_type", "refresh_token");
         formData.add("refresh_token", refreshToken);
@@ -120,7 +132,7 @@ public class AuthController {
         if (userService.isNotExistByEmail(email)) {
             user = userService.createUserKeycloak(user);
         } else {
-            user= userService.updateUserKeycloak(user, userService.findUserByEmail(email).getId());
+            user = userService.updateUserKeycloak(user, userService.findUserByEmail(email).getId());
         }
 
         List<String> cookies = CookieUtil.createCookiesFromJWTs(
@@ -131,6 +143,7 @@ public class AuthController {
                 Long.parseLong(response.get("expires_in").toString()),
                 Long.parseLong(response.get("refresh_expires_in").toString())
         );
+
         return ResponseEntity
                 .ok()
                 .headers(httpHeaders -> httpHeaders.put(HttpHeaders.SET_COOKIE, cookies))
@@ -139,12 +152,14 @@ public class AuthController {
 
     @ResponseStatus(HttpStatus.OK)
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(@RequestParam Long userId) {
+    @Operation(summary = "Logout user", description = "Logs out a user and deletes authentication cookies")
+    public ResponseEntity<Void> logout(
+            @Parameter(description = "ID of the user to logout", example = "1")
+            @RequestParam Long userId) {
         log.info("AuthController: Logout user");
         realmResource.users().get(userService.findById(userId).getKeycloakUserId()).logout();
         return ResponseEntity.ok()
-                .headers(headers ->
-                        headers.put(HttpHeaders.SET_COOKIE, deleteAllCookies()))
+                .headers(headers -> headers.put(HttpHeaders.SET_COOKIE, deleteAllCookies()))
                 .build();
     }
 }

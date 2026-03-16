@@ -1,0 +1,12 @@
+databaseChangeLog:
+  - changeSet:
+      id: add_count_of_winners_column_to_round
+      author: vladobrod
+      changes:
+        - addColumn:
+            schemaName: tournament
+            tableName: rounds
+            columns:
+              - column:
+                  name: count_of_winners
+                  type: bigint
