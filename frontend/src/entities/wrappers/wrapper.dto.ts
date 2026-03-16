@@ -7,7 +7,7 @@ export interface StringRequestDto {
     text: string;
 }
 
-export interface LongResponseDto {
+export interface LongDto {
     count: number;
 }
 

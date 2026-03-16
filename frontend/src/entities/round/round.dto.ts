@@ -1,6 +1,6 @@
 // ==== ENUM ====
 
-type RoundStatus = 'DRAFT' | 'ACTIVE' | 'SUBMISSION_CLOSED' | 'EVALUATED';
+export type RoundStatus = 'DRAFT' | 'ACTIVE' | 'SUBMISSION_CLOSED' | 'EVALUATED';
 
 // ==== CREATE ====
 
