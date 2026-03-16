@@ -249,5 +249,9 @@ export const uk = {
             "all_teams": "Всі команди",
             "details": "Деталі"
         }
+    },
+    common: {
+        authenticating: "Аутентифікація",
+        authenticatingSubtitle: "Зачекайте, будь ласка"
     }
 };
