@@ -1,0 +1,25 @@
+databaseChangeLog:
+  - changeSet:
+      id: add_keycloak_use_id
+      author: vladobrod
+      changes:
+        - renameColumn:
+            schemaName: tournament
+            tableName: juries
+            oldColumnName: tournament_id
+            newColumnName: round_id
+
+        - dropForeignKeyConstraint:
+            baseTableSchemaName: tournament
+            baseTableName: juries
+            constraintName: fk_jury_tournament
+
+        - addForeignKeyConstraint:
+            constraintName: fk_jury_round
+            baseTableSchemaName: tournament
+            baseTableName: juries
+            baseColumnNames: round_id
+            referencedTableSchemaName: tournament
+            referencedTableName: rounds
+            referencedColumnNames: id
+            onDelete: CASCADE
