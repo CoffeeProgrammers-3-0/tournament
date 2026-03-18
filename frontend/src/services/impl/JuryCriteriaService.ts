@@ -5,7 +5,7 @@ import type {LongDto} from "../../entities/wrappers/wrapper.dto.ts";
 
 class JuryCriteriaService extends BaseService {
     constructor() {
-        super('/api/jury-criteria');
+        super('/jury-criteria');
     }
 
     public setScore(submissionId: number, criteriaId: number, data: LongDto): Promise<JuryCriteriaResponseDto> {

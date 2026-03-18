@@ -18,7 +18,7 @@ interface RoundQueryParams {
 
 class RoundService extends BaseService {
     constructor() {
-        super('/api/tournaments');
+        super('/tournaments');
     }
 
     public createRound(tournamentId: number, data: RoundCreateRequestDto): Promise<RoundFullResponseDto> {

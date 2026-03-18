@@ -59,11 +59,10 @@ export const en = {
             "edit": "Edit"
         },
         "statuses": {
-            "REGISTRATION_OPEN": "Registration Open",
-            "IN_PROGRESS": "In Progress",
+            "REGISTRATION": "Registration Open",
+            "RUNNING": "In Progress",
             "FINISHED": "Finished",
-            "REGISTRATION_CLOSED": "Registration Closed",
-            "CREATED": "Announcement"
+            "DRAFT": "Draft"
         },
         "admin": {
             "create_button": "Create tournament",
@@ -71,7 +70,7 @@ export const en = {
             "fields": {
                 "name": "Title",
                 "description": "Description",
-                "startDate": "Start date",
+                "startTournament": "Start date",
                 "startReg": "Start registration",
                 "endReg": "End registration",
                 "maxTeams": "Max teams",

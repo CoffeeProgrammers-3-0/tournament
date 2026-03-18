@@ -23,6 +23,7 @@ public class TournamentServiceImpl implements TournamentService {
 
     @Override
     public Tournament create(Tournament tournament) {
+        tournament.setStatus(TournamentStatus.DRAFT);
         return tournamentRepository.save(tournament);
     }
 

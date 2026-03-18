@@ -4,7 +4,7 @@ import type {PaginationListResponseDto} from "../../entities/wrappers/wrapper.dt
 
 class UserService extends BaseService {
     constructor() {
-        super('/api/users');
+        super('/users');
     }
 
     public createJury(data: UserCreateRequestDto): Promise<UserResponseDto> {

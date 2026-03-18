@@ -7,7 +7,7 @@ class CategoryService extends BaseService {
     }
 
     private getBaseUrl(roundId: number): string {
-        return `/api/rounds/${roundId}/categories`;
+        return `/rounds/${roundId}/categories`;
     }
 
     public createCategory(roundId: number, data: CategoryRequestDto): Promise<CategoryResponseDto> {

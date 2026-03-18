@@ -17,7 +17,7 @@ interface TournamentQueryParams {
 
 class TournamentService extends BaseService {
     constructor() {
-        super('/api/tournaments');
+        super('/tournaments');
     }
 
     public createTournament(data: TournamentCreateRequestDto): Promise<TournamentFullResponseDto> {
@@ -40,7 +40,7 @@ class TournamentService extends BaseService {
         return this.get<PaginationListResponseDto<TournamentListResponseDto>>('/my', { params });
     }
 
-    public getAvailableTournaments(params: { search?: string, page: number, size: number }): Promise<PaginationListResponseDto<TournamentListResponseDto>> {
+    public getAvailableTournaments(params: TournamentQueryParams): Promise<PaginationListResponseDto<TournamentListResponseDto>> {
         return this.get<PaginationListResponseDto<TournamentListResponseDto>>('/available-for-me', { params });
     }
 

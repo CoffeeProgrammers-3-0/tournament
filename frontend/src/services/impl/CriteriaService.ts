@@ -8,7 +8,7 @@ class CriteriaService extends BaseService {
     }
 
     private getBaseUrl(categoryId: number): string {
-        return `/api/categories/${categoryId}/criteria`;
+        return `/categories/${categoryId}/criteria`;
     }
 
     public createCriteria(categoryId: number, data: StringRequestDto): Promise<CriteriaResponseDto> {

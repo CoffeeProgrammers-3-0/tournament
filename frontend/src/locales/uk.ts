@@ -59,11 +59,10 @@ export const uk = {
             "edit": "Редагувати"
         },
         "statuses": {
-            "REGISTRATION_OPEN": "Реєстрація відкрита",
-            "IN_PROGRESS": "Триває",
-            "FINISHED": "Завершено",
-            "REGISTRATION_CLOSED": "Реєстрацію закрито",
-            "CREATED": "Анонс"
+            "REGISTRATION": "Регістрація відкрита",
+            "RUNNING": "В процесі",
+            "FINISHED": "Закінчився",
+            "DRAFT": "Чорновик"
         },
         "admin": {
             "create_button": "Створити турнір",
@@ -71,7 +70,7 @@ export const uk = {
             "fields": {
                 "name": "Назва",
                 "description": "Опис",
-                "startDate": "Дата початку",
+                "startTournament": "Дата початку",
                 "startReg": "Початок реєстрації",
                 "endReg": "Кінець реєстрації",
                 "maxTeams": "Макс. команд",

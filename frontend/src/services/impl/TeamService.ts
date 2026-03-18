@@ -17,7 +17,7 @@ interface TeamQueryParams {
 
 class TeamService extends BaseService {
     constructor() {
-        super('/api/teams');
+        super('/teams');
     }
 
     // --- Core Team Management ---

@@ -13,7 +13,7 @@ interface PaginationParams {
 
 class SubmissionService extends BaseService {
     constructor() {
-        super('/api/submissions');
+        super('/submissions');
     }
 
     public sendSubmission(roundId: number, data: SubmissionRequestDto): Promise<SubmissionFullResponseDto> {

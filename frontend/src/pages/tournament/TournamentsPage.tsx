@@ -1,4 +1,4 @@
-import {type ChangeEvent, useEffect, useMemo, useState} from "react";
+import {type ChangeEvent, useEffect, useState} from "react";
 import {useNavigate, useSearchParams} from "react-router-dom";
 import {useTranslation} from "react-i18next";
 import Cookies from "js-cookie";
@@ -9,6 +9,7 @@ import {
     CardActions,
     CardContent,
     Chip,
+    CircularProgress,
     Divider,
     Grid,
     InputAdornment,
@@ -22,23 +23,30 @@ import {
 } from "@mui/material";
 import EventIcon from "@mui/icons-material/Event";
 import SearchIcon from "@mui/icons-material/Search";
-import FilterListIcon from "@mui/icons-material/FilterList";
 import AddIcon from "@mui/icons-material/Add";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+
+import {tournamentService} from "../../services/impl/TournamentService";
 import type {
     TournamentCreateRequestDto,
     TournamentListResponseDto,
     TournamentStatus
 } from "../../entities/tournament/tournament.dto.ts";
 
-const MOCK_TOURNAMENTS: TournamentListResponseDto[] = [
-    { id: 1, name: "Осінній Кубок 2026", startDate: "2026-09-01", startRegistration: "2026-08-01", endRegistration: "2026-08-25", status: "REGISTRATION_OPEN" },
-    { id: 2, name: "Кібер-ліга: Сезон 4", startDate: "2026-10-15", startRegistration: "2026-09-15", endRegistration: "2026-10-10", status: "CREATED" },
-    { id: 3, name: "Літній Інтенсив", startDate: "2026-01-10", startRegistration: "2025-12-01", endRegistration: "2025-12-31", status: "IN_PROGRESS" },
-    { id: 4, name: "Star for Life Championship", startDate: "2025-11-01", startRegistration: "2025-10-01", endRegistration: "2025-10-25", status: "FINISHED" },
-];
-
 const ITEMS_PER_PAGE = 6;
+
+// Константи для значень вкладок
+const TABS = {
+    AVAILABLE: 0,
+    MY: 1,
+    HISTORY: 2,
+    ADMIN: 3
+};
+
+const formatToLocalDateTime = (dateTimeStr: string) => {
+    if (!dateTimeStr) return "";
+    return dateTimeStr.length === 16 ? `${dateTimeStr}:00` : dateTimeStr;
+};
 
 export const TournamentsPage = () => {
     const { t, i18n } = useTranslation();
@@ -48,143 +56,172 @@ export const TournamentsPage = () => {
     const isLoggedIn = Cookies.get("userId") !== undefined;
     const userRole = Cookies.get("role");
     const isAdmin = isLoggedIn && userRole === "ADMIN";
+    const isJury = isLoggedIn && userRole === "JURY";
 
-    // Стейт для перемикання екранів (List <-> Create Form)
+    const [tournaments, setTournaments] = useState<TournamentListResponseDto[]>([]);
+    const [totalPages, setTotalPages] = useState(1);
+    const [loading, setLoading] = useState(false);
     const [isCreating, setIsCreating] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Стейт списку
-    const tabFromUrl = parseInt(searchParams.get("tab") || "0");
-    const [tabValue, setTabValue] = useState(tabFromUrl);
+    // Ініціалізація вкладки з URL або дефолт
+    const queryTab = searchParams.get("tab");
+    const initialTab = queryTab !== null ? parseInt(queryTab) : (isJury ? TABS.MY : TABS.AVAILABLE);
+
+    const [tabValue, setTabValue] = useState(initialTab);
     const [searchQuery, setSearchQuery] = useState("");
-    const [statusFilter, setStatusFilter] = useState<string>("ALL");
+    const [debouncedSearch, setDebouncedSearch] = useState("");
+    const [statusFilter, setStatusFilter] = useState<string>("DRAFT");
     const [page, setPage] = useState(1);
 
-    // Стейт форми створення
     const [formData, setFormData] = useState<TournamentCreateRequestDto>({
         name: "",
         description: "",
-        startDate: "",
+        startTournament: "",
         startRegistration: "",
         endRegistration: "",
         maxCountOfTeams: 16,
         countOfRounds: 4
     });
 
+    // 1. Захист та валідація вкладок
     useEffect(() => {
-        if (tabFromUrl === 3 && !isAdmin) {
-            setSearchParams({ tab: "0" });
-            setTabValue(0);
-        } else {
-            setTabValue(tabFromUrl);
+        let activeTab = tabValue;
+
+        if (isJury && tabValue !== TABS.MY) {
+            activeTab = TABS.MY;
+        } else if (!isAdmin && tabValue === TABS.ADMIN) {
+            activeTab = TABS.AVAILABLE;
+        } else if (!isLoggedIn && (tabValue === TABS.MY || tabValue === TABS.HISTORY)) {
+            activeTab = TABS.AVAILABLE;
         }
-        setPage(1);
-    }, [tabFromUrl, isAdmin, isLoggedIn]);
+
+        if (activeTab !== tabValue) {
+            setTabValue(activeTab);
+            setSearchParams({ tab: activeTab.toString() });
+        }
+    }, [isJury, isAdmin, isLoggedIn, tabValue, setSearchParams]);
+
+    // 2. Дебаунс пошуку
+    useEffect(() => {
+        const timer = setTimeout(() => setDebouncedSearch(searchQuery), 500);
+        return () => clearTimeout(timer);
+    }, [searchQuery]);
+
+    // 3. Завантаження даних
+    useEffect(() => {
+        const fetchTournaments = async () => {
+            setLoading(true);
+            try {
+                const apiPage = page - 1;
+                const baseParams = { page: apiPage, size: ITEMS_PER_PAGE, search: debouncedSearch || undefined };
+                let res;
+
+                switch (tabValue) {
+                    case TABS.AVAILABLE:
+                        res = isLoggedIn
+                            ? await tournamentService.getAvailableTournaments(baseParams)
+                            : await tournamentService.getAllTournaments({ ...baseParams, status: "REGISTRATION" });
+                        break;
+                    case TABS.MY:
+                        res = await tournamentService.getMyTournaments({ ...baseParams, status: "RUNNING" });
+                        break;
+                    case TABS.HISTORY:
+                        res = await tournamentService.getMyTournaments({ ...baseParams, status: "FINISHED" });
+                        break;
+                    case TABS.ADMIN:
+                        const reqStatus = statusFilter === "ALL" ? undefined : (statusFilter as TournamentStatus);
+                        res = await tournamentService.getAllTournaments({ ...baseParams, status: reqStatus });
+                        break;
+                }
+
+                if (res) {
+                    setTournaments(res.content);
+                    setTotalPages(res.totalPages);
+                }
+            } catch (error) {
+                console.error("Fetch error:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchTournaments();
+    }, [tabValue, page, debouncedSearch, statusFilter, isLoggedIn]);
 
     const handleTabChange = (_: any, newValue: number) => {
         setTabValue(newValue);
         setSearchParams({ tab: newValue.toString() });
-        setStatusFilter("ALL");
+        setPage(1);
+        setStatusFilter("DRAFT");
     };
 
-    const getStatusColor = (status: TournamentStatus) => {
-        switch (status) {
-            case "REGISTRATION_OPEN": return "success";
-            case "IN_PROGRESS": return "warning";
-            case "FINISHED": return "default";
-            case "REGISTRATION_CLOSED": return "error";
-            case "CREATED": return "info";
-            default: return "default";
-        }
-    };
-
-    const filteredData = useMemo(() => {
-        return MOCK_TOURNAMENTS.filter((t) => {
-            const matchesSearch = t.name.toLowerCase().includes(searchQuery.toLowerCase());
-            if (isAdmin && tabValue === 3) {
-                const matchesStatus = statusFilter === "ALL" || t.status === statusFilter;
-                return matchesSearch && matchesStatus;
-            }
-            const matchesTab =
-                tabValue === 0 ? (t.status === "REGISTRATION_OPEN" || t.status === "CREATED") :
-                    tabValue === 1 ? (t.status === "IN_PROGRESS") :
-                        tabValue === 2 ? (t.status === "FINISHED") : true;
-
-            return matchesTab && matchesSearch;
-        });
-    }, [tabValue, searchQuery, statusFilter, isAdmin]);
-
-    const count = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
-    const paginatedData = filteredData.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
-
-    const handleViewDetails = (id: number) => {
-        navigate(`/tournaments/${id}`);
-    };
-
-    // --- Логіка Форми Створення ---
     const handleFormChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({
             ...prev,
-            [name]: name === "maxCountOfTeams" || name === "countOfRounds" ? Number(value) : value
+            [name]: ["maxCountOfTeams", "countOfRounds"].includes(name) ? Number(value) : value
         }));
     };
 
-    const handleSubmitCreate = () => {
-        console.log("Відправка на бекенд:", formData);
-        // Тут буде запит POST. Після успіху:
-        setIsCreating(false);
+    const handleSubmitCreate = async () => {
+        try {
+            setIsSubmitting(true);
+            const payload = {
+                ...formData,
+                startTournament: formatToLocalDateTime(formData.startTournament),
+                startRegistration: formatToLocalDateTime(formData.startRegistration),
+                endRegistration: formatToLocalDateTime(formData.endRegistration),
+            };
+            await tournamentService.createTournament(payload);
+            setIsCreating(false);
+            setFormData({ name: "", description: "", startTournament: "", startRegistration: "", endRegistration: "", maxCountOfTeams: 16, countOfRounds: 4 });
+            setPage(1);
+        } catch (error) {
+            console.error("Create error:", error);
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
-    // --- РЕНДЕР ЕКРАНУ СТВОРЕННЯ ---
     if (isCreating && isAdmin) {
         return (
-            <Box sx={{ pb: 8, maxWidth: "800px", mx: "auto" }}>
-                <Button
-                    startIcon={<ArrowBackIcon />}
-                    onClick={() => setIsCreating(false)}
-                    sx={{ mb: 3, textTransform: "none" }}
-                >
+            <Box sx={{ pb: 8, maxWidth: "800px", mx: "auto", pt: 2 }}>
+                <Button startIcon={<ArrowBackIcon />} onClick={() => setIsCreating(false)} sx={{ mb: 3 }}>
                     {t("tournaments.admin.backToList")}
                 </Button>
-
-                <Paper sx={{ p: 4, borderRadius: "16px", boxShadow: "0 8px 24px rgba(0,0,0,0.05)" }}>
+                <Paper sx={{ p: 4, borderRadius: "16px" }}>
                     <Typography variant="h4" fontWeight={700} color="primary" gutterBottom>
                         {t("tournaments.admin.modal_title")}
                     </Typography>
                     <Divider sx={{ mb: 4 }} />
-
                     <Grid container spacing={3}>
-                        <Grid size={{xs: 12}}>
-                            <TextField label={t("tournaments.admin.fields.name")} name="name" fullWidth value={formData.name} onChange={handleFormChange} />
+                        <Grid size={{ xs: 12 }}>
+                            <TextField label={t("tournaments.admin.fields.name")} name="name" fullWidth value={formData.name} onChange={handleFormChange} required />
                         </Grid>
-                        <Grid size={{xs: 12}}>
-                            <TextField label={t("tournaments.admin.fields.description")} name="description" multiline rows={4} fullWidth value={formData.description} onChange={handleFormChange} />
+                        <Grid size={{ xs: 12 }}>
+                            <TextField label={t("tournaments.admin.fields.description")} name="description" multiline rows={4} fullWidth value={formData.description} onChange={handleFormChange} required />
                         </Grid>
-
-                        <Grid size={{xs: 12, sm: 4}}>
-                            <TextField label={t("tournaments.admin.fields.startDate")} name="startDate" type="date" fullWidth InputLabelProps={{ shrink: true }} value={formData.startDate} onChange={handleFormChange} />
+                        <Grid size={{ xs: 12, sm: 4 }}>
+                            <TextField label={t("tournaments.admin.fields.startTournament")} name="startTournament" type="datetime-local" fullWidth InputLabelProps={{ shrink: true }} value={formData.startTournament} onChange={handleFormChange} required />
                         </Grid>
-                        <Grid size={{xs: 12, sm: 4}}>
-                            <TextField label={t("tournaments.admin.fields.startReg")} name="startRegistration" type="date" fullWidth InputLabelProps={{ shrink: true }} value={formData.startRegistration} onChange={handleFormChange} />
+                        <Grid size={{ xs: 12, sm: 4 }}>
+                            <TextField label={t("tournaments.admin.fields.startReg")} name="startRegistration" type="datetime-local" fullWidth InputLabelProps={{ shrink: true }} value={formData.startRegistration} onChange={handleFormChange} required />
                         </Grid>
-                        <Grid size={{xs: 12, sm: 4}}>
-                            <TextField label={t("tournaments.admin.fields.endReg")} name="endRegistration" type="date" fullWidth InputLabelProps={{ shrink: true }} value={formData.endRegistration} onChange={handleFormChange} />
+                        <Grid size={{ xs: 12, sm: 4 }}>
+                            <TextField label={t("tournaments.admin.fields.endReg")} name="endRegistration" type="datetime-local" fullWidth InputLabelProps={{ shrink: true }} value={formData.endRegistration} onChange={handleFormChange} required />
                         </Grid>
-
-                        <Grid size={{xs: 12, sm: 6}}>
-                            <TextField label={t("tournaments.admin.fields.maxTeams")} name="maxCountOfTeams" type="number" fullWidth value={formData.maxCountOfTeams} onChange={handleFormChange} />
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <TextField label={t("tournaments.admin.fields.maxTeams")} name="maxCountOfTeams" type="number" fullWidth value={formData.maxCountOfTeams} onChange={handleFormChange} required />
                         </Grid>
-                        <Grid size={{xs: 12, sm: 6}}>
-                            <TextField label={t("tournaments.admin.fields.rounds")} name="countOfRounds" type="number" fullWidth value={formData.countOfRounds} onChange={handleFormChange} />
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <TextField label={t("tournaments.admin.fields.rounds")} name="countOfRounds" type="number" fullWidth value={formData.countOfRounds} onChange={handleFormChange} required />
                         </Grid>
                     </Grid>
-
                     <Box sx={{ mt: 5, display: "flex", justifyContent: "flex-end", gap: 2 }}>
-                        <Button variant="outlined" color="inherit" onClick={() => setIsCreating(false)}>
-                            {t("tournaments.admin.cancel")}
-                        </Button>
-                        <Button variant="contained" color="primary" onClick={handleSubmitCreate} sx={{ px: 4, fontWeight: 700 }}>
-                            {t("tournaments.admin.submit")}
+                        <Button variant="outlined" onClick={() => setIsCreating(false)}>{t("tournaments.admin.cancel")}</Button>
+                        <Button variant="contained" onClick={handleSubmitCreate} disabled={isSubmitting}>
+                            {isSubmitting ? <CircularProgress size={24} /> : t("tournaments.admin.submit")}
                         </Button>
                     </Box>
                 </Paper>
@@ -192,137 +229,80 @@ export const TournamentsPage = () => {
         );
     }
 
-    // --- РЕНДЕР ОСНОВНОГО СПИСКУ (оригінальний) ---
     return (
-        <Box sx={{ pb: 8 }}>
+        <Box sx={{ pb: 8, pt: 2 }}>
             <Box sx={{ mb: 4, textAlign: "center", position: "relative" }}>
-                <Typography variant="h3" fontWeight={700} gutterBottom color="primary">
-                    {t("tournaments.title")}
-                </Typography>
-                <Typography variant="body1" color="text.secondary">
-                    {t("tournaments.subtitle")}
-                </Typography>
-
-                {/* Кнопка створення турніру для Адміна */}
-                {isAdmin && tabValue === 3 && (
-                    <Button
-                        variant="contained"
-                        color="error"
-                        startIcon={<AddIcon />}
-                        onClick={() => setIsCreating(true)}
-                        sx={{ position: { md: "absolute" }, right: 0, top: "50%", transform: { md: "translateY(-50%)" }, mt: { xs: 2, md: 0 }, borderRadius: "20px", fontWeight: 700 }}
-                    >
+                <Typography variant="h3" fontWeight={700} color="primary">{t("tournaments.title")}</Typography>
+                <Typography variant="body1" color="text.secondary">{t("tournaments.subtitle")}</Typography>
+                {isAdmin && tabValue === TABS.ADMIN && (
+                    <Button variant="contained" color="secondary" startIcon={<AddIcon />} onClick={() => setIsCreating(true)}
+                            sx={{ position: { md: "absolute" }, right: 0, top: "50%", transform: { md: "translateY(-50%)" }, borderRadius: "20px" }}>
                         {t("tournaments.admin.create_button")}
                     </Button>
                 )}
             </Box>
 
-            <Box sx={{ mb: 4 }}>
-                <Box sx={{ display: "flex", flexDirection: { xs: "column", md: "row" }, alignItems: "center", justifyContent: "space-between", gap: 2 }}>
-                    <Tabs value={tabValue} onChange={handleTabChange} textColor="primary" indicatorColor="primary">
-                        <Tab label={t("tournaments.tabs.available")} sx={{ textTransform: "none", fontWeight: 600 }} />
-                        {isLoggedIn && <Tab label={t("tournaments.tabs.my")} sx={{ textTransform: "none", fontWeight: 600 }} />}
-                        {isLoggedIn && <Tab label={t("tournaments.tabs.history")} sx={{ textTransform: "none", fontWeight: 600 }} />}
-                        {isAdmin && <Tab label={t("tournaments.tabs.admin")} sx={{ textTransform: "none", fontWeight: 700, color: "error.main" }} />}
-                    </Tabs>
+            <Box sx={{ mb: 4, display: "flex", flexDirection: { xs: "column", md: "row" }, alignItems: "center", justifyContent: "space-between", gap: 2 }}>
+                <Tabs value={tabValue} onChange={handleTabChange} textColor="primary" indicatorColor="primary">
+                    {!isJury && <Tab value={TABS.AVAILABLE} label={t("tournaments.tabs.available")} />}
+                    {isLoggedIn && <Tab value={TABS.MY} label={t("tournaments.tabs.my")} />}
+                    {isLoggedIn && !isJury && <Tab value={TABS.HISTORY} label={t("tournaments.tabs.history")} />}
+                    {isAdmin && <Tab value={TABS.ADMIN} label={t("tournaments.tabs.admin")} sx={{ color: "error.main" }} />}
+                </Tabs>
 
-                    <Box sx={{ display: "flex", gap: 1, width: { xs: "100%", md: "auto" } }}>
-                        {isAdmin && tabValue === 3 && (
-                            <TextField
-                                select
-                                size="small"
-                                value={statusFilter}
-                                onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-                                sx={{ minWidth: 150 }}
-                                InputProps={{ startAdornment: <FilterListIcon sx={{ mr: 1, color: "action.active" }} /> }}
-                            >
-                                <MenuItem value="ALL">{t("tournaments.all_statuses")}</MenuItem>
-                                <MenuItem value="CREATED">{t("tournaments.statuses.CREATED")}</MenuItem>
-                                <MenuItem value="REGISTRATION_OPEN">{t("tournaments.statuses.REGISTRATION_OPEN")}</MenuItem>
-                                <MenuItem value="IN_PROGRESS">{t("tournaments.statuses.IN_PROGRESS")}</MenuItem>
-                                <MenuItem value="FINISHED">{t("tournaments.statuses.FINISHED")}</MenuItem>
-                            </TextField>
-                        )}
-                        <TextField
-                            size="small"
-                            placeholder={t("tournaments.search_placeholder")}
-                            value={searchQuery}
-                            onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
-                            sx={{ width: { xs: "100%", md: 250 } }}
-                            InputProps={{
-                                startAdornment: <InputAdornment position="start"><SearchIcon color="action" /></InputAdornment>,
-                            }}
-                        />
-                    </Box>
+                <Box sx={{ display: "flex", gap: 1, width: { xs: "100%", md: "auto" } }}>
+                    {isAdmin && tabValue === TABS.ADMIN && (
+                        <TextField select size="small" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} sx={{ minWidth: 150 }}>
+                            <MenuItem value="DRAFT">{t("tournaments.statuses.DRAFT")}</MenuItem>
+                            <MenuItem value="REGISTRATION">{t("tournaments.statuses.REGISTRATION")}</MenuItem>
+                            <MenuItem value="RUNNING">{t("tournaments.statuses.RUNNING")}</MenuItem>
+                            <MenuItem value="FINISHED">{t("tournaments.statuses.FINISHED")}</MenuItem>
+                        </TextField>
+                    )}
+                    <TextField size="small" placeholder={t("tournaments.search_placeholder")} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+                               InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon /></InputAdornment> }} />
                 </Box>
             </Box>
 
-            <Grid container spacing={3}>
-                {paginatedData.length > 0 ? (
-                    paginatedData.map((tournament) => (
-                        <Grid size={{xs: 12, sm: 6, md: 4}} key={tournament.id}>
-                            <Card
-                                onClick={() => handleViewDetails(tournament.id)}
-                                sx={{
-                                    height: "100%",
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    borderRadius: "16px",
-                                    cursor: "pointer",
-                                    border: "1px solid #e0e0e0",
-                                    transition: "transform 0.2s, box-shadow 0.2s",
-                                    "&:hover": {
-                                        transform: "translateY(-4px)",
-                                        boxShadow: "0 12px 30px rgba(0,0,0,0.1)",
-                                        borderColor: "primary.main"
-                                    }
-                                }}
-                            >
-                                <CardContent sx={{ flexGrow: 1 }}>
-                                    <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2, alignItems: "flex-start" }}>
-                                        <Typography variant="h6" fontWeight={700} sx={{ pr: 1 }}>{tournament.name}</Typography>
-                                        <Chip
-                                            label={t(`tournaments.statuses.${tournament.status}`)}
-                                            color={getStatusColor(tournament.status)}
-                                            size="small"
-                                            sx={{ fontWeight: 600 }}
-                                        />
-                                    </Box>
-                                    <Divider sx={{ my: 1.5 }} />
-                                    <Box sx={{ display: "flex", alignItems: "center", color: "text.secondary" }}>
-                                        <EventIcon fontSize="small" sx={{ mr: 1 }} />
-                                        <Typography variant="body2">
-                                            {t("tournaments.card.start")}: {new Date(tournament.startDate).toLocaleDateString(i18n.language === "uk" ? "uk-UA" : "en-US")}
-                                        </Typography>
-                                    </Box>
-                                </CardContent>
-                                <CardActions sx={{ p: 2, pt: 0 }}>
-                                    <Button
-                                        variant={"outlined"}
-                                        color={"primary"}
-                                        fullWidth
-                                        sx={{ borderRadius: "10px", fontWeight: 600, textTransform: "none" }}
-                                    >
-                                        {t("tournaments.card.more_info")}
-                                    </Button>
-                                </CardActions>
-                            </Card>
-                        </Grid>
-                    ))
-                ) : (
-                    <Grid size={{xs: 12}}>
-                        <Box sx={{ textAlign: "center", py: 10 }}>
-                            <Typography variant="h6" color="text.secondary">
-                                {t("tournaments.card.no_data")}
-                            </Typography>
+            {loading ? (
+                <Box sx={{ display: "flex", justifyContent: "center", py: 10 }}><CircularProgress /></Box>
+            ) : (
+                <Grid container spacing={3}>
+                    {tournaments.length > 0 ? (
+                        tournaments.map((tournament) => (
+                            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={tournament.id}>
+                                <Card onClick={() => navigate(`/tournaments/${tournament.id}`)}
+                                      sx={{ height: "100%", cursor: "pointer", borderRadius: "16px", border: "1px solid #e0e0e0", transition: "0.2s", "&:hover": { transform: "translateY(-4px)", boxShadow: "0 12px 30px rgba(0,0,0,0.1)" } }}>
+                                    <CardContent>
+                                        <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
+                                            <Typography variant="h6" fontWeight={700}>{tournament.name}</Typography>
+                                            <Chip label={t(`tournaments.statuses.${tournament.status}`)} color={tournament.status === "REGISTRATION" ? "success" : "default"} size="small" />
+                                        </Box>
+                                        <Divider sx={{ my: 1.5 }} />
+                                        <Box sx={{ display: "flex", alignItems: "center", color: "text.secondary" }}>
+                                            <EventIcon fontSize="small" sx={{ mr: 1 }} />
+                                            <Typography variant="body2">
+                                                {new Date(tournament.startTournament).toLocaleString(i18n.language === "uk" ? "uk-UA" : "en-US", {
+                                                    day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                                                })}
+                                            </Typography>
+                                        </Box>
+                                    </CardContent>
+                                    <CardActions sx={{ p: 2 }}><Button variant="outlined" fullWidth>{t("tournaments.card.more_info")}</Button></CardActions>
+                                </Card>
+                            </Grid>
+                        ))
+                    ) : (
+                        <Box sx={{ width: "100%", textAlign: "center", py: 10 }}>
+                            <Typography color="text.secondary">{t("tournaments.card.no_data")}</Typography>
                         </Box>
-                    </Grid>
-                )}
-            </Grid>
+                    )}
+                </Grid>
+            )}
 
-            {count > 1 && (
+            {totalPages > 1 && (
                 <Box sx={{ display: "flex", justifyContent: "center", mt: 6 }}>
-                    <Pagination count={count} page={page} onChange={(_, v) => setPage(v)} color="primary" shape="rounded" size="large" />
+                    <Pagination count={totalPages} page={page} onChange={(_, v) => setPage(v)} color="primary" />
                 </Box>
             )}
         </Box>
