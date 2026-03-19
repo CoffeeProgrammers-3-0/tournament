@@ -90,7 +90,7 @@ export const TournamentDetailsPage = () => {
     });
 
     // Дозволяємо редагувати все, якщо статус CREATED (реєстрація ще не почалась)
-    const canEditFullInfo = isAdmin && tournamentData?.status === "CREATED";
+    const canEditFullInfo = isAdmin && tournamentData?.status === "DRAFT";
 
     // --- Data Fetching ---
     const fetchRounds = useCallback(async () => {
@@ -242,7 +242,7 @@ export const TournamentDetailsPage = () => {
             {/* --- TAB 1: INFO --- */}
             {tabValue === 0 && (
                 <Grid container spacing={4}>
-                    <Grid item xs={12} md={8}>
+                    <Grid size={{xs: 12, md: 8}}>
                         {isEditingInfo ? (
                             <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
                                 <TextField
@@ -264,7 +264,7 @@ export const TournamentDetailsPage = () => {
                                     <>
                                         <Divider>Дати та ліміти</Divider>
                                         <Grid container spacing={2}>
-                                            <Grid item xs={12} sm={6}>
+                                            <Grid size={{xs: 12, sm: 6}}>
                                                 <TextField
                                                     fullWidth
                                                     type="datetime-local"
@@ -274,7 +274,7 @@ export const TournamentDetailsPage = () => {
                                                     onChange={(e) => setEditFormData({ ...editFormData, startRegistration: e.target.value })}
                                                 />
                                             </Grid>
-                                            <Grid item xs={12} sm={6}>
+                                            <Grid size={{xs: 12, sm: 6}}>
                                                 <TextField
                                                     fullWidth
                                                     type="datetime-local"
@@ -284,7 +284,7 @@ export const TournamentDetailsPage = () => {
                                                     onChange={(e) => setEditFormData({ ...editFormData, endRegistration: e.target.value })}
                                                 />
                                             </Grid>
-                                            <Grid item xs={12} sm={6}>
+                                            <Grid size={{xs: 12, sm: 6}}>
                                                 <TextField
                                                     fullWidth
                                                     type="datetime-local"
@@ -294,7 +294,7 @@ export const TournamentDetailsPage = () => {
                                                     onChange={(e) => setEditFormData({ ...editFormData, startTournament: e.target.value })}
                                                 />
                                             </Grid>
-                                            <Grid item xs={12} sm={3}>
+                                            <Grid size={{xs: 12, sm: 3}}>
                                                 <TextField
                                                     fullWidth
                                                     type="number"
@@ -303,7 +303,7 @@ export const TournamentDetailsPage = () => {
                                                     onChange={(e) => setEditFormData({ ...editFormData, maxCountOfTeams: Number(e.target.value) })}
                                                 />
                                             </Grid>
-                                            <Grid item xs={12} sm={3}>
+                                            <Grid size={{xs: 12, sm: 3}}>
                                                 <TextField
                                                     fullWidth
                                                     type="number"
@@ -325,7 +325,7 @@ export const TournamentDetailsPage = () => {
                             <Typography variant="body1" sx={{ whiteSpace: "pre-line", fontSize: "1.1rem", lineHeight: 1.8 }}>{tournamentData.description}</Typography>
                         )}
                     </Grid>
-                    <Grid item xs={12} md={4}>
+                    <Grid size={{xs: 12, md: 4}}>
                         <Card sx={{ borderRadius: "16px", border: "1px solid #eee" }} elevation={0}>
                             <CardContent sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
                                 <Box>
@@ -362,7 +362,7 @@ export const TournamentDetailsPage = () => {
                     {loadingTab ? <CircularProgress sx={{ display: 'block', mx: 'auto', my: 4 }} /> : (
                         <Grid container spacing={2}>
                             {rounds.length > 0 ? rounds.map((round) => (
-                                <Grid item xs={12} key={round.id}>
+                                <Grid size={{xs: 12}} key={round.id}>
                                     <Card onClick={() => navigate(`/rounds/${round.id}`)} sx={{ borderRadius: "12px", cursor: "pointer", border: "1px solid #e0e0e0", transition: "0.2s", "&:hover": { borderColor: "primary.main" } }} elevation={0}>
                                         <CardContent sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                                             <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
@@ -387,7 +387,7 @@ export const TournamentDetailsPage = () => {
                     {loadingTab ? <CircularProgress sx={{ display: 'block', mx: 'auto', my: 4 }} /> : (
                         <Grid container spacing={2}>
                             {teams.length > 0 ? teams.map((team) => (
-                                <Grid item xs={12} sm={6} md={4} key={team.id}>
+                                <Grid size={{xs: 12, sm: 6, md:4}} key={team.id}>
                                     <Card onClick={() => navigate(`/teams/${team.id}`)} sx={{ borderRadius: "16px", cursor: "pointer", border: "1px solid #eee", transition: "0.2s", "&:hover": { borderColor: "primary.main", boxShadow: "0 4px 12px rgba(0,0,0,0.05)" } }} elevation={0}>
                                         <CardContent sx={{ textAlign: "center" }}>
                                             <Avatar sx={{ mx: "auto", mb: 1, bgcolor: "secondary.light", color: "secondary.dark" }}><GroupsIcon /></Avatar>
