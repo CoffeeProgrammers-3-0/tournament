@@ -24,6 +24,7 @@ const App: React.FC = () => {
             <AuthInit>
                 <Routes>
                     <Route path="/" element={<PageContainer><HomePage/></PageContainer>}/>
+                    <Route path="/home" element={<PageContainer><HomePage/></PageContainer>}/>
                     <Route path="/tournaments" element={<PageContainer><TournamentsPage/></PageContainer>}/>
                     <Route path="/tournaments/:id" element={<PageContainer><TournamentDetailsPage/></PageContainer>}/>
                     <Route path="/rounds/:id" element={<PageContainer><RoundDetailsPage/></PageContainer>}/>

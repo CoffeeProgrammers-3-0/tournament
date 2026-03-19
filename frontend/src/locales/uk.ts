@@ -120,11 +120,12 @@ export const uk = {
         }
     },
     rounds: {
+        "status": "Статус",
         "statuses": {
-            "CREATED": "Створений",
+            "DRAFT": "Створений",
             "ACTIVE": "Активний",
-            "CANCELLED": "Відміннений",
-            "FINISHED": "Пройшов",
+            "SUBMISSION_CLOSED": "Надсилання припинено",
+            "EVALUATED": "",
         }
     },
     round_details: {

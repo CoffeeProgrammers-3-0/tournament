@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -40,6 +41,7 @@ public class RoundServiceImpl implements RoundService {
             throw new IllegalStateException("Tournament already has max count of rounds, change this value in tournament settings");
         }
         round.setTournament(tournament);
+        round.setStatus(RoundStatus.DRAFT);
         return roundRepository.save(round);
     }
 
@@ -67,7 +69,7 @@ public class RoundServiceImpl implements RoundService {
     @Override
     public Page<Round> findAllByTournament(Long tournamentId, Integer page, Integer size, String search, RoundStatus status) {
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "startDate"));
-        return roundRepository.findAll(RoundSpecification.byTournamentId(tournamentId), pageRequest);
+        return roundRepository.findAll(Specification.allOf(RoundSpecification.byTournamentId(tournamentId), RoundSpecification.byStatus(status)), pageRequest);
     }
 
     @Override

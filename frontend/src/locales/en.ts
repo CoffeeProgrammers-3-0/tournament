@@ -120,11 +120,12 @@ export const en = {
         }
     },
     rounds: {
+        "status": "Status",
         "statuses": {
-            "CREATED": "Created",
-            "ACTIVE": "Active",
-            "CANCELLED": "Cancelled",
-            "FINISHED": "Finished",
+            "DRAFT": "Створений",
+            "ACTIVE": "Активний",
+            "SUBMISSION_CLOSED": "",
+            "EVALUATED": "",
         }
     },
     teams: {
