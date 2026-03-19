@@ -77,12 +77,20 @@ export const TournamentDetailsPage = () => {
     // Forms
     const [editFormData, setEditFormData] = useState<TournamentUpdateRequestDto>({
         name: "",
-        description: ""
+        description: "",
+        startRegistration: "",
+        endRegistration: "",
+        startTournament: "",
+        maxCountOfTeams: 0,
+        countOfRounds: 0
     } as TournamentUpdateRequestDto);
 
     const [roundFormData, setRoundFormData] = useState<RoundCreateRequestDto>({
         name: "", startDate: "", endDate: "", countOfWinners: 1, requirements: "", task: ""
     });
+
+    // Дозволяємо редагувати все, якщо статус CREATED (реєстрація ще не почалась)
+    const canEditFullInfo = isAdmin && tournamentData?.status === "CREATED";
 
     // --- Data Fetching ---
     const fetchRounds = useCallback(async () => {
@@ -114,10 +122,15 @@ export const TournamentDetailsPage = () => {
             try {
                 const data = await tournamentService.getTournamentById(Number(id));
                 setTournamentData(data);
-                // Ініціалізуємо форму всіма наявними даними, щоб не відправляти пусті поля
+
                 setEditFormData({
                     name: data.name,
-                    description: data.description
+                    description: data.description,
+                    startRegistration: data.startRegistration?.substring(0, 16) || "",
+                    endRegistration: data.endRegistration?.substring(0, 16) || "",
+                    startTournament: data.startTournament?.substring(0, 16) || "",
+                    maxCountOfTeams: data.maxCountOfTeams,
+                    countOfRounds: data.countOfRounds
                 } as TournamentUpdateRequestDto);
 
                 if (isLoggedIn && !isAdmin) {
@@ -138,10 +151,14 @@ export const TournamentDetailsPage = () => {
     const handleSaveUpdate = async () => {
         if (!id || !tournamentData) return;
         try {
-            // Передаємо повний об'єкт editFormData, який містить і ім'я, і опис
-            tournamentData.name = editFormData.name;
-            tournamentData.description = editFormData.description;
-            const updated = await tournamentService.updateTournament(Number(id), tournamentData);
+            const payload = {
+                ...editFormData,
+                startRegistration: formatToLocalDateTime(editFormData.startRegistration),
+                endRegistration: formatToLocalDateTime(editFormData.endRegistration),
+                startTournament: formatToLocalDateTime(editFormData.startTournament),
+            };
+
+            const updated = await tournamentService.updateTournament(Number(id), payload as TournamentUpdateRequestDto);
             setTournamentData(updated);
             setIsEditingInfo(false);
         } catch (error) {
@@ -202,11 +219,7 @@ export const TournamentDetailsPage = () => {
                                     variant="contained"
                                     color="secondary"
                                     startIcon={<EditIcon />}
-                                    onClick={() => {
-                                        // При кліку на "Редагувати" ще раз переконуємось, що форма заповнена поточними даними
-                                        setEditFormData({ name: tournamentData.name, description: tournamentData.description } as TournamentUpdateRequestDto);
-                                        setIsEditingInfo(true);
-                                    }}
+                                    onClick={() => setIsEditingInfo(true)}
                                     sx={{ borderRadius: "12px", fontWeight: 700 }}
                                 >
                                     {t("tournament_details.admin.edit_info")}
@@ -229,7 +242,7 @@ export const TournamentDetailsPage = () => {
             {/* --- TAB 1: INFO --- */}
             {tabValue === 0 && (
                 <Grid container spacing={4}>
-                    <Grid size={{ xs: 12, md: 8 }}>
+                    <Grid item xs={12} md={8}>
                         {isEditingInfo ? (
                             <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
                                 <TextField
@@ -246,7 +259,64 @@ export const TournamentDetailsPage = () => {
                                     value={editFormData.description}
                                     onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
                                 />
-                                <Box sx={{ display: "flex", gap: 2 }}>
+
+                                {canEditFullInfo && (
+                                    <>
+                                        <Divider>Дати та ліміти</Divider>
+                                        <Grid container spacing={2}>
+                                            <Grid item xs={12} sm={6}>
+                                                <TextField
+                                                    fullWidth
+                                                    type="datetime-local"
+                                                    label="Початок реєстрації"
+                                                    InputLabelProps={{ shrink: true }}
+                                                    value={editFormData.startRegistration}
+                                                    onChange={(e) => setEditFormData({ ...editFormData, startRegistration: e.target.value })}
+                                                />
+                                            </Grid>
+                                            <Grid item xs={12} sm={6}>
+                                                <TextField
+                                                    fullWidth
+                                                    type="datetime-local"
+                                                    label="Кінець реєстрації"
+                                                    InputLabelProps={{ shrink: true }}
+                                                    value={editFormData.endRegistration}
+                                                    onChange={(e) => setEditFormData({ ...editFormData, endRegistration: e.target.value })}
+                                                />
+                                            </Grid>
+                                            <Grid item xs={12} sm={6}>
+                                                <TextField
+                                                    fullWidth
+                                                    type="datetime-local"
+                                                    label="Початок турніру"
+                                                    InputLabelProps={{ shrink: true }}
+                                                    value={editFormData.startTournament}
+                                                    onChange={(e) => setEditFormData({ ...editFormData, startTournament: e.target.value })}
+                                                />
+                                            </Grid>
+                                            <Grid item xs={12} sm={3}>
+                                                <TextField
+                                                    fullWidth
+                                                    type="number"
+                                                    label="Макс. команд"
+                                                    value={editFormData.maxCountOfTeams}
+                                                    onChange={(e) => setEditFormData({ ...editFormData, maxCountOfTeams: Number(e.target.value) })}
+                                                />
+                                            </Grid>
+                                            <Grid item xs={12} sm={3}>
+                                                <TextField
+                                                    fullWidth
+                                                    type="number"
+                                                    label="К-ть раундів"
+                                                    value={editFormData.countOfRounds}
+                                                    onChange={(e) => setEditFormData({ ...editFormData, countOfRounds: Number(e.target.value) })}
+                                                />
+                                            </Grid>
+                                        </Grid>
+                                    </>
+                                )}
+
+                                <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
                                     <Button variant="contained" startIcon={<SaveIcon />} onClick={handleSaveUpdate}>{t("tournament_details.admin.save")}</Button>
                                     <Button variant="outlined" onClick={() => setIsEditingInfo(false)}>{t("tournament_details.admin.cancel")}</Button>
                                 </Box>
@@ -255,7 +325,7 @@ export const TournamentDetailsPage = () => {
                             <Typography variant="body1" sx={{ whiteSpace: "pre-line", fontSize: "1.1rem", lineHeight: 1.8 }}>{tournamentData.description}</Typography>
                         )}
                     </Grid>
-                    <Grid size={{ xs: 12, md: 4 }}>
+                    <Grid item xs={12} md={4}>
                         <Card sx={{ borderRadius: "16px", border: "1px solid #eee" }} elevation={0}>
                             <CardContent sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
                                 <Box>
@@ -271,7 +341,7 @@ export const TournamentDetailsPage = () => {
                 </Grid>
             )}
 
-            {/* --- TAB 2: ROUNDS --- */}
+            {/* --- ТАБИ 2 ТА 3 (Раунди та Команди) ЗАЛИШЕНІ БЕЗ ЗМІН ЯК У ВАШОМУ КОДІ --- */}
             {tabValue === 1 && (
                 <Box>
                     <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3, alignItems: "center", flexWrap: 'wrap', gap: 2 }}>
@@ -292,7 +362,7 @@ export const TournamentDetailsPage = () => {
                     {loadingTab ? <CircularProgress sx={{ display: 'block', mx: 'auto', my: 4 }} /> : (
                         <Grid container spacing={2}>
                             {rounds.length > 0 ? rounds.map((round) => (
-                                <Grid size={{ xs: 12 }} key={round.id}>
+                                <Grid item xs={12} key={round.id}>
                                     <Card onClick={() => navigate(`/rounds/${round.id}`)} sx={{ borderRadius: "12px", cursor: "pointer", border: "1px solid #e0e0e0", transition: "0.2s", "&:hover": { borderColor: "primary.main" } }} elevation={0}>
                                         <CardContent sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                                             <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
@@ -312,13 +382,12 @@ export const TournamentDetailsPage = () => {
                 </Box>
             )}
 
-            {/* --- TAB 3: TEAMS --- */}
             {tabValue === 2 && (
                 <Box>
                     {loadingTab ? <CircularProgress sx={{ display: 'block', mx: 'auto', my: 4 }} /> : (
                         <Grid container spacing={2}>
                             {teams.length > 0 ? teams.map((team) => (
-                                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={team.id}>
+                                <Grid item xs={12} sm={6} md={4} key={team.id}>
                                     <Card onClick={() => navigate(`/teams/${team.id}`)} sx={{ borderRadius: "16px", cursor: "pointer", border: "1px solid #eee", transition: "0.2s", "&:hover": { borderColor: "primary.main", boxShadow: "0 4px 12px rgba(0,0,0,0.05)" } }} elevation={0}>
                                         <CardContent sx={{ textAlign: "center" }}>
                                             <Avatar sx={{ mx: "auto", mb: 1, bgcolor: "secondary.light", color: "secondary.dark" }}><GroupsIcon /></Avatar>
