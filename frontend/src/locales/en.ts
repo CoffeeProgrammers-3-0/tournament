@@ -8,7 +8,8 @@ export const en = {
         "history": "History",
         "profile": "Profile",
         "logout": "Logout",
-        "login": "Login"
+        "login": "Login",
+        "juryTournaments": "My Jury Tournaments"
     },
     languages: {
         "uk": "Ukrainian",
@@ -190,6 +191,11 @@ export const en = {
             "all_teams": "All Teams",
             "details": "Details"
         }
+    },
+    jury_tournaments: {
+        "title": "My Jury Assignments",
+        "subtitle": "Tournaments where you are assigned as a jury member.",
+        "no_data": "You are not assigned as jury in any tournament."
     },
     common: {
         authenticating: "Authenticating",

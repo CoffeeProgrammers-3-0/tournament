@@ -20,6 +20,7 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import PlayCircleOutlineIcon from "@mui/icons-material/PlayCircleOutline";
 import HistoryIcon from "@mui/icons-material/History";
+import GavelIcon from "@mui/icons-material/Gavel";
 import LanguageIcon from "@mui/icons-material/Language";
 import logo from "../../assets/logo.png";
 import {Link as RouterLink} from "react-router-dom";
@@ -30,8 +31,8 @@ export const AppHeader = () => {
     const { t } = useTranslation();
     const { language, changeLanguage } = useLanguage();
 
-    // ЗАМІНИ ЦЕ на реальну логіку авторизації (наприклад, з контексту)
     const isLoggedIn = Cookies.get("userId") !== undefined;
+    const isJury = Cookies.get("role") === "JURY";
 
     const [profileAnchorEl, setProfileAnchorEl] = useState<null | HTMLElement>(null);
     const [tournamentsAnchorEl, setTournamentsAnchorEl] = useState<null | HTMLElement>(null);
@@ -75,7 +76,6 @@ export const AppHeader = () => {
                             {t("header.tournaments")}
                         </Button>
 
-                        {/* Показуємо Команди тільки авторизованим */}
                         {isLoggedIn && (
                             <Button color="inherit" component={RouterLink} to="/teams" sx={{ textTransform: "none" }}>
                                 {t("header.teams")}
@@ -96,7 +96,6 @@ export const AppHeader = () => {
 
                         <Divider orientation="vertical" flexItem sx={{ mx: 0.5, height: 24, alignSelf: "center" }} />
 
-                        {/* Language Switcher */}
                         <Button
                             onClick={handleLangClick}
                             startIcon={<LanguageIcon sx={{ fontSize: 20 }} />}
@@ -142,7 +141,7 @@ export const AppHeader = () => {
                 </MenuItem>
             </Menu>
 
-            {/* Menu: Tournaments (Dynamic based on login) */}
+            {/* Menu: Tournaments */}
             <Menu
                 anchorEl={tournamentsAnchorEl}
                 open={Boolean(tournamentsAnchorEl)}
@@ -156,7 +155,6 @@ export const AppHeader = () => {
                     {t("header.availableTournaments")}
                 </MenuItem>
 
-                {/* Ці пункти бачить тільки залогінений юзер */}
                 {isLoggedIn && [
                     <MenuItem key="current" component={RouterLink} to="/tournaments?tab=1" onClick={handleClose}>
                         <ListItemIcon><PlayCircleOutlineIcon fontSize="small" color="warning" /></ListItemIcon>
@@ -168,9 +166,17 @@ export const AppHeader = () => {
                         {t("header.history")}
                     </MenuItem>
                 ]}
+
+                {isJury && [
+                    <Divider key="jury-divider" />,
+                    <MenuItem key="jury" component={RouterLink} to="/jury/tournaments" onClick={handleClose}>
+                        <ListItemIcon><GavelIcon fontSize="small" color="primary" /></ListItemIcon>
+                        {t("header.juryTournaments")}
+                    </MenuItem>
+                ]}
             </Menu>
 
-            {/* Menu: Profile (Only for logged in) */}
+            {/* Menu: Profile */}
             {isLoggedIn && (
                 <Menu
                     anchorEl={profileAnchorEl}
@@ -191,7 +197,7 @@ export const AppHeader = () => {
                         {t("header.profile")}
                     </MenuItem>
                     <Divider />
-                    <MenuItem onClick={() => { handleClose(); /* setIsLoggedIn(false); */ }}>
+                    <MenuItem onClick={() => { handleClose(); }}>
                         <ListItemIcon><Logout fontSize="small" color="error" /></ListItemIcon>
                         {t("header.logout")}
                     </MenuItem>

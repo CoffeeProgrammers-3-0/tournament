@@ -8,7 +8,8 @@ export const uk = {
         "history": "Історія",
         "profile": "Профіль",
         "logout": "Вийти",
-        "login": "Увійти"
+        "login": "Увійти",
+        "juryTournaments": "Мої турніри як журі"
     },
     languages: {
         "uk": "Українська",
@@ -249,6 +250,11 @@ export const uk = {
             "all_teams": "Всі команди",
             "details": "Деталі"
         }
+    },
+    jury_tournaments: {
+        "title": "Мої турніри як журі",
+        "subtitle": "Турніри, де вас призначено суддею.",
+        "no_data": "Ви ще не призначені суддею в жодному турнірі."
     },
     common: {
         authenticating: "Аутентифікація",
