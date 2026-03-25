@@ -1,15 +1,16 @@
-import {useState} from "react";
-import {useNavigate} from "react-router-dom";
+import {useCallback, useEffect, useState} from "react";
+import {useParams} from "react-router-dom";
 import {useTranslation} from "react-i18next";
 import Cookies from "js-cookie";
 import {
+    Alert,
     Avatar,
     Box,
     Button,
     Card,
     CardContent,
     Checkbox,
-    Chip,
+    CircularProgress,
     Dialog,
     DialogActions,
     DialogContent,
@@ -31,72 +32,105 @@ import StarsIcon from "@mui/icons-material/Stars";
 import AlternateEmailIcon from "@mui/icons-material/AlternateEmail";
 import SaveIcon from "@mui/icons-material/Save";
 import CorporateFareIcon from "@mui/icons-material/CorporateFare";
-import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
 
-import type {TeamFullResponseDto} from "../../entities/team/team.dto.ts";
-import type {TournamentListResponseDto} from "../../entities/tournament/tournament.dto.ts";
-
-
-// ==== MOCK DATA ====
-const MOCK_TEAM: TeamFullResponseDto = {
-    id: 1,
-    name: "Cyber Dragons",
-    email: "contact@cyberdragons.com",
-    organization: "Kyiv Esport Academy",
-    contact: "+380 67 123 45 67",
-    users: [
-        { id: 101, fullName: "Олександр Коваленко", email: "alex@team.com", isLeader: true },
-        { id: 102, fullName: "Дмитро Мороз", email: "dima@team.com", isLeader: false },
-        { id: 103, fullName: "Анна Петренко", email: "anna@team.com", isLeader: false },
-    ]
-};
-
-const MOCK_TEAM_TOURNAMENTS: TournamentListResponseDto[] = [
-    { id: 1, name: "Осінній Кубок 2026", startDate: "2026-09-01", startRegistration: "2026-08-01", endRegistration: "2026-08-25", status: "REGISTRATION_OPEN" },
-    { id: 5, name: "Summer Pro League", startDate: "2025-06-15", startRegistration: "2025-05-01", endRegistration: "2025-05-20", status: "FINISHED" },
-];
+import {teamService} from "../../services/impl/TeamService";
+import type {TeamFullResponseDto, TeamUpdateRequestDto} from "../../entities/team/team.dto.ts";
+import type {UserCreateRequestForTeamDto} from "../../entities/user/user.dto.ts";
 
 export const TeamDetailsPage = () => {
-    //const { id } = useParams();
+    const { id } = useParams<{ id: string }>();
     const { t } = useTranslation();
-    const navigate = useNavigate();
 
-    // Отримуємо дані про поточного користувача
     const currentUserId = Number(Cookies.get("userId"));
     const isAdmin = Cookies.get("role") === "ADMIN";
 
-    const [teamData, setTeamData] = useState<TeamFullResponseDto>(MOCK_TEAM);
-
-    // Перевірка: чи є користувач лідером ЦІЄЇ команди
-    const isTeamLeader = teamData.users.find(u => u.id === currentUserId)?.isLeader;
-    const canControl = isAdmin || isTeamLeader;
+    const [teamData, setTeamData] = useState<TeamFullResponseDto | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     const [tabValue, setTabValue] = useState(0);
     const [isEditing, setIsEditing] = useState(false);
+    const [editForm, setEditForm] = useState<TeamUpdateRequestDto>({ name: "", organization: "", contact: "" });
+
     const [memberModalOpen, setMemberModalOpen] = useState(false);
+    const [newMember, setNewMember] = useState<UserCreateRequestForTeamDto>({ fullName: "", email: "", isLeader: false });
 
-    const handleTabChange = (_: any, newValue: number) => setTabValue(newValue);
-
-    const handleDeleteMember = (userId: number) => {
-        if (window.confirm(t("team_details.admin.delete_member_confirm"))) {
-            setTeamData({
-                ...teamData,
-                users: teamData.users.filter(u => u.id !== userId)
+    // --- DATA FETCHING ---
+    const fetchTeamDetails = useCallback(async () => {
+        if (!id) return;
+        setLoading(true);
+        try {
+            const data = await teamService.getTeamById(Number(id));
+            setTeamData(data);
+            setEditForm({
+                name: data.name,
+                organization: data.organization,
+                contact: data.contact
             });
+        } catch (err) {
+            setError(t("team_details.errors.fetch_failed"));
+        } finally {
+            setLoading(false);
+        }
+    }, [id, t]);
+
+    useEffect(() => {
+        fetchTeamDetails();
+    }, [fetchTeamDetails]);
+
+    // --- PERMISSIONS ---
+    const isTeamLeader = teamData?.users.find(u => u.id === currentUserId)?.isLeader;
+    const canControl = isAdmin || isTeamLeader;
+
+    // --- ACTIONS ---
+    const handleUpdateTeam = async () => {
+        if (!teamData) return;
+        try {
+            const updated = await teamService.updateTeam(teamData.id, editForm);
+            setTeamData(updated);
+            setIsEditing(false);
+        } catch (err) {
+            setError(t("team_details.errors.update_failed"));
         }
     };
 
-    const handlePromoteToLeader = (userId: number) => {
-        setTeamData({
-            ...teamData,
-            users: teamData.users.map(u => ({
-                ...u,
-                isLeader: u.id === userId // Новий лідер тільки один
-            }))
-        });
+    const handleAddMember = async () => {
+        if (!teamData) return;
+        try {
+            const updated = await teamService.addMember(teamData.id, newMember);
+            setTeamData(updated);
+            setMemberModalOpen(false);
+            setNewMember({ fullName: "", email: "", isLeader: false });
+        } catch (err) {
+            setError(t("team_details.errors.add_member_failed"));
+        }
     };
+
+    const handleDeleteMember = async (userId: number) => {
+        if (!teamData || !window.confirm(t("team_details.admin.delete_member_confirm"))) return;
+        try {
+            const updated = await teamService.removeMember(teamData.id, userId);
+            setTeamData(updated);
+        } catch (err) {
+            setError(t("team_details.errors.remove_member_failed"));
+        }
+    };
+
+    const handlePromoteToLeader = async (userId: number) => {
+        if (!teamData) return;
+        try {
+            const updated = await teamService.setTeamLeader(teamData.id, userId);
+            setTeamData(updated);
+        } catch (err) {
+            setError(t("team_details.errors.promote_failed"));
+        }
+    };
+
+    if (loading) return <Box sx={{ display: "flex", justifyContent: "center", py: 10 }}><CircularProgress /></Box>;
+    if (error) return <Alert severity="error" sx={{ m: 2 }}>{error}</Alert>;
+    if (!teamData) return <Typography>{t("team_details.not_found")}</Typography>;
 
     return (
         <Box sx={{ pb: 8 }}>
@@ -133,7 +167,7 @@ export const TeamDetailsPage = () => {
                 </Box>
             </Paper>
 
-            <Tabs value={tabValue} onChange={handleTabChange} sx={{ mb: 3 }} textColor="secondary" indicatorColor="secondary">
+            <Tabs value={tabValue} onChange={(_, v) => setTabValue(v)} sx={{ mb: 3 }} textColor="secondary" indicatorColor="secondary">
                 <Tab label={t("team_details.tabs.info")} />
                 <Tab label={t("team_details.tabs.members")} />
                 <Tab label={t("team_details.tabs.tournaments")} />
@@ -145,11 +179,11 @@ export const TeamDetailsPage = () => {
                     <Grid size={{xs: 12, md: 8}}>
                         {isEditing ? (
                             <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                                <TextField fullWidth label={t("team_details.info.org_name")} value={teamData.organization} onChange={(e) => setTeamData({...teamData, organization: e.target.value})} />
-                                <TextField fullWidth label={t("team_details.info.contact_person")} value={teamData.contact} onChange={(e) => setTeamData({...teamData, contact: e.target.value})} />
-                                <TextField fullWidth label={t("team_details.info.email")} value={teamData.email} onChange={(e) => setTeamData({...teamData, email: e.target.value})} />
+                                <TextField fullWidth label={t("team_details.info.team_name")} value={editForm.name} onChange={(e) => setEditForm({...editForm, name: e.target.value})} />
+                                <TextField fullWidth label={t("team_details.info.org_name")} value={editForm.organization} onChange={(e) => setEditForm({...editForm, organization: e.target.value})} />
+                                <TextField fullWidth label={t("team_details.info.contact_person")} value={editForm.contact} onChange={(e) => setEditForm({...editForm, contact: e.target.value})} />
                                 <Box sx={{ display: "flex", gap: 2 }}>
-                                    <Button variant="contained" color="secondary" startIcon={<SaveIcon />} onClick={() => setIsEditing(false)}>
+                                    <Button variant="contained" color="secondary" startIcon={<SaveIcon />} onClick={handleUpdateTeam}>
                                         {t("team_details.admin.save")}
                                     </Button>
                                     <Button variant="outlined" color="secondary" onClick={() => setIsEditing(false)}>
@@ -183,7 +217,7 @@ export const TeamDetailsPage = () => {
                 </Grid>
             )}
 
-            {/* --- TAB 2: MEMBERS (З КЕРУВАННЯМ) --- */}
+            {/* --- TAB 2: MEMBERS --- */}
             {tabValue === 1 && (
                 <Box>
                     <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3, alignItems: "center" }}>
@@ -214,8 +248,6 @@ export const TeamDetailsPage = () => {
                                             </Box>
                                             <Typography variant="caption" color="text.secondary">{user.email}</Typography>
                                         </Box>
-
-                                        {/* Елементи керування для Адміна/Лідера */}
                                         {canControl && (
                                             <Box sx={{ display: "flex", flexDirection: "column" }}>
                                                 {!user.isLeader && (
@@ -225,7 +257,6 @@ export const TeamDetailsPage = () => {
                                                         </IconButton>
                                                     </Tooltip>
                                                 )}
-                                                {/* Не дозволяємо видаляти самого себе, якщо ти не Адмін */}
                                                 {(isAdmin || user.id !== currentUserId) && (
                                                     <Tooltip title={t("team_details.admin.remove_member")}>
                                                         <IconButton size="small" onClick={() => handleDeleteMember(user.id)} color="error">
@@ -244,35 +275,11 @@ export const TeamDetailsPage = () => {
             )}
 
             {/* --- TAB 3: TOURNAMENTS --- */}
+            {/* Тут потрібно буде додати реальний виклик, наприклад trnService.getTournamentsByTeam(teamId) */}
             {tabValue === 2 && (
                 <Box>
                     <Typography variant="h5" fontWeight={700} sx={{ mb: 3 }}>{t("team_details.tournaments.title")}</Typography>
-                    <Grid container spacing={2}>
-                        {MOCK_TEAM_TOURNAMENTS.length > 0 ? (
-                            MOCK_TEAM_TOURNAMENTS.map((trn) => (
-                                <Grid size={{xs: 12}} key={trn.id}>
-                                    <Card
-                                        onClick={() => navigate(`/tournaments/${trn.id}`)}
-                                        sx={{ borderRadius: "12px", cursor: "pointer", border: "1px solid #e0e0e0", "&:hover": { borderColor: "secondary.main" } }}
-                                        elevation={0}
-                                    >
-                                        <CardContent sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                                            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                                                <Avatar sx={{ bgcolor: "secondary.light" }}><EmojiEventsIcon /></Avatar>
-                                                <Box>
-                                                    <Typography variant="h6" fontWeight={600}>{trn.name}</Typography>
-                                                    <Typography variant="caption" color="text.secondary">{trn.startDate}</Typography>
-                                                </Box>
-                                            </Box>
-                                            <Chip label={t(`tournaments.statuses.${trn.status}`)} color="secondary" variant="outlined" size="small" />
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
-                            ))
-                        ) : (
-                            <Typography sx={{ ml: 2 }} color="text.secondary">{t("team_details.tournaments.empty")}</Typography>
-                        )}
-                    </Grid>
+                    <Typography color="text.secondary">{t("team_details.tournaments.coming_soon")}</Typography>
                 </Box>
             )}
 
@@ -280,13 +287,33 @@ export const TeamDetailsPage = () => {
             <Dialog open={memberModalOpen} onClose={() => setMemberModalOpen(false)} maxWidth="xs" fullWidth>
                 <DialogTitle sx={{ fontWeight: 700 }}>{t("team_details.admin.member_modal.title")}</DialogTitle>
                 <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 2 }}>
-                    <TextField label={t("team_details.admin.member_modal.full_name")} fullWidth />
-                    <TextField label={t("team_details.admin.member_modal.email")} fullWidth />
-                    <FormControlLabel control={<Checkbox color="secondary" />} label={t("team_details.admin.member_modal.is_leader")} />
+                    <TextField
+                        label={t("team_details.admin.member_modal.full_name")}
+                        fullWidth
+                        value={newMember.fullName}
+                        onChange={(e) => setNewMember({...newMember, fullName: e.target.value})}
+                    />
+                    <TextField
+                        label={t("team_details.admin.member_modal.email")}
+                        fullWidth
+                        type="email"
+                        value={newMember.email}
+                        onChange={(e) => setNewMember({...newMember, email: e.target.value})}
+                    />
+                    <FormControlLabel
+                        control={
+                            <Checkbox
+                                color="secondary"
+                                checked={newMember.isLeader === true}
+                                onChange={(e) => setNewMember({...newMember, isLeader: e.target.checked ? true : false})}
+                            />
+                        }
+                        label={t("team_details.admin.member_modal.is_leader")}
+                    />
                 </DialogContent>
                 <DialogActions sx={{ p: 3 }}>
                     <Button onClick={() => setMemberModalOpen(false)} color="inherit">{t("team_details.admin.cancel")}</Button>
-                    <Button variant="contained" color="secondary" onClick={() => setMemberModalOpen(false)} sx={{ fontWeight: 700 }}>
+                    <Button variant="contained" color="secondary" onClick={handleAddMember} sx={{ fontWeight: 700 }}>
                         {t("team_details.admin.member_modal.submit")}
                     </Button>
                 </DialogActions>

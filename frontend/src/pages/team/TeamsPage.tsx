@@ -1,4 +1,4 @@
-import {useMemo, useState} from "react";
+import {useCallback, useEffect, useState} from "react";
 import {useNavigate} from "react-router-dom";
 import {useTranslation} from "react-i18next";
 import {
@@ -8,6 +8,7 @@ import {
     Card,
     CardActions,
     CardContent,
+    CircularProgress,
     Divider,
     Grid,
     InputAdornment,
@@ -18,18 +19,9 @@ import {
 import SearchIcon from "@mui/icons-material/Search";
 import EmailIcon from "@mui/icons-material/Email";
 import GroupsIcon from "@mui/icons-material/Groups";
-import type {TeamListResponseDto} from "../../entities/team/team.dto.ts";
 
-// Мокові дані
-const MOCK_TEAMS: TeamListResponseDto[] = [
-    { id: 1, name: "NaVi Junior", email: "contact@navi.gg" },
-    { id: 2, name: "Cyber Cats", email: "meow@cybercats.ua" },
-    { id: 3, name: "SFL Masters", email: "masters@starforlife.org.ua" },
-    { id: 4, name: "Lviv Lions", email: "lions@lviv.ua" },
-    { id: 5, name: "Kyiv Ninjas", email: "ninjas@kyiv.ua" },
-    { id: 6, name: "Odesa Pirates", email: "pirates@odesa.ua" },
-    { id: 7, name: "Dnipro Rockets", email: "rockets@dnipro.ua" },
-];
+import {teamService} from "../../services/impl/TeamService"; // Переконайся у правильності шляху
+import type {TeamListResponseDto} from "../../entities/team/team.dto.ts";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -37,21 +29,59 @@ export const TeamsPage = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
 
+    // Стейт для даних та UI
+    const [teams, setTeams] = useState<TeamListResponseDto[]>([]);
+    const [loading, setLoading] = useState(true);
+
     // Стейт для пошуку та пагінації
     const [searchQuery, setSearchQuery] = useState("");
+    const [debouncedSearch, setDebouncedSearch] = useState("");
     const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
 
-    // Фільтрація
-    const filteredData = useMemo(() => {
-        return MOCK_TEAMS.filter((team) =>
-            team.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            team.email.toLowerCase().includes(searchQuery.toLowerCase())
-        );
+    // Debounce для пошуку: оновлює debouncedSearch через 500мс після припинення вводу
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(searchQuery);
+        }, 500);
+        return () => clearTimeout(timer);
     }, [searchQuery]);
 
-    // Пагінація
-    const count = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
-    const paginatedData = filteredData.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
+    // Скидаємо сторінку на першу при новому пошуковому запиті
+    useEffect(() => {
+        setPage(1);
+    }, [debouncedSearch]);
+
+    // Завантаження даних з бекенду
+    const fetchTeams = useCallback(async () => {
+        setLoading(true);
+        try {
+            // Зверни увагу: якщо твій бекенд використовує 0-індексовані сторінки (як Spring Boot),
+            // передаємо `page - 1`. Якщо 1-індексовані, передавай просто `page`.
+            const response = await teamService.getAllTeams({
+                page: page - 1,
+                size: ITEMS_PER_PAGE,
+                search: debouncedSearch || undefined
+            });
+
+            // Підлаштуй під структуру свого PaginationListResponseDto.
+            // Зазвичай дані лежать у response.content або response.items
+            const content = (response as any).content ?? (response as any).items ?? [];
+            const total = (response as any).totalPages ?? 1;
+
+            setTeams(content);
+            setTotalPages(total);
+        } catch (error) {
+            console.error("Помилка завантаження команд:", error);
+            // Можна додати toast/snackbar для сповіщення користувача
+        } finally {
+            setLoading(false);
+        }
+    }, [page, debouncedSearch]);
+
+    useEffect(() => {
+        fetchTeams();
+    }, [fetchTeams]);
 
     const handleViewDetails = (id: number) => {
         navigate(`/teams/${id}`);
@@ -70,15 +100,13 @@ export const TeamsPage = () => {
             </Box>
 
             {/* Блок пошуку */}
-            <Box sx={{ mb: 4, display: "flex", justifyContent: "flex-end" }}>
+            <Box sx={{ mb: 4, display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 2 }}>
+                {loading && <CircularProgress size={24} />}
                 <TextField
                     size="small"
                     placeholder={t("teams.search_placeholder")}
                     value={searchQuery}
-                    onChange={(e) => {
-                        setSearchQuery(e.target.value);
-                        setPage(1); // Скидаємо на першу сторінку при новому пошуку
-                    }}
+                    onChange={(e) => setSearchQuery(e.target.value)}
                     sx={{ width: { xs: "100%", md: 300 } }}
                     InputProps={{
                         startAdornment: (
@@ -91,78 +119,84 @@ export const TeamsPage = () => {
             </Box>
 
             {/* Сітка карток */}
-            <Grid container spacing={3}>
-                {paginatedData.length > 0 ? (
-                    paginatedData.map((team) => (
-                        <Grid size={{xs: 12, sm: 6, md: 4}} key={team.id}>
-                            <Card
-                                onClick={() => handleViewDetails(team.id)}
-                                sx={{
-                                    height: "100%",
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    borderRadius: "16px",
-                                    cursor: "pointer",
-                                    border: "1px solid #e0e0e0",
-                                    transition: "transform 0.2s, box-shadow 0.2s",
-                                    "&:hover": {
-                                        transform: "translateY(-4px)",
-                                        boxShadow: "0 12px 30px rgba(0,0,0,0.1)",
-                                        borderColor: "primary.main"
-                                    }
-                                }}
-                            >
-                                <CardContent sx={{ flexGrow: 1, display: "flex", flexDirection: "column", gap: 2 }}>
-                                    <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                                        <Avatar sx={{ bgcolor: "primary.light", color: "primary.dark" }}>
-                                            <GroupsIcon />
-                                        </Avatar>
-                                        <Typography variant="h6" fontWeight={700} sx={{ wordBreak: "break-word" }}>
-                                            {team.name}
-                                        </Typography>
-                                    </Box>
+            {loading && teams.length === 0 ? (
+                <Box sx={{ display: "flex", justifyContent: "center", py: 10 }}>
+                    <CircularProgress />
+                </Box>
+            ) : (
+                <Grid container spacing={3}>
+                    {teams.length > 0 ? (
+                        teams.map((team) => (
+                            <Grid size={{xs: 12, sm: 6, md: 4}} key={team.id}>
+                                <Card
+                                    onClick={() => handleViewDetails(team.id)}
+                                    sx={{
+                                        height: "100%",
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        borderRadius: "16px",
+                                        cursor: "pointer",
+                                        border: "1px solid #e0e0e0",
+                                        transition: "transform 0.2s, box-shadow 0.2s",
+                                        "&:hover": {
+                                            transform: "translateY(-4px)",
+                                            boxShadow: "0 12px 30px rgba(0,0,0,0.1)",
+                                            borderColor: "primary.main"
+                                        }
+                                    }}
+                                >
+                                    <CardContent sx={{ flexGrow: 1, display: "flex", flexDirection: "column", gap: 2 }}>
+                                        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                                            <Avatar sx={{ bgcolor: "primary.light", color: "primary.dark" }}>
+                                                <GroupsIcon />
+                                            </Avatar>
+                                            <Typography variant="h6" fontWeight={700} sx={{ wordBreak: "break-word" }}>
+                                                {team.name}
+                                            </Typography>
+                                        </Box>
 
-                                    <Divider />
+                                        <Divider />
 
-                                    <Box sx={{ display: "flex", alignItems: "center", color: "text.secondary" }}>
-                                        <EmailIcon fontSize="small" sx={{ mr: 1 }} />
-                                        <Typography variant="body2" sx={{ wordBreak: "break-all" }}>
-                                            {team.email}
-                                        </Typography>
-                                    </Box>
-                                </CardContent>
+                                        <Box sx={{ display: "flex", alignItems: "center", color: "text.secondary" }}>
+                                            <EmailIcon fontSize="small" sx={{ mr: 1 }} />
+                                            <Typography variant="body2" sx={{ wordBreak: "break-all" }}>
+                                                {team.email}
+                                            </Typography>
+                                        </Box>
+                                    </CardContent>
 
-                                <CardActions sx={{ p: 2, pt: 0 }}>
-                                    <Button
-                                        variant="outlined"
-                                        color="primary"
-                                        fullWidth
-                                        sx={{ borderRadius: "10px", fontWeight: 600, textTransform: "none" }}
-                                    >
-                                        {t("teams.card.more_info")}
-                                    </Button>
-                                </CardActions>
-                            </Card>
+                                    <CardActions sx={{ p: 2, pt: 0 }}>
+                                        <Button
+                                            variant="outlined"
+                                            color="primary"
+                                            fullWidth
+                                            sx={{ borderRadius: "10px", fontWeight: 600, textTransform: "none" }}
+                                        >
+                                            {t("teams.card.more_info")}
+                                        </Button>
+                                    </CardActions>
+                                </Card>
+                            </Grid>
+                        ))
+                    ) : (
+                        // Пустий стан
+                        <Grid size={{xs: 12}}>
+                            <Box sx={{ textAlign: "center", py: 10 }}>
+                                <GroupsIcon sx={{ fontSize: 60, color: "text.disabled", mb: 2 }} />
+                                <Typography variant="h6" color="text.secondary">
+                                    {t("teams.no_data")}
+                                </Typography>
+                            </Box>
                         </Grid>
-                    ))
-                ) : (
-                    // Пустий стан
-                    <Grid size={{xs: 12}}>
-                        <Box sx={{ textAlign: "center", py: 10 }}>
-                            <GroupsIcon sx={{ fontSize: 60, color: "text.disabled", mb: 2 }} />
-                            <Typography variant="h6" color="text.secondary">
-                                {t("teams.no_data")}
-                            </Typography>
-                        </Box>
-                    </Grid>
-                )}
-            </Grid>
+                    )}
+                </Grid>
+            )}
 
             {/* Пагінація */}
-            {count > 1 && (
+            {totalPages > 1 && (
                 <Box sx={{ display: "flex", justifyContent: "center", mt: 6 }}>
                     <Pagination
-                        count={count}
+                        count={totalPages}
                         page={page}
                         onChange={(_, v) => setPage(v)}
                         color="primary"

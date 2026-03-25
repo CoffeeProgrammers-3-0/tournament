@@ -177,6 +177,32 @@ export const en = {
             "remove_member": "Remove from team",
         }
     },
+    team_create: {
+        "title": "Regis team",
+        "subtitle": "Fill in the form below to regis your team.",
+        "success": "Team registered successfully!",
+        "choose_tournament": "Choose a tournament",
+        "name_needed": "Team name is required",
+        "error": "Error creating team",
+        "back": "Back",
+        "members": "Team members",
+        "registration": "Registration...",
+        "regis": "Regis your team",
+        "fields": {
+            "name": "Team name",
+            "contact_email": "Contact email",
+            "contact_some": "Contact phone or telegram",
+            "email": "Email",
+            "org_name": "Organization name",
+            "members": "Team members",
+            "add_member": "Add member",
+            "submit": "Create",
+            "leaders_name": "Team leader full name",
+            "members_name": "Team member full name",
+            "leaders_email": "Team leader email",
+            "members_email": "Team member email",
+        }
+    },
     profile: {
         "title": "My Profile",
         "info": "Personal Information",

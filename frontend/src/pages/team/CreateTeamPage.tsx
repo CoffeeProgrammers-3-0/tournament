@@ -1,232 +1,245 @@
-import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { useTranslation } from "react-i18next";
-import { Box, Button, Divider, Grid, Paper, TextField, Typography, MenuItem, IconButton } from "@mui/material";
+import {useState} from "react";
+import {useNavigate, useParams} from "react-router-dom";
+import {useTranslation} from "react-i18next";
+import {
+    Alert,
+    Box,
+    Button,
+    CircularProgress,
+    Divider,
+    Grid,
+    IconButton,
+    Paper,
+    TextField,
+    Typography
+} from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import SaveIcon from "@mui/icons-material/Save";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
 
-const DEFAULT_MAX_MEMBERS = 5;
-const MIN_MEMBERS = 2;
+import {teamService} from "../../services/impl/TeamService";
+import type {TeamCreateRequestDto} from "../../entities/team/team.dto.ts";
 
 export const CreateTeamPage = () => {
-    const { t } = useTranslation();
+    const {t} = useTranslation();
     const navigate = useNavigate();
-    const { tournamentId } = useParams();
+    const {tournamentId} = useParams<{ tournamentId: string }>();
 
-    const [formData, setFormData] = useState({
-        teamName: "",
-        captainName: "",
-        captainEmail: "",
-        members: [
-            { name: "", email: "" },
-            { name: "", email: "" }
-        ],
-        tournamentId: tournamentId || ""
-    });
-    const [maxMembers] = useState(DEFAULT_MAX_MEMBERS); // TODO: fetch from config if available
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>, idx?: number) => {
-        const { name, value } = e.target;
-        if (name.startsWith("member-") && typeof idx === "number") {
-            const field = name.split("-")[1];
-            setFormData(prev => {
-                const members = [...prev.members];
-                members[idx] = { ...members[idx], [field]: value };
-                return { ...prev, members };
-            });
-        } else {
-            setFormData(prev => ({ ...prev, [name]: value }));
-        }
+    // Стейт форми, який точно відповідає TeamCreateRequestDto
+    const [formData, setFormData] = useState<TeamCreateRequestDto>({
+        name: "",
+        email: "",
+        organization: "",
+        contact: "",
+        users: [
+            {fullName: "", email: "", isLeader: true},
+            {fullName: "", email: "", isLeader: false}
+        ]
+    });
+
+    // Оновлення базових полів команди
+    const handleTeamChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const {name, value} = e.target;
+        setFormData(prev => ({...prev, [name]: value}));
     };
 
-    const addMember = () => {
-        if (formData.members.length < maxMembers) {
-            setFormData(prev => ({ ...prev, members: [...prev.members, { name: "", email: "" }] }));
-        }
+    // Оновлення полів конкретного учасника
+    const handleUserChange = (idx: number, field: keyof typeof formData.users[0], value: string) => {
+        setFormData(prev => {
+            const updatedUsers = [...prev.users];
+            updatedUsers[idx] = {...updatedUsers[idx], [field]: value};
+            return {...prev, users: updatedUsers};
+        });
     };
-    const removeMember = (idx: number) => {
-        if (formData.members.length > MIN_MEMBERS) {
-            setFormData(prev => ({ ...prev, members: prev.members.filter((_, i) => i !== idx) }));
-        }
+
+    const addUser = () => {
+        setFormData(prev => ({
+            ...prev,
+            users: [...prev.users, {fullName: "", email: "", isLeader: false}]
+        }));
+
+    };
+
+    const removeUser = (idx: number) => {
+        setFormData(prev => ({
+            ...prev,
+            users: prev.users.filter((_, i) => i !== idx)
+        }));
+
     };
 
     const validate = () => {
-        // Required fields
-        if (!formData.teamName.trim() || !formData.captainName.trim() || !formData.captainEmail.trim()) {
-            setError("All required fields must be filled.");
+        if (tournamentId) {
+            setError(t("team_create.choose_tournament"));
             return false;
         }
-        // Tournament ID must be > 0
-        const tidNum = Number(formData.tournamentId);
-        if (isNaN(tidNum) || tidNum < 1) {
-            setError("Tournament ID must be greater than 0.");
-            return false;
-        }
-        // Members count
-        if (formData.members.length < MIN_MEMBERS) {
-            setError(`At least ${MIN_MEMBERS} members required.`);
-            return false;
-        }
-        // Emails unique, normalized, and valid
-        const emails = [formData.captainEmail, ...formData.members.map(m => m.email)]
-            .map(e => e.trim().toLowerCase());
-        const emailSet = new Set(emails);
-        if (emailSet.size !== emails.length) {
-            setError("Emails must be unique.");
-            return false;
-        }
-        const emailRegex = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
-        if (!emails.every(e => emailRegex.test(e))) {
-            setError("Invalid email format.");
+        if (!formData.name.trim() || !formData.email.trim()) {
+            setError(t("team_create.name_needed"));
             return false;
         }
         setError(null);
         return true;
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!validate()) return;
-        setSuccess(true);
+
+        setLoading(true);
         setError(null);
-        setFormData({
-            teamName: "",
-            captainName: "",
-            captainEmail: "",
-            members: [
-                { name: "", email: "" },
-                { name: "", email: "" }
-            ],
-            tournamentId: tournamentId || ""
-        });
+
+        try {
+            await teamService.createTeam(Number(tournamentId), formData);
+            setSuccess(true);
+
+            // Затримка перед редіректом, щоб показати повідомлення про успіх
+            setTimeout(() => {
+                navigate(tournamentId ? `/tournaments/${tournamentId}` : "/teams");
+            }, 2000);
+
+        } catch (err: any) {
+            console.error("Помилка створення команди:", err);
+            setError(err.response?.data?.message || t("team_create.error"));
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
-        <Box sx={{ pb: 8, maxWidth: "700px", mx: "auto" }}>
+        <Box sx={{pb: 8, maxWidth: "800px", mx: "auto"}}>
             <Button
-                startIcon={<ArrowBackIcon />}
+                startIcon={<ArrowBackIcon/>}
                 onClick={() => navigate(-1)}
-                sx={{ mb: 3, textTransform: "none" }}
+                sx={{mb: 3, textTransform: "none"}}
             >
-                {t('common.back', 'Back')}
+                {t('common.back', t("team_create.back"))}
             </Button>
+
             <Paper
                 component="form"
                 onSubmit={handleSubmit}
-                sx={{ p: 4, borderRadius: "16px", boxShadow: "0 8px 24px rgba(0,0,0,0.05)" }}
+                sx={{p: {xs: 3, md: 5}, borderRadius: "24px", boxShadow: "0 8px 32px rgba(0,0,0,0.08)"}}
             >
-                <Typography variant="h4" fontWeight={700} color="primary" gutterBottom>
-                    Register New Team
+                <Typography variant="h4" fontWeight={800} color="primary.main" gutterBottom>
+                    {t("team_create.title")}
                 </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                    Fill in the team and member details to register for the tournament.
+                <Typography variant="body1" color="text.secondary" sx={{mb: 4}}>
+                    {t("team_create.subtitle")}
                 </Typography>
-                <Divider sx={{ mb: 4 }} />
+
+                <Divider sx={{mb: 4}}/>
+
+                {error && <Alert severity="error" sx={{mb: 3}}>{error}</Alert>}
+                {success && <Alert severity="success" sx={{mb: 3}}>{t("team_create.success")}</Alert>}
+
                 <Grid container spacing={3}>
-                    <Grid>
+                    <Grid size={{xs: 12, sm: 6}}>
                         <TextField
-                            label="Team Name"
-                            name="teamName"
+                            label={t("team_create.fields.name")}
+                            name="name"
                             fullWidth
                             required
-                            value={formData.teamName}
-                            onChange={handleChange}
+                            value={formData.name}
+                            onChange={handleTeamChange}
                         />
                     </Grid>
-                    <Grid>
+                    <Grid size={{xs: 12, sm: 6}}>
                         <TextField
-                            label="Captain Name"
-                            name="captainName"
-                            fullWidth
-                            required
-                            value={formData.captainName}
-                            onChange={handleChange}
-                        />
-                    </Grid>
-                    <Grid>
-                        <TextField
-                            label="Captain Email"
-                            name="captainEmail"
+                            label={t("team_create.fields.contact_email")}
+                            name="email"
                             type="email"
                             fullWidth
                             required
-                            value={formData.captainEmail}
-                            onChange={handleChange}
+                            value={formData.email}
+                            onChange={handleTeamChange}
                         />
                     </Grid>
-                    {formData.members.map((member, idx) => (
-                        <Grid container spacing={1} alignItems="center" key={idx}>
-                            <Grid>
+                    <Grid size={{xs: 12, sm: 6}}>
+                        <TextField
+                            label={t("team_create.fields.org_name")}
+                            name="organization"
+                            fullWidth
+                            value={formData.organization}
+                            onChange={handleTeamChange}
+                        />
+                    </Grid>
+                    <Grid size={{xs: 12, sm: 6}}>
+                        <TextField
+                            label={t("team_create.fields.contact_some")}
+                            name="contact"
+                            fullWidth
+                            value={formData.contact}
+                            onChange={handleTeamChange}
+                        />
+                    </Grid>
+
+                    <Grid size={{xs: 12}}>
+                        <Typography variant="h6" fontWeight={700} sx={{mt: 2, mb: 1}}>
+                            {t("team_create.team_members")}
+                        </Typography>
+                        <Divider/>
+                    </Grid>
+
+                    {formData.users.map((user, idx) => (
+                        <Grid size={{xs: 12}} key={idx}>
+                            <Box sx={{
+                                display: "flex",
+                                gap: 2,
+                                alignItems: "center",
+                                flexWrap: {xs: "wrap", sm: "nowrap"}
+                            }}>
                                 <TextField
-                                    label={`Member ${idx + 1} Name`}
-                                    name="member-name"
+                                    label={idx === 0 ? t("team_create.fields.leaders_name") : t("team_create.fields.members_name") + ` ${idx + 1}`}
                                     fullWidth
                                     required
-                                    value={member.name}
-                                    onChange={e => handleChange(e as React.ChangeEvent<HTMLInputElement>, idx)}
+                                    value={user.fullName}
+                                    onChange={e => handleUserChange(idx, "fullName", e.target.value)}
                                 />
-                            </Grid>
-                            <Grid>
                                 <TextField
-                                    label={`Member ${idx + 1} Email`}
-                                    name="member-email"
+                                    label={idx === 0 ? t("team_create.fields.leaders_email") : t("team_create.fields.members_email")+ ` ${idx + 1}`}
                                     type="email"
                                     fullWidth
                                     required
-                                    value={member.email}
-                                    onChange={e => handleChange(e as React.ChangeEvent<HTMLInputElement>, idx)}
+                                    value={user.email}
+                                    onChange={e => handleUserChange(idx, "email", e.target.value)}
                                 />
-                            </Grid>
-                            <Grid>
-                                <Box display="flex" alignItems="center">
-                                    <IconButton onClick={() => removeMember(idx)} disabled={formData.members.length <= MIN_MEMBERS}>
-                                        <RemoveIcon />
+                                <Box sx={{display: "flex"}}>
+                                    <IconButton
+                                        color="error"
+                                        onClick={() => removeUser(idx)}
+                                    >
+                                        <RemoveIcon/>
                                     </IconButton>
-                                    {idx === formData.members.length - 1 && formData.members.length < maxMembers && (
-                                        <IconButton onClick={addMember}>
-                                            <AddIcon />
+                                    {idx === formData.users.length - 1  && (
+                                        <IconButton color="primary" onClick={addUser}>
+                                            <AddIcon/>
                                         </IconButton>
                                     )}
                                 </Box>
-                            </Grid>
+                            </Box>
                         </Grid>
                     ))}
-                    {!tournamentId && (
-                        <Grid>
-                            <TextField
-                                select
-                                label="Select Tournament"
-                                name="tournamentId"
-                                fullWidth
-                                required
-                                value={formData.tournamentId}
-                                onChange={handleChange}
-                            >
-                                {/* TODO: Replace with real tournament list */}
-                                <MenuItem value="1">Spring Hackathon 2026</MenuItem>
-                                <MenuItem value="2">Winter Code Jam</MenuItem>
-                            </TextField>
-                        </Grid>
-                    )}
                 </Grid>
-                {error && <Typography color="error" sx={{ mt: 2 }}>{error}</Typography>}
-                {success && <Typography color="success.main" sx={{ mt: 2 }}>Team registered successfully!</Typography>}
-                <Box sx={{ mt: 5, display: "flex", justifyContent: "flex-end", gap: 2 }}>
-                    <Button variant="outlined" color="inherit" onClick={() => navigate(-1)}>
-                        Cancel
+
+                <Box sx={{mt: 5, display: "flex", justifyContent: "flex-end", gap: 2}}>
+                    <Button variant="outlined" color="inherit" onClick={() => navigate(-1)}
+                            disabled={loading || success}>
+                        Скасувати
                     </Button>
                     <Button
                         type="submit"
                         variant="contained"
                         color="primary"
-                        startIcon={<SaveIcon />}
-                        sx={{ px: 4, fontWeight: 700 }}
+                        startIcon={loading ? <CircularProgress size={20} color="inherit"/> : <SaveIcon/>}
+                        disabled={loading || success}
+                        sx={{px: 4, fontWeight: 700}}
                     >
-                        Register Team
+                        {loading ? t("team_create.registration") : t("team_create.regis")}
                     </Button>
                 </Box>
             </Paper>
