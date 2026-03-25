@@ -35,5 +35,7 @@ public interface UserService {
 
     Page<User> findAllByRole(Integer page, Integer size, String query, Role role);
 
+    Page<User> findAllJuriesUsersForRound(Integer page, Integer size, String query, Long roundId);
+
     User findUserByEmailOrNull(String email);
 }

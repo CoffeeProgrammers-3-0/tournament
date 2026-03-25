@@ -271,6 +271,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public Page<User> findAllJuriesUsersForRound(Integer page, Integer size, String query, Long roundId) {
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "fullName"));
+        return userRepository.findAll(
+                Specification.allOf(UserSpecification.juriesByRoundId(roundId), UserSpecification.byFullName(query)),
+                pageRequest);
+    }
+
+    @Override
     public User findUserByEmailOrNull(String email) {
         log.info("Service: Finding user by email {}", email);
         return userRepository.findOne(UserSpecification.byEmail(email)).orElse(null);

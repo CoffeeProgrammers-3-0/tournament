@@ -42,6 +42,6 @@ public class JurySpecification {
     }
 
     public static Specification<Jury> byUserIdAndRoundId(Long userId, Long roundId) {
-        return byUserId(userId).and(byRoundId(roundId));
+        return Specification.allOf(byUserId(userId), byRoundId(roundId));
     }
 }

@@ -53,6 +53,7 @@ import type {RoundFullResponseDto, RoundUpdateRequestDto} from "../../entities/r
 import type {CategoryRequestDto, CategoryResponseDto} from "../../entities/category/category.dto.ts";
 import type {UserResponseDto} from "../../entities/user/user.dto.ts";
 import type {StatisticResponseDto, TeamLeaderboardResponseDto} from "../../entities/team/team.dto.ts";
+import {userService} from "../../services/impl/UserService.ts";
 
 const formatToLocalDateTime = (dateTimeStr: string) => {
     if (!dateTimeStr) return "";
@@ -116,21 +117,32 @@ export const RoundDetailsPage = () => {
         if (!id) return;
         setLoadingTab(true);
         try {
-            // const data = await categoryService.getCategoriesByRound(Number(id));
-            // setCategories(data);
+            const data = await categoryService.getCategories(Number(id));
+            setCategories(data);
         } catch (error) { console.error("Error fetching categories:", error); }
         finally { setLoadingTab(false); }
     }, [id]);
 
     const fetchJury = useCallback(async () => {
-        if (!id) return;
+        const roundId = Number(id);
+        if (!roundId || isNaN(roundId)) return;
+
         setLoadingTab(true);
         try {
-            // Припускаємо, що є такий метод або використовуємо ендпоінт раунду, якщо журі приходить в ньому
-            // const data = await userService.getJuries(id, 0, 20);
-            // setJury(data);
-        } catch (error) { console.error("Error fetching jury:", error); }
-        finally { setLoadingTab(false); }
+            const params = {
+                page: 0,
+                size: 20,
+            };
+
+            const response = await userService.getJuriesByRound(params, roundId);
+
+            setJury(response.content);
+        } catch (error) {
+            console.error("Error fetching jury for round:", error);
+            setJury([]);
+        } finally {
+            setLoadingTab(false);
+        }
     }, [id]);
 
     const fetchLeaderboard = useCallback(async () => {

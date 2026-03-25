@@ -2,6 +2,8 @@ package com.project.backend.repositories.specifications;
 
 import com.project.backend.models.User;
 import com.project.backend.models.constants.Role;
+import com.project.backend.models.join_tables.Jury;
+import jakarta.persistence.criteria.Join;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -45,5 +47,16 @@ public class UserSpecification {
 
         return (root, query, cb) ->
                 cb.equal(root.get("role"), role);
+    }
+
+    public static Specification<User> juriesByRoundId(Long roundId) {
+        log.debug("UserSpecification.juriesByRoundId called with roundId={}", roundId);
+        if (roundId == null) return null;
+
+        return (root, query, cb) -> {
+            Join<User, Jury> juryJoin = root.join("juries");
+
+            return cb.equal(juryJoin.get("round").get("id"), roundId);
+        };
     }
 }
