@@ -1,7 +1,5 @@
-import {type ChangeEvent, useCallback, useEffect, useState} from "react";
-import {useNavigate, useParams} from "react-router-dom";
+import {useNavigate} from "react-router-dom";
 import {useTranslation} from "react-i18next";
-import Cookies from "js-cookie";
 import {
     Avatar,
     Box,
@@ -10,6 +8,7 @@ import {
     CardContent,
     Chip,
     CircularProgress,
+    Container,
     Dialog,
     DialogActions,
     DialogContent,
@@ -17,7 +16,7 @@ import {
     Divider,
     FormControl,
     Grid,
-    InputLabel,
+    IconButton,
     MenuItem,
     Paper,
     Select,
@@ -33,162 +32,19 @@ import AssignmentIcon from "@mui/icons-material/Assignment";
 import SaveIcon from "@mui/icons-material/Save";
 import HowToRegIcon from "@mui/icons-material/HowToReg";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CloseIcon from "@mui/icons-material/Close";
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 
-import {tournamentService} from "../../services/impl/TournamentService";
-import {roundService} from "../../services/impl/RoundService";
-import {teamService} from "../../services/impl/TeamService";
-
-import type {RoundCreateRequestDto, RoundListResponseDto, RoundStatus} from "../../entities/round/round.dto.ts";
-import type {TournamentFullResponseDto, TournamentUpdateRequestDto} from "../../entities/tournament/tournament.dto.ts";
-import type {TeamListResponseDto} from "../../entities/team/team.dto.ts";
-
-const formatToLocalDateTime = (dateTimeStr: string) => {
-    if (!dateTimeStr) return "";
-    return dateTimeStr.length === 16 ? `${dateTimeStr}:00` : dateTimeStr;
-};
+// Зверни увагу на правильний імпорт хука (шлях може відрізнятися)
+import {useTournamentDetails} from "./useTournamentDetails";
+import type {RoundStatus} from "../../entities/round/round.dto.ts";
 
 const ROUND_STATUSES: RoundStatus[] = ['DRAFT', 'ACTIVE', 'SUBMISSION_CLOSED', 'EVALUATED'];
 
 export const TournamentDetailsPage = () => {
-    const { id } = useParams<{ id: string }>();
     const { t, i18n } = useTranslation();
     const navigate = useNavigate();
-
-    const isLoggedIn = Cookies.get("userId") !== undefined;
-    const isAdmin = Cookies.get("role") === "ADMIN";
-
-    // UI States
-    const [loading, setLoading] = useState(true);
-    const [loadingTab, setLoadingTab] = useState(false);
-    const [tabValue, setTabValue] = useState(0);
-    const [isEditingInfo, setIsEditingInfo] = useState(false);
-    const [roundModalOpen, setRoundModalOpen] = useState(false);
-    const [isCreatingRound, setIsCreatingRound] = useState(false);
-
-    // Data States
-    const [tournamentData, setTournamentData] = useState<TournamentFullResponseDto | null>(null);
-    const [isUserRegistered, setIsUserRegistered] = useState(false);
-    const [rounds, setRounds] = useState<RoundListResponseDto[]>([]);
-    const [teams, setTeams] = useState<TeamListResponseDto[]>([]);
-
-    // Filters
-    const [selectedRoundStatus, setSelectedRoundStatus] = useState<RoundStatus>('ACTIVE');
-
-    // Forms
-    const [editFormData, setEditFormData] = useState<TournamentUpdateRequestDto>({
-        name: "",
-        description: "",
-        startRegistration: "",
-        endRegistration: "",
-        startTournament: "",
-        maxCountOfTeams: 0,
-        countOfRounds: 0
-    } as TournamentUpdateRequestDto);
-
-    const [roundFormData, setRoundFormData] = useState<RoundCreateRequestDto>({
-        name: "", startDate: "", endDate: "", countOfWinners: 1, requirements: "", task: ""
-    });
-
-    // Дозволяємо редагувати все, якщо статус CREATED (реєстрація ще не почалась)
-    const canEditFullInfo = isAdmin && tournamentData?.status === "DRAFT";
-
-    // --- Data Fetching ---
-    const fetchRounds = useCallback(async () => {
-        if (!id) return;
-        setLoadingTab(true);
-        try {
-            const res = await roundService.getRoundsByTournament(Number(id), {
-                page: 0, size: 100, status: selectedRoundStatus
-            });
-            setRounds(res.content);
-        } catch (e) { console.error("Rounds fetch error:", e); }
-        finally { setLoadingTab(false); }
-    }, [id, selectedRoundStatus]);
-
-    const fetchTeams = useCallback(async () => {
-        if (!id) return;
-        setLoadingTab(true);
-        try {
-            const res = await teamService.getTeamsByTournament(Number(id), { page: 0, size: 100 });
-            setTeams(res.content);
-        } catch (e) { console.error("Teams fetch error:", e); }
-        finally { setLoadingTab(false); }
-    }, [id]);
-
-    useEffect(() => {
-        if (!id) return;
-        const init = async () => {
-            setLoading(true);
-            try {
-                const data = await tournamentService.getTournamentById(Number(id));
-                setTournamentData(data);
-
-                setEditFormData({
-                    name: data.name,
-                    description: data.description,
-                    startRegistration: data.startRegistration?.substring(0, 16) || "",
-                    endRegistration: data.endRegistration?.substring(0, 16) || "",
-                    startTournament: data.startTournament?.substring(0, 16) || "",
-                    maxCountOfTeams: data.maxCountOfTeams,
-                    countOfRounds: data.countOfRounds
-                } as TournamentUpdateRequestDto);
-
-                if (isLoggedIn && !isAdmin) {
-                    setIsUserRegistered(await teamService.checkIfRegistered(Number(id)));
-                }
-            } catch (e) { console.error("Init error:", e); }
-            finally { setLoading(false); }
-        };
-        init();
-    }, [id, isLoggedIn, isAdmin]);
-
-    useEffect(() => {
-        if (tabValue === 1) fetchRounds();
-        if (tabValue === 2) fetchTeams();
-    }, [tabValue, fetchRounds, fetchTeams]);
-
-    // --- Handlers ---
-    const handleSaveUpdate = async () => {
-        if (!id || !tournamentData) return;
-        try {
-            const payload = {
-                ...editFormData,
-                startRegistration: formatToLocalDateTime(editFormData.startRegistration),
-                endRegistration: formatToLocalDateTime(editFormData.endRegistration),
-                startTournament: formatToLocalDateTime(editFormData.startTournament),
-            };
-
-            const updated = await tournamentService.updateTournament(Number(id), payload as TournamentUpdateRequestDto);
-            setTournamentData(updated);
-            setIsEditingInfo(false);
-        } catch (error) {
-            console.error("Update error:", error);
-        }
-    };
-
-    const handleRoundFormChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        const { name, value } = e.target;
-        setRoundFormData(prev => ({
-            ...prev,
-            [name]: name === "countOfWinners" ? Number(value) : value
-        }));
-    };
-
-    const handleCreateRound = async () => {
-        if (!id) return;
-        setIsCreatingRound(true);
-        try {
-            await roundService.createRound(Number(id), {
-                ...roundFormData,
-                startDate: formatToLocalDateTime(roundFormData.startDate),
-                endDate: formatToLocalDateTime(roundFormData.endDate)
-            });
-            setRoundModalOpen(false);
-            setRoundFormData({ name: "", startDate: "", endDate: "", countOfWinners: 1, requirements: "", task: "" });
-            fetchRounds();
-        } catch (e) { console.error("Round creation error:", e); }
-        finally { setIsCreatingRound(false); }
-    };
+    const state = useTournamentDetails();
 
     const formatDate = (dateString?: string) => {
         if (!dateString) return "";
@@ -197,230 +53,183 @@ export const TournamentDetailsPage = () => {
         });
     };
 
-    if (loading) return <Box sx={{ display: "flex", justifyContent: "center", mt: 10 }}><CircularProgress /></Box>;
-    if (!tournamentData) return <Typography sx={{ textAlign: 'center', mt: 5 }}>Tournament not found</Typography>;
+    if (state.loading) return <Box sx={{ display: "flex", justifyContent: "center", mt: 10 }}><CircularProgress /></Box>;
+    if (!state.tournamentData) return <Typography align="center" mt={10}>Tournament not found</Typography>;
 
     return (
-        <Box sx={{ pb: 8 }}>
-            {/* --- HEADER --- */}
-            <Paper sx={{ p: 4, borderRadius: "24px", bgcolor: "primary.main", color: "white", mb: 4 }}>
-                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 2 }}>
-                    <Box>
-                        <Typography variant="h3" fontWeight={800}>{tournamentData.name}</Typography>
-                        <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
-                            <Chip label={t(`tournaments.statuses.${tournamentData.status}`)} sx={{ bgcolor: "white", fontWeight: 700 }} size="small" />
-                            <Chip label={`${t("tournament_details.header.startDate")} ${formatDate(tournamentData.startTournament)}`} variant="outlined" sx={{ color: "white", borderColor: "white" }} size="small" />
+        <Container maxWidth="lg" sx={{ pb: 8, pt: 4 }}>
+            {/* HERO SECTION */}
+            <Paper elevation={0} sx={{ p: { xs: 3, md: 6 }, borderRadius: "32px", bgcolor: "primary.main", color: "white", mb: 5, position: "relative", overflow: "hidden", background: "linear-gradient(135deg, #1a237e 0%, #3f51b5 100%)" }}>
+                <Grid container spacing={3} alignItems="center">
+                    <Grid size={{ xs: 12, md: 8 }}>
+                        <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
+                            <Chip label={t(`tournaments.statuses.${state.tournamentData.status}`)} sx={{ bgcolor: "secondary.main", color: "black", fontWeight: 800, px: 1 }} />
+                            <Chip icon={<CalendarMonthIcon style={{ color: "white", fontSize: "16px" }} />} label={formatDate(state.tournamentData.startTournament)} variant="outlined" sx={{ color: "white", borderColor: "rgba(255,255,255,0.3)" }} />
                         </Box>
-                    </Box>
-                    <Box sx={{ display: "flex", gap: 2 }}>
-                        {isAdmin ? (
-                            !isEditingInfo && (
-                                <Button
-                                    variant="contained"
-                                    color="secondary"
-                                    startIcon={<EditIcon />}
-                                    onClick={() => setIsEditingInfo(true)}
-                                    sx={{ borderRadius: "12px", fontWeight: 700 }}
-                                >
-                                    {t("tournament_details.admin.edit_info")}
-                                </Button>
-                            )
+                        <Typography variant="h2" fontWeight={800} sx={{ letterSpacing: "-0.03em", mb: 2 }}>{state.tournamentData.name}</Typography>
+                    </Grid>
+                    <Grid size={{ xs: 12, md: 4 }} sx={{ display: "flex", justifyContent: { md: "flex-end" } }}>
+                        {state.isAdmin ? (
+                            !state.isEditingInfo && <Button variant="contained" color="secondary" startIcon={<EditIcon />} onClick={() => state.setIsEditingInfo(true)} sx={{ borderRadius: "14px", fontWeight: 800, px: 4, py: 1.5, color: "black" }}>{t("tournament_details.admin.edit_info")}</Button>
                         ) : (
-                            isLoggedIn && tournamentData.status === "REGISTRATION" && (
-                                isUserRegistered ? <Chip icon={<CheckCircleIcon style={{ color: "white" }} />} label={t("tournament_details.header.registered")} sx={{ bgcolor: "success.main", color: "white", fontWeight: 700, p: 2, height: "45px", borderRadius: "12px" }} />
-                                    : <Button variant="contained" color="secondary" size="large" startIcon={<HowToRegIcon />} onClick={() => navigate(`/tournaments/${id}/team/create`)} sx={{ borderRadius: "12px", fontWeight: 700, px: 4 }}>{t("tournament_details.header.register_btn")}</Button>
+                            state.isLoggedIn && state.tournamentData.status === "REGISTRATION" && (
+                                state.isUserRegistered
+                                    ? <Chip icon={<CheckCircleIcon style={{ color: "white" }} />} label={t("tournament_details.header.registered")} sx={{ bgcolor: "success.main", color: "white", fontWeight: 700, p: 3, fontSize: "1rem", borderRadius: "16px" }} />
+                                    : <Button variant="contained" color="secondary" size="large" startIcon={<HowToRegIcon />} onClick={() => navigate(`/tournaments/${state.tournamentId}/team/create`)} sx={{ borderRadius: "16px", fontWeight: 800, px: 5, py: 2, color: "black", boxShadow: "0 10px 20px rgba(0,0,0,0.2)" }}>{t("tournament_details.header.register_btn")}</Button>
                             )
                         )}
-                    </Box>
-                </Box>
+                    </Grid>
+                </Grid>
             </Paper>
 
-            <Tabs value={tabValue} onChange={(_, v) => setTabValue(v)} sx={{ mb: 3 }}>
+            <Tabs value={state.tabValue} onChange={(_, v) => state.setTabValue(v)} sx={{ mb: 4, borderBottom: 1, borderColor: 'divider', '& .MuiTab-root': { fontWeight: 700, fontSize: "1rem" } }}>
                 {['info', 'rounds', 'teams'].map((label, idx) => <Tab key={idx} label={t(`tournament_details.tabs.${label}`)} />)}
             </Tabs>
 
-            {/* --- TAB 1: INFO --- */}
-            {tabValue === 0 && (
-                <Grid container spacing={4}>
-                    <Grid size={{xs: 12, md: 8}}>
-                        {isEditingInfo ? (
-                            <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                                <TextField
-                                    fullWidth
-                                    label={t("tournament_details.admin.create_modal.name")}
-                                    value={editFormData.name}
-                                    onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
-                                />
-                                <TextField
-                                    fullWidth
-                                    multiline
-                                    rows={4}
-                                    label={t("tournament_details.admin.create_modal.task")}
-                                    value={editFormData.description}
-                                    onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
-                                />
+            <Box sx={{ mt: 2 }}>
+                {state.tabValue === 0 && <InfoTab state={state} formatDate={formatDate} t={t} />}
+                {state.tabValue === 1 && <RoundsTab state={state} formatDate={formatDate} t={t} navigate={navigate} />}
+                {state.tabValue === 2 && <TeamsTab state={state} t={t} navigate={navigate} />}
+            </Box>
 
-                                {canEditFullInfo && (
-                                    <>
-                                        <Divider>Дати та ліміти</Divider>
-                                        <Grid container spacing={2}>
-                                            <Grid size={{xs: 12, sm: 6}}>
-                                                <TextField
-                                                    fullWidth
-                                                    type="datetime-local"
-                                                    label="Початок реєстрації"
-                                                    InputLabelProps={{ shrink: true }}
-                                                    value={editFormData.startRegistration}
-                                                    onChange={(e) => setEditFormData({ ...editFormData, startRegistration: e.target.value })}
-                                                />
-                                            </Grid>
-                                            <Grid size={{xs: 12, sm: 6}}>
-                                                <TextField
-                                                    fullWidth
-                                                    type="datetime-local"
-                                                    label="Кінець реєстрації"
-                                                    InputLabelProps={{ shrink: true }}
-                                                    value={editFormData.endRegistration}
-                                                    onChange={(e) => setEditFormData({ ...editFormData, endRegistration: e.target.value })}
-                                                />
-                                            </Grid>
-                                            <Grid size={{xs: 12, sm: 6}}>
-                                                <TextField
-                                                    fullWidth
-                                                    type="datetime-local"
-                                                    label="Початок турніру"
-                                                    InputLabelProps={{ shrink: true }}
-                                                    value={editFormData.startTournament}
-                                                    onChange={(e) => setEditFormData({ ...editFormData, startTournament: e.target.value })}
-                                                />
-                                            </Grid>
-                                            <Grid size={{xs: 12, sm: 3}}>
-                                                <TextField
-                                                    fullWidth
-                                                    type="number"
-                                                    label="Макс. команд"
-                                                    value={editFormData.maxCountOfTeams}
-                                                    onChange={(e) => setEditFormData({ ...editFormData, maxCountOfTeams: Number(e.target.value) })}
-                                                />
-                                            </Grid>
-                                            <Grid size={{xs: 12, sm: 3}}>
-                                                <TextField
-                                                    fullWidth
-                                                    type="number"
-                                                    label="К-ть раундів"
-                                                    value={editFormData.countOfRounds}
-                                                    onChange={(e) => setEditFormData({ ...editFormData, countOfRounds: Number(e.target.value) })}
-                                                />
-                                            </Grid>
-                                        </Grid>
-                                    </>
-                                )}
-
-                                <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
-                                    <Button variant="contained" startIcon={<SaveIcon />} onClick={handleSaveUpdate}>{t("tournament_details.admin.save")}</Button>
-                                    <Button variant="outlined" onClick={() => setIsEditingInfo(false)}>{t("tournament_details.admin.cancel")}</Button>
-                                </Box>
-                            </Box>
-                        ) : (
-                            <Typography variant="body1" sx={{ whiteSpace: "pre-line", fontSize: "1.1rem", lineHeight: 1.8 }}>{tournamentData.description}</Typography>
-                        )}
-                    </Grid>
-                    <Grid size={{xs: 12, md: 4}}>
-                        <Card sx={{ borderRadius: "16px", border: "1px solid #eee" }} elevation={0}>
-                            <CardContent sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                                <Box>
-                                    <Typography variant="caption" color="text.secondary">{t("tournament_details.info.reg_period")}</Typography>
-                                    <Typography variant="body2" fontWeight={600}>{formatDate(tournamentData.startRegistration)} — {formatDate(tournamentData.endRegistration)}</Typography>
-                                </Box>
-                                <Divider />
-                                <Box sx={{ display: "flex", justifyContent: "space-between" }}><Typography variant="body2">{t("tournament_details.info.max_teams")}</Typography><Typography variant="body2" fontWeight={700}>{tournamentData.maxCountOfTeams}</Typography></Box>
-                                <Box sx={{ display: "flex", justifyContent: "space-between" }}><Typography variant="body2">{t("tournament_details.info.rounds_count")}</Typography><Typography variant="body2" fontWeight={700}>{tournamentData.countOfRounds}</Typography></Box>
-                            </CardContent>
-                        </Card>
-                    </Grid>
-                </Grid>
-            )}
-
-            {/* --- ТАБИ 2 ТА 3 (Раунди та Команди) ЗАЛИШЕНІ БЕЗ ЗМІН ЯК У ВАШОМУ КОДІ --- */}
-            {tabValue === 1 && (
-                <Box>
-                    <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3, alignItems: "center", flexWrap: 'wrap', gap: 2 }}>
-                        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                            <Typography variant="h5" fontWeight={700}>{t("tournament_details.rounds.title")}</Typography>
-                            <FormControl size="small" sx={{ minWidth: 180 }}>
-                                <InputLabel>{t("rounds.status")}</InputLabel>
-                                <Select value={selectedRoundStatus} label={t("rounds.status")} onChange={(e) => setSelectedRoundStatus(e.target.value as RoundStatus)}>
-                                    {ROUND_STATUSES.filter(s => isAdmin || s !== 'DRAFT').map(s => (
-                                        <MenuItem key={s} value={s}>{t(`rounds.statuses.${s}`)}</MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
-                        </Box>
-                        {isAdmin && <Button variant="outlined" startIcon={<AddIcon />} onClick={() => setRoundModalOpen(true)} sx={{ borderRadius: "10px" }}>{t("tournament_details.admin.add_round")}</Button>}
-                    </Box>
-
-                    {loadingTab ? <CircularProgress sx={{ display: 'block', mx: 'auto', my: 4 }} /> : (
-                        <Grid container spacing={2}>
-                            {rounds.length > 0 ? rounds.map((round) => (
-                                <Grid size={{xs: 12}} key={round.id}>
-                                    <Card onClick={() => navigate(`/rounds/${round.id}`)} sx={{ borderRadius: "12px", cursor: "pointer", border: "1px solid #e0e0e0", transition: "0.2s", "&:hover": { borderColor: "primary.main" } }} elevation={0}>
-                                        <CardContent sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                                            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                                                <Avatar sx={{ bgcolor: round.status === "ACTIVE" ? "primary.main" : "grey.300" }}><AssignmentIcon /></Avatar>
-                                                <Box>
-                                                    <Typography variant="h6" fontWeight={600}>{round.name}</Typography>
-                                                    <Typography variant="caption" color="text.secondary">{formatDate(round.startDate)} — {formatDate(round.endDate)}</Typography>
-                                                </Box>
-                                            </Box>
-                                            <Chip label={t(`rounds.statuses.${round.status}`)} color={round.status === "ACTIVE" ? "success" : "default"} size="small" />
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
-                            )) : <Typography sx={{ textAlign: 'center', width: '100%', py: 5, color: 'text.secondary' }}>{t("tournament_details.rounds.empty")}</Typography>}
-                        </Grid>
-                    )}
-                </Box>
-            )}
-
-            {tabValue === 2 && (
-                <Box>
-                    {loadingTab ? <CircularProgress sx={{ display: 'block', mx: 'auto', my: 4 }} /> : (
-                        <Grid container spacing={2}>
-                            {teams.length > 0 ? teams.map((team) => (
-                                <Grid size={{xs: 12, sm: 6, md:4}} key={team.id}>
-                                    <Card onClick={() => navigate(`/teams/${team.id}`)} sx={{ borderRadius: "16px", cursor: "pointer", border: "1px solid #eee", transition: "0.2s", "&:hover": { borderColor: "primary.main", boxShadow: "0 4px 12px rgba(0,0,0,0.05)" } }} elevation={0}>
-                                        <CardContent sx={{ textAlign: "center" }}>
-                                            <Avatar sx={{ mx: "auto", mb: 1, bgcolor: "secondary.light", color: "secondary.dark" }}><GroupsIcon /></Avatar>
-                                            <Typography variant="h6" fontWeight={700}>{team.name}</Typography>
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
-                            )) : <Typography sx={{ textAlign: 'center', width: '100%', py: 5, color: 'text.secondary' }}>{t("tournament_details.teams.empty")}</Typography>}
-                        </Grid>
-                    )}
-                </Box>
-            )}
-
-            {/* --- MODAL: CREATE ROUND --- */}
-            <Dialog open={roundModalOpen} onClose={() => setRoundModalOpen(false)} maxWidth="sm" fullWidth>
-                <DialogTitle sx={{ fontWeight: 700 }}>{t("tournament_details.admin.create_modal.title")}</DialogTitle>
+            {/* CREATE ROUND DIALOG */}
+            <Dialog open={state.roundModalOpen} onClose={() => state.setRoundModalOpen(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: "24px", p: 1 } }}>
+                <DialogTitle sx={{ fontWeight: 800, fontSize: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    {t("tournament_details.admin.create_modal.title")}
+                    <IconButton onClick={() => state.setRoundModalOpen(false)}><CloseIcon /></IconButton>
+                </DialogTitle>
                 <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 3, pt: 2 }}>
-                    <TextField label={t("tournament_details.admin.create_modal.name")} name="name" value={roundFormData.name} onChange={handleRoundFormChange} fullWidth />
+                    <TextField label={t("tournament_details.admin.create_modal.name")} name="name" value={state.roundFormData.name} onChange={state.handleRoundFormChange} fullWidth />
                     <Box sx={{ display: "flex", gap: 2 }}>
-                        <TextField label={t("tournament_details.admin.create_modal.start")} name="startDate" type="datetime-local" value={roundFormData.startDate} onChange={handleRoundFormChange} fullWidth InputLabelProps={{ shrink: true }} />
-                        <TextField label={t("tournament_details.admin.create_modal.end")} name="endDate" type="datetime-local" value={roundFormData.endDate} onChange={handleRoundFormChange} fullWidth InputLabelProps={{ shrink: true }} />
+                        <TextField label={t("tournament_details.admin.create_modal.start")} name="startDate" type="datetime-local" value={state.roundFormData.startDate} onChange={state.handleRoundFormChange} fullWidth InputLabelProps={{ shrink: true }} />
+                        <TextField label={t("tournament_details.admin.create_modal.end")} name="endDate" type="datetime-local" value={state.roundFormData.endDate} onChange={state.handleRoundFormChange} fullWidth InputLabelProps={{ shrink: true }} />
                     </Box>
-                    <TextField label={t("tournament_details.admin.create_modal.winners")} name="countOfWinners" type="number" value={roundFormData.countOfWinners} onChange={handleRoundFormChange} fullWidth />
-                    <TextField label={t("tournament_details.admin.create_modal.requirements")} name="requirements" value={roundFormData.requirements} onChange={handleRoundFormChange} multiline rows={3} fullWidth />
-                    <TextField label={t("tournament_details.admin.create_modal.task")} name="task" value={roundFormData.task} onChange={handleRoundFormChange} multiline rows={4} fullWidth />
+                    <TextField label={t("tournament_details.admin.create_modal.winners")} name="countOfWinners" type="number" value={state.roundFormData.countOfWinners} onChange={state.handleRoundFormChange} fullWidth />
+                    <TextField label={t("tournament_details.admin.create_modal.task")} name="task" value={state.roundFormData.task} onChange={state.handleRoundFormChange} multiline rows={4} fullWidth placeholder={t("tournament_details.admin.create_modal.name_placeholder")} />
                 </DialogContent>
-                <DialogActions sx={{ p: 3 }}>
-                    <Button onClick={() => setRoundModalOpen(false)} color="inherit" disabled={isCreatingRound}>{t("tournament_details.admin.cancel")}</Button>
-                    <Button variant="contained" onClick={handleCreateRound} sx={{ fontWeight: 700 }} disabled={isCreatingRound}>
-                        {isCreatingRound ? <CircularProgress size={24} /> : t("tournament_details.admin.create_modal.submit")}
+                <DialogActions sx={{ p: 3, gap: 1 }}>
+                    <Button onClick={() => state.setRoundModalOpen(false)} sx={{ fontWeight: 700, px: 3 }}>{t("common.cancel")}</Button>
+                    <Button variant="contained" color="secondary" onClick={state.handleCreateRound} sx={{ fontWeight: 800, borderRadius: "12px", px: 4, color: "black" }} disabled={state.isCreatingRound}>
+                        {state.isCreatingRound ? <CircularProgress size={24} /> : t("tournament_details.admin.create_modal.submit")}
                     </Button>
                 </DialogActions>
             </Dialog>
-        </Box>
+        </Container>
     );
 };
+
+export default TournamentDetailsPage;
+
+// --- SUB-COMPONENTS (Щоб файл залишався читабельним) ---
+
+const InfoTab = ({ state, formatDate, t }: any) => (
+    <Grid container spacing={4}>
+        <Grid size={{ xs: 12, md: 8 }}>
+            {state.isEditingInfo ? (
+                <Paper sx={{ p: 4, borderRadius: "24px", border: "1px solid #e0e0e0" }}>
+                    <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                        <TextField fullWidth label={t("tournaments.admin.fields.name")} value={state.editFormData.name} onChange={(e) => state.setEditFormData({ ...state.editFormData, name: e.target.value })} />
+                        <TextField fullWidth multiline rows={6} label={t("tournaments.admin.fields.description")} value={state.editFormData.description} onChange={(e) => state.setEditFormData({ ...state.editFormData, description: e.target.value })} />
+
+                        {state.canEditFullInfo && (
+                            <Grid container spacing={2}>
+                                <Grid size={{xs: 12, sm: 6}}><TextField fullWidth type="datetime-local" label={t("tournaments.admin.fields.startReg")} InputLabelProps={{ shrink: true }} value={state.editFormData.startRegistration} onChange={(e) => state.setEditFormData({ ...state.editFormData, startRegistration: e.target.value })} /></Grid>
+                                <Grid size={{xs: 12, sm: 6}}><TextField fullWidth type="datetime-local" label={t("tournaments.admin.fields.endReg")} InputLabelProps={{ shrink: true }} value={state.editFormData.endRegistration} onChange={(e) => state.setEditFormData({ ...state.editFormData, endRegistration: e.target.value })} /></Grid>
+                                <Grid size={{xs: 12, sm: 4}}><TextField fullWidth type="datetime-local" label={t("tournaments.admin.fields.startTournament")} InputLabelProps={{ shrink: true }} value={state.editFormData.startTournament} onChange={(e) => state.setEditFormData({ ...state.editFormData, startTournament: e.target.value })} /></Grid>
+                                <Grid size={{xs: 6, sm: 4}}><TextField fullWidth type="number" label={t("tournaments.admin.fields.maxTeams")} value={state.editFormData.maxCountOfTeams} onChange={(e) => state.setEditFormData({ ...state.editFormData, maxCountOfTeams: Number(e.target.value) })} /></Grid>
+                                <Grid size={{xs: 6, sm: 4}}><TextField fullWidth type="number" label={t("tournaments.admin.fields.rounds")} value={state.editFormData.countOfRounds} onChange={(e) => state.setEditFormData({ ...state.editFormData, countOfRounds: Number(e.target.value) })} /></Grid>
+                            </Grid>
+                        )}
+                        <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
+                            <Button variant="contained" size="large" startIcon={<SaveIcon />} onClick={state.handleSaveUpdate} sx={{ borderRadius: "12px", px: 4 }}>{t("common.save")}</Button>
+                            <Button variant="outlined" size="large" onClick={() => state.setIsEditingInfo(false)} sx={{ borderRadius: "12px" }}>{t("common.cancel")}</Button>
+                        </Box>
+                    </Box>
+                </Paper>
+            ) : (
+                <Box>
+                    <Typography variant="h5" fontWeight={800} gutterBottom>{t("tournament_details.tabs.info")}</Typography>
+                    <Typography variant="body1" sx={{ whiteSpace: "pre-line", fontSize: "1.1rem", lineHeight: 1.8, color: "text.primary" }}>
+                        {state.tournamentData.description || t("tournament_details.info.no_description")}
+                    </Typography>
+                </Box>
+            )}
+        </Grid>
+        <Grid size={{ xs: 12, md: 4 }}>
+            <Card sx={{ borderRadius: "24px", p: 1, border: "1px solid #f0f0f0" }} elevation={0}>
+                <CardContent sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                    <Box>
+                        <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ textTransform: "uppercase" }}>{t("tournament_details.info.reg_period")}</Typography>
+                        <Typography variant="body1" fontWeight={600} sx={{ mt: 0.5 }}>{formatDate(state.tournamentData.startRegistration)} — {formatDate(state.tournamentData.endRegistration)}</Typography>
+                    </Box>
+                    <Divider />
+                    <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                        <Typography color="text.secondary" fontWeight={500}>{t("tournament_details.info.max_teams")}</Typography>
+                        <Typography fontWeight={800}>{state.tournamentData.maxCountOfTeams}</Typography>
+                    </Box>
+                    <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                        <Typography color="text.secondary" fontWeight={500}>{t("tournament_details.info.rounds_count")}</Typography>
+                        <Typography fontWeight={800}>{state.tournamentData.countOfRounds}</Typography>
+                    </Box>
+                </CardContent>
+            </Card>
+        </Grid>
+    </Grid>
+);
+
+const RoundsTab = ({ state, formatDate, t, navigate }: any) => (
+    <Box>
+        <Box sx={{ display: "flex", justifyContent: "space-between", mb: 4, alignItems: "center", flexWrap: 'wrap', gap: 2 }}>
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                <Typography variant="h5" fontWeight={800}>{t("tournament_details.rounds.title")}</Typography>
+                <FormControl size="small" sx={{ minWidth: 200 }}>
+                    <Select value={state.selectedRoundStatus} onChange={(e) => state.setSelectedRoundStatus(e.target.value as RoundStatus)} sx={{ borderRadius: "12px", fontWeight: 600 }}>
+                        {ROUND_STATUSES.filter(s => state.isAdmin || s !== 'DRAFT').map(s => <MenuItem key={s} value={s}>{t(`rounds.statuses.${s}`)}</MenuItem>)}
+                    </Select>
+                </FormControl>
+            </Box>
+            {state.isAdmin && <Button variant="contained" color="secondary" startIcon={<AddIcon />} onClick={() => state.setRoundModalOpen(true)} sx={{ borderRadius: "12px", fontWeight: 700, color: "black" }}>{t("tournament_details.admin.add_round")}</Button>}
+        </Box>
+        {state.loadingTab ? <Box sx={{ textAlign: 'center', py: 5 }}><CircularProgress /></Box> : (
+            <Grid container spacing={2}>
+                {state.rounds.length > 0 ? state.rounds.map((round: any) => (
+                    <Grid size={{ xs: 12 }} key={round.id}>
+                        <Card onClick={() => navigate(`/rounds/${round.id}`)} sx={{ borderRadius: "20px", cursor: "pointer", border: "1px solid #eee", transition: "0.3s", "&:hover": { borderColor: "primary.main", transform: "translateX(8px)", boxShadow: "0 4px 20px rgba(0,0,0,0.05)" } }} elevation={0}>
+                            <CardContent sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", p: 3 }}>
+                                <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
+                                    <Avatar sx={{ bgcolor: round.status === "ACTIVE" ? "primary.main" : "grey.100", color: round.status === "ACTIVE" ? "white" : "grey.400", width: 56, height: 56 }}><AssignmentIcon /></Avatar>
+                                    <Box>
+                                        <Typography variant="h6" fontWeight={800}>{round.name}</Typography>
+                                        <Typography variant="body2" color="text.secondary" fontWeight={500}>{formatDate(round.startDate)} — {formatDate(round.endDate)}</Typography>
+                                    </Box>
+                                </Box>
+                                <Chip label={t(`rounds.statuses.${round.status}`)} color={round.status === "ACTIVE" ? "success" : "default"} sx={{ fontWeight: 700, borderRadius: "8px" }} />
+                            </CardContent>
+                        </Card>
+                    </Grid>
+                )) : <Box sx={{ textAlign: 'center', width: '100%', py: 8, bgcolor: "#fafafa", borderRadius: "24px" }}><Typography color="text.secondary" fontWeight={600}>{t("tournament_details.rounds.empty")}</Typography></Box>}
+            </Grid>
+        )}
+    </Box>
+);
+
+const TeamsTab = ({ state, t, navigate }: any) => (
+    <Box>
+        <Typography variant="h5" fontWeight={800} sx={{ mb: 4 }}>{t("tournament_details.tabs.teams")}</Typography>
+        {state.loadingTab ? <Box sx={{ textAlign: 'center', py: 5 }}><CircularProgress /></Box> : (
+            <Grid container spacing={3}>
+                {state.teams.length > 0 ? state.teams.map((team: any) => (
+                    <Grid size={{ xs: 12, sm: 6, md: 4 }} key={team.id}>
+                        <Card onClick={() => navigate(`/teams/${team.id}`)} sx={{ borderRadius: "24px", cursor: "pointer", border: "1px solid #eee", transition: "0.3s", "&:hover": { transform: "translateY(-8px)", boxShadow: "0 12px 30px rgba(0,0,0,0.08)" } }} elevation={0}>
+                            <CardContent sx={{ textAlign: "center", p: 4 }}>
+                                <Avatar sx={{ mx: "auto", mb: 2, bgcolor: "primary.light", color: "primary.main", width: 64, height: 64 }}><GroupsIcon fontSize="large" /></Avatar>
+                                <Typography variant="h6" fontWeight={800}>{team.name}</Typography>
+                                <Typography variant="body2" color="text.secondary">{team.email}</Typography>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+                )) : <Box sx={{ textAlign: 'center', width: '100%', py: 8, bgcolor: "#fafafa", borderRadius: "24px" }}><Typography color="text.secondary" fontWeight={600}>{t("tournament_details.teams.empty")}</Typography></Box>}
+            </Grid>
+        )}
+    </Box>
+);

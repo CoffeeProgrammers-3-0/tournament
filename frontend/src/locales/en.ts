@@ -3,222 +3,230 @@ export const en = {
         "tournaments": "Tournaments",
         "teams": "Teams",
         "support": "Support",
-        "availableTournaments": "Available Tournaments",
+        "availableTournaments": "Available",
         "myCurrentTournaments": "My Active",
         "history": "History",
         "profile": "Profile",
         "logout": "Logout",
-        "login": "Login"
-    },
-    languages: {
-        "uk": "Ukrainian",
-        "en": "English"
+        "login": "Login",
+        "manageTournaments": "Manage Tournaments",
+        "allTeams": "All Teams",
+        "adminPanel": "Admin Panel",
+        "mySubmissions": "Review Submissions",
+        "myTeam": "My Team",
+        "role": "Role: ",
     },
     footer: {
+        "description": "Digital platform for hackathons and competitions by Star for Life Ukraine charity foundation.",
         "tournaments": "Tournaments",
         "available": "Available",
-        "myTournaments": "My Tournaments",
+        "myTournaments": "My Participation",
         "teams": "Teams",
         "myTeams": "My Teams",
         "contacts": "Contacts",
         "founded": "Founded: 30.01.2023",
-        "rights": "© 2026 Star for Life Ukraine",
+        "rights": "All rights reserved",
         "terms": "Terms of Use",
         "privacy": "Privacy Policy",
-        "register": "Registered Charity: 44977372"
-    },
-    login: {
-        "title": "Redirect to login page",
-    },
-    home: {
-        title: "Home Page",
-        description: "This site serves as a convenient platform for hosting various tournaments by the Star for Life Ukraine charity foundation."
+        "register": "ID: 44977372"
     },
     tournaments: {
         "title": "Tournaments",
-        "subtitle": "Track your results and find new competitions.",
-        "search_placeholder": "Search tournament by name...",
-        "filter_status": "Filter by status",
-        "all_statuses": "All statuses",
-        "pagination": {
-            "next": "Next",
-            "prev": "Previous"
-        },
+        "admin_title": "Tournament Management",
+        "subtitle": "Track your results and discover new challenges.",
+        "search_placeholder": "Search by name...",
+        "no_data": "No tournaments found",
         "tabs": {
-            "available": "Available Tournaments",
-            "my": "My Active",
-            "history": "History",
-            "admin": "Management (Admin)"
+            "available": "Available",
+            "my": "My Entries",
+            "history": "Past",
+            "admin": "Management"
         },
         "card": {
-            "start": "Starts",
-            "registration": "Registration",
-            "details": "Details",
-            "no_data": "There are no tournaments in this category.",
-            "more_info": "More info",
-            "edit": "Edit"
+            "more_info": "View Details",
+            "no_data": "No tournaments in this category yet."
         },
         "statuses": {
-            "REGISTRATION": "Registration Open",
-            "RUNNING": "In Progress",
+            "REGISTRATION": "Registration",
+            "RUNNING": "Ongoing",
             "FINISHED": "Finished",
             "DRAFT": "Draft"
         },
         "admin": {
-            "create_button": "Create tournament",
-            "modal_title": "New tournament",
+            "create_button": "Create Tournament",
+            "modal_title": "New Tournament",
+            "submit": "Create",
+            "cancel": "Cancel",
+            "backToList": "Back to List",
             "fields": {
-                "name": "Title",
+                "name": "Tournament Name",
                 "description": "Description",
-                "startTournament": "Start date",
-                "startReg": "Start registration",
-                "endReg": "End registration",
-                "maxTeams": "Max teams",
-                "rounds": "Rounds"
-            },
-            "cancel": "Cancel",
-            "submit": "Submit",
-            "backToList": "Back to list"
-        }
-    },
-    tournament_details: {
-        "header": {
-            "registered": "You are registered",
-            "register_btn": "Register",
-            "startDate": "Start:"
-        },
-        "tabs": {
-            "info": "Info",
-            "rounds": "Rounds",
-            "teams": "Teams"
-        },
-        "info": {
-            "reg_period": "Registration period",
-            "max_teams": "Max teams",
-            "rounds_count": "Rounds count",
-            "no_description": "No description"
-        },
-        "rounds": {
-            "title": "Tournament rounds",
-            "empty": "Rounds have not started yet"
-        },
-        "admin": {
-            "edit_info": "Edit tournament info",
-            "add_round": "Add round",
-            "save": "Save",
-            "cancel": "Cancel",
-            "create_modal": {
-                "title": "New round",
-                "name": "Round name",
-                "name_placeholder": "E.g. Semifinal",
-                "start": "Start date",
-                "end": "End date",
-                "winners": "Number of teams that advance",
-                "task": "Task description",
-                "submit": "Create",
+                "startTournament": "Start Date",
+                "startReg": "Registration Start",
+                "endReg": "Registration End",
+                "maxTeams": "Max Teams",
+                "rounds": "Rounds Count"
             }
         }
     },
-    rounds: {
-        "status": "Status",
-        "statuses": {
-            "DRAFT": "Створений",
-            "ACTIVE": "Активний",
-            "SUBMISSION_CLOSED": "",
-            "EVALUATED": "",
+    tournament_details: {
+        header: {
+            startDate: "Starts:",
+            registered: "You are registered",
+            register_btn: "Register Now"
+        },
+        tabs: {
+            info: "Information",
+            rounds: "Rounds",
+            teams: "Teams"
+        },
+        info: {
+            reg_period: "Registration Period",
+            max_teams: "Max Teams Capacity",
+            rounds_count: "Number of Rounds",
+            no_description: "No description provided for this tournament."
+        },
+        rounds: {
+            title: "Tournament Rounds",
+            empty: "No rounds have been created for this tournament yet."
+        },
+        teams: {
+            empty: "No teams have registered for this tournament yet."
+        },
+        admin: {
+            edit_info: "Edit Tournament",
+            add_round: "Add New Round",
+            create_modal: {
+                title: "Create New Round",
+                name: "Round Name",
+                name_placeholder: "Describe the tasks for participants in this stage...",
+                start: "Start Date",
+                end: "End Date",
+                winners: "Teams advancing count",
+                task: "Task Description",
+                submit: "Create Round"
+            }
         }
     },
     teams: {
-        "title": "My Teams",
-        "subtitle": "List of teams you belong to or manage",
-        "search_placeholder": "Search team...",
-        "no_data": "You are not a member of any teams yet.",
+        "title": "Teams",
+        "admin_title": "Team Directory",
+        "subtitle": "Participants and communities of the platform",
+        "search_placeholder": "Search team by name...",
+        "no_data": "No teams found",
+        "actions": {
+            "create": "Register Team"
+        },
         "card": {
-            "more_info": "More info",
+            "more_info": "View Profile"
         }
     },
-    team_details: {
-        "header": {
-            "contact": "Contact:",
-            "organization": "Organization:"
-        },
-        "tabs": {
-            "info": "Info",
-            "members": "Members",
-            "tournaments": "Tournaments"
-        },
-        "info": {
-            "contact_person": "Contact person",
-            "org_name": "Organization name",
-            "email": "Email",
-            "no_info": "No additional information provided"
-        },
-        "members": {
-            "title": "Team members",
-            "leader": "Leader",
-            "member": "Member",
-        },
-        "tournaments": {
-            "title": "Tournaments participated",
-            "empty": "This team has not participated in any tournaments yet."
-        },
-        "admin": {
-            "edit_info": "Edit team info",
-            "add_member": "Add member",
-            "member_modal": {
-                "title": "Add team member",
-                "full_name": "Full name",
-                "email": "Email",
-                "is_leader": "Leader",
-                "submit": "Add",
-            },
-            "delete_member_confirm": "Are you sure you want to remove this member from the team?",
-            "make_leader": "Make leader",
-            "remove_member": "Remove from team",
-        }
-    },
-    team_create: {
-        "title": "Regis team",
-        "subtitle": "Fill in the form below to regis your team.",
-        "success": "Team registered successfully!",
-        "choose_tournament": "Choose a tournament",
-        "name_needed": "Team name is required",
-        "error": "Error creating team",
-        "back": "Back",
-        "members": "Team members",
-        "registration": "Registration...",
-        "regis": "Regis your team",
+    submission: {
+        "title": "Submit Project",
+        "subtitle": "Round: {{roundName}}",
         "fields": {
-            "name": "Team name",
-            "contact_email": "Contact email",
-            "contact_some": "Contact phone or telegram",
-            "email": "Email",
-            "org_name": "Organization name",
-            "members": "Team members",
-            "add_member": "Add member",
-            "submit": "Create",
-            "leaders_name": "Team leader full name",
-            "members_name": "Team member full name",
-            "leaders_email": "Team leader email",
-            "members_email": "Team member email",
+            "github": "GitHub / Repository Link",
+            "video": "Video Presentation Link (YouTube/Drive)",
+            "description": "Solution Description",
+            "placeholder_desc": "Briefly describe your work..."
+        },
+        "status": {
+            "not_submitted": "Not submitted yet",
+            "submitted": "Project submitted",
+            "edit": "Update Project"
+        },
+        "submit_btn": "Submit for Review",
+        "success": "Project saved successfully!"
+    },
+    jury: {
+        "submissions_title": "Pending Reviews",
+        "evaluate_title": "Project Evaluation",
+        "team": "Team",
+        "links": "Materials",
+        "no_submissions": "No projects to review at the moment",
+        "evaluation_form": {
+            "score": "Score",
+            "comment": "Comment for the team",
+            "placeholder_comment": "Your notes or advice...",
+            "submit": "Complete Evaluation",
+            "success": "Score submitted!"
+        },
+        "criteria": "Evaluation Criteria"
+    },
+    create_jury: {
+        "title": "New Jury",
+        "subtitle": "Fill in the details to add a new jury member to the system",
+        "success": "Jury member created successfully!",
+        "fields": {
+            "full_name": "Full Name",
+            "email": "Email Address"
+        },
+        "actions": {
+            "submit": "Create Jury",
+            "creating": "Creating..."
+        },
+        "errors": {
+            "generic": "Failed to create jury. Please check the data and try again."
         }
     },
-    profile: {
-        "title": "My Profile",
-        "info": "Personal Information",
-        "teams": "My Teams",
-        "tournaments": "My Tournaments",
-        "role": "Role",
-        "no_teams": "You are not a member of any teams yet.",
-        "no_tournaments": "There are no active tournaments.",
-        "buttons": {
-            "edit": "Edit Profile",
-            "all_teams": "All Teams",
-            "details": "Details"
+    rounds: {
+        "status": "Round Status",
+        "statuses": {
+            "DRAFT": "Drafting",
+            "ACTIVE": "Open for Submissions",
+            "SUBMISSION_CLOSED": "Under Review",
+            "EVALUATED": "Finished"
         }
     },
     common: {
-        authenticating: "Authenticating",
-        authenticatingSubtitle: "Please, wait"
+        "save": "Save",
+        "cancel": "Cancel",
+        "loading": "Loading...",
+        "error": "An error occurred",
+        "success": "Action successful",
+        "back": "Back",
+        "authenticating": "Authenticating",
+        "authenticatingSubtitle": "Please, wait"
+    },
+    profile: {
+        "title": "My Profile",
+        "role": "System Role",
+        "teams": "My Teams",
+        "tournaments": "Active Tournaments",
+        "no_teams": "You haven't joined any teams yet",
+        "no_tournaments": "No active tournaments at the moment",
+        "error_loading": "Failed to load profile data",
+        "buttons": {
+            "edit": "Edit Profile"
+        },
+        "fields": {
+            "full_name": "Full Name",
+        },
+        "statuses": {
+            "RUNNING": "Running",
+            "COMPLETED": "Completed",
+            "REGISTRATION": "Registration"
+        }
+    },
+    home: {
+        "title": "Manage Tournaments Easily",
+        "description": "A single platform for organizing competitions, managing teams, and transparent real-time scoring.",
+        "how_it_works": {
+            "title": "How it works?",
+            "steps": {
+                "step1": {
+                    "title": "Registration",
+                    "desc": "Create your profile and get access to the list of current tournaments in your region or online."
+                },
+                "step2": {
+                    "title": "Team Formation",
+                    "desc": "Find like-minded people, create your own team, or join an existing one to participate in competitions."
+                },
+                "step3": {
+                    "title": "Path to Victory",
+                    "desc": "Complete round tasks, get scores from professional jury, and climb to the top of the leaderboard."
+                }
+            }
+        }
     }
-}
+};

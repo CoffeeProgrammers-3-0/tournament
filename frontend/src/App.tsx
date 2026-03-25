@@ -9,7 +9,7 @@ import {TournamentsPage} from "./pages/tournament/TournamentsPage.tsx";
 import LoginPage from "./pages/home/LoginPage.tsx";
 import {TeamsPage} from "./pages/team/TeamsPage.tsx";
 import {ProfilePage} from "./pages/user/ProfilePage.tsx";
-import {TournamentDetailsPage} from "./pages/tournament/TournamentDetailsPage.tsx";
+import TournamentDetailsPage from "./pages/tournament/TournamentDetailsPage.tsx";
 import {TeamDetailsPage} from "./pages/team/TeamDetailsPage.tsx";
 import {RoundDetailsPage} from "./pages/round/RoundDetailsPage.tsx";
 import {CreateJuryPage} from "./pages/jury/CreateJuryPage.tsx";
