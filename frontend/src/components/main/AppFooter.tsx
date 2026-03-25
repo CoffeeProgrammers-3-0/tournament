@@ -5,15 +5,14 @@ import Cookies from "js-cookie";
 import InstagramIcon from "@mui/icons-material/Instagram";
 import FacebookIcon from "@mui/icons-material/Facebook";
 import LinkedInIcon from "@mui/icons-material/LinkedIn";
+import YouTubeIcon from "@mui/icons-material/YouTube"; // Додаємо YouTube
 import logo from "../../assets/logo.png";
 
-// Типи ролей для синхронізації з хедером
 type role = 'ADMIN' | 'JURY' | 'USER' | null;
 
 export const AppFooter = () => {
     const { t } = useTranslation();
 
-    // Отримання статусу та ролі (аналогічно хедеру)
     const isLoggedIn = Cookies.get("userId") !== undefined;
     const role = Cookies.get("role") as role || 'USER';
 
@@ -39,7 +38,7 @@ export const AppFooter = () => {
                         </Typography>
                     </Grid>
 
-                    {/* 2. Динамічна колонка: ТУРНІРИ */}
+                    {/* 2. ТУРНІРИ */}
                     <Grid size={{xs: 6, md: 3}} sx={{ textAlign: "center" }}>
                         <Typography fontWeight={800} color="text.primary" sx={{ mb: 2, fontSize: "0.9rem", textTransform: "uppercase", letterSpacing: 1 }}>
                             {t("header.tournaments")}
@@ -56,13 +55,12 @@ export const AppFooter = () => {
                         )}
                     </Grid>
 
-                    {/* 3. Динамічна колонка: КОМАНДИ / УПРАВЛІННЯ */}
+                    {/* 3. КОМАНДИ / УПРАВЛІННЯ */}
                     <Grid size={{xs: 6, md: 3}} sx={{ textAlign: "center" }}>
                         <Typography fontWeight={800} color="text.primary" sx={{ mb: 2, fontSize: "0.9rem", textTransform: "uppercase", letterSpacing: 1 }}>
                             {role === 'JURY' ? t("header.mySubmissions") : t("footer.teams")}
                         </Typography>
 
-                        {/* Адмін бачить все */}
                         {role === 'ADMIN' && (
                             <>
                                 <Link component={RouterLink} to="/admin/teams" display="block" underline="hover" sx={{ mb: 1, color: "text.secondary", fontSize: "0.875rem" }}>
@@ -74,14 +72,12 @@ export const AppFooter = () => {
                             </>
                         )}
 
-                        {/* Юзер бачить свою команду */}
                         {role === 'USER' && (
                             <Link component={RouterLink} to={isLoggedIn ? "/my-team" : "/login"} display="block" underline="hover" sx={{ color: "text.secondary", fontSize: "0.875rem" }}>
                                 {isLoggedIn ? t("header.myTeam") : t("header.login")}
                             </Link>
                         )}
 
-                        {/* Журі бачить свої роботи */}
                         {role === 'JURY' && (
                             <Link component={RouterLink} to="/jury/submissions" display="block" underline="hover" sx={{ color: "text.secondary", fontSize: "0.875rem" }}>
                                 {t("header.mySubmissions")}
@@ -89,7 +85,7 @@ export const AppFooter = () => {
                         )}
                     </Grid>
 
-                    {/* 4. Контакти та Соцмережі */}
+                    {/* 4. Контакти та Соцмережі з ТВОЇМИ ЛІНКАМИ */}
                     <Grid size={{xs: 12, md: 3}} sx={{ textAlign: { xs: "center", md: "right" } }}>
                         <Typography fontWeight={800} color="text.primary" sx={{ mb: 2, fontSize: "0.9rem", textTransform: "uppercase", letterSpacing: 1 }}>
                             {t("footer.contacts")}
@@ -101,21 +97,27 @@ export const AppFooter = () => {
                         <Box sx={{ mt: 2, display: "flex", justifyContent: { xs: "center", md: "flex-end" }, gap: 1 }}>
                             <IconButton
                                 sx={{ bgcolor: "grey.100", '&:hover': { bgcolor: "primary.light", color: "white" } }}
-                                size="small" href="https://instagram.com" target="_blank"
+                                size="small" href="https://www.instagram.com/starforlifeukraine" target="_blank"
                             >
                                 <InstagramIcon fontSize="small" />
                             </IconButton>
                             <IconButton
                                 sx={{ bgcolor: "grey.100", '&:hover': { bgcolor: "primary.light", color: "white" } }}
-                                size="small" href="https://facebook.com" target="_blank"
+                                size="small" href="https://www.facebook.com/starforlifeua" target="_blank"
                             >
                                 <FacebookIcon fontSize="small" />
                             </IconButton>
                             <IconButton
                                 sx={{ bgcolor: "grey.100", '&:hover': { bgcolor: "primary.light", color: "white" } }}
-                                size="small" href="https://linkedin.com" target="_blank"
+                                size="small" href="https://www.linkedin.com/company/starforlifeua/" target="_blank"
                             >
                                 <LinkedInIcon fontSize="small" />
+                            </IconButton>
+                            <IconButton
+                                sx={{ bgcolor: "grey.100", '&:hover': { bgcolor: "primary.light", color: "white" } }}
+                                size="small" href="https://www.youtube.com/@starforlifeua" target="_blank"
+                            >
+                                <YouTubeIcon fontSize="small" />
                             </IconButton>
                         </Box>
                     </Grid>
