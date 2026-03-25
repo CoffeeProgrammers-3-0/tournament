@@ -8,14 +8,14 @@ import LinkedInIcon from "@mui/icons-material/LinkedIn";
 import logo from "../../assets/logo.png";
 
 // Типи ролей для синхронізації з хедером
-type UserRole = 'ADMIN' | 'JURY' | 'USER' | null;
+type role = 'ADMIN' | 'JURY' | 'USER' | null;
 
 export const AppFooter = () => {
     const { t } = useTranslation();
 
     // Отримання статусу та ролі (аналогічно хедеру)
     const isLoggedIn = Cookies.get("userId") !== undefined;
-    const userRole = Cookies.get("userRole") as UserRole || 'USER';
+    const role = Cookies.get("role") as role || 'USER';
 
     return (
         <Box component="footer" sx={{
@@ -46,10 +46,10 @@ export const AppFooter = () => {
                         </Typography>
 
                         <Link component={RouterLink} to="/tournaments" display="block" underline="hover" sx={{ mb: 1, color: "text.secondary", fontSize: "0.875rem" }}>
-                            {userRole === 'ADMIN' ? t("header.manageTournaments") : t("tournaments.tabs.available")}
+                            {role === 'ADMIN' ? t("header.manageTournaments") : t("tournaments.tabs.available")}
                         </Link>
 
-                        {isLoggedIn && userRole === 'USER' && (
+                        {isLoggedIn && role === 'USER' && (
                             <Link component={RouterLink} to="/tournaments?tab=1" display="block" underline="hover" sx={{ color: "text.secondary", fontSize: "0.875rem" }}>
                                 {t("tournaments.tabs.my")}
                             </Link>
@@ -59,11 +59,11 @@ export const AppFooter = () => {
                     {/* 3. Динамічна колонка: КОМАНДИ / УПРАВЛІННЯ */}
                     <Grid size={{xs: 6, md: 3}} sx={{ textAlign: "center" }}>
                         <Typography fontWeight={800} color="text.primary" sx={{ mb: 2, fontSize: "0.9rem", textTransform: "uppercase", letterSpacing: 1 }}>
-                            {userRole === 'JURY' ? t("header.mySubmissions") : t("footer.teams")}
+                            {role === 'JURY' ? t("header.mySubmissions") : t("footer.teams")}
                         </Typography>
 
                         {/* Адмін бачить все */}
-                        {userRole === 'ADMIN' && (
+                        {role === 'ADMIN' && (
                             <>
                                 <Link component={RouterLink} to="/admin/teams" display="block" underline="hover" sx={{ mb: 1, color: "text.secondary", fontSize: "0.875rem" }}>
                                     {t("header.allTeams")}
@@ -75,14 +75,14 @@ export const AppFooter = () => {
                         )}
 
                         {/* Юзер бачить свою команду */}
-                        {userRole === 'USER' && (
+                        {role === 'USER' && (
                             <Link component={RouterLink} to={isLoggedIn ? "/my-team" : "/login"} display="block" underline="hover" sx={{ color: "text.secondary", fontSize: "0.875rem" }}>
                                 {isLoggedIn ? t("header.myTeam") : t("header.login")}
                             </Link>
                         )}
 
                         {/* Журі бачить свої роботи */}
-                        {userRole === 'JURY' && (
+                        {role === 'JURY' && (
                             <Link component={RouterLink} to="/jury/submissions" display="block" underline="hover" sx={{ color: "text.secondary", fontSize: "0.875rem" }}>
                                 {t("header.mySubmissions")}
                             </Link>

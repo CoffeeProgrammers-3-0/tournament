@@ -32,7 +32,7 @@ import {useLanguage} from "../../i18n/useLanguage.ts";
 import Cookies from "js-cookie";
 
 // Визначення ролей для зручності
-type UserRole = 'ADMIN' | 'JURY' | 'USER' | null;
+type role = 'ADMIN' | 'JURY' | 'USER' | null;
 
 export const AppHeader = () => {
     const { t } = useTranslation();
@@ -40,7 +40,7 @@ export const AppHeader = () => {
 
     // Отримання статусу авторизації та ролі
     const isLoggedIn = Cookies.get("userId") !== undefined;
-    const userRole = Cookies.get("userRole") as UserRole || 'USER'; // Замініть на вашу логіку
+    const role = Cookies.get("role") as role || 'USER'; // Замініть на вашу логіку
 
     const [profileAnchorEl, setProfileAnchorEl] = useState<null | HTMLElement>(null);
     const [tournamentsAnchorEl, setTournamentsAnchorEl] = useState<null | HTMLElement>(null);
@@ -77,7 +77,7 @@ export const AppHeader = () => {
                     <Box sx={{ display: "flex", gap: 1, justifyContent: "center", alignItems: "center" }}>
 
                         {/* 1. TOURNAMENTS (Visible for Admin & User) */}
-                        {(userRole === 'ADMIN' || userRole === 'USER') && (
+                        {(role === 'ADMIN' || role === 'USER') && (
                             <Button
                                 color="inherit"
                                 onClick={handleTournamentsClick}
@@ -89,20 +89,20 @@ export const AppHeader = () => {
                         )}
 
                         {/* 2. TEAMS (Admin: All teams, User: My Team) */}
-                        {isLoggedIn && (userRole === 'ADMIN' || userRole === 'USER') && (
+                        {isLoggedIn && (role === 'ADMIN' || role === 'USER') && (
                             <Button
                                 color="inherit"
                                 component={RouterLink}
-                                to={userRole === 'ADMIN' ? "/admin/teams" : "/my-team"}
+                                to={role === 'ADMIN' ? "/admin/teams" : "/my-team"}
                                 sx={{ textTransform: "none" }}
                                 startIcon={<GroupsIcon sx={{ opacity: 0.7 }} />}
                             >
-                                {userRole === 'ADMIN' ? t("header.allTeams") : t("header.myTeam")}
+                                {role === 'ADMIN' ? t("header.allTeams") : t("header.myTeam")}
                             </Button>
                         )}
 
                         {/* 3. JURY SPECIFIC: My Submissions */}
-                        {isLoggedIn && userRole === 'JURY' && (
+                        {isLoggedIn && role === 'JURY' && (
                             <Button
                                 color="primary"
                                 variant="text"
@@ -116,7 +116,7 @@ export const AppHeader = () => {
                         )}
 
                         {/* 4. ADMIN SPECIFIC: Management */}
-                        {isLoggedIn && userRole === 'ADMIN' && (
+                        {isLoggedIn && role === 'ADMIN' && (
                             <Button
                                 color="primary"
                                 component={RouterLink}
@@ -154,9 +154,9 @@ export const AppHeader = () => {
                             <IconButton onClick={handleProfileClick} size="small">
                                 <Avatar sx={{
                                     width: 40, height: 40,
-                                    bgcolor: userRole === 'ADMIN' ? "error.main" : "primary.main"
+                                    bgcolor: role === 'ADMIN' ? "error.main" : "primary.main"
                                 }}>
-                                    {userRole === 'ADMIN' ? <AdminPanelSettingsIcon /> : <PersonIcon />}
+                                    {role === 'ADMIN' ? <AdminPanelSettingsIcon /> : <PersonIcon />}
                                 </Avatar>
                             </IconButton>
                         ) : (
@@ -197,10 +197,10 @@ export const AppHeader = () => {
             >
                 <MenuItem component={RouterLink} to="/tournaments" onClick={handleClose}>
                     <ListItemIcon><EmojiEventsIcon fontSize="small" color="primary" /></ListItemIcon>
-                    {userRole === 'ADMIN' ? t("header.manageTournaments") : t("header.availableTournaments")}
+                    {role === 'ADMIN' ? t("header.manageTournaments") : t("header.availableTournaments")}
                 </MenuItem>
 
-                {isLoggedIn && userRole === 'USER' && [
+                {isLoggedIn && role === 'USER' && [
                     <MenuItem key="current" component={RouterLink} to="/tournaments?tab=1" onClick={handleClose}>
                         <ListItemIcon><PlayCircleOutlineIcon fontSize="small" color="warning" /></ListItemIcon>
                         {t("header.myCurrentTournaments")}
@@ -230,7 +230,7 @@ export const AppHeader = () => {
                     anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
                 >
                     <Box sx={{ px: 2, py: 1.5 }}>
-                        <Typography variant="subtitle2" fontWeight={700}>{t("header.role")}: {userRole}</Typography>
+                        <Typography variant="subtitle2" fontWeight={700}>{t("header.role")}: {role}</Typography>
                     </Box>
                     <Divider />
                     <MenuItem component={RouterLink} to="/profile" onClick={handleClose}>

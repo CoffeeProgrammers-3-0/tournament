@@ -57,6 +57,7 @@ const App: React.FC = () => {
 
                         {/* --- СТОРІНКИ АДМІНІСТРАТОРА --- */}
                         <Route path="/admin/jury/create" element={<PageContainer><CreateJuryPage/></PageContainer>}/>
+                        <Route path="/admin/teams" element={<PageContainer><TeamsPage/></PageContainer>}/>
                         {/* Сюди можна додати /admin/teams тощо */}
                     </Route>
 
