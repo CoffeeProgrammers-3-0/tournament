@@ -23,4 +23,14 @@ public interface TournamentRepository extends JpaRepository<Tournament, Long>, J
             "WHERE t.status = com.project.backend.models.constants.TournamentStatus.REGISTRATION " +
             "AND t.startTournament <= :now")
     int startTournaments(@Param("now") LocalDateTime now);
+
+    @Modifying
+    @Query("UPDATE Tournament t SET t.status = com.project.backend.models.constants.TournamentStatus.FINISHED " +
+            "WHERE t.status = com.project.backend.models.constants.TournamentStatus.RUNNING " +
+            // Умова 1: Кількість раундів досягла максимуму
+            "AND t.countOfRounds = (SELECT COUNT(r) FROM Round r WHERE r.tournament = t) " +
+            // Умова 2: Усі раунди цього турніру мають статус EVALUATED (немає жодного НЕ оціненого)
+            "AND NOT EXISTS (SELECT r2 FROM Round r2 WHERE r2.tournament = t " +
+            "AND r2.status != com.project.backend.models.constants.RoundStatus.EVALUATED)")
+    int finishTournaments();
 }

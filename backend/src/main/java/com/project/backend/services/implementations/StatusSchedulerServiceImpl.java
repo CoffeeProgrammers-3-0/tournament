@@ -23,16 +23,25 @@ public class StatusSchedulerServiceImpl {
     public void updateStatusesBasedOnTime() {
         LocalDateTime now = LocalDateTime.now();
 
+        // 1. Початок реєстрації
         int regsStarted = tournamentRepository.startRegistrations(now);
         if (regsStarted > 0) log.info("Opened registration for {} tournaments", regsStarted);
 
+        // 2. Початок турнірів
         int toursStarted = tournamentRepository.startTournaments(now);
         if (toursStarted > 0) log.info("Started {} tournaments", toursStarted);
 
+        // 3. Початок раундів
         int roundsStarted = roundRepository.startRounds(now);
         if (roundsStarted > 0) log.info("Started {} rounds", roundsStarted);
 
+        // 4. Закриття прийому робіт у раундах
         int roundsClosed = roundRepository.closeRoundSubmissions(now);
         if (roundsClosed > 0) log.info("Closed submissions for {} rounds", roundsClosed);
+
+        // 5. НОВА ЛОГІКА: Завершення турнірів
+        // Це спрацює, коли останній раунд перейде в EVALUATED (це зазвичай робить адмін вручну)
+        int toursFinished = tournamentRepository.finishTournaments();
+        if (toursFinished > 0) log.info("Successfully finished {} tournaments", toursFinished);
     }
 }

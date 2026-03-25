@@ -17,6 +17,7 @@ import {
     Divider,
     Grid,
     IconButton,
+    MenuItem,
     Paper,
     Tab,
     Table,
@@ -49,7 +50,7 @@ import {roundService} from "../../services/impl/RoundService";
 import {teamService} from "../../services/impl/TeamService";
 import {categoryService} from "../../services/impl/CategoryService";
 
-import type {RoundFullResponseDto, RoundUpdateRequestDto} from "../../entities/round/round.dto.ts";
+import type {RoundFullResponseDto, RoundStatus, RoundUpdateRequestDto} from "../../entities/round/round.dto.ts";
 import type {CategoryRequestDto, CategoryResponseDto} from "../../entities/category/category.dto.ts";
 import type {UserResponseDto} from "../../entities/user/user.dto.ts";
 import type {StatisticResponseDto, TeamLeaderboardResponseDto} from "../../entities/team/team.dto.ts";
@@ -104,7 +105,8 @@ export const RoundDetailsPage = () => {
                 endDate: data.endDate?.substring(0, 16) || "",
                 countOfWinners: data.countOfWinners,
                 requirements: data.requirements,
-                task: data.task
+                task: data.task,
+                status: data.status,
             } as RoundUpdateRequestDto);
         } catch (error) {
             console.error("Failed to fetch round:", error);
@@ -244,6 +246,47 @@ export const RoundDetailsPage = () => {
     const juryList = selectedStats?.pointsPerJury ? Object.keys(selectedStats.pointsPerJury) : [];
     const criteriaList = Object.keys(aggregatedCriteria);
 
+    const toDateTimeLocal = (date: Date) => {
+        const offset = date.getTimezoneOffset() * 60000;
+        return new Date(date.getTime() - offset).toISOString().slice(0, 16);
+    };
+
+    const handleStatusChange = (newStatus: RoundStatus) => {
+        const now = new Date();
+        let newStartDate = editFormData.startDate ? new Date(editFormData.startDate) : new Date();
+        let newEndDate = editFormData.endDate ? new Date(editFormData.endDate) : new Date(now.getTime() + 86400000); // +1 день за замовчуванням
+
+        if (newStatus === "DRAFT") {
+            // DRAFT: Початок має бути в майбутньому
+            if (newStartDate <= now) {
+                newStartDate = new Date(now.getTime() + 86400000); // Завтра
+                newEndDate = new Date(newStartDate.getTime() + 86400000); // Післязавтра
+            }
+        } else if (newStatus === "ACTIVE") {
+            // ACTIVE: Початок у минулому/зараз, кінець у майбутньому
+            if (newStartDate > now) {
+                newStartDate = new Date(now.getTime() - 60000); // Хвилину тому
+            }
+            if (newEndDate <= now) {
+                newEndDate = new Date(now.getTime() + 86400000); // Завтра
+            }
+        } else if (newStatus === "SUBMISSION_CLOSED" || newStatus === "EVALUATED") {
+            // CLOSED / EVALUATED: Обидві дати в минулому
+            if (newEndDate > now) {
+                newEndDate = new Date(now.getTime() - 60000); // Хвилину тому
+            }
+            if (newStartDate >= newEndDate) {
+                newStartDate = new Date(newEndDate.getTime() - 86400000); // Вчора відносно кінця
+            }
+        }
+
+        setEditFormData(prev => ({
+            ...prev,
+            status: newStatus,
+            startDate: toDateTimeLocal(newStartDate),
+            endDate: toDateTimeLocal(newEndDate)
+        }));
+    };
 
     if (loading) return <Box sx={{ display: "flex", justifyContent: "center", mt: 10 }}><CircularProgress /></Box>;
     if (!roundData) return <Typography sx={{ textAlign: 'center', mt: 5 }}>Round not found</Typography>;
@@ -296,20 +339,89 @@ export const RoundDetailsPage = () => {
                     <Grid size={{xs:12, md:8}}>
                         {isEditingInfo ? (
                             <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                                <TextField fullWidth label="Назва раунду" value={editFormData.name} onChange={(e) => setEditFormData({...editFormData, name: e.target.value})} />
-                                <Box sx={{ display: "flex", gap: 2 }}>
-                                    <TextField fullWidth type="datetime-local" label="Початок" InputLabelProps={{ shrink: true }} value={editFormData.startDate} onChange={(e) => setEditFormData({...editFormData, startDate: e.target.value})} />
-                                    <TextField fullWidth type="datetime-local" label="Кінець" InputLabelProps={{ shrink: true }} value={editFormData.endDate} onChange={(e) => setEditFormData({...editFormData, endDate: e.target.value})} />
+                                <Box sx={{ display: "flex", gap: 2, flexDirection: { xs: "column", sm: "row" } }}>
+                                    <TextField
+                                        fullWidth
+                                        label={t("round_details.info.name", "Назва раунду")} // або свій ключ
+                                        value={editFormData.name}
+                                        onChange={(e) => setEditFormData({...editFormData, name: e.target.value})}
+                                    />
+                                    <TextField
+                                        select
+                                        fullWidth
+                                        label={t("round_details.info.status", "Статус")} // або свій ключ
+                                        value={editFormData.status}
+                                        onChange={(e) => handleStatusChange(e.target.value as RoundStatus)}
+                                    >
+                                        <MenuItem value="DRAFT">{t("rounds.statuses.DRAFT")}</MenuItem>
+                                        <MenuItem value="ACTIVE">{t("rounds.statuses.ACTIVE")}</MenuItem>
+                                        <MenuItem value="SUBMISSION_CLOSED">{t("rounds.statuses.SUBMISSION_CLOSED")}</MenuItem>
+                                        <MenuItem value="EVALUATED">{t("rounds.statuses.EVALUATED")}</MenuItem>
+                                    </TextField>
                                 </Box>
-                                <TextField fullWidth type="number" label="Кількість переможців" value={editFormData.countOfWinners} onChange={(e) => setEditFormData({...editFormData, countOfWinners: Number(e.target.value)})} />
-                                <TextField fullWidth multiline rows={4} label={t("round_details.info.task")} value={editFormData.task} onChange={(e) => setEditFormData({...editFormData, task: e.target.value})} />
-                                <TextField fullWidth multiline rows={4} label={t("round_details.info.requirements")} value={editFormData.requirements} onChange={(e) => setEditFormData({...editFormData, requirements: e.target.value})} />
+
+                                <Box sx={{ display: "flex", gap: 2, flexDirection: { xs: "column", sm: "row" } }}>
+                                    <TextField
+                                        fullWidth
+                                        type="datetime-local"
+                                        label={t("round_details.info.start_date", "Початок")}
+                                        InputLabelProps={{ shrink: true }}
+                                        value={editFormData.startDate}
+                                        onChange={(e) => setEditFormData({...editFormData, startDate: e.target.value})}
+                                    />
+                                    <TextField
+                                        fullWidth
+                                        type="datetime-local"
+                                        label={t("round_details.info.end_date", "Кінець")}
+                                        InputLabelProps={{ shrink: true }}
+                                        value={editFormData.endDate}
+                                        onChange={(e) => setEditFormData({...editFormData, endDate: e.target.value})}
+                                    />
+                                </Box>
+
+                                <TextField
+                                    fullWidth
+                                    type="number"
+                                    label={t("round_details.info.winners_count", "Кількість переможців")}
+                                    value={editFormData.countOfWinners}
+                                    onChange={(e) => setEditFormData({...editFormData, countOfWinners: Number(e.target.value)})}
+                                />
+                                <TextField
+                                    fullWidth
+                                    multiline
+                                    rows={4}
+                                    label={t("round_details.info.task")}
+                                    value={editFormData.task}
+                                    onChange={(e) => setEditFormData({...editFormData, task: e.target.value})}
+                                />
+                                <TextField
+                                    fullWidth
+                                    multiline
+                                    rows={4}
+                                    label={t("round_details.info.requirements")}
+                                    value={editFormData.requirements}
+                                    onChange={(e) => setEditFormData({...editFormData, requirements: e.target.value})}
+                                />
 
                                 <Box sx={{ display: "flex", gap: 2 }}>
                                     <Button variant="contained" startIcon={<SaveIcon />} onClick={handleSaveUpdate}>
                                         {t("round_details.admin.save")}
                                     </Button>
-                                    <Button variant="outlined" onClick={() => setIsEditingInfo(false)}>
+                                    <Button variant="outlined" onClick={() => {
+                                        // Скидаємо зміни до початкових при скасуванні
+                                        if (roundData) {
+                                            setEditFormData({
+                                                name: roundData.name,
+                                                startDate: roundData.startDate?.substring(0, 16) || "",
+                                                endDate: roundData.endDate?.substring(0, 16) || "",
+                                                countOfWinners: roundData.countOfWinners,
+                                                requirements: roundData.requirements,
+                                                task: roundData.task,
+                                                status: roundData.status,
+                                            } as RoundUpdateRequestDto);
+                                        }
+                                        setIsEditingInfo(false);
+                                    }}>
                                         {t("round_details.admin.cancel")}
                                     </Button>
                                 </Box>

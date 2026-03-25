@@ -15,6 +15,11 @@ const formatToLocalDateTime = (dateTimeStr: string) => {
     return dateTimeStr.length === 16 ? `${dateTimeStr}:00` : dateTimeStr;
 };
 
+const toDateTimeLocal = (date: Date) => {
+    const offset = date.getTimezoneOffset() * 60000;
+    return new Date(date.getTime() - offset).toISOString().slice(0, 16);
+};
+
 export const useTournamentDetails = () => {
     const { id } = useParams<{ id: string }>();
     const tournamentId = Number(id);
@@ -134,6 +139,47 @@ export const useTournamentDetails = () => {
         setRoundFormData(prev => ({ ...prev, [name]: value }));
     };
 
+    const handleStatusChange = (newStatus: string) => {
+        const now = new Date();
+
+        // Копіюємо поточні дати з форми або ставимо "зараз"
+        let startReg = editFormData.startRegistration ? new Date(editFormData.startRegistration) : new Date(now);
+        let endReg = editFormData.endRegistration ? new Date(editFormData.endRegistration) : new Date(now.getTime() + 86400000); // +1 день
+        let startTour = editFormData.startTournament ? new Date(editFormData.startTournament) : new Date(endReg.getTime() + 3600000); // +1 година після рег
+
+        if (newStatus === "DRAFT") {
+            // Майбутній час для всього
+            if (startReg <= now) {
+                startReg = new Date(now.getTime() + 3600000); // через годину
+                endReg = new Date(startReg.getTime() + 86400000 * 2);
+                startTour = new Date(endReg.getTime() + 3600000);
+            }
+        } else if (newStatus === "REGISTRATION") {
+            // Початок реєстрації має бути в минулому/зараз, кінець — у майбутньому
+            if (startReg > now) startReg = new Date(now.getTime() - 60000);
+            if (endReg <= now) endReg = new Date(now.getTime() + 86400000);
+            if (startTour <= endReg) startTour = new Date(endReg.getTime() + 3600000);
+        } else if (newStatus === "RUNNING") {
+            // Реєстрація закінчена, турнір почався
+            if (endReg > now) endReg = new Date(now.getTime() - 60000);
+            if (startReg >= endReg) startReg = new Date(endReg.getTime() - 86400000);
+            if (startTour > now) startTour = new Date(now.getTime() - 60000);
+        } else if (newStatus === "FINISHED") {
+            // Все в минулому
+            if (startTour > now) startTour = new Date(now.getTime() - 120000);
+            if (endReg >= startTour) endReg = new Date(startTour.getTime() - 60000);
+            if (startReg >= endReg) startReg = new Date(endReg.getTime() - 86400000);
+        }
+
+        setEditFormData(prev => ({
+            ...prev,
+            status: newStatus as any,
+            startRegistration: toDateTimeLocal(startReg),
+            endRegistration: toDateTimeLocal(endReg),
+            startTournament: toDateTimeLocal(startTour)
+        }));
+    };
+
     return {
         tournamentId, isAdmin, isLoggedIn, loading, loadingTab,
         tabValue, setTabValue, isEditingInfo, setIsEditingInfo,
@@ -141,6 +187,6 @@ export const useTournamentDetails = () => {
         selectedRoundStatus, setSelectedRoundStatus,
         editFormData, setEditFormData, roundFormData, handleRoundFormChange,
         handleSaveUpdate, handleCreateRound, roundModalOpen, setRoundModalOpen,
-        isCreatingRound, canEditFullInfo
+        isCreatingRound, canEditFullInfo, handleStatusChange
     };
 };

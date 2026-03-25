@@ -128,18 +128,52 @@ const InfoTab = ({ state, formatDate, t }: any) => (
             {state.isEditingInfo ? (
                 <Paper sx={{ p: 4, borderRadius: "24px", border: "1px solid #e0e0e0" }}>
                     <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                        <TextField fullWidth label={t("tournaments.admin.fields.name")} value={state.editFormData.name} onChange={(e) => state.setEditFormData({ ...state.editFormData, name: e.target.value })} />
+                        <Grid container spacing={2}>
+                            <Grid size={{ xs: 12, sm: 8 }}>
+                                <TextField
+                                    fullWidth
+                                    label={t("tournaments.admin.fields.name")}
+                                    value={state.editFormData.name}
+                                    onChange={(e) => state.setEditFormData({ ...state.editFormData, name: e.target.value })}
+                                />
+                            </Grid>
+                            <Grid size={{ xs: 12, sm: 4 }}>
+                                <TextField
+                                    select
+                                    fullWidth
+                                    label={t("tournaments.admin.fields.status", "Статус")}
+                                    value={state.editFormData.status}
+                                    onChange={(e) => state.handleStatusChange(e.target.value)}
+                                >
+                                    <MenuItem value="DRAFT">{t("tournaments.statuses.DRAFT")}</MenuItem>
+                                    <MenuItem value="REGISTRATION">{t("tournaments.statuses.REGISTRATION")}</MenuItem>
+                                    <MenuItem value="RUNNING">{t("tournaments.statuses.RUNNING")}</MenuItem>
+                                    <MenuItem value="FINISHED">{t("tournaments.statuses.FINISHED")}</MenuItem>
+                                </TextField>
+                            </Grid>
+                        </Grid>
+
                         <TextField fullWidth multiline rows={6} label={t("tournaments.admin.fields.description")} value={state.editFormData.description} onChange={(e) => state.setEditFormData({ ...state.editFormData, description: e.target.value })} />
 
-                        {state.canEditFullInfo && (
-                            <Grid container spacing={2}>
-                                <Grid size={{xs: 12, sm: 6}}><TextField fullWidth type="datetime-local" label={t("tournaments.admin.fields.startReg")} InputLabelProps={{ shrink: true }} value={state.editFormData.startRegistration} onChange={(e) => state.setEditFormData({ ...state.editFormData, startRegistration: e.target.value })} /></Grid>
-                                <Grid size={{xs: 12, sm: 6}}><TextField fullWidth type="datetime-local" label={t("tournaments.admin.fields.endReg")} InputLabelProps={{ shrink: true }} value={state.editFormData.endRegistration} onChange={(e) => state.setEditFormData({ ...state.editFormData, endRegistration: e.target.value })} /></Grid>
-                                <Grid size={{xs: 12, sm: 4}}><TextField fullWidth type="datetime-local" label={t("tournaments.admin.fields.startTournament")} InputLabelProps={{ shrink: true }} value={state.editFormData.startTournament} onChange={(e) => state.setEditFormData({ ...state.editFormData, startTournament: e.target.value })} /></Grid>
-                                <Grid size={{xs: 6, sm: 4}}><TextField fullWidth type="number" label={t("tournaments.admin.fields.maxTeams")} value={state.editFormData.maxCountOfTeams} onChange={(e) => state.setEditFormData({ ...state.editFormData, maxCountOfTeams: Number(e.target.value) })} /></Grid>
-                                <Grid size={{xs: 6, sm: 4}}><TextField fullWidth type="number" label={t("tournaments.admin.fields.rounds")} value={state.editFormData.countOfRounds} onChange={(e) => state.setEditFormData({ ...state.editFormData, countOfRounds: Number(e.target.value) })} /></Grid>
+                        {/* Навіть якщо не DRAFT, адміну може знадобитися підкоригувати дати при зміні статусу */}
+                        <Grid container spacing={2}>
+                            <Grid size={{xs: 12, sm: 6}}>
+                                <TextField fullWidth type="datetime-local" label={t("tournaments.admin.fields.startReg")} InputLabelProps={{ shrink: true }} value={state.editFormData.startRegistration} onChange={(e) => state.setEditFormData({ ...state.editFormData, startRegistration: e.target.value })} />
                             </Grid>
-                        )}
+                            <Grid size={{xs: 12, sm: 6}}>
+                                <TextField fullWidth type="datetime-local" label={t("tournaments.admin.fields.endReg")} InputLabelProps={{ shrink: true }} value={state.editFormData.endRegistration} onChange={(e) => state.setEditFormData({ ...state.editFormData, endRegistration: e.target.value })} />
+                            </Grid>
+                            <Grid size={{xs: 12, sm: 4}}>
+                                <TextField fullWidth type="datetime-local" label={t("tournaments.admin.fields.startTournament")} InputLabelProps={{ shrink: true }} value={state.editFormData.startTournament} onChange={(e) => state.setEditFormData({ ...state.editFormData, startTournament: e.target.value })} />
+                            </Grid>
+                            <Grid size={{xs: 6, sm: 4}}>
+                                <TextField fullWidth type="number" label={t("tournaments.admin.fields.maxTeams")} value={state.editFormData.maxCountOfTeams} onChange={(e) => state.setEditFormData({ ...state.editFormData, maxCountOfTeams: Number(e.target.value) })} />
+                            </Grid>
+                            <Grid size={{xs: 6, sm: 4}}>
+                                <TextField fullWidth type="number" label={t("tournaments.admin.fields.rounds")} value={state.editFormData.countOfRounds} onChange={(e) => state.setEditFormData({ ...state.editFormData, countOfRounds: Number(e.target.value) })} />
+                            </Grid>
+                        </Grid>
+
                         <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
                             <Button variant="contained" size="large" startIcon={<SaveIcon />} onClick={state.handleSaveUpdate} sx={{ borderRadius: "12px", px: 4 }}>{t("common.save")}</Button>
                             <Button variant="outlined" size="large" onClick={() => state.setIsEditingInfo(false)} sx={{ borderRadius: "12px" }}>{t("common.cancel")}</Button>
