@@ -30,6 +30,7 @@ import logo from "../../assets/logo.png";
 import {Link as RouterLink} from "react-router-dom";
 import {useLanguage} from "../../i18n/useLanguage.ts";
 import Cookies from "js-cookie";
+import AuthService from "../../services/auth/AuthService.ts";
 
 // Визначення ролей для зручності
 type role = 'ADMIN' | 'JURY' | 'USER' | null;
@@ -237,7 +238,7 @@ export const AppHeader = () => {
                         <ListItemIcon><PersonIcon fontSize="small" color="primary" /></ListItemIcon>
                         {t("header.profile")}
                     </MenuItem>
-                    <MenuItem onClick={() => { handleClose(); /* Logout logic here */ }}>
+                    <MenuItem onClick={() => { handleClose(); AuthService.logout()}}>
                         <ListItemIcon><Logout fontSize="small" color="error" /></ListItemIcon>
                         {t("header.logout")}
                     </MenuItem>
