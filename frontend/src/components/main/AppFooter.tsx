@@ -5,14 +5,17 @@ import Cookies from "js-cookie";
 import InstagramIcon from "@mui/icons-material/Instagram";
 import FacebookIcon from "@mui/icons-material/Facebook";
 import LinkedInIcon from "@mui/icons-material/LinkedIn";
-import YouTubeIcon from "@mui/icons-material/YouTube";
 import logo from "../../assets/logo.png";
+
+// Типи ролей для синхронізації з хедером
+type UserRole = 'ADMIN' | 'JURY' | 'USER' | null;
 
 export const AppFooter = () => {
     const { t } = useTranslation();
 
-    // Перевірка авторизації
+    // Отримання статусу та ролі (аналогічно хедеру)
     const isLoggedIn = Cookies.get("userId") !== undefined;
+    const userRole = Cookies.get("userRole") as UserRole || 'USER';
 
     return (
         <Box component="footer" sx={{
@@ -26,93 +29,122 @@ export const AppFooter = () => {
             <Container maxWidth="lg" sx={{ pt: 6, pb: 4 }}>
                 <Grid container spacing={4} justifyContent="center">
 
-                    {/* Logo Row */}
-                    <Grid size={{xs: 12}} sx={{ textAlign: "center", mb: 2 }}>
-                        <Box component={RouterLink} to="/">
-                            <Box component="img" src={logo} alt="Star for Life" sx={{ height: 60 }} />
+                    {/* 1. Логотип та місія */}
+                    <Grid size={{xs: 12, md: 3}} sx={{ textAlign: { xs: "center", md: "left" } }}>
+                        <Box component={RouterLink} to="/" sx={{ display: "inline-block", mb: 2 }}>
+                            <Box component="img" src={logo} alt="Star for Life" sx={{ height: 50 }} />
                         </Box>
+                        <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 250, mx: { xs: "auto", md: 0 } }}>
+                            {t("footer.description", "Цифрова платформа для проведення хакатонів та конкурсів.")}
+                        </Typography>
                     </Grid>
 
-                    {/* Tournaments Column */}
-                    <Grid size={{xs: 12, md: 4}} sx={{ textAlign: "center" }}>
-                        <Typography fontWeight={700} color="primary" gutterBottom>
-                            {t("tournaments.title")}
+                    {/* 2. Динамічна колонка: ТУРНІРИ */}
+                    <Grid size={{xs: 6, md: 3}} sx={{ textAlign: "center" }}>
+                        <Typography fontWeight={800} color="text.primary" sx={{ mb: 2, fontSize: "0.9rem", textTransform: "uppercase", letterSpacing: 1 }}>
+                            {t("header.tournaments")}
                         </Typography>
-                        <Link
-                            component={RouterLink}
-                            to="/tournaments?tab=0"
-                            display="block"
-                            underline="hover"
-                            sx={{ mb: 1, color: "text.secondary" }}
-                        >
-                            {t("tournaments.tabs.available")}
+
+                        <Link component={RouterLink} to="/tournaments" display="block" underline="hover" sx={{ mb: 1, color: "text.secondary", fontSize: "0.875rem" }}>
+                            {userRole === 'ADMIN' ? t("header.manageTournaments") : t("tournaments.tabs.available")}
                         </Link>
-                        {/* Показуємо "Мої", тільки якщо залогінений */}
-                        {isLoggedIn && (
-                            <Link
-                                component={RouterLink}
-                                to="/tournaments?tab=1"
-                                display="block"
-                                underline="hover"
-                                sx={{ color: "text.secondary" }}
-                            >
+
+                        {isLoggedIn && userRole === 'USER' && (
+                            <Link component={RouterLink} to="/tournaments?tab=1" display="block" underline="hover" sx={{ color: "text.secondary", fontSize: "0.875rem" }}>
                                 {t("tournaments.tabs.my")}
                             </Link>
                         )}
                     </Grid>
 
-                    {/* Teams Column */}
-                    <Grid size={{xs: 12, md: 4}} sx={{ textAlign: "center" }}>
-                        <Typography fontWeight={700} color="primary" gutterBottom>
-                            {t("footer.teams")}
+                    {/* 3. Динамічна колонка: КОМАНДИ / УПРАВЛІННЯ */}
+                    <Grid size={{xs: 6, md: 3}} sx={{ textAlign: "center" }}>
+                        <Typography fontWeight={800} color="text.primary" sx={{ mb: 2, fontSize: "0.9rem", textTransform: "uppercase", letterSpacing: 1 }}>
+                            {userRole === 'JURY' ? t("header.mySubmissions") : t("footer.teams")}
                         </Typography>
-                        {/* Якщо залогінений — ведемо в кабінет команд, якщо ні — можемо вести на загальний опис або приховати */}
-                        <Link
-                            component={RouterLink}
-                            to={isLoggedIn ? "/teams" : "/login"}
-                            display="block"
-                            underline="hover"
-                            sx={{ color: "text.secondary" }}
-                        >
-                            {isLoggedIn ? t("footer.myTeams") : t("header.login")}
-                        </Link>
+
+                        {/* Адмін бачить все */}
+                        {userRole === 'ADMIN' && (
+                            <>
+                                <Link component={RouterLink} to="/admin/teams" display="block" underline="hover" sx={{ mb: 1, color: "text.secondary", fontSize: "0.875rem" }}>
+                                    {t("header.allTeams")}
+                                </Link>
+                                <Link component={RouterLink} to="/admin/jury/create" display="block" underline="hover" sx={{ color: "text.secondary", fontSize: "0.875rem" }}>
+                                    {t("header.adminPanel")}
+                                </Link>
+                            </>
+                        )}
+
+                        {/* Юзер бачить свою команду */}
+                        {userRole === 'USER' && (
+                            <Link component={RouterLink} to={isLoggedIn ? "/my-team" : "/login"} display="block" underline="hover" sx={{ color: "text.secondary", fontSize: "0.875rem" }}>
+                                {isLoggedIn ? t("header.myTeam") : t("header.login")}
+                            </Link>
+                        )}
+
+                        {/* Журі бачить свої роботи */}
+                        {userRole === 'JURY' && (
+                            <Link component={RouterLink} to="/jury/submissions" display="block" underline="hover" sx={{ color: "text.secondary", fontSize: "0.875rem" }}>
+                                {t("header.mySubmissions")}
+                            </Link>
+                        )}
                     </Grid>
 
-                    {/* Contacts Column */}
-                    <Grid size={{xs: 12, md: 4}} sx={{ textAlign: "center" }}>
-                        <Typography fontWeight={700} color="primary" gutterBottom>
+                    {/* 4. Контакти та Соцмережі */}
+                    <Grid size={{xs: 12, md: 3}} sx={{ textAlign: { xs: "center", md: "right" } }}>
+                        <Typography fontWeight={800} color="text.primary" sx={{ mb: 2, fontSize: "0.9rem", textTransform: "uppercase", letterSpacing: 1 }}>
                             {t("footer.contacts")}
                         </Typography>
-                        <Typography variant="body2" sx={{ mb: 1, color: "text.secondary" }}>
+                        <Typography variant="body2" sx={{ mb: 1, color: "primary.main", fontWeight: 600 }}>
                             team@starforlife.org.ua
                         </Typography>
-                        <Typography variant="body2" sx={{ mb: 0.5, color: "text.secondary" }}>
-                            {t("footer.founded")}
-                        </Typography>
 
-                        <Box sx={{ mt: 2, display: "flex", justifyContent: "center", gap: 1 }}>
-                            <IconButton color="primary" size="small" href="https://instagram.com" target="_blank">
-                                <InstagramIcon />
+                        <Box sx={{ mt: 2, display: "flex", justifyContent: { xs: "center", md: "flex-end" }, gap: 1 }}>
+                            <IconButton
+                                sx={{ bgcolor: "grey.100", '&:hover': { bgcolor: "primary.light", color: "white" } }}
+                                size="small" href="https://instagram.com" target="_blank"
+                            >
+                                <InstagramIcon fontSize="small" />
                             </IconButton>
-                            <IconButton color="primary" size="small" href="https://facebook.com" target="_blank">
-                                <FacebookIcon />
+                            <IconButton
+                                sx={{ bgcolor: "grey.100", '&:hover': { bgcolor: "primary.light", color: "white" } }}
+                                size="small" href="https://facebook.com" target="_blank"
+                            >
+                                <FacebookIcon fontSize="small" />
                             </IconButton>
-                            <IconButton color="primary" size="small" href="https://linkedin.com" target="_blank">
-                                <LinkedInIcon />
-                            </IconButton>
-                            <IconButton color="primary" size="small" href="https://youtube.com" target="_blank">
-                                <YouTubeIcon />
+                            <IconButton
+                                sx={{ bgcolor: "grey.100", '&:hover': { bgcolor: "primary.light", color: "white" } }}
+                                size="small" href="https://linkedin.com" target="_blank"
+                            >
+                                <LinkedInIcon fontSize="small" />
                             </IconButton>
                         </Box>
                     </Grid>
                 </Grid>
             </Container>
 
-            {/* Bottom Bar */}
-            <Box sx={{ backgroundColor: "primary.main", color: "white", py: 1.5, textAlign: "center" }}>
-                <Typography variant="caption" sx={{ opacity: 0.9, fontWeight: 500 }}>
-                    {t("footer.rights")} | {t("footer.terms")} | {t("footer.privacy")}
-                </Typography>
+            {/* Нижня панель (Copyright) */}
+            <Box sx={{ backgroundColor: "primary.main", color: "white", py: 2 }}>
+                <Container maxWidth="lg">
+                    <Box sx={{
+                        display: "flex",
+                        flexDirection: { xs: "column", sm: "row" },
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        gap: 1
+                    }}>
+                        <Typography variant="caption" sx={{ opacity: 0.8 }}>
+                            © 2026 Star for Life Ukraine. {t("footer.rights")}
+                        </Typography>
+                        <Box sx={{ display: "flex", gap: 3 }}>
+                            <Link component={RouterLink} to="/terms" color="inherit" underline="none" sx={{ fontSize: "0.75rem", opacity: 0.8, '&:hover': { opacity: 1 } }}>
+                                {t("footer.terms")}
+                            </Link>
+                            <Link component={RouterLink} to="/privacy" color="inherit" underline="none" sx={{ fontSize: "0.75rem", opacity: 0.8, '&:hover': { opacity: 1 } }}>
+                                {t("footer.privacy")}
+                            </Link>
+                        </Box>
+                    </Box>
+                </Container>
             </Box>
         </Box>
     );
