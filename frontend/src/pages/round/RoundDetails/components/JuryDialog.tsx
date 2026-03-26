@@ -1,29 +1,39 @@
-import {Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField} from "@mui/material";
+import {Autocomplete, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField} from "@mui/material";
+import type {UserResponseDto} from "../../../../entities/user/user.dto";
 
 type Props = {
     open: boolean;
     onClose: () => void;
-    juryAssignId: string;
-    setJuryAssignId: React.Dispatch<React.SetStateAction<string>>;
+    availableJuries: UserResponseDto[];
+    selectedJury: UserResponseDto | null;
+    setSelectedJury: React.Dispatch<React.SetStateAction<UserResponseDto | null>>;
     onSubmit: () => Promise<void>;
     t: (key: string, options?: any) => string;
 };
 
-export const JuryDialog = ({ open, onClose, juryAssignId, setJuryAssignId, onSubmit, t }: Props) => {
+export const JuryDialog = ({ open, onClose, availableJuries, selectedJury, setSelectedJury, onSubmit, t }: Props) => {
     return (
-        <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
+        <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
             <DialogTitle sx={{ fontWeight: 700 }}>{t("round_details.admin.jury_modal.title")}</DialogTitle>
-            <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 2 }}>
-                <TextField
-                    label={t("round_details.admin.jury_modal.id")}
-                    fullWidth
-                    value={juryAssignId}
-                    onChange={(e) => setJuryAssignId(e.target.value)}
+            <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 2, overflowY: "visible" }}>
+                <Autocomplete
+                    options={availableJuries}
+                    getOptionLabel={(option) => `${option.fullName} (${option.email})`}
+                    value={selectedJury}
+                    onChange={(_, newValue) => setSelectedJury(newValue)}
+                    renderInput={(params) => (
+                        <TextField
+                            {...params}
+                            label={t("round_details.admin.jury_modal.select", "Оберіть члена журі")}
+                            fullWidth
+                        />
+                    )}
+                    noOptionsText={t("common.no_options", "Немає доступних варіантів")}
                 />
             </DialogContent>
             <DialogActions sx={{ p: 3 }}>
                 <Button onClick={onClose} color="inherit">{t("round_details.admin.cancel")}</Button>
-                <Button variant="contained" onClick={onSubmit} sx={{ fontWeight: 700 }} disabled={!juryAssignId}>
+                <Button variant="contained" onClick={onSubmit} sx={{ fontWeight: 700 }} disabled={!selectedJury}>
                     {t("round_details.admin.jury_modal.submit")}
                 </Button>
             </DialogActions>

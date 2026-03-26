@@ -14,6 +14,8 @@ import {RoundStatsDialog} from "./RoundDetails/components/RoundStatsDialog";
 import {CategoryDialog} from "./RoundDetails/components/CategoryDialog";
 import {JuryDialog} from "./RoundDetails/components/JuryDialog";
 
+import {CriteriaDialog} from "./RoundDetails/components/CriteriaDialog";
+
 export const RoundDetailsPage = () => {
     const { t } = useTranslation();
     const isAdmin = Cookies.get("role") === "ADMIN";
@@ -26,6 +28,7 @@ export const RoundDetailsPage = () => {
         setRoundData: details.setRoundData,
         fetchCategories: details.fetchCategories,
         fetchJury: details.fetchJury,
+        currentJury: details.jury, // ДОДАНО ПАРАМЕТР
     });
 
     if (details.loading) {
@@ -86,6 +89,12 @@ export const RoundDetailsPage = () => {
                 loadingTab={details.loadingTab}
                 isAdmin={isAdmin}
                 onOpenCategoryModal={() => editors.setCategoryModalOpen(true)}
+                onDeleteCategory={editors.handleDeleteCategory}
+                onOpenCriteriaModal={(categoryId) => {
+                    editors.setSelectedCategoryId(categoryId);
+                    editors.setCriteriaModalOpen(true);
+                }}
+                onDeleteCriteria={editors.handleDeleteCriteria}
                 t={t}
             />
 
@@ -94,7 +103,7 @@ export const RoundDetailsPage = () => {
                 jury={details.jury}
                 loadingTab={details.loadingTab}
                 isAdmin={isAdmin}
-                onOpenJuryModal={() => editors.setJuryModalOpen(true)}
+                onOpenJuryModal={editors.handleOpenJuryModal} // ЗМІНЕНО: тепер викликаємо метод завантаження
                 onRemoveJury={editors.handleRemoveJury}
                 t={t}
             />
@@ -132,10 +141,27 @@ export const RoundDetailsPage = () => {
 
             <JuryDialog
                 open={editors.juryModalOpen}
-                onClose={() => editors.setJuryModalOpen(false)}
-                juryAssignId={editors.juryAssignId}
-                setJuryAssignId={editors.setJuryAssignId}
+                onClose={() => {
+                    editors.setJuryModalOpen(false);
+                    editors.setSelectedJuryToAssign(null); // Очищаємо вибір при закритті
+                }}
+                availableJuries={editors.availableJuries}
+                selectedJury={editors.selectedJuryToAssign}
+                setSelectedJury={editors.setSelectedJuryToAssign}
                 onSubmit={editors.handleAssignJury}
+                t={t}
+            />
+
+            <CriteriaDialog
+                open={editors.criteriaModalOpen}
+                onClose={() => {
+                    editors.setCriteriaModalOpen(false);
+                    editors.setNewCriteriaText("");
+                    editors.setSelectedCategoryId(null);
+                }}
+                newCriteriaText={editors.newCriteriaText}
+                setNewCriteriaText={editors.setNewCriteriaText}
+                onSubmit={editors.handleAddCriteria}
                 t={t}
             />
         </Box>

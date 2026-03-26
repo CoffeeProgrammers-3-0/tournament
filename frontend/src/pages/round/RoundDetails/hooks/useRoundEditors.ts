@@ -7,6 +7,11 @@ import type {RoundFullResponseDto, RoundStatus, RoundUpdateRequestDto} from "../
 import type {CategoryRequestDto} from "../../../../entities/category/category.dto";
 import type {StatisticResponseDto} from "../../../../entities/team/team.dto";
 
+import {userService} from "../../../../services/impl/UserService";
+import type {UserResponseDto} from "../../../../entities/user/user.dto";
+
+import {criteriaService} from "../../../../services/impl/CriteriaService";
+
 const formatToLocalDateTime = (dateTimeStr: string) => {
     if (!dateTimeStr) return "";
     return dateTimeStr.length === 16 ? `${dateTimeStr}:00` : dateTimeStr;
@@ -23,9 +28,10 @@ type Params = {
     setRoundData: React.Dispatch<React.SetStateAction<RoundFullResponseDto | null>>;
     fetchCategories: () => Promise<void>;
     fetchJury: () => Promise<void>;
+    currentJury: UserResponseDto[]; // ДОДАНО: щоб фільтрувати вже доданих
 };
 
-export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, fetchJury }: Params) => {
+export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, fetchJury, currentJury }: Params) => {
     const [isEditingInfo, setIsEditingInfo] = useState(false);
 
     const [categoryModalOpen, setCategoryModalOpen] = useState(false);
@@ -35,9 +41,16 @@ export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, 
     const [selectedStats, setSelectedStats] = useState<StatisticResponseDto | null>(null);
     const [statsViewMode, setStatsViewMode] = useState<"aggregated" | "detailed">("aggregated");
 
+    const [availableJuries, setAvailableJuries] = useState<UserResponseDto[]>([]);
+    const [selectedJuryToAssign, setSelectedJuryToAssign] = useState<UserResponseDto | null>(null);
+
     const [editFormData, setEditFormData] = useState<RoundUpdateRequestDto>({} as RoundUpdateRequestDto);
     const [newCategoryData, setNewCategoryData] = useState({ title: "", weight: 0.1 });
     const [juryAssignId, setJuryAssignId] = useState("");
+
+    const [criteriaModalOpen, setCriteriaModalOpen] = useState(false);
+    const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+    const [newCriteriaText, setNewCriteriaText] = useState("");
 
     const resetEditForm = useCallback(() => {
         if (!roundData) return;
@@ -79,18 +92,6 @@ export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, 
             console.error("Error creating category:", error);
         }
     }, [fetchCategories, id, newCategoryData]);
-
-    const handleAssignJury = useCallback(async () => {
-        if (!id || !juryAssignId) return;
-        try {
-            await roundService.setJuryToRound(Number(id), Number(juryAssignId));
-            setJuryModalOpen(false);
-            setJuryAssignId("");
-            await fetchJury();
-        } catch (error) {
-            console.error("Error assigning jury:", error);
-        }
-    }, [fetchJury, id, juryAssignId]);
 
     const handleRemoveJury = useCallback(async (juryId: number) => {
         if (!id) return;
@@ -161,8 +162,73 @@ export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, 
         return result;
     }, [selectedStats]);
 
+    const handleDeleteCategory = useCallback(async (categoryId: number) => {
+        if (!id) return;
+        if (!window.confirm("Are you sure you want to delete this category?")) return;
+        try {
+            await categoryService.deleteCategory(Number(id), categoryId);
+            await fetchCategories();
+        } catch (error) {
+            console.error("Error deleting category:", error);
+        }
+    }, [id, fetchCategories]);
+
+    const handleAddCriteria = useCallback(async () => {
+        if (!selectedCategoryId || !newCriteriaText.trim()) return;
+        try {
+            // StringRequestDto зазвичай має поле value
+            await criteriaService.createCriteria(selectedCategoryId, { text: newCriteriaText });
+            setCriteriaModalOpen(false);
+            setNewCriteriaText("");
+            setSelectedCategoryId(null);
+            await fetchCategories();
+        } catch (error) {
+            console.error("Error creating criteria:", error);
+        }
+    }, [selectedCategoryId, newCriteriaText, fetchCategories]);
+
+    const handleDeleteCriteria = useCallback(async (categoryId: number, criteriaId: number) => {
+        if (!window.confirm("Are you sure you want to delete this criteria?")) return;
+        try {
+            await criteriaService.deleteCriteria(categoryId, criteriaId);
+            await fetchCategories();
+        } catch (error) {
+            console.error("Error deleting criteria:", error);
+        }
+    }, [fetchCategories]);
+
     const juryList = selectedStats?.pointsPerJury ? Object.keys(selectedStats.pointsPerJury) : [];
     const criteriaList = Object.keys(aggregatedCriteria);
+
+    const handleOpenJuryModal = useCallback(async () => {
+        setJuryModalOpen(true);
+        try {
+            // Завантажуємо перші 100 членів журі (можна налаштувати пагінацію або пошук за потреби)
+            const response = await userService.getJuries({ page: 0, size: 100 });
+
+            // Фільтруємо тих, хто ВЖЕ є у поточному раунді
+            const available = (response.content || []).filter(
+                (user) => !currentJury.some((j) => j.id === user.id)
+            );
+
+            setAvailableJuries(available);
+        } catch (error) {
+            console.error("Error fetching available juries:", error);
+        }
+    }, [currentJury]);
+
+    // ОНОВЛЕНА функція призначення
+    const handleAssignJury = useCallback(async () => {
+        if (!id || !selectedJuryToAssign) return;
+        try {
+            await roundService.setJuryToRound(Number(id), selectedJuryToAssign.id);
+            setJuryModalOpen(false);
+            setSelectedJuryToAssign(null);
+            await fetchJury();
+        } catch (error) {
+            console.error("Error assigning jury:", error);
+        }
+    }, [fetchJury, id, selectedJuryToAssign]);
 
     return {
         isEditingInfo,
@@ -192,5 +258,18 @@ export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, 
         juryList,
         criteriaList,
         cancelEditing,
+        handleDeleteCategory,
+        criteriaModalOpen,
+        setCriteriaModalOpen,
+        selectedCategoryId,
+        setSelectedCategoryId,
+        newCriteriaText,
+        setNewCriteriaText,
+        handleAddCriteria,
+        handleDeleteCriteria,
+        handleOpenJuryModal,
+        availableJuries,
+        selectedJuryToAssign,
+        setSelectedJuryToAssign,
     };
 };

@@ -20,10 +20,16 @@ type Props = {
     loadingTab: boolean;
     isAdmin: boolean;
     onOpenCategoryModal: () => void;
+    onDeleteCategory: (categoryId: number) => void;
+    onOpenCriteriaModal: (categoryId: number) => void;
+    onDeleteCriteria: (categoryId: number, criteriaId: number) => void;
     t: (key: string, options?: any) => string;
 };
 
-export const RoundCategoriesTab = ({ tabValue, categories, loadingTab, isAdmin, onOpenCategoryModal, t }: Props) => {
+export const RoundCategoriesTab = ({
+                                       tabValue, categories, loadingTab, isAdmin,
+                                       onOpenCategoryModal, onDeleteCategory, onOpenCriteriaModal, onDeleteCriteria, t
+                                   }: Props) => {
     if (tabValue !== 1) return null;
 
     return (
@@ -53,7 +59,7 @@ export const RoundCategoriesTab = ({ tabValue, categories, loadingTab, isAdmin, 
                                             </Typography>
                                         </Box>
                                         {isAdmin && (
-                                            <IconButton size="small" color="error">
+                                            <IconButton size="small" color="error" onClick={() => onDeleteCategory(cat.id)}>
                                                 <DeleteOutlineIcon fontSize="small" />
                                             </IconButton>
                                         )}
@@ -62,8 +68,15 @@ export const RoundCategoriesTab = ({ tabValue, categories, loadingTab, isAdmin, 
                                     <Divider sx={{ mb: 2 }} />
 
                                     <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                                        {cat.criteria?.map((crit, idx) => (
-                                            <Chip key={idx} label={crit.text} variant="filled" size="small" sx={{ bgcolor: "grey.200", fontWeight: 500 }} />
+                                        {cat.criteria?.map((crit) => (
+                                            <Chip
+                                                key={crit.id}
+                                                label={crit.text}
+                                                variant="filled"
+                                                size="small"
+                                                onDelete={isAdmin ? () => onDeleteCriteria(cat.id, crit.id) : undefined}
+                                                sx={{ bgcolor: "grey.200", fontWeight: 500 }}
+                                            />
                                         ))}
                                         {isAdmin && (
                                             <Chip
@@ -72,6 +85,7 @@ export const RoundCategoriesTab = ({ tabValue, categories, loadingTab, isAdmin, 
                                                 variant="outlined"
                                                 color="primary"
                                                 size="small"
+                                                onClick={() => onOpenCriteriaModal(cat.id)}
                                                 sx={{ cursor: "pointer", borderStyle: "dashed" }}
                                             />
                                         )}
