@@ -1,4 +1,13 @@
-import {Autocomplete, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField} from "@mui/material";
+import {
+    Autocomplete,
+    Button,
+    CircularProgress,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    TextField
+} from "@mui/material";
 import type {UserResponseDto} from "../../../../entities/user/user.dto";
 
 type Props = {
@@ -9,9 +18,15 @@ type Props = {
     setSelectedJury: React.Dispatch<React.SetStateAction<UserResponseDto | null>>;
     onSubmit: () => Promise<void>;
     t: (key: string, options?: any) => string;
+    inputValue: string;
+    onInputChange: (value: string) => void;
+    loading: boolean;
 };
 
-export const JuryDialog = ({ open, onClose, availableJuries, selectedJury, setSelectedJury, onSubmit, t }: Props) => {
+export const JuryDialog = ({
+                               open, onClose, availableJuries, selectedJury, setSelectedJury,
+                               onSubmit, t, inputValue, onInputChange, loading
+                           }: Props) => {
     return (
         <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
             <DialogTitle sx={{ fontWeight: 700 }}>{t("round_details.admin.jury_modal.title")}</DialogTitle>
@@ -19,16 +34,29 @@ export const JuryDialog = ({ open, onClose, availableJuries, selectedJury, setSe
                 <Autocomplete
                     options={availableJuries}
                     getOptionLabel={(option) => `${option.fullName} (${option.email})`}
+                    filterOptions={(x) => x} // Важливо: вимикаємо вбудовану фільтрацію MUI, бо ми фільтруємо на сервері
                     value={selectedJury}
+                    loading={loading}
                     onChange={(_, newValue) => setSelectedJury(newValue)}
+                    inputValue={inputValue}
+                    onInputChange={(_, newInputValue) => onInputChange(newInputValue)}
                     renderInput={(params) => (
                         <TextField
                             {...params}
-                            label={t("round_details.admin.jury_modal.select", "Оберіть члена журі")}
+                            label={t("round_details.admin.jury_modal.select")}
                             fullWidth
+                            InputProps={{
+                                ...params.InputProps,
+                                endAdornment: (
+                                    <>
+                                        {loading ? <CircularProgress color="inherit" size={20} /> : null}
+                                        {params.InputProps.endAdornment}
+                                    </>
+                                ),
+                            }}
                         />
                     )}
-                    noOptionsText={t("common.no_options", "Немає доступних варіантів")}
+                    noOptionsText={loading ? t("common.loading") : t("common.no_options")}
                 />
             </DialogContent>
             <DialogActions sx={{ p: 3 }}>

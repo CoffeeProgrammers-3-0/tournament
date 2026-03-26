@@ -143,13 +143,17 @@ export const RoundDetailsPage = () => {
                 open={editors.juryModalOpen}
                 onClose={() => {
                     editors.setJuryModalOpen(false);
-                    editors.setSelectedJuryToAssign(null); // Очищаємо вибір при закритті
+                    editors.setSelectedJuryToAssign(null);
                 }}
                 availableJuries={editors.availableJuries}
                 selectedJury={editors.selectedJuryToAssign}
                 setSelectedJury={editors.setSelectedJuryToAssign}
                 onSubmit={editors.handleAssignJury}
                 t={t}
+                // НОВІ ПРОПСИ:
+                inputValue={editors.inputValue}
+                onInputChange={editors.setInputValue}
+                loading={editors.isSearching}
             />
 
             <CriteriaDialog

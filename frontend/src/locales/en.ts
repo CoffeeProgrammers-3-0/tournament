@@ -199,6 +199,7 @@ export const en = {
         "authenticatingSubtitle": "Please, wait",
         "edit": "Edit",
         "delete": "Delete",
+        "no_options": "No options available",
     },
     profile: {
         "title": "My Profile",
@@ -346,7 +347,8 @@ export const en = {
             jury_modal: {
                 title: "Assign Jury Member",
                 id: "Enter jury ID",
-                submit: "Assign"
+                submit: "Assign",
+                select: "Choose jury member"
             }
         },
         categories: {

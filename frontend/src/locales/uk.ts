@@ -199,6 +199,7 @@ export const uk = {
         "authenticatingSubtitle": "Зачекайте, будь ласка",
         "edit": "Редагувати",
         "delete": "Видалити",
+        "no_options": "Немає опцій",
     },
     profile: {
         "title": "Мій профіль",
@@ -347,7 +348,8 @@ export const uk = {
             jury_modal: {
                 title: "Призначити суддю",
                 id: "Введіть ID судді",
-                submit: "Призначити"
+                submit: "Призначити",
+                select: "Оберіть журі"
             }
         },
         categories: {
