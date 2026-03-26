@@ -38,7 +38,7 @@ public class TournamentServiceImpl implements TournamentService {
         tournamentToUpdate.setMaxCountOfTeam(tournament.getMaxCountOfTeam());
         tournamentToUpdate.setCountOfRounds(tournament.getCountOfRounds());
         tournamentToUpdate.setStatus(tournament.getStatus());
-        return tournamentRepository.save(tournament);
+        return tournamentRepository.save(tournamentToUpdate);
     }
 
     @Override

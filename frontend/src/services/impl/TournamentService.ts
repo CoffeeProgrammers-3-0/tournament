@@ -25,6 +25,7 @@ class TournamentService extends BaseService {
     }
 
     public updateTournament(tournamentId: number, data: TournamentUpdateRequestDto): Promise<TournamentFullResponseDto> {
+        console.log(tournamentId, data)
         return this.put<TournamentFullResponseDto>(`/${tournamentId}`, data);
     }
 

@@ -35,7 +35,7 @@ export const InfoTab = ({ state, formatDate, t }: any) => {
                                     <TextField fullWidth type="datetime-local" label={t("tournaments.admin.fields.startTournament")} InputLabelProps={{ shrink: true }} value={state.editFormData.startTournament} onChange={(e) => state.setEditFormData({ ...state.editFormData, startTournament: e.target.value })} />
                                 </Grid>
                                 <Grid size={{xs: 6, sm: 4}}>
-                                    <TextField fullWidth type="number" label={t("tournaments.admin.fields.maxTeams")} value={state.editFormData.maxCountOfTeams} onChange={(e) => state.setEditFormData({ ...state.editFormData, maxCountOfTeams: Number(e.target.value) })} />
+                                    <TextField fullWidth type="number" label={t("tournaments.admin.fields.maxTeams")} value={state.editFormData.maxCountOfTeam} onChange={(e) => state.setEditFormData({ ...state.editFormData, maxCountOfTeam: Number(e.target.value) })} />
                                 </Grid>
                                 <Grid size={{xs: 6, sm: 4}}>
                                     <TextField fullWidth type="number" label={t("tournaments.admin.fields.rounds")} value={state.editFormData.countOfRounds} onChange={(e) => state.setEditFormData({ ...state.editFormData, countOfRounds: Number(e.target.value) })} />
@@ -68,7 +68,7 @@ export const InfoTab = ({ state, formatDate, t }: any) => {
                         <Divider />
                         <Box sx={{ display: "flex", justifyContent: "space-between" }}>
                             <Typography color="text.secondary" fontWeight={500}>{t("tournament_details.info.max_teams")}</Typography>
-                            <Typography fontWeight={800}>{state.tournamentData.maxCountOfTeams}</Typography>
+                            <Typography fontWeight={800}>{state.tournamentData.maxCountOfTeam}</Typography>
                         </Box>
                         <Box sx={{ display: "flex", justifyContent: "space-between" }}>
                             <Typography color="text.secondary" fontWeight={500}>{t("tournament_details.info.rounds_count")}</Typography>

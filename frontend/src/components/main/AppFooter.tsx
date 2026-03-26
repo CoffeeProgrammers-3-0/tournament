@@ -73,7 +73,7 @@ export const AppFooter = () => {
                         )}
 
                         {role === 'USER' && (
-                            <Link component={RouterLink} to={isLoggedIn ? "/my-team" : "/login"} display="block" underline="hover" sx={{ color: "text.secondary", fontSize: "0.875rem" }}>
+                            <Link component={RouterLink} to={isLoggedIn ? "/teams" : "/login"} display="block" underline="hover" sx={{ color: "text.secondary", fontSize: "0.875rem" }}>
                                 {isLoggedIn ? t("header.myTeam") : t("header.login")}
                             </Link>
                         )}

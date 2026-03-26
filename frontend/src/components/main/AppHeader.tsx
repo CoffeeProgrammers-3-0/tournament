@@ -94,7 +94,7 @@ export const AppHeader = () => {
                             <Button
                                 color="inherit"
                                 component={RouterLink}
-                                to={role === 'ADMIN' ? "/admin/teams" : "/my-team"}
+                                to={role === 'ADMIN' ? "/admin/teams" : "/teams"}
                                 sx={{ textTransform: "none" }}
                                 startIcon={<GroupsIcon sx={{ opacity: 0.7 }} />}
                             >

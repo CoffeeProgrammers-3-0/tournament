@@ -10,7 +10,7 @@ export interface TournamentCreateRequestDto {
     startTournament: string;
     startRegistration: string;
     endRegistration: string;
-    maxCountOfTeams: number;
+    maxCountOfTeam: number;
     countOfRounds: number;
 }
 
@@ -22,7 +22,7 @@ export interface TournamentUpdateRequestDto {
     startTournament: string;
     startRegistration: string;
     endRegistration: string;
-    maxCountOfTeams: number;
+    maxCountOfTeam: number;
     countOfRounds: number;
     status: TournamentStatus;
 }

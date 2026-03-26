@@ -153,6 +153,16 @@ export const en = {
         },
         "criteria": "Evaluation Criteria"
     },
+    juries: {
+        "management_title": "Management of Jury",
+        "management_subtitle": "Page for management all juries",
+        "tabs": {
+            "list": "List",
+            "create": "Create"
+        },
+        "search_placeholder": "Search",
+        "delete_confirm": "Are you sure you want to delete this jury member?",
+    },
     create_jury: {
         "title": "New Jury",
         "subtitle": "Fill in the details to add a new jury member to the system",
@@ -186,7 +196,9 @@ export const en = {
         "success": "Action successful",
         "back": "Back",
         "authenticating": "Authenticating",
-        "authenticatingSubtitle": "Please, wait"
+        "authenticatingSubtitle": "Please, wait",
+        "edit": "Edit",
+        "delete": "Delete",
     },
     profile: {
         "title": "My Profile",
@@ -254,6 +266,117 @@ export const en = {
             "users_incomplete": "Please fill in all member details.",
             "min_members": "A team must have at least one member.",
             "error": "Failed to create team. Please try again."
+        }
+    },
+    team_details: {
+        "not_found": "Team not found",
+        "tabs": {
+            "info": "Information",
+            "members": "Members",
+            "tournaments": "Tournaments"
+        },
+        "info": {
+            "team_name": "Team Name",
+            "org_name": "Organization / Institution",
+            "contact_person": "Contact Person",
+            "email": "Contact Email"
+        },
+        "members": {
+            "title": "Team Roster"
+        },
+        "tournaments": {
+            "title": "Tournament History",
+            "coming_soon": "Tournament list will be available soon."
+        },
+        "admin": {
+            "edit_info": "Edit Details",
+            "save": "Save Changes",
+            "cancel": "Cancel",
+            "add_member": "Add Member",
+            "delete_member_confirm": "Are you sure you want to remove this member from the team?",
+            "make_leader": "Promote to Leader",
+            "remove_member": "Remove from team",
+            "member_modal": {
+                "title": "New Member",
+                "full_name": "Full Name",
+                "email": "Email Address",
+                "is_leader": "Set as Leader",
+                "submit": "Add to Roster"
+            }
+        },
+        "errors": {
+            "fetch_failed": "Failed to load team details",
+            "update_failed": "Error updating information",
+            "add_member_failed": "Failed to add member",
+            "remove_member_failed": "Error removing member",
+            "promote_failed": "Failed to change leader"
+        }
+    },round_details: {
+        not_found: "Round not found",
+        header: {
+            dates: "Dates:",
+            winners: "Winners:"
+        },
+        tabs: {
+            info: "Information",
+            categories: "Categories",
+            jury: "Jury",
+            teams: "Teams"
+        },
+        info: {
+            name: "Round name",
+            status: "Status",
+            start_date: "Start",
+            end_date: "End",
+            winners_count: "Number of winners",
+            task: "Task",
+            requirements: "Requirements",
+            no_info: "No information"
+        },
+        admin: {
+            edit_info: "Edit information",
+            save: "Save",
+            cancel: "Cancel",
+            category_modal: {
+                title: "Add Category",
+                name: "Category name",
+                weight: "Weight",
+                submit: "Create category"
+            },
+            jury_modal: {
+                title: "Assign Jury Member",
+                id: "Enter jury ID",
+                submit: "Assign"
+            }
+        },
+        categories: {
+            add_category: "Add Category",
+            add_criteria: "Add Criterion",
+            weight: "Weight:"
+        },
+        jury: {
+            assign: "Assign Jury",
+            remove: "Remove Jury"
+        },
+        teams: {
+            rank: "Rank",
+            team_name: "Team name",
+            email: "Email",
+            points: "Points",
+            no_data: "No data"
+        },
+        stats_modal: {
+            title: "Team stats: {{teamName}}",
+            view_aggregated: "Aggregated",
+            view_detailed: "Detailed",
+            criteria: "Criterion",
+            total: "Total",
+            total_score: "TOTAL SCORE",
+            close: "Close",
+            open: "Detailed statistics"
+        },
+        common: {
+            actions: "Actions"
         }
     },
 };

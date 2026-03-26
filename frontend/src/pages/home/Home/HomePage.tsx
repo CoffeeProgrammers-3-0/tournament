@@ -1,0 +1,71 @@
+import {Box, Container, Grid, Typography} from "@mui/material";
+import {useTranslation} from "react-i18next";
+import {StepCard} from "./components/StepCard";
+import {getHomeSteps} from "./constants/homeSteps";
+import type {JSXElementConstructor, Key, ReactElement, ReactNode, ReactPortal} from "react";
+
+export const HomePage = () => {
+    const {t} = useTranslation();
+    const steps = getHomeSteps(t);
+
+    return (
+        <Container maxWidth="lg" sx={{pt: 12, pb: 12}}>
+            {/* HERO SECTION */}
+            <Box textAlign="center" sx={{mb: 12}}>
+                <Typography
+                    variant="h1"
+                    fontWeight={900}
+                    gutterBottom
+                    sx={{
+                        letterSpacing: "-0.04em",
+                        fontSize: {xs: "3rem", md: "4.5rem"},
+                        background: "linear-gradient(45deg, #1a237e, #3949ab)",
+                        WebkitBackgroundClip: "text",
+                        WebkitTextFillColor: "transparent"
+                    }}
+                >
+                    {t("home.title")}
+                </Typography>
+                <Typography
+                    variant="h5"
+                    color="text.secondary"
+                    sx={{maxWidth: "750px", mx: "auto", lineHeight: 1.7, fontWeight: 400, opacity: 0.9}}
+                >
+                    {t("home.description")}
+                </Typography>
+            </Box>
+
+            {/* HOW IT WORKS SECTION */}
+            <Box>
+                <Typography
+                    variant="h3"
+                    fontWeight={800}
+                    textAlign="center"
+                    sx={{mb: 8, letterSpacing: "-0.02em"}}
+                >
+                    {t("home.how_it_works.title")}
+                </Typography>
+
+                <Grid container spacing={4}>
+                    {steps.map((step: {
+                        icon: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined;
+                        title: string;
+                        description: string;
+                        color: string;
+                    }, index: Key | null | undefined) => (
+                        <Grid size={{xs: 12, md: 4}} key={index}>
+                            <StepCard
+                                icon={step.icon}
+                                title={step.title}
+                                description={step.description}
+                                color={step.color}
+                            />
+                        </Grid>
+                    ))}
+                </Grid>
+            </Box>
+        </Container>
+    );
+};
+
+export default HomePage;

@@ -153,6 +153,16 @@ export const uk = {
         },
         "criteria": "Критерії оцінювання"
     },
+    juries: {
+        "management_title": "Менеджемнт журі",
+        "management_subtitle": "Сторінку менеджменту журі",
+        "tabs": {
+            "list": "Лист",
+            "create": "Створити"
+        },
+        "search_placeholder": "Шукати",
+        "delete_confirm": "Ви впевнені що хочете видалити цього журі?",
+    },
     create_jury: {
         "title": "Нове журі",
         "subtitle": "Заповніть дані, щоб додати нового члена журі до системи",
@@ -186,7 +196,9 @@ export const uk = {
         "success": "Успішно виконано",
         "back": "Назад",
         "authenticating": "Аутентифікація",
-        "authenticatingSubtitle": "Зачекайте, будь ласка"
+        "authenticatingSubtitle": "Зачекайте, будь ласка",
+        "edit": "Редагувати",
+        "delete": "Видалити",
     },
     profile: {
         "title": "Мій профіль",
@@ -254,6 +266,118 @@ export const uk = {
             "users_incomplete": "Будь ласка, заповніть дані всіх учасників.",
             "min_members": "У команді має бути хоча б один учасник.",
             "error": "Не вдалося створити команду. Спробуйте ще раз."
+        }
+    },
+    team_details: {
+        "not_found": "Команду не знайдено",
+        "tabs": {
+            "info": "Інформація",
+            "members": "Учасники",
+            "tournaments": "Турніри"
+        },
+        "info": {
+            "team_name": "Назва команди",
+            "org_name": "Організація / Заклад",
+            "contact_person": "Контактна особа",
+            "email": "Контактний Email"
+        },
+        "members": {
+            "title": "Склад команди"
+        },
+        "tournaments": {
+            "title": "Історія турнірів",
+            "coming_soon": "Список турнірів з'явиться найближчим часом."
+        },
+        "admin": {
+            "edit_info": "Редагувати дані",
+            "save": "Зберегти зміни",
+            "cancel": "Скасувати",
+            "add_member": "Додати учасника",
+            "delete_member_confirm": "Ви впевнені, що хочете видалити цього учасника з команди?",
+            "make_leader": "Призначити капітаном",
+            "remove_member": "Видалити з команди",
+            "member_modal": {
+                "title": "Новий учасник",
+                "full_name": "Прізвище та ім'я",
+                "email": "Електронна пошта",
+                "is_leader": "Призначити капітаном",
+                "submit": "Додати до складу"
+            }
+        },
+        "errors": {
+            "fetch_failed": "Не вдалося завантажити дані команди",
+            "update_failed": "Помилка при оновленні даних",
+            "add_member_failed": "Не вдалося додати учасника",
+            "remove_member_failed": "Помилка при видаленні",
+            "promote_failed": "Не вдалося змінити капітана"
+        }
+    },
+    round_details: {
+        not_found: "Раунд не знайдено",
+        header: {
+            dates: "Дати:",
+            winners: "Переможців:"
+        },
+        tabs: {
+            info: "Інформація",
+            categories: "Категорії",
+            jury: "Журі",
+            teams: "Команди"
+        },
+        info: {
+            name: "Назва раунду",
+            status: "Статус",
+            start_date: "Початок",
+            end_date: "Кінець",
+            winners_count: "Кількість переможців",
+            task: "Завдання",
+            requirements: "Вимоги",
+            no_info: "Немає інформації"
+        },
+        admin: {
+            edit_info: "Редагувати інформацію",
+            save: "Зберегти",
+            cancel: "Скасувати",
+            category_modal: {
+                title: "Додати категорію",
+                name: "Назва категорії",
+                weight: "Вага",
+                submit: "Створити категорію"
+            },
+            jury_modal: {
+                title: "Призначити суддю",
+                id: "Введіть ID судді",
+                submit: "Призначити"
+            }
+        },
+        categories: {
+            add_category: "Додати категорію",
+            add_criteria: "Додати критерій",
+            weight: "Вага:"
+        },
+        jury: {
+            assign: "Призначити суддю",
+            remove: "Зняти суддю"
+        },
+        teams: {
+            rank: "Місце",
+            team_name: "Назва команди",
+            email: "Email",
+            points: "Бали",
+            no_data: "Немає даних"
+        },
+        stats_modal: {
+            title: "Статистика команди: {{teamName}}",
+            view_aggregated: "Сумарно",
+            view_detailed: "Детально",
+            criteria: "Критерій",
+            total: "Разом",
+            total_score: "ЗАГАЛЬНИЙ БАЛ",
+            close: "Закрити",
+            open: "Детальна статистика"
+        },
+        common: {
+            actions: "Дії"
         }
     },
 };
