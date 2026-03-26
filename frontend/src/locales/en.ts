@@ -228,5 +228,32 @@ export const en = {
                 }
             }
         }
-    }
+    },
+    team_create: {
+        "title": "Team Registration",
+        "subtitle": "Fill in the details to participate in the tournament",
+        "back": "Back to tournament",
+        "success": "Team successfully registered!",
+        "registration": "Registering...",
+        "regis": "Register Team",
+        "team_members": "Team Members",
+        "fields": {
+            "name": "Team Name",
+            "contact_email": "Contact Email",
+            "org_name": "Organization / University",
+            "contact_some": "Phone or Telegram",
+            "leaders_name": "Leader's Full Name",
+            "leaders_email": "Leader's Email",
+            "members_name": "Member",
+            "members_email": "Member`s email"
+        },
+        "errors": {
+            "choose_tournament": "Tournament ID is missing. Please return and try again.",
+            "name_needed": "Please enter a team name.",
+            "email_needed": "Contact email is required.",
+            "users_incomplete": "Please fill in all member details.",
+            "min_members": "A team must have at least one member.",
+            "error": "Failed to create team. Please try again."
+        }
+    },
 };

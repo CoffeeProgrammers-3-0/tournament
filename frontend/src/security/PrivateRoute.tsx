@@ -1,17 +1,23 @@
 import React from 'react';
-import {Outlet, useLocation} from 'react-router-dom';
+import {Navigate, Outlet, useLocation} from 'react-router-dom';
 import {useAuth} from './useAuth.tsx';
-import AuthService from '../services/auth/AuthService';
 
 const PrivateRoute: React.FC = () => {
     const { isAuthenticated } = useAuth();
     const location = useLocation();
 
+    // /callback зазвичай обробляється окремо, але краще тримати його публічним в App.tsx
     if (location.pathname === "/callback") {
         return <Outlet />;
     }
 
-    return isAuthenticated() ? <Outlet /> : AuthService.refresh();
+    // Якщо авторизований — показуємо вкладені роути.
+    // Якщо ні — перенаправляємо на /login, зберігаючи попередній шлях у state
+    return isAuthenticated() ? (
+        <Outlet />
+    ) : (
+        <Navigate to="/login" state={{ from: location }} replace />
+    );
 };
 
 export default PrivateRoute;

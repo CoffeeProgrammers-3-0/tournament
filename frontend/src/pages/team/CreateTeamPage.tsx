@@ -22,64 +22,70 @@ import {teamService} from "../../services/impl/TeamService";
 import type {TeamCreateRequestDto} from "../../entities/team/team.dto.ts";
 
 export const CreateTeamPage = () => {
-    const {t} = useTranslation();
+    const { t } = useTranslation();
     const navigate = useNavigate();
-    const {tournamentId} = useParams<{ tournamentId: string }>();
+    const { tournamentId } = useParams<{ tournamentId: string }>();
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
 
-    // Стейт форми, який точно відповідає TeamCreateRequestDto
     const [formData, setFormData] = useState<TeamCreateRequestDto>({
         name: "",
         email: "",
         organization: "",
         contact: "",
         users: [
-            {fullName: "", email: "", isLeader: true},
-            {fullName: "", email: "", isLeader: false}
+            { fullName: "", email: "", isLeader: true },
+            { fullName: "", email: "", isLeader: false }
         ]
     });
 
-    // Оновлення базових полів команди
     const handleTeamChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const {name, value} = e.target;
-        setFormData(prev => ({...prev, [name]: value}));
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    // Оновлення полів конкретного учасника
     const handleUserChange = (idx: number, field: keyof typeof formData.users[0], value: string) => {
         setFormData(prev => {
             const updatedUsers = [...prev.users];
-            updatedUsers[idx] = {...updatedUsers[idx], [field]: value};
-            return {...prev, users: updatedUsers};
+            updatedUsers[idx] = { ...updatedUsers[idx], [field]: value };
+            return { ...prev, users: updatedUsers };
         });
     };
 
     const addUser = () => {
         setFormData(prev => ({
             ...prev,
-            users: [...prev.users, {fullName: "", email: "", isLeader: false}]
+            users: [...prev.users, { fullName: "", email: "", isLeader: false }]
         }));
-
     };
 
     const removeUser = (idx: number) => {
-        setFormData(prev => ({
-            ...prev,
-            users: prev.users.filter((_, i) => i !== idx)
-        }));
-
+        setFormData(prev => {
+            // Забороняємо видаляти останнього учасника, щоб кнопка "+" не зникала
+            if (prev.users.length <= 1) return prev;
+            return {
+                ...prev,
+                users: prev.users.filter((_, i) => i !== idx)
+            };
+        });
     };
 
     const validate = () => {
-        if (tournamentId) {
-            setError(t("team_create.choose_tournament"));
+        // ВИПРАВЛЕНО: перевірка на наявність ID
+        if (!tournamentId) {
+            setError(t("team_create.errors.no_tournament"));
             return false;
         }
         if (!formData.name.trim() || !formData.email.trim()) {
-            setError(t("team_create.name_needed"));
+            setError(t("team_create.errors.fields_required"));
+            return false;
+        }
+        // Перевірка чи заповнені всі імена та email учасників
+        const hasEmptyUserFields = formData.users.some(u => !u.fullName.trim() || !u.email.trim());
+        if (hasEmptyUserFields) {
+            setError(t("team_create.errors.users_incomplete"));
             return false;
         }
         setError(null);
@@ -96,49 +102,46 @@ export const CreateTeamPage = () => {
         try {
             await teamService.createTeam(Number(tournamentId), formData);
             setSuccess(true);
-
-            // Затримка перед редіректом, щоб показати повідомлення про успіх
             setTimeout(() => {
-                navigate(tournamentId ? `/tournaments/${tournamentId}` : "/teams");
+                navigate(`/tournaments/${tournamentId}`);
             }, 2000);
-
         } catch (err: any) {
             console.error("Помилка створення команди:", err);
-            setError(err.response?.data?.message || t("team_create.error"));
+            setError(err.response?.data?.message || t("team_create.errors.submit_failed"));
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <Box sx={{pb: 8, maxWidth: "800px", mx: "auto"}}>
+        <Box sx={{ pb: 8, maxWidth: "800px", mx: "auto", pt: 4 }}>
             <Button
-                startIcon={<ArrowBackIcon/>}
+                startIcon={<ArrowBackIcon />}
                 onClick={() => navigate(-1)}
-                sx={{mb: 3, textTransform: "none"}}
+                sx={{ mb: 3, textTransform: "none", fontWeight: 700 }}
             >
-                {t('common.back', t("team_create.back"))}
+                {t("common.back")}
             </Button>
 
             <Paper
                 component="form"
                 onSubmit={handleSubmit}
-                sx={{p: {xs: 3, md: 5}, borderRadius: "24px", boxShadow: "0 8px 32px rgba(0,0,0,0.08)"}}
+                sx={{ p: { xs: 3, md: 5 }, borderRadius: "24px", boxShadow: "0 8px 32px rgba(0,0,0,0.08)" }}
             >
                 <Typography variant="h4" fontWeight={800} color="primary.main" gutterBottom>
                     {t("team_create.title")}
                 </Typography>
-                <Typography variant="body1" color="text.secondary" sx={{mb: 4}}>
+                <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
                     {t("team_create.subtitle")}
                 </Typography>
 
-                <Divider sx={{mb: 4}}/>
+                <Divider sx={{ mb: 4 }} />
 
-                {error && <Alert severity="error" sx={{mb: 3}}>{error}</Alert>}
-                {success && <Alert severity="success" sx={{mb: 3}}>{t("team_create.success")}</Alert>}
+                {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
+                {success && <Alert severity="success" sx={{ mb: 3 }}>{t("team_create.success")}</Alert>}
 
                 <Grid container spacing={3}>
-                    <Grid size={{xs: 12, sm: 6}}>
+                    <Grid size={{xs:12, sm: 6}}>
                         <TextField
                             label={t("team_create.fields.name")}
                             name="name"
@@ -148,7 +151,7 @@ export const CreateTeamPage = () => {
                             onChange={handleTeamChange}
                         />
                     </Grid>
-                    <Grid size={{xs: 12, sm: 6}}>
+                    <Grid size={{xs:12, sm: 6}}>
                         <TextField
                             label={t("team_create.fields.contact_email")}
                             name="email"
@@ -159,7 +162,7 @@ export const CreateTeamPage = () => {
                             onChange={handleTeamChange}
                         />
                     </Grid>
-                    <Grid size={{xs: 12, sm: 6}}>
+                    <Grid size={{xs:12, sm: 6}}>
                         <TextField
                             label={t("team_create.fields.org_name")}
                             name="organization"
@@ -168,7 +171,7 @@ export const CreateTeamPage = () => {
                             onChange={handleTeamChange}
                         />
                     </Grid>
-                    <Grid size={{xs: 12, sm: 6}}>
+                    <Grid size={{xs:12, sm:6}}>
                         <TextField
                             label={t("team_create.fields.contact_some")}
                             name="contact"
@@ -178,46 +181,53 @@ export const CreateTeamPage = () => {
                         />
                     </Grid>
 
-                    <Grid size={{xs: 12}}>
-                        <Typography variant="h6" fontWeight={700} sx={{mt: 2, mb: 1}}>
-                            {t("team_create.team_members")}
-                        </Typography>
-                        <Divider/>
+                    <Grid size={{xs:12}}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2, mb: 1 }}>
+                            <Typography variant="h6" fontWeight={700}>
+                                {t("team_create.team_members")}
+                            </Typography>
+                            {/* Додаткова кнопка "+" для зручності, якщо список порожній (про всяк випадок) */}
+                            {formData.users.length === 0 && (
+                                <Button startIcon={<AddIcon />} onClick={addUser}>{t("team_create.add_member")}</Button>
+                            )}
+                        </Box>
+                        <Divider />
                     </Grid>
 
                     {formData.users.map((user, idx) => (
-                        <Grid size={{xs: 12}} key={idx}>
+                        <Grid size={{xs:12}} key={idx}>
                             <Box sx={{
                                 display: "flex",
                                 gap: 2,
                                 alignItems: "center",
-                                flexWrap: {xs: "wrap", sm: "nowrap"}
+                                flexWrap: { xs: "wrap", sm: "nowrap" }
                             }}>
                                 <TextField
-                                    label={idx === 0 ? t("team_create.fields.leaders_name") : t("team_create.fields.members_name") + ` ${idx + 1}`}
+                                    label={idx === 0 ? t("team_create.fields.leaders_name") : `${t("team_create.fields.members_name")} ${idx}`}
                                     fullWidth
                                     required
                                     value={user.fullName}
                                     onChange={e => handleUserChange(idx, "fullName", e.target.value)}
                                 />
                                 <TextField
-                                    label={idx === 0 ? t("team_create.fields.leaders_email") : t("team_create.fields.members_email")+ ` ${idx + 1}`}
+                                    label={idx === 0 ? t("team_create.fields.leaders_email") : `${t("team_create.fields.members_email")} ${idx}`}
                                     type="email"
                                     fullWidth
                                     required
                                     value={user.email}
                                     onChange={e => handleUserChange(idx, "email", e.target.value)}
                                 />
-                                <Box sx={{display: "flex"}}>
+                                <Box sx={{ display: "flex", gap: 0.5 }}>
                                     <IconButton
                                         color="error"
                                         onClick={() => removeUser(idx)}
+                                        disabled={formData.users.length <= 1}
                                     >
-                                        <RemoveIcon/>
+                                        <RemoveIcon />
                                     </IconButton>
-                                    {idx === formData.users.length - 1  && (
+                                    {idx === formData.users.length - 1 && (
                                         <IconButton color="primary" onClick={addUser}>
-                                            <AddIcon/>
+                                            <AddIcon />
                                         </IconButton>
                                     )}
                                 </Box>
@@ -226,18 +236,22 @@ export const CreateTeamPage = () => {
                     ))}
                 </Grid>
 
-                <Box sx={{mt: 5, display: "flex", justifyContent: "flex-end", gap: 2}}>
-                    <Button variant="outlined" color="inherit" onClick={() => navigate(-1)}
-                            disabled={loading || success}>
-                        Скасувати
+                <Box sx={{ mt: 5, display: "flex", justifyContent: "flex-end", gap: 2 }}>
+                    <Button
+                        variant="outlined"
+                        color="inherit"
+                        onClick={() => navigate(-1)}
+                        disabled={loading || success}
+                    >
+                        {t("common.cancel")}
                     </Button>
                     <Button
                         type="submit"
                         variant="contained"
                         color="primary"
-                        startIcon={loading ? <CircularProgress size={20} color="inherit"/> : <SaveIcon/>}
+                        startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
                         disabled={loading || success}
-                        sx={{px: 4, fontWeight: 700}}
+                        sx={{ px: 4, fontWeight: 700 }}
                     >
                         {loading ? t("team_create.registration") : t("team_create.regis")}
                     </Button>

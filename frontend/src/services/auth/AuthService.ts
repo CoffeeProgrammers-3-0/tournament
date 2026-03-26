@@ -7,6 +7,14 @@ class AuthService {
     static redirectToKeycloak(): void {
         localStorage.setItem('preLoginPath', window.location.pathname);
 
+        const currentPath = window.location.pathname;
+
+        if (currentPath !== '/callback' && currentPath !== '/login') {
+            localStorage.setItem('preLoginPath', currentPath);
+        } else {
+            localStorage.setItem('preLoginPath', '/home');
+        }
+
         const keycloakUrl = "http://localhost:8080/realms/coffee-programmers/protocol/openid-connect/auth";
         const clientId = "coffee-programmers-client";
         const redirectUri = "http://localhost:3000/callback";
@@ -31,18 +39,13 @@ class AuthService {
     }
 
     static refresh(): Promise<boolean> {
-        if (this.refreshPromise) {
-            return this.refreshPromise;
-        }
+        if (this.refreshPromise) return this.refreshPromise;
 
         this.refreshPromise = (async () => {
-            console.log("Refreshing token");
-
             const refreshToken = Cookies.get("refreshToken");
             if (!refreshToken) {
-                console.log("No refresh token, redirecting to Keycloak");
-                this.redirectToKeycloak();
-                return false;
+                console.log("No refresh token available");
+                return false; // ПРОСТО ПОВЕРТАЄМО FALSE, НЕ РЕДИРЕКТИМО
             }
 
             try {
@@ -50,18 +53,14 @@ class AuthService {
                     "http://localhost:8081/api/auth/refresh",
                     {},
                     {
-                        params: {
-                            refreshToken: encodeURIComponent(refreshToken),
-                        },
+                        params: { refreshToken: encodeURIComponent(refreshToken) },
                         withCredentials: true,
                     }
                 );
-
                 return true;
             } catch (error) {
                 console.error("Token refresh failed", error);
-                this.redirectToKeycloak();
-                return false;
+                return false; // ТУТ ТЕЖ НЕ РЕДИРЕКТИМО
             } finally {
                 this.refreshPromise = null;
             }
