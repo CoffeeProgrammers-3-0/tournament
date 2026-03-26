@@ -20,7 +20,7 @@ const PageContainer = ({ children }: PageContainerProps) => {
             <AppHeader />
 
             <Box component="main" sx={{ flex: 1 }}>
-                <Container maxWidth="lg" sx={{ py: 6 }}>
+                <Container maxWidth="lg" sx={{ py: 4 }}>
                     {children}
                 </Container>
             </Box>

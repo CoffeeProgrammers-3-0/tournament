@@ -15,7 +15,7 @@ export const JurySubmissionsPage = () => {
     }
 
     return (
-        <Container maxWidth="lg" sx={{ py: 6 }}>
+        <Container maxWidth="lg" sx={{ pb: 6, pt: 1 }}>
             {/* Header Section */}
             <Box sx={{ mb: 6, display: "flex", alignItems: "center", gap: 3 }}>
                 <Avatar sx={{

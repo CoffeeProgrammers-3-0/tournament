@@ -2,7 +2,7 @@ import {Box, CircularProgress, Container, Tab, Tabs, Typography} from "@mui/mate
 import {useTranslation} from "react-i18next";
 import {useNavigate} from "react-router-dom";
 
-import {useTournamentDetails} from "./useTournamentDetails";
+import {useTournamentDetails} from "./useTournamentDetails.ts";
 import {TournamentHero} from "./components/TournamentHero";
 import {CreateRoundDialog} from "./components/CreateRoundDialog";
 import {InfoTab} from "./tabs/InfoTab";
@@ -30,7 +30,7 @@ export const TournamentDetailsPage = () => {
     }
 
     return (
-        <Container maxWidth="lg" sx={{ pb: 8, pt: 4 }}>
+        <Container maxWidth="lg" sx={{ pb: 6, pt: 1 }}>
             <TournamentHero state={state} formatDate={formatDate} t={t} navigate={navigate} />
 
             <Tabs

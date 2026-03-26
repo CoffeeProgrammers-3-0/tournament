@@ -52,7 +52,7 @@ export const TeamDetailsPage = () => {
     if (!teamData) return <Typography align="center" sx={{ mt: 5 }}>{t("team_details.not_found")}</Typography>;
 
     return (
-        <Container maxWidth="lg" sx={{ pb: 8 }}>
+        <Container maxWidth="lg" sx={{ pb: 6, pt: 1 }}>
             <TeamHeader team={teamData} canControl={canControl && !isEditing} onEdit={startEditing} />
 
             <Tabs value={tabValue} onChange={(_, v) => setTabValue(v)} textColor="secondary" indicatorColor="secondary" sx={{ mb: 4 }}>

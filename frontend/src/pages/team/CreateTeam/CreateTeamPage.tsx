@@ -22,7 +22,7 @@ export const CreateTeamPage = () => {
     } = useCreateTeam();
 
     return (
-        <Container maxWidth="md" sx={{ py: 4 }}>
+        <Container maxWidth="md" sx={{ pb:6, pt: 1 }}>
             <Button startIcon={<ArrowBackIcon />} onClick={() => navigate(-1)} sx={{ mb: 3, fontWeight: 700 }}>
                 {t("common.back")}
             </Button>

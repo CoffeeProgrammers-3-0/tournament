@@ -44,7 +44,7 @@ export const RoundDetailsPage = () => {
     }
 
     return (
-        <Box sx={{ pb: 8 }}>
+        <Box sx={{ pb: 8, pt: 1 }}>
             <RoundHeader
                 roundData={details.roundData}
                 isAdmin={isAdmin}

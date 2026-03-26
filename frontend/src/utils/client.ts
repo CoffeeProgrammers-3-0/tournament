@@ -1,6 +1,11 @@
-import axios, {type AxiosRequestConfig, type AxiosResponse} from 'axios';
+import axios, {type AxiosResponse, type InternalAxiosRequestConfig} from 'axios';
 import Cookies from 'js-cookie';
 import AuthService from '../services/auth/AuthService';
+
+// Додаємо розширення типу для підтримки прапорця повтору
+interface CustomInternalConfig extends InternalAxiosRequestConfig {
+    _retried?: boolean;
+}
 
 export const client = axios.create({
     baseURL: 'http://localhost:8081/api',
@@ -8,37 +13,39 @@ export const client = axios.create({
 });
 
 client.interceptors.request.use(
-    (config: AxiosRequestConfig) => {
+    (config: InternalAxiosRequestConfig) => {
         const token = Cookies.get('accessToken');
-        if (token) {
-            config.headers = {
-                ...config.headers,
-                Authorization: `Bearer ${token}`,
-            };
+        if (token && config.headers) {
+            // Використовуємо .set() або пряме призначення, оскільки headers вже ініціалізовані
+            config.headers.Authorization = `Bearer ${token}`;
         }
         return config;
     },
-    error => Promise.reject(error)
+    (error) => Promise.reject(error)
 );
 
 client.interceptors.response.use(
     (response: AxiosResponse) => response,
-    async error => {
+    async (error) => {
         const { response, config } = error;
+        const originalRequest = config as CustomInternalConfig;
 
-        if (response && response.status === 401 && config && !config._retried) {
-            config._retried = true;
-            const success = await AuthService.refresh();
+        if (response && response.status === 401 && originalRequest && !originalRequest._retried) {
+            originalRequest._retried = true;
 
-            if (success) {
-                const newToken = Cookies.get('accessToken');
-                if (newToken) {
-                    config.headers = {
-                        ...config.headers,
-                        Authorization: `Bearer ${newToken}`,
-                    };
+            try {
+                const success = await AuthService.refresh();
+
+                if (success) {
+                    const newToken = Cookies.get('accessToken');
+                    if (newToken && originalRequest.headers) {
+                        originalRequest.headers.Authorization = `Bearer ${newToken}`;
+                    }
+                    // Повертаємо виклик клієнта з оновленим конфігом
+                    return client(originalRequest);
                 }
-                return client(config);
+            } catch (refreshError) {
+                return Promise.reject(refreshError);
             }
         }
 

@@ -14,7 +14,7 @@ export const JuryEvaluatePage = () => {
     if (!submission) return <Typography>No data found.</Typography>;
 
     return (
-        <Box sx={{ pb: 8, maxWidth: "900px", mx: "auto", pt: 4 }}>
+        <Box sx={{ pb: 8, maxWidth: "900px", mx: "auto", pt: 1 }}>
             <Button startIcon={<ArrowBackIcon />} onClick={() => navigate(-1)} sx={{ mb: 3, fontWeight: 700 }}>
                 {t('common.back')}
             </Button>

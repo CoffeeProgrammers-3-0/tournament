@@ -147,7 +147,7 @@ export const TeamSubmissionPage = () => {
     const isEditMode = !!existingSubmission;
 
     return (
-        <Box sx={{ pb: 8, maxWidth: "750px", mx: "auto" }}>
+        <Box sx={{ pb: 8, maxWidth: "750px", mx: "auto", pt: 1 }}>
             <Button
                 startIcon={<ArrowBackIcon />}
                 onClick={() => navigate(-1)}

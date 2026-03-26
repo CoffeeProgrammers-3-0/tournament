@@ -9,7 +9,7 @@ export const HomePage = () => {
     const steps = getHomeSteps(t);
 
     return (
-        <Container maxWidth="lg" sx={{pt: 12, pb: 12}}>
+        <Container maxWidth="lg" sx={{pt: 1, pb: 12}}>
             {/* HERO SECTION */}
             <Box textAlign="center" sx={{mb: 12}}>
                 <Typography

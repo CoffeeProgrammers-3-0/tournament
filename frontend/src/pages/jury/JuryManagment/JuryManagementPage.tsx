@@ -56,7 +56,7 @@ export const JuryManagementPage = () => {
     };
 
     return (
-        <Container maxWidth="lg" sx={{ py: 6 }}>
+        <Container maxWidth="lg" sx={{ pb: 6, pt: 1 }}>
             {/* Unified Header */}
             <Paper elevation={0} sx={{
                 p: 5, borderRadius: "32px", mb: 5,

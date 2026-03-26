@@ -28,7 +28,7 @@ export const TeamsPage = () => {
     } = useTeams();
 
     return (
-        <Container maxWidth="lg" sx={{ py: 6 }}>
+        <Container maxWidth="lg" sx={{ pb: 6, pt: 1 }}>
             {/* Header Section */}
             <Box sx={{
                 display: "flex",

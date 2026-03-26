@@ -43,7 +43,7 @@ export const TournamentsPage = () => {
     }
 
     return (
-        <Container maxWidth="lg" sx={{ pb: 8, pt: 2 }}>
+        <Container maxWidth="lg" sx={{ pb: 6, pt: 1 }}>
             <Box sx={{ mb: 6, textAlign: "center", position: "relative" }}>
                 <Typography variant="h3" fontWeight={800}>{t("tournaments.title")}</Typography>
                 <Typography variant="h6" color="text.secondary">{t("tournaments.subtitle")}</Typography>

@@ -26,7 +26,7 @@ export const ProfilePage = () => {
     );
 
     return (
-        <Box sx={{ pb: 8, pt: 2 }}>
+        <Box sx={{ pb: 6, pt: 1 }}>
             <Typography variant="h3" fontWeight={800} gutterBottom sx={{ mb: 4 }}>
                 {t("profile.title")}
             </Typography>
