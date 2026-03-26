@@ -12,7 +12,6 @@ import {ProfilePage} from "./pages/user/ProfilePage.tsx";
 import TournamentDetailsPage from "./pages/tournament/TournamentDetailsPage.tsx";
 import {TeamDetailsPage} from "./pages/team/TeamDetailsPage.tsx";
 import {RoundDetailsPage} from "./pages/round/RoundDetailsPage.tsx";
-import {CreateJuryPage} from "./pages/jury/CreateJuryPage.tsx";
 import {CreateTeamPage} from "./pages/team/CreateTeamPage.tsx";
 
 // НОВІ СТОРІНКИ
@@ -21,6 +20,7 @@ import {JurySubmissionsPage} from "./pages/jury/JurySubmissionsPage.tsx";
 import {JuryEvaluatePage} from "./pages/jury/JuryEvaluatePage.tsx";
 
 import AuthInit from "./security/AuthInit.tsx";
+import JuryManagementPage from "./pages/jury/JuryManagementPage.tsx";
 
 const App: React.FC = () => {
 
@@ -56,13 +56,10 @@ const App: React.FC = () => {
                         <Route path="/jury/evaluate/:submissionId" element={<PageContainer><JuryEvaluatePage/></PageContainer>}/>
 
                         {/* --- СТОРІНКИ АДМІНІСТРАТОРА --- */}
-                        <Route path="/admin/jury/create" element={<PageContainer><CreateJuryPage/></PageContainer>}/>
+                        <Route path="/admin/jury/managment" element={<PageContainer><JuryManagementPage/></PageContainer>}/>
                         <Route path="/admin/teams" element={<PageContainer><TeamsPage/></PageContainer>}/>
                         {/* Сюди можна додати /admin/teams тощо */}
                     </Route>
-
-                    {/* Backward compatibility (якщо десь залишились старі лінки) */}
-                    <Route path="/jury/create" element={<PageContainer><CreateJuryPage/></PageContainer>}/>
                 </Routes>
             </AuthInit>
         </Router>

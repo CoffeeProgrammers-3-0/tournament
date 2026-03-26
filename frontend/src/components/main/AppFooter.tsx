@@ -66,7 +66,7 @@ export const AppFooter = () => {
                                 <Link component={RouterLink} to="/admin/teams" display="block" underline="hover" sx={{ mb: 1, color: "text.secondary", fontSize: "0.875rem" }}>
                                     {t("header.allTeams")}
                                 </Link>
-                                <Link component={RouterLink} to="/admin/jury/create" display="block" underline="hover" sx={{ color: "text.secondary", fontSize: "0.875rem" }}>
+                                <Link component={RouterLink} to="/admin/jury/managment" display="block" underline="hover" sx={{ color: "text.secondary", fontSize: "0.875rem" }}>
                                     {t("header.adminPanel")}
                                 </Link>
                             </>

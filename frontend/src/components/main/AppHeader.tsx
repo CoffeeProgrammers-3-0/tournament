@@ -121,7 +121,7 @@ export const AppHeader = () => {
                             <Button
                                 color="primary"
                                 component={RouterLink}
-                                to="/admin/jury/create"
+                                to="/admin/jury/managment"
                                 sx={{ textTransform: "none", fontWeight: 600 }}
                                 startIcon={<AdminPanelSettingsIcon />}
                             >
