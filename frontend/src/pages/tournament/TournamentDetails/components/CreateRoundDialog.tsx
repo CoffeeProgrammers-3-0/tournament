@@ -11,7 +11,7 @@ import {
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 
-export const CreateRoundDialog = ({ state, t }: any) => {
+export const CreateRoundDialog = ({ state, t, tournament }: any) => {
     const { roundModalOpen, setRoundModalOpen, roundFormData, handleRoundFormChange, handleCreateRound, isCreatingRound } = state;
 
     return (
@@ -21,12 +21,12 @@ export const CreateRoundDialog = ({ state, t }: any) => {
                 <IconButton onClick={() => setRoundModalOpen(false)}><CloseIcon /></IconButton>
             </DialogTitle>
             <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 3, pt: 2 }}>
-                <TextField label={t("tournament_details.admin.create_modal.name")} name="name" value={roundFormData.name} onChange={handleRoundFormChange} fullWidth />
+                <TextField required label={t("tournament_details.admin.create_modal.name")} name="name" value={roundFormData.name} onChange={handleRoundFormChange} fullWidth />
                 <Box sx={{ display: "flex", gap: 2 }}>
-                    <TextField label={t("tournament_details.admin.create_modal.start")} name="startDate" type="datetime-local" value={roundFormData.startDate} onChange={handleRoundFormChange} fullWidth InputLabelProps={{ shrink: true }} />
-                    <TextField label={t("tournament_details.admin.create_modal.end")} name="endDate" type="datetime-local" value={roundFormData.endDate} onChange={handleRoundFormChange} fullWidth InputLabelProps={{ shrink: true }} inputProps={{ min: roundFormData.startDate || undefined }} />
+                    <TextField required label={t("tournament_details.admin.create_modal.start")} name="startDate" type="datetime-local" value={roundFormData.startDate} onChange={handleRoundFormChange} fullWidth InputLabelProps={{ shrink: true }}  inputProps={{ min: tournament.startTournament || undefined }} />
+                    <TextField required label={t("tournament_details.admin.create_modal.end")} name="endDate" type="datetime-local" value={roundFormData.endDate} onChange={handleRoundFormChange} fullWidth InputLabelProps={{ shrink: true }} inputProps={{ min: roundFormData.startDate || undefined }} />
                 </Box>
-                <TextField label={t("tournament_details.admin.create_modal.winners")} name="countOfWinners" type="number" value={roundFormData.countOfWinners} onChange={handleRoundFormChange} fullWidth />
+                <TextField required label={t("tournament_details.admin.create_modal.winners")} name="countOfWinners" type="number" value={roundFormData.countOfWinners} onChange={handleRoundFormChange} fullWidth />
                 <TextField label={t("tournament_details.admin.create_modal.task")} name="task" value={roundFormData.task} onChange={handleRoundFormChange} multiline rows={4} fullWidth placeholder={t("tournament_details.admin.create_modal.name_placeholder")} />
             </DialogContent>
             <DialogActions sx={{ p: 3, gap: 1 }}>

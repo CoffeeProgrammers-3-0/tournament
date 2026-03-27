@@ -51,7 +51,7 @@ export const TournamentDetailsPage = () => {
                     && <TeamsTab state={state} t={t} navigate={navigate} />}
             </Box>
 
-            <CreateRoundDialog state={state} t={t} />
+            <CreateRoundDialog state={state} t={t} tournament={state.tournamentData}/>
         </Container>
     );
 };

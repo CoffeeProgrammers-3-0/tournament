@@ -17,9 +17,14 @@ import {TeamMembersForm} from "./components/TeamMembersForm";
 
 export const CreateTeamPage = () => {
     const {
-        formData, loading, error, success, handleTeamChange,
-        handleUserChange, addUser, removeUser, handleSubmit, navigate, t
+        formData, loading, fetchingTournament, error, success, limits,
+        handleTeamChange, handleUserChange, addUser, removeUser, handleSubmit,
+        navigate, t
     } = useCreateTeam();
+
+    if (fetchingTournament) {
+        return <CircularProgress sx={{ display: "block", mx: "auto", mt: 10 }} />;
+    }
 
     return (
         <Container maxWidth="md" sx={{ pb:6, pt: 1 }}>
@@ -56,6 +61,7 @@ export const CreateTeamPage = () => {
                             onChange={handleUserChange}
                             onAdd={addUser}
                             onRemove={removeUser}
+                            limits={limits}
                         />
                     </Grid>
                 </Grid>

@@ -1,7 +1,8 @@
-import {useState} from "react";
+import {useCallback, useEffect, useState} from "react";
 import {useNavigate, useParams} from "react-router-dom";
 import {useTranslation} from "react-i18next";
 import {teamService} from "../../../services/impl/TeamService";
+import {tournamentService} from "../../../services/impl/TournamentService";
 import type {TeamCreateRequestDto} from "../../../entities/team/team.dto.ts";
 
 export const useCreateTeam = () => {
@@ -10,19 +11,41 @@ export const useCreateTeam = () => {
     const { tournamentId } = useParams<{ tournamentId: string }>();
 
     const [loading, setLoading] = useState(false);
+    const [fetchingTournament, setFetchingTournament] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
+
+    // Ліміти учасників
+    const [limits, setLimits] = useState({ min: 3, max: 10 });
 
     const [formData, setFormData] = useState<TeamCreateRequestDto>({
         name: "",
         email: "",
         organization: "",
         contact: "",
-        users: [
-            { fullName: "", email: "", isLeader: true },
-            { fullName: "", email: "", isLeader: false }
-        ]
+        users: Array.from({ length: 3 }, (_, i) => ({
+            fullName: "",
+            email: "",
+            isLeader: i === 0
+        }))
     });
+
+    const fetchTournamentInfo = useCallback(async () => {
+        if (!tournamentId) return;
+        try {
+            const tournament = await tournamentService.getTournamentById(Number(tournamentId));
+            // Якщо бекенд присилає ліміт учасників на команду, беремо його тут
+            setLimits(prev => ({ ...prev, max: tournament.maxCountOfTeam || 10 }));
+        } catch (err) {
+            console.error("Failed to fetch tournament limits", err);
+        } finally {
+            setFetchingTournament(false);
+        }
+    }, [tournamentId]);
+
+    useEffect(() => {
+        fetchTournamentInfo();
+    }, [fetchTournamentInfo]);
 
     const handleTeamChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -38,6 +61,7 @@ export const useCreateTeam = () => {
     };
 
     const addUser = () => {
+        if (formData.users.length >= limits.max) return;
         setFormData(prev => ({
             ...prev,
             users: [...prev.users, { fullName: "", email: "", isLeader: false }]
@@ -45,7 +69,7 @@ export const useCreateTeam = () => {
     };
 
     const removeUser = (idx: number) => {
-        if (formData.users.length <= 1) return;
+        if (formData.users.length <= limits.min) return;
         setFormData(prev => ({
             ...prev,
             users: prev.users.filter((_, i) => i !== idx)
@@ -55,6 +79,10 @@ export const useCreateTeam = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!tournamentId) return setError(t("team_create.errors.choose_tournament"));
+
+        if (formData.users.length < limits.min) {
+            return setError(t("team_create.errors.min_members", { count: limits.min }));
+        }
 
         setLoading(true);
         try {
@@ -69,7 +97,7 @@ export const useCreateTeam = () => {
     };
 
     return {
-        formData, loading, error, success,
+        formData, loading, fetchingTournament, error, success, limits,
         handleTeamChange, handleUserChange, addUser, removeUser, handleSubmit,
         navigate, t
     };

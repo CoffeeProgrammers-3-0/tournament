@@ -30,6 +30,70 @@ export const en = {
         "privacy": "Privacy Policy",
         "register": "ID: 44977372"
     },
+
+    languages: {
+        en: "English",
+        uk: "Ukrainian",
+    },
+    common: {
+        "save": "Save",
+        "saving": "Saving...",
+        "cancel": "Cancel",
+        "loading": "Loading...",
+        "error": "An error occurred",
+        "success": "Action successful",
+        "back": "Back",
+        "authenticating": "Authenticating",
+        "authenticatingSubtitle": "Please, wait",
+        "edit": "Edit",
+        "delete": "Delete",
+        "add": "Add",
+        "no_options": "No options available",
+    },
+
+    home: {
+        "title": "Manage Tournaments Easily",
+        "description": "A single platform for organizing competitions, managing teams, and transparent real-time scoring.",
+        "how_it_works": {
+            "title": "How it works?",
+            "steps": {
+                "step1": {
+                    "title": "Registration",
+                    "desc": "Create your profile and get access to the list of current tournaments in your region or online."
+                },
+                "step2": {
+                    "title": "Team Formation",
+                    "desc": "Find like-minded people, create your own team, or join an existing one to participate in competitions."
+                },
+                "step3": {
+                    "title": "Path to Victory",
+                    "desc": "Complete round tasks, get scores from professional jury, and climb to the top of the leaderboard."
+                }
+            }
+        }
+    },
+
+    profile: {
+        "title": "My Profile",
+        "role": "System Role",
+        "teams": "My Teams",
+        "tournaments": "Active Tournaments",
+        "no_teams": "You haven't joined any teams yet",
+        "no_tournaments": "No active tournaments at the moment",
+        "error_loading": "Failed to load profile data",
+        "buttons": {
+            "edit": "Edit Profile"
+        },
+        "fields": {
+            "full_name": "Full Name",
+        },
+        "statuses": {
+            "RUNNING": "Running",
+            "COMPLETED": "Completed",
+            "REGISTRATION": "Registration"
+        }
+    },
+
     tournaments: {
         "title": "Tournaments",
         "admin_title": "Tournament Management",
@@ -71,44 +135,45 @@ export const en = {
         }
     },
     tournament_details: {
-        header: {
-            startDate: "Starts:",
-            registered: "You are registered",
-            register_btn: "Register Now"
+        "header": {
+            "startDate": "Starts:",
+            "registered": "You are registered",
+            "register_btn": "Register Now"
         },
-        tabs: {
-            info: "Information",
-            rounds: "Rounds",
-            teams: "Teams"
+        "tabs": {
+            "info": "Information",
+            "rounds": "Rounds",
+            "teams": "Teams"
         },
-        info: {
-            reg_period: "Registration Period",
-            max_teams: "Max Members of Team Capacity",
-            rounds_count: "Number of Rounds",
-            no_description: "No description provided for this tournament."
+        "info": {
+            "reg_period": "Registration Period",
+            "max_teams": "Max Members of Team Capacity",
+            "rounds_count": "Number of Rounds",
+            "no_description": "No description provided for this tournament."
         },
-        rounds: {
-            title: "Tournament Rounds",
-            empty: "No rounds have been created for this tournament yet."
+        "rounds": {
+            "title": "Tournament Rounds",
+            "empty": "No rounds have been created for this tournament yet."
         },
-        teams: {
-            empty: "No teams have registered for this tournament yet."
+        "teams": {
+            "empty": "No teams have registered for this tournament yet."
         },
-        admin: {
-            edit_info: "Edit Tournament",
-            add_round: "Add New Round",
-            create_modal: {
-                title: "Create New Round",
-                name: "Round Name",
-                name_placeholder: "Describe the tasks for participants in this stage...",
-                start: "Start Date",
-                end: "End Date",
-                winners: "Teams advancing count",
-                task: "Task Description",
-                submit: "Create Round"
+        "admin": {
+            "edit_info": "Edit Tournament",
+            "add_round": "Add New Round",
+            "create_modal": {
+                "title": "Create New Round",
+                "name": "Round Name",
+                "name_placeholder": "Describe the tasks for participants in this stage...",
+                "start": "Start Date",
+                "end": "End Date",
+                "winners": "Teams advancing count",
+                "task": "Task Description",
+                "submit": "Create Round"
             }
         }
     },
+
     teams: {
         "title": "Teams",
         "admin_title": "Team Directory",
@@ -120,140 +185,6 @@ export const en = {
         },
         "card": {
             "more_info": "View Profile"
-        }
-    },
-    submission: {
-        "title": "Submit Project",
-        "subtitle": "Round: {{roundName}}",
-        "fields": {
-            "github": "GitHub / Repository Link",
-            "video": "Video Presentation Link (YouTube/Drive)",
-            "description": "Solution Description",
-            "placeholder_desc": "Briefly describe your work..."
-        },
-        "status": {
-            "not_submitted": "Not submitted yet",
-            "submitted": "Project submitted",
-            "edit": "Update Project"
-        },
-        "submit_btn": "Submit for Review",
-        "success": "Project saved successfully!"
-    },
-    jury: {
-        "submissions_title": "Pending Reviews",
-        "submissions_subtitle": "Please check the projects submitted by the teams",
-        "evaluate_title": "Project Evaluation",
-        "team": "Team",
-        "links": "Materials",
-        "no_submissions": "No projects to review at the moment",
-        "evaluation_form": {
-            "score": "Score",
-            "comment": "Comment for the team",
-            "placeholder_comment": "Your notes or advice...",
-            "submit": "Complete Evaluation",
-            "success": "Score submitted!"
-        },
-        "criteria": "Evaluation Criteria",
-        "actions": {
-            "evaluate": "Evaluate",
-            "save_scores": "Save Scores",
-        },
-        "round_label": "Round",
-        "view_github": "Link to github",
-        "view_video": "Link to YouTube/Google disk",
-        "submission_desc": "Project Description",
-        "grading_rubric": "Grading Rubric",
-        "category_weight": "Weight",
-        "score_0_100": "Score 0-100",
-    },
-    juries: {
-        "management_title": "Management of Jury",
-        "management_subtitle": "Page for management all juries",
-        "tabs": {
-            "list": "List",
-            "create": "Create"
-        },
-        "search_placeholder": "Search",
-        "delete_confirm": "Are you sure you want to delete this jury member?",
-    },
-    create_jury: {
-        "title": "New Jury",
-        "subtitle": "Fill in the details to add a new jury member to the system",
-        "success": "Jury member created successfully!",
-        "fields": {
-            "full_name": "Full Name",
-            "email": "Email Address"
-        },
-        "actions": {
-            "submit": "Create Jury",
-            "creating": "Creating..."
-        },
-        "errors": {
-            "generic": "Failed to create jury. Please check the data and try again."
-        }
-    },
-    rounds: {
-        "status": "Round Status",
-        "statuses": {
-            "DRAFT": "Drafting",
-            "ACTIVE": "Open for Submissions",
-            "SUBMISSION_CLOSED": "Under Review",
-            "EVALUATED": "Finished"
-        }
-    },
-    common: {
-        "save": "Save",
-        "cancel": "Cancel",
-        "loading": "Loading...",
-        "error": "An error occurred",
-        "success": "Action successful",
-        "back": "Back",
-        "authenticating": "Authenticating",
-        "authenticatingSubtitle": "Please, wait",
-        "edit": "Edit",
-        "delete": "Delete",
-        "add": "Add",
-        "no_options": "No options available",
-    },
-    profile: {
-        "title": "My Profile",
-        "role": "System Role",
-        "teams": "My Teams",
-        "tournaments": "Active Tournaments",
-        "no_teams": "You haven't joined any teams yet",
-        "no_tournaments": "No active tournaments at the moment",
-        "error_loading": "Failed to load profile data",
-        "buttons": {
-            "edit": "Edit Profile"
-        },
-        "fields": {
-            "full_name": "Full Name",
-        },
-        "statuses": {
-            "RUNNING": "Running",
-            "COMPLETED": "Completed",
-            "REGISTRATION": "Registration"
-        }
-    },
-    home: {
-        "title": "Manage Tournaments Easily",
-        "description": "A single platform for organizing competitions, managing teams, and transparent real-time scoring.",
-        "how_it_works": {
-            "title": "How it works?",
-            "steps": {
-                "step1": {
-                    "title": "Registration",
-                    "desc": "Create your profile and get access to the list of current tournaments in your region or online."
-                },
-                "step2": {
-                    "title": "Team Formation",
-                    "desc": "Find like-minded people, create your own team, or join an existing one to participate in competitions."
-                },
-                "step3": {
-                    "title": "Path to Victory",
-                    "desc": "Complete round tasks, get scores from professional jury, and climb to the top of the leaderboard."
-                }
-            }
         }
     },
     team_create: {
@@ -327,87 +258,167 @@ export const en = {
             "remove_member_failed": "Error removing member",
             "promote_failed": "Failed to change leader"
         }
-    },round_details: {
-        not_found: "Round not found",
-        header: {
-            dates: "Dates:",
-            winners: "Winners:"
+    },
+
+    jury: {
+        "submissions_title": "Pending Reviews",
+        "submissions_subtitle": "Please check the projects submitted by the teams",
+        "evaluate_title": "Project Evaluation",
+        "team": "Team",
+        "links": "Materials",
+        "no_submissions": "No projects to review at the moment",
+        "evaluation_form": {
+            "score": "Score",
+            "comment": "Comment for the team",
+            "placeholder_comment": "Your notes or advice...",
+            "submit": "Complete Evaluation",
+            "success": "Score submitted!"
         },
-        tabs: {
-            info: "Information",
-            categories: "Categories",
-            jury: "Jury",
-            teams: "Teams",
-            leaderboard: "Teams(Leaderboard)",
-            submissions: "Submissions",
-            stats: "Statistics",
+        "criteria": "Evaluation Criteria",
+        "actions": {
+            "evaluate": "Evaluate",
+            "save_scores": "Save Scores",
         },
-        info: {
-            name: "Round name",
-            status: "Status",
-            start_date: "Start",
-            end_date: "End",
-            winners_count: "Number of winners",
-            task: "Task",
-            requirements: "Requirements",
-            no_info: "No information"
+        "round_label": "Round",
+        "view_github": "Link to github",
+        "view_video": "Link to YouTube/Google disk",
+        "submission_desc": "Project Description",
+        "grading_rubric": "Grading Rubric",
+        "category_weight": "Weight",
+        "score_0_100": "Score 0-100",
+        "no_categories": "No categories available",
+    },
+    juries: {
+        "management_title": "Management of Jury",
+        "management_subtitle": "Page for management all juries",
+        "tabs": {
+            "list": "List",
+            "create": "Create"
         },
-        admin: {
-            edit_info: "Edit information",
-            save: "Save",
-            cancel: "Cancel",
-            category_modal: {
-                title: "Add Category",
-                name: "Category name",
-                weight: "Weight",
-                submit: "Create category"
+        "search_placeholder": "Search",
+        "delete_confirm": "Are you sure you want to delete this jury member?",
+    },
+    create_jury: {
+        "title": "New Jury",
+        "subtitle": "Fill in the details to add a new jury member to the system",
+        "success": "Jury member created successfully!",
+        "fields": {
+            "full_name": "Full Name",
+            "email": "Email Address"
+        },
+        "actions": {
+            "submit": "Create Jury",
+            "creating": "Creating..."
+        },
+        "errors": {
+            "generic": "Failed to create jury. Please check the data and try again."
+        }
+    },
+
+    rounds: {
+        "status": "Round Status",
+        "statuses": {
+            "DRAFT": "Drafting",
+            "ACTIVE": "Open for Submissions",
+            "SUBMISSION_CLOSED": "Under Review",
+            "EVALUATED": "Finished"
+        }
+    },
+    round_details: {
+        "not_found": "Round not found",
+        "header": {
+            "dates": "Dates:",
+            "winners": "Winners:"
+        },
+        "tabs": {
+            "info": "Information",
+            "categories": "Categories",
+            "jury": "Jury",
+            "teams": "Teams",
+            "leaderboard": "Teams(Leaderboard)",
+            "submissions": "Submissions",
+            "stats": "Statistics",
+        },
+        "info": {
+            "name": "Round name",
+            "status": "Status",
+            "start_date": "Start",
+            "end_date": "End",
+            "winners_count": "Number of winners",
+            "task": "Task",
+            "requirements": "Requirements",
+            "no_info": "No information"
+        },
+        "admin": {
+            "edit_info": "Edit information",
+            "save": "Save",
+            "cancel": "Cancel",
+            "category_modal": {
+                "title": "Add Category",
+                "name": "Category name",
+                "weight": "Weight",
+                "submit": "Create category"
             },
-            jury_modal: {
-                title: "Assign Jury Member",
-                id: "Enter jury ID",
-                submit: "Assign",
-                select: "Choose jury member"
+            "jury_modal": {
+                "title": "Assign Jury Member",
+                "id": "Enter jury ID",
+                "submit": "Assign",
+                "select": "Choose jury member"
             }
         },
-        categories: {
-            add_category: "Add Category",
-            add_criteria: "Add Criterion",
-            criteria_text: "Criterion Text",
-            weight: "Weight:"
+        "categories": {
+            "add_category": "Add Category",
+            "add_criteria": "Add Criterion",
+            "criteria_text": "Criterion Text",
+            "weight": "Weight:"
         },
-        jury: {
-            assign: "Assign Jury",
-            remove: "Remove Jury"
+        "jury": {
+            "assign": "Assign Jury",
+            "remove": "Remove Jury"
         },
-        teams: {
-            rank: "Rank",
-            team_name: "Team name",
-            email: "Email",
-            points: "Points",
-            no_data: "No data"
+        "teams": {
+            "rank": "Rank",
+            "team_name": "Team name",
+            "email": "Email",
+            "points": "Points",
+            "no_data": "No data"
         },
-        stats_modal: {
-            title: "Team stats: {{teamName}}",
-            view_aggregated: "Aggregated",
-            view_detailed: "Detailed",
-            criteria: "Criterion",
-            total: "Total",
-            total_score: "TOTAL SCORE",
-            close: "Close",
-            open: "Detailed statistics"
+        "stats_modal": {
+            "title": "Team stats: {{teamName}}",
+            "view_aggregated": "Aggregated",
+            "view_detailed": "Detailed",
+            "criteria": "Criterion",
+            "total": "Total",
+            "total_score": "TOTAL SCORE",
+            "close": "Close",
+            "open": "Detailed statistics"
         },
-        common: {
-            actions: "Actions"
+        "common": {
+            "actions": "Actions"
         },
         "submit_button": "Submit work",
-        submissions: {
+        "submissions": {
             "auto_assign": "Auto assign juries for all submissions",
             "auto_assign_title": "Auto assign juries",
             "auto_assign_desc": "Enter number of juries per submission. Note: this will erase all existing jury assignments.",
         }
     },
-    languages: {
-        en: "English",
-        uk: "Ukrainian",
-    }
+
+    submission: {
+        "title": "Submit Project",
+        "subtitle": "Round: {{roundName}}",
+        "fields": {
+            "github": "GitHub / Repository Link",
+            "video": "Video Presentation Link (YouTube/Drive)",
+            "description": "Solution Description",
+            "placeholder_desc": "Briefly describe your work..."
+        },
+        "status": {
+            "not_submitted": "Not submitted yet",
+            "submitted": "Project submitted",
+            "edit": "Update Project"
+        },
+        "submit_btn": "Submit for Review",
+        "success": "Project saved successfully!"
+    },
 };

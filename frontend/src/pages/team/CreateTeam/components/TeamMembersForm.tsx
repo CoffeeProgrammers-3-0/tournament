@@ -10,7 +10,7 @@ interface Props {
     onRemove: (idx: number) => void;
 }
 
-export const TeamMembersForm = ({ users, onChange, onAdd, onRemove }: Props) => {
+export const TeamMembersForm = ({ users, onChange, onAdd, onRemove, limits }: Props & { limits: any }) => {
     const { t } = useTranslation();
 
     return (
@@ -38,11 +38,24 @@ export const TeamMembersForm = ({ users, onChange, onAdd, onRemove }: Props) => 
                             onChange={e => onChange(idx, "email", e.target.value)}
                         />
                         <Box sx={{ display: "flex" }}>
-                            <IconButton color="error" onClick={() => onRemove(idx)} disabled={users.length <= 1}>
+                            <IconButton
+                                color="error"
+                                onClick={() => onRemove(idx)}
+                                // Блокуємо видалення, якщо досягнуто мінімум
+                                disabled={users.length <= limits.min}
+                            >
                                 <RemoveIcon />
                             </IconButton>
+
                             {idx === users.length - 1 && (
-                                <IconButton color="primary" onClick={onAdd}><AddIcon /></IconButton>
+                                <IconButton
+                                    color="primary"
+                                    onClick={onAdd}
+                                    // Приховуємо або блокуємо додавання, якщо досягнуто максимум
+                                    disabled={users.length >= limits.max}
+                                >
+                                    <AddIcon />
+                                </IconButton>
                             )}
                         </Box>
                     </Box>
