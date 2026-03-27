@@ -65,9 +65,8 @@ public class TournamentServiceImpl implements TournamentService {
         return tournamentRepository.findAll(Specification.allOf(
                         TournamentSpecification.byName(search),
                         TournamentSpecification.byTournamentStatus(status),
-                        Specification
-                                .not(TournamentSpecification.byUserId(user.getId()))
-                        ), pageRequest);
+                        TournamentSpecification.byUserIdNot(user.getId())),
+                        pageRequest);
     }
 
     @Override

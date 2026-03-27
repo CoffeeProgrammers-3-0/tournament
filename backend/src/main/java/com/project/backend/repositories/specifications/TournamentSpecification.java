@@ -242,4 +242,22 @@ public class TournamentSpecification {
             return cb.equal(teamJoin.get("id"), teamId);
         };
     }
+
+    public static Specification<Tournament> byUserIdNot(Long userId) {
+        log.debug("TournamentSpecification.byUserIdNot called with userId={}", userId);
+        if (userId == null) return null;
+
+        return (root, query, cb) -> {
+            Subquery<Long> subquery = query.subquery(Long.class);
+            Root<TeamParticipant> subRoot = subquery.from(TeamParticipant.class);
+
+            subquery.select(cb.literal(1L));
+            subquery.where(
+                    cb.equal(subRoot.get("tournament"), root),
+                    cb.equal(subRoot.get("user").get("id"), userId)
+            );
+
+            return cb.not(cb.exists(subquery));
+        };
+    }
 }
