@@ -72,6 +72,7 @@ public interface TeamRepository extends JpaRepository<Team, Long>, JpaSpecificat
                 WHERE (:lastPoints IS NULL
                        OR points < :lastPoints
                        OR (points = :lastPoints AND team_id < :lastId))
+                       AND (:lastId IS NULL OR team_id <> :lastId)
                 ORDER BY points DESC, team_id DESC
                 LIMIT :size;
             """, nativeQuery = true)
