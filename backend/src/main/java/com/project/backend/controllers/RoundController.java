@@ -5,11 +5,14 @@ import com.project.backend.dto.round.RoundFullResponse;
 import com.project.backend.dto.round.RoundListResponse;
 import com.project.backend.dto.round.RoundUpdateRequest;
 import com.project.backend.dto.team.TeamLeaderboardResponse;
+import com.project.backend.dto.team.TeamListResponse;
 import com.project.backend.dto.user.UserResponse;
 import com.project.backend.dto.wrapper.PaginationListResponse;
 import com.project.backend.mappers.RoundMapper;
+import com.project.backend.mappers.TeamMapper;
 import com.project.backend.mappers.UserMapper;
 import com.project.backend.models.Round;
+import com.project.backend.models.Team;
 import com.project.backend.models.User;
 import com.project.backend.models.constants.RoundStatus;
 import com.project.backend.services.interfaces.EvaluationService;
@@ -38,6 +41,7 @@ public class RoundController {
     private final EvaluationService evaluationService;
     private final TeamService teamService;
     private final UserService userService;
+    private final TeamMapper teamMapper;
     private final UserMapper userMapper;
 
     @PostMapping("/{tournament_id}/rounds")
@@ -211,6 +215,104 @@ public class RoundController {
                         .map(userMapper::fromUserToResponse)
                         .toList()
         );
+
+        return response;
+    }
+
+    @PutMapping("/rounds/{round_id}/assign-teams")
+    @Operation(summary = "Assign teams to round", description = "Assigns teams to an existing round")
+    public void assignTeams(
+            @Parameter(description = "ID of the round", example = "10")
+            @PathVariable(value = "round_id") Long roundId,
+
+            @Parameter(description = "IDs of the teams")
+            @RequestParam(value = "team_ids") List<Long> teamIds) {
+        roundService.assignTeams(
+                roundId,
+                teamIds
+        );
+    }
+
+    @DeleteMapping("/rounds/{round_id}/unassign-teams")
+    @Operation(summary = "Unassign teams from round", description = "Unassigns teams from an existing round")
+    public void unassignTeams(
+            @Parameter(description = "ID of the round", example = "10")
+            @PathVariable(value = "round_id") Long roundId,
+
+            @Parameter(description = "IDs of the teams")
+            @RequestParam(value = "team_ids") List<Long> teamIds) {
+        roundService.unassignTeams(
+                roundId,
+                teamIds
+        );
+    }
+
+    @PutMapping("/rounds/{round_id}/assign-all-teams")
+    @Operation(summary = "Assign all teams to round", description = "Assigns all teams of tournament to an existing round")
+    public void assignTeams(
+            @Parameter(description = "ID of the round", example = "10")
+            @PathVariable(value = "round_id") Long roundId) {
+        roundService.assignAllTeams(
+                roundId
+        );
+    }
+
+    @DeleteMapping("/rounds/{round_id}/unassign-all-teams")
+    @Operation(summary = "Unassign all teams from round", description = "Unassigns all teams of the tournament from an existing round")
+    public void unassignTeams(
+            @Parameter(description = "ID of the round", example = "10")
+            @PathVariable(value = "round_id") Long roundId) {
+        roundService.unassignAllTeams(
+                roundId
+        );
+    }
+
+    @GetMapping("/rounds/{round_id}/teams")
+    @Operation(summary = "Get teams by round", description = "Returns paginated list of teams for the specified round")
+    public PaginationListResponse<TeamListResponse> getAllTeamsByRound(
+            @Parameter(description = "Search teams by name", example = "Alpha")
+            @RequestParam(value = "search", required = false) String search,
+
+            @Parameter(description = "Page number (starting from 0)", example = "0")
+            @RequestParam(value = "page") Integer page,
+
+            @Parameter(description = "Page size", example = "10")
+            @RequestParam(value = "size") Integer size,
+
+            @Parameter(description = "ID of the round", example = "1")
+            @PathVariable(value = "round_id") Long roundId) {
+        Page<Team> teamPage = teamService.findAllByRound(page, size, search, roundId);
+
+        PaginationListResponse<TeamListResponse> response = new PaginationListResponse<>();
+        response.setTotalPages(teamPage.getTotalPages());
+        response.setContent(teamPage.getContent().stream()
+                .map(teamMapper::fromTeamToListResponse)
+                .toList());
+
+        return response;
+    }
+
+    @GetMapping("/rounds/{round_id}/not-teams")
+    @Operation(summary = "Get teams by round not", description = "Returns paginated list of teams for the specified round")
+    public PaginationListResponse<TeamListResponse> getAllTeamsByRoundNot(
+            @Parameter(description = "Search teams by name", example = "Alpha")
+            @RequestParam(value = "search", required = false) String search,
+
+            @Parameter(description = "Page number (starting from 0)", example = "0")
+            @RequestParam(value = "page") Integer page,
+
+            @Parameter(description = "Page size", example = "10")
+            @RequestParam(value = "size") Integer size,
+
+            @Parameter(description = "ID of the round", example = "1")
+            @PathVariable(value = "round_id") Long roundId) {
+        Page<Team> teamPage = teamService.findAllByRoundNot(page, size, search, roundId);
+
+        PaginationListResponse<TeamListResponse> response = new PaginationListResponse<>();
+        response.setTotalPages(teamPage.getTotalPages());
+        response.setContent(teamPage.getContent().stream()
+                .map(teamMapper::fromTeamToListResponse)
+                .toList());
 
         return response;
     }

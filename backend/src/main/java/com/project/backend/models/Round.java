@@ -2,6 +2,7 @@ package com.project.backend.models;
 
 import com.project.backend.models.constants.RoundStatus;
 import com.project.backend.models.join_tables.Jury;
+import com.project.backend.models.join_tables.TeamRound;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -41,6 +42,9 @@ public class Round {
     private Long countOfWinners;
 
     private RoundStatus status;
+
+    @OneToMany(mappedBy = "round", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<TeamRound> teamRounds = new HashSet<>();
 
     @OneToMany(mappedBy = "round", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Category> categories = new HashSet<>();

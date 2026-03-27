@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 public interface RoundRepository extends JpaRepository<Round, Long>, JpaSpecificationExecutor<Round> {
     // Переводимо з DRAFT в ACTIVE, якщо настав час початку раунду
@@ -23,4 +24,6 @@ public interface RoundRepository extends JpaRepository<Round, Long>, JpaSpecific
             "WHERE r.status = com.project.backend.models.constants.RoundStatus.ACTIVE " +
             "AND r.endDate <= :now")
     int closeRoundSubmissions(@Param("now") LocalDateTime now);
+
+    Optional<Round> findFirstByTournamentIdOrderByStartDateAsc(Long tournamentId);
 }

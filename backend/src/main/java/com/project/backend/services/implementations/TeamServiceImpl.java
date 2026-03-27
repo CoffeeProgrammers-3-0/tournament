@@ -1,5 +1,6 @@
 package com.project.backend.services.implementations;
 
+import com.project.backend.dto.event.TeamCreatedEvent;
 import com.project.backend.dto.team.StatisticResponse;
 import com.project.backend.dto.team.StatisticRowDTO;
 import com.project.backend.dto.team.TeamLeaderboardResponse;
@@ -22,6 +23,7 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -39,6 +41,7 @@ public class TeamServiceImpl implements TeamService {
     private final TeamParticipantRepository teamParticipantRepository;
     private final TournamentRepository tournamentRepository;
     private final UserService userService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public boolean check(Long tournamentId, User user) {
@@ -108,8 +111,12 @@ public class TeamServiceImpl implements TeamService {
 
             savedTeam.getTeamParticipants().add(participant);
         }
+        savedTeam = teamRepository.save(savedTeam);
 
-        return teamRepository.save(savedTeam);
+        TeamCreatedEvent teamCreatedEvent = new TeamCreatedEvent(team, tournament);
+        eventPublisher.publishEvent(teamCreatedEvent);
+
+        return savedTeam;
     }
 
     @Override
@@ -279,6 +286,28 @@ public class TeamServiceImpl implements TeamService {
                 Specification.allOf(
                         TeamSpecification.byName(search),
                         TeamSpecification.byTournamentId(tournamentId)
+                ),
+                pageRequest);
+    }
+
+    @Override
+    public Page<Team> findAllByRound(Integer page, Integer size, String search, Long roundId) {
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "name"));
+        return teamRepository.findAll(
+                Specification.allOf(
+                        TeamSpecification.byName(search),
+                        TeamSpecification.byRoundId(roundId)
+                ),
+                pageRequest);
+    }
+
+    @Override
+    public Page<Team> findAllByRoundNot(Integer page, Integer size, String search, Long roundId) {
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "name"));
+        return teamRepository.findAll(
+                Specification.allOf(
+                        TeamSpecification.byName(search),
+                        Specification.not(TeamSpecification.byRoundId(roundId))
                 ),
                 pageRequest);
     }

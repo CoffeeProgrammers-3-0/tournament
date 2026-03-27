@@ -39,4 +39,8 @@ public interface TeamService {
 
     @Transactional
     List<TeamLeaderboardResponse> getAllStatsByRoundId(Long roundId, Double lastTeamPoints, Long lastTeam, Integer size);
+
+    Page<Team> findAllByRound(Integer page, Integer size, String search, Long roundId);
+
+    Page<Team> findAllByRoundNot(Integer page, Integer size, String search, Long roundId);
 }

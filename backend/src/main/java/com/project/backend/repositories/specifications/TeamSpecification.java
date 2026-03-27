@@ -1,9 +1,8 @@
 package com.project.backend.repositories.specifications;
 
-import com.project.backend.models.Round;
 import com.project.backend.models.Team;
-import com.project.backend.models.Tournament;
 import com.project.backend.models.join_tables.TeamParticipant;
+import com.project.backend.models.join_tables.TeamRound;
 import jakarta.persistence.criteria.Join;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.domain.Specification;
@@ -81,10 +80,8 @@ public class TeamSpecification {
 
         return (root, query, cb) -> {
             query.distinct(true);
-            Join<Team, TeamParticipant> tpJoin = root.join("teamParticipants");
-            Join<TeamParticipant, Tournament> tournamentJoin = tpJoin.join("tournament");
-            Join<Tournament, Round> roundJoin = tournamentJoin.join("rounds");
-            return cb.equal(roundJoin.get("id"), roundId);
+            Join<Team, TeamRound> trJoin = root.join("teamRounds");
+            return cb.equal(trJoin.get("round").get("id"), roundId);
         };
     }
 }

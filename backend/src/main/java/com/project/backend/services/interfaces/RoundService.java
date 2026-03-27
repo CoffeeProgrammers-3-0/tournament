@@ -4,6 +4,8 @@ import com.project.backend.models.Round;
 import com.project.backend.models.constants.RoundStatus;
 import org.springframework.data.domain.Page;
 
+import java.util.List;
+
 public interface RoundService {
     Round create(Long tournamentId, Round round);
 
@@ -18,4 +20,12 @@ public interface RoundService {
     void setJury(Long roundId, Long juryId);
 
     void removeJury(Long roundId, Long juryId);
+
+    void assignTeams(Long roundId, List<Long> teamIds);
+
+    void unassignTeams(Long roundId, List<Long> teamIds);
+
+    void assignAllTeams(Long roundId);
+
+    void unassignAllTeams(Long roundId);
 }
