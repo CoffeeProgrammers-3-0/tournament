@@ -1,5 +1,6 @@
 import {
     Box,
+    Button,
     Chip,
     CircularProgress,
     IconButton,
@@ -15,6 +16,9 @@ import {
 } from "@mui/material";
 import TrophyIcon from "@mui/icons-material/EmojiEvents";
 import InsertChartOutlinedIcon from "@mui/icons-material/InsertChartOutlined";
+import GroupAddIcon from "@mui/icons-material/GroupAdd";
+import PersonRemoveIcon from "@mui/icons-material/PersonRemove";
+import FastForwardIcon from "@mui/icons-material/FastForward";
 import type {TeamLeaderboardResponseDto} from "../../../../entities/team/team.dto";
 import type {RoundFullResponseDto} from "../../../../entities/round/round.dto";
 
@@ -26,19 +30,49 @@ type Props = {
     onOpenStats: (teamId: number, e: React.MouseEvent) => void;
     navigate: (path: string) => void;
     t: (key: string, options?: any) => string;
+    isAdmin: boolean;
+    onOpenAddMissingTeamsModal: () => void;
+    onOpenAdvanceTeamsModal: () => void;
+    onUnassignTeam: (teamId: number) => void;
 };
 
-export const RoundTeamsTab = ({ tabValue, leaderboard, loadingTab, roundData, onOpenStats, navigate, t }: Props) => {
+export const RoundTeamsTab = ({
+                                  tabValue, leaderboard, loadingTab, roundData, onOpenStats, navigate, t,
+                                  isAdmin, onOpenAddMissingTeamsModal, onOpenAdvanceTeamsModal, onUnassignTeam
+                              }: Props) => {
     if (tabValue !== 3) return null;
 
     return (
         <Box>
-            <Typography variant="h5" fontWeight={700} sx={{ mb: 3 }}>
-                {t("round_details.tabs.teams")}
-            </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                <Typography variant="h5" fontWeight={700}>
+                    {t("round_details.tabs.teams")}
+                </Typography>
+
+                {isAdmin && (
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                        <Button
+                            variant="outlined"
+                            startIcon={<GroupAddIcon/>}
+                            onClick={onOpenAddMissingTeamsModal}
+                        >
+                            Add Missing Teams
+                        </Button>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            startIcon={<FastForwardIcon/>}
+                            onClick={onOpenAdvanceTeamsModal}
+                            disabled={leaderboard.length === 0}
+                        >
+                            Advance Teams
+                        </Button>
+                    </Box>
+                )}
+            </Box>
 
             {loadingTab ? (
-                <CircularProgress sx={{ display: "block", mx: "auto", my: 4 }} />
+                <CircularProgress sx={{display: "block", mx: "auto", my: 4}}/>
             ) : (
                 <TableContainer
                     component={Paper}
@@ -46,45 +80,39 @@ export const RoundTeamsTab = ({ tabValue, leaderboard, loadingTab, roundData, on
                     sx={{
                         border: "1px solid #eee",
                         borderRadius: "16px",
-                        // --- ADDED PROPERTIES ---
-                        maxHeight: "600px", // Adjust this height as needed
+                        maxHeight: "600px",
                         overflowY: "auto",
-                        // Smooth scrollbar styling (optional)
-                        "&::-webkit-scrollbar": { width: "8px" },
-                        "&::-webkit-scrollbar-thumb": {
-                            backgroundColor: "#ccc",
-                            borderRadius: "10px"
-                        }
+                        "&::-webkit-scrollbar": {width: "8px"},
+                        "&::-webkit-scrollbar-thumb": { backgroundColor: "#ccc", borderRadius: "10px" }
                     }}
                 >
-                    <Table stickyHeader> {/* Added stickyHeader for better UX */}
+                    <Table stickyHeader>
                         <TableHead>
                             <TableRow>
-                                {/* Make sure to set bgcolor here or in sx because sticky headers can be transparent */}
-                                <TableCell align="center" width="80px" sx={{ bgcolor: "grey.50", fontWeight: 700 }}>
-                                    {t("round_details.teams.rank")}
-                                </TableCell>
-                                <TableCell sx={{ bgcolor: "grey.50", fontWeight: 700 }}>
-                                    {t("round_details.teams.team_name")}
-                                </TableCell>
-                                <TableCell sx={{ bgcolor: "grey.50", fontWeight: 700 }}>
-                                    {t("round_details.teams.email")}
-                                </TableCell>
-                                <TableCell align="right" sx={{ bgcolor: "grey.50", fontWeight: 700 }}>
-                                    {t("round_details.teams.points")}
-                                </TableCell>
-                                <TableCell align="center" width="100px" sx={{ bgcolor: "grey.50", fontWeight: 700 }}>
-                                    {t("round_details.common.actions")}
-                                </TableCell>
+                                <TableCell align="center" width="80px" sx={{bgcolor: "grey.50", fontWeight: 700}}>Rank</TableCell>
+                                <TableCell sx={{bgcolor: "grey.50", fontWeight: 700}}>Team Name</TableCell>
+                                <TableCell sx={{bgcolor: "grey.50", fontWeight: 700}}>Email</TableCell>
+                                <TableCell align="right" sx={{bgcolor: "grey.50", fontWeight: 700}}>Points</TableCell>
+                                <TableCell align="center" width="100px" sx={{bgcolor: "grey.50", fontWeight: 700}}>Actions</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
                             {leaderboard.map((team, index) => (
-                                <TableRow key={team.id} hover sx={{ cursor: "pointer" }} onClick={() => navigate(`/teams/${team.id}`)}>
+                                <TableRow
+                                    key={team.id} hover
+                                    onClick={() => navigate(`/teams/${team.id}`)}
+                                    sx={{
+                                        cursor: "pointer",
+                                        transition: 'background-color 0.2s',
+                                        '&:hover': { bgcolor: 'rgba(25, 118, 210, 0.04) !important' },
+                                        // Highlight winners slightly
+                                        ...(index < roundData.countOfWinners && { bgcolor: 'rgba(76, 175, 80, 0.02)' })
+                                    }}
+                                >
                                     <TableCell align="center">
-                                        {index === 0 ? <TrophyIcon sx={{ color: "gold" }} /> :
-                                            index === 1 ? <TrophyIcon sx={{ color: "silver" }} /> :
-                                                index === 2 ? <TrophyIcon sx={{ color: "#cd7f32" }} /> :
+                                        {index === 0 ? <TrophyIcon sx={{color: "gold"}}/> :
+                                            index === 1 ? <TrophyIcon sx={{color: "silver"}}/> :
+                                                index === 2 ? <TrophyIcon sx={{color: "#cd7f32"}}/> :
                                                     <Typography fontWeight={700} color="text.secondary">{index + 1}</Typography>}
                                     </TableCell>
                                     <TableCell><Typography fontWeight={600}>{team.name}</Typography></TableCell>
@@ -94,26 +122,33 @@ export const RoundTeamsTab = ({ tabValue, leaderboard, loadingTab, roundData, on
                                             label={team.points}
                                             color={index < roundData.countOfWinners ? "success" : "default"}
                                             variant="filled"
-                                            sx={{ fontWeight: 700 }}
+                                            sx={{fontWeight: 700}}
                                         />
                                     </TableCell>
                                     <TableCell align="center">
-                                        <Tooltip title={t("round_details.stats_modal.open")}>
-                                            <IconButton
-                                                color="primary"
-                                                size="small"
-                                                onClick={(e) => onOpenStats(team.id, e)}
-                                                sx={{ bgcolor: "primary.50" }}
-                                            >
-                                                <InsertChartOutlinedIcon />
-                                            </IconButton>
-                                        </Tooltip>
+                                        <Box sx={{display: 'flex', gap: 1, justifyContent: 'center'}}>
+                                            {isAdmin && (
+                                                <Tooltip title="Remove from Round">
+                                                    <IconButton color="error" size="small" onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        onUnassignTeam(team.id);
+                                                    }}>
+                                                        <PersonRemoveIcon fontSize="small"/>
+                                                    </IconButton>
+                                                </Tooltip>
+                                            )}
+                                            <Tooltip title="View Stats">
+                                                <IconButton color="primary" size="small" onClick={(e) => onOpenStats(team.id, e)} sx={{bgcolor: "primary.50"}}>
+                                                    <InsertChartOutlinedIcon fontSize="small"/>
+                                                </IconButton>
+                                            </Tooltip>
+                                        </Box>
                                     </TableCell>
                                 </TableRow>
                             ))}
                             {leaderboard.length === 0 && (
                                 <TableRow>
-                                    <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
+                                    <TableCell colSpan={5} align="center" sx={{py: 4, color: 'text.secondary'}}>
                                         {t("round_details.teams.no_data")}
                                     </TableCell>
                                 </TableRow>
