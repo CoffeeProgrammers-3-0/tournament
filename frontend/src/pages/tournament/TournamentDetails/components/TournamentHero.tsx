@@ -3,6 +3,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import HowToRegIcon from "@mui/icons-material/HowToReg";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import DeleteIcon from "@mui/icons-material/Delete"; // Додано
 
 export const TournamentHero = ({ state, formatDate, t, navigate }: any) => {
     const {
@@ -11,12 +12,14 @@ export const TournamentHero = ({ state, formatDate, t, navigate }: any) => {
         isEditingInfo,
         setIsEditingInfo,
         isUserRegistered,
-        tournamentId
+        tournamentId,
+        handleDeleteTournament
     } = state;
 
     if (!tournamentData) return null;
 
     const isRegistrationOpen = tournamentData.status === "REGISTRATION";
+    const isDraft = tournamentData.status === "DRAFT";
 
     return (
         <Paper
@@ -52,19 +55,44 @@ export const TournamentHero = ({ state, formatDate, t, navigate }: any) => {
                 </Grid>
 
                 <Grid size={{ xs: 12, md: 4 }} sx={{ display: "flex", justifyContent: { md: "flex-end" }, gap: 2 }}>
-                    {/* 1. ЛОГІКА ДЛЯ АДМІНА */}
                     {isAdmin ? (
-                        !isEditingInfo && (
-                            <Button
-                                variant="contained"
-                                color="secondary"
-                                startIcon={<EditIcon />}
-                                onClick={() => setIsEditingInfo(true)}
-                                sx={{ borderRadius: "14px", fontWeight: 800, px: 3, py: 1.5, color: "black" }}
-                            >
-                                {t("tournament_details.admin.edit_info")}
-                            </Button>
-                        )
+                        <>
+                            {/* Кнопка ВИДАЛЕННЯ (тільки для DRAFT) */}
+                            {isDraft && !isEditingInfo && (
+                                <Button
+                                    variant="outlined"
+                                    color="error"
+                                    startIcon={<DeleteIcon />}
+                                    onClick={handleDeleteTournament}
+                                    sx={{
+                                        borderRadius: "14px",
+                                        fontWeight: 800,
+                                        px: 3,
+                                        py: 1.5,
+                                        borderColor: 'rgba(255,255,255,0.5)',
+                                        color: 'white',
+                                        '&:hover': {
+                                            borderColor: 'error.main',
+                                            bgcolor: 'rgba(211, 47, 47, 0.1)'
+                                        }
+                                    }}
+                                >
+                                    {t("common.delete", "Видалити")}
+                                </Button>
+                            )}
+
+                            {!isEditingInfo && (
+                                <Button
+                                    variant="contained"
+                                    color="secondary"
+                                    startIcon={<EditIcon />}
+                                    onClick={() => setIsEditingInfo(true)}
+                                    sx={{ borderRadius: "14px", fontWeight: 800, px: 3, py: 1.5, color: "black" }}
+                                >
+                                    {t("tournament_details.admin.edit_info")}
+                                </Button>
+                            )}
+                        </>
                     ) : (
                         /* 2. ЛОГІКА ДЛЯ ЗВИЧАЙНИХ ЮЗЕРІВ ТА ГОСТЕЙ */
                         isRegistrationOpen && (

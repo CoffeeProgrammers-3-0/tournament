@@ -2,7 +2,6 @@ import {Box, Container, Grid, Typography} from "@mui/material";
 import {useTranslation} from "react-i18next";
 import {StepCard} from "./components/StepCard";
 import {getHomeSteps} from "./constants/homeSteps";
-import type {JSXElementConstructor, Key, ReactElement, ReactNode, ReactPortal} from "react";
 
 export const HomePage = () => {
     const {t} = useTranslation();
@@ -47,12 +46,7 @@ export const HomePage = () => {
                 </Typography>
 
                 <Grid container spacing={4}>
-                    {steps.map((step: {
-                        icon: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined;
-                        title: string;
-                        description: string;
-                        color: string;
-                    }, index: Key | null | undefined) => (
+                    {steps.map((step, index) => (
                         <Grid size={{xs: 12, md: 4}} key={index}>
                             <StepCard
                                 icon={step.icon}

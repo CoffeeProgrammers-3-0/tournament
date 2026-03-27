@@ -36,7 +36,7 @@ export interface TournamentFullResponseDto {
     startTournament: string;
     startRegistration: string;
     endRegistration: string;
-    maxCountOfTeams: number;
+    maxCountOfTeam: number;
     countOfRounds: number;
     status: TournamentStatus;
 }

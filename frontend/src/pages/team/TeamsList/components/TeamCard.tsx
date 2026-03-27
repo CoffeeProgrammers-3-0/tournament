@@ -28,7 +28,6 @@ export const TeamCard = ({ team, isAdmin, onDelete }: TeamCardProps) => {
 
     const handleDelete = (e: React.MouseEvent) => {
         e.stopPropagation();
-
         if (window.confirm(t("team_details.admin.delete_confirm"))) {
             onDelete?.(team.id);
         }

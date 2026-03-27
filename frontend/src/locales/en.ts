@@ -82,7 +82,7 @@ export const en = {
         },
         info: {
             reg_period: "Registration Period",
-            max_teams: "Max Teams Capacity",
+            max_teams: "Max Members of Team Capacity",
             rounds_count: "Number of Rounds",
             no_description: "No description provided for this tournament."
         },
@@ -199,6 +199,7 @@ export const en = {
         "authenticatingSubtitle": "Please, wait",
         "edit": "Edit",
         "delete": "Delete",
+        "add": "Add",
         "no_options": "No options available",
     },
     profile: {
@@ -294,6 +295,7 @@ export const en = {
             "save": "Save Changes",
             "cancel": "Cancel",
             "add_member": "Add Member",
+            "delete_confirm": "Are you sure you want to delete this team?",
             "delete_member_confirm": "Are you sure you want to remove this member from the team?",
             "make_leader": "Promote to Leader",
             "remove_member": "Remove from team",
@@ -354,6 +356,7 @@ export const en = {
         categories: {
             add_category: "Add Category",
             add_criteria: "Add Criterion",
+            criteria_text: "Criterion Text",
             weight: "Weight:"
         },
         jury: {

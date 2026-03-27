@@ -23,6 +23,7 @@ const AuthInit: React.FC<{ children: React.ReactElement }> = ({ children }) => {
         };
 
         initAuth();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     if (!isLoaded) {

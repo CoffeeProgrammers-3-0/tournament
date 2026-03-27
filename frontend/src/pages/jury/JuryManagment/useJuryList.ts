@@ -38,9 +38,8 @@ export const useJuryList = () => {
     useEffect(() => { fetchJuries(); }, [fetchJuries]);
 
     const deleteJury = async (id: number) => {
-        if (!window.confirm("Ви впевнені, що хочете видалити цього члена журі?")) return;
         try {
-            await userService.deleteUser(id); // Припускаємо наявність методу
+            await userService.deleteUser(id);
             setJuries(prev => prev.filter(j => j.id !== id));
         } catch (error) {
             alert("Помилка при видаленні");

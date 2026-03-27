@@ -82,7 +82,7 @@ export const uk = {
         },
         info: {
             reg_period: "Період реєстрації",
-            max_teams: "Максимально команд",
+            max_teams: "Максимальна кількіть учасників у команді",
             rounds_count: "Кількість раундів",
             no_description: "Опис для цього турніру ще не додано."
         },
@@ -199,6 +199,7 @@ export const uk = {
         "authenticatingSubtitle": "Зачекайте, будь ласка",
         "edit": "Редагувати",
         "delete": "Видалити",
+        "add": "Додати",
         "no_options": "Немає опцій",
     },
     profile: {
@@ -294,6 +295,7 @@ export const uk = {
             "save": "Зберегти зміни",
             "cancel": "Скасувати",
             "add_member": "Додати учасника",
+            "delete_confirm": "Ви впевнені, що хочете видалити цю команду?",
             "delete_member_confirm": "Ви впевнені, що хочете видалити цього учасника з команди?",
             "make_leader": "Призначити капітаном",
             "remove_member": "Видалити з команди",
@@ -355,6 +357,7 @@ export const uk = {
         categories: {
             add_category: "Додати категорію",
             add_criteria: "Додати критерій",
+            criteria_text: "Текст критерію",
             weight: "Вага:"
         },
         jury: {

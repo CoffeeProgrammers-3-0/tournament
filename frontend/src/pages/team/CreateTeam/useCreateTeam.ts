@@ -54,7 +54,7 @@ export const useCreateTeam = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!tournamentId) return setError(t("team_create.errors.no_tournament"));
+        if (!tournamentId) return setError(t("team_create.errors.choose_tournament"));
 
         setLoading(true);
         try {
@@ -62,7 +62,7 @@ export const useCreateTeam = () => {
             setSuccess(true);
             setTimeout(() => navigate(`/tournaments/${tournamentId}`), 2000);
         } catch (err: any) {
-            setError(err.response?.data?.message || t("team_create.errors.submit_failed"));
+            setError(err.response?.data?.message || t("team_create.errors.error"));
         } finally {
             setLoading(false);
         }

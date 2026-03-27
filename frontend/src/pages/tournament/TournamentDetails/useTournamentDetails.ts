@@ -1,5 +1,5 @@
 import {useCallback, useEffect, useState} from 'react';
-import {useParams} from 'react-router-dom';
+import {useNavigate, useParams} from 'react-router-dom';
 import {tournamentService} from '../../../services/impl/TournamentService';
 import {roundService} from "../../../services/impl/RoundService";
 import {teamService} from "../../../services/impl/TeamService";
@@ -12,6 +12,7 @@ import Cookies from "js-cookie";
 export const useTournamentDetails = () => {
     const { id } = useParams<{ id: string }>();
     const tournamentId = Number(id);
+    const navigate = useNavigate();
 
     // --- СТАН ДАНИХ ---
     const [loading, setLoading] = useState<boolean>(true);
@@ -106,7 +107,11 @@ export const useTournamentDetails = () => {
     const handleSaveUpdate = async () => {
         if (!tournamentId) return;
         try {
-            const updated = await tournamentService.updateTournament(tournamentId, editFormData as TournamentUpdateRequestDto);
+            const payload: TournamentUpdateRequestDto = {
+                ...(editFormData as TournamentUpdateRequestDto),
+                startTournament: (editFormData.endRegistration ?? editFormData.startTournament) as string,
+            };
+            const updated = await tournamentService.updateTournament(tournamentId, payload);
             setTournamentData(updated);
             setIsEditingInfo(false);
         } catch (error) {
@@ -140,6 +145,22 @@ export const useTournamentDetails = () => {
         }
     };
 
+    const handleDeleteTournament = useCallback(async () => {
+        if (!tournamentId) return;
+
+        // Додаємо підтвердження
+        if (!window.confirm("Ви впевнені, що хочете видалити цей турнір? Цю дію неможливо скасувати.")) {
+            return;
+        }
+
+        try {
+            await tournamentService.deleteTournament(tournamentId);
+            navigate('/tournaments'); // Перенаправляємо на список турнірів
+        } catch (error) {
+            console.error("Помилка видалення турніру", error);
+        }
+    }, [tournamentId, navigate]);
+
     return {
         tournamentId,
         tournamentData,
@@ -165,6 +186,7 @@ export const useTournamentDetails = () => {
         roundFormData,
         handleRoundFormChange,
         handleCreateRound,
-        isCreatingRound
+        isCreatingRound,
+        handleDeleteTournament,
     };
 };

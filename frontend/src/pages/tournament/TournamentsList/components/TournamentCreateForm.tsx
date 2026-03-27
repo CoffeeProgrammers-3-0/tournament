@@ -13,7 +13,7 @@ export const TournamentCreateForm = ({ onCancel, onSuccess }: { onCancel: () => 
     const { t } = useTranslation();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [formData, setFormData] = useState({
-        name: "", description: "", startTournament: "",
+        name: "", description: "",
         startRegistration: "", endRegistration: "",
         maxCountOfTeam: 16, countOfRounds: 4
     });
@@ -31,7 +31,7 @@ export const TournamentCreateForm = ({ onCancel, onSuccess }: { onCancel: () => 
         try {
             const payload = {
                 ...formData,
-                startTournament: formatToLocalDateTime(formData.startTournament),
+                startTournament: formatToLocalDateTime(formData.endRegistration),
                 startRegistration: formatToLocalDateTime(formData.startRegistration),
                 endRegistration: formatToLocalDateTime(formData.endRegistration),
             };
@@ -61,14 +61,13 @@ export const TournamentCreateForm = ({ onCancel, onSuccess }: { onCancel: () => 
                     <Grid size={{xs:12}}>
                         <TextField label={t("tournaments.admin.fields.description")} name="description" multiline rows={4} fullWidth onChange={handleChange} required />
                     </Grid>
-                    <Grid size={{xs:12, sm: 4}}>
-                        <TextField label={t("tournaments.admin.fields.startTournament")} name="startTournament" type="datetime-local" fullWidth InputLabelProps={{ shrink: true }} onChange={handleChange} required />
-                    </Grid>
-                    <Grid size={{xs:12, sm: 4}}>
+                    <Grid size={{xs:12, sm: 6}}>
                         <TextField label={t("tournaments.admin.fields.startReg")} name="startRegistration" type="datetime-local" fullWidth InputLabelProps={{ shrink: true }} onChange={handleChange} required />
                     </Grid>
-                    <Grid size={{xs:12, sm: 4}}>
-                        <TextField label={t("tournaments.admin.fields.endReg")} name="endRegistration" type="datetime-local" fullWidth InputLabelProps={{ shrink: true }} onChange={handleChange} required />
+                    <Grid size={{xs:12, sm: 6}}>
+                        <TextField label={t("tournaments.admin.fields.endReg")} name="endRegistration" type="datetime-local" fullWidth InputLabelProps={{ shrink: true }} onChange={handleChange} required
+                            inputProps={{ min: formData.startRegistration || undefined }}
+                        />
                     </Grid>
                     <Grid size={{xs:12, sm: 6}}>
                         <TextField label={t("tournaments.admin.fields.maxTeams")} name="maxCountOfTeam" type="number" fullWidth defaultValue={16} onChange={handleChange} required />
