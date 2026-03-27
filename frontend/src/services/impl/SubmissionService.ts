@@ -5,15 +5,24 @@ import type {
     SubmissionRequestDto
 } from "../../entities/submission/submission.dto.ts";
 import type {PaginationListResponseDto} from "../../entities/wrappers/wrapper.dto.ts";
+import type {UserResponseDto} from "../../entities/user/user.dto.ts";
 
 interface PaginationParams {
     page: number;
     size: number;
 }
 
+interface JurySearchParams extends PaginationParams {
+    query?: string;
+}
+
 class SubmissionService extends BaseService {
     constructor() {
         super('/submissions');
+    }
+
+    public checkSubmission(roundId: number): Promise<boolean> {
+        return this.get<boolean>(`/check/${roundId}`);
     }
 
     public sendSubmission(roundId: number, data: SubmissionRequestDto): Promise<SubmissionFullResponseDto> {
@@ -46,6 +55,10 @@ class SubmissionService extends BaseService {
 
     public removeJury(submissionId: number, juryId: number): Promise<SubmissionFullResponseDto> {
         return this.delete<SubmissionFullResponseDto>(`/${submissionId}/juries/${juryId}`);
+    }
+
+    public getJuriesBySubmission(submissionId: number, params: JurySearchParams): Promise<PaginationListResponseDto<UserResponseDto>> {
+        return this.get<PaginationListResponseDto<UserResponseDto>>(`/${submissionId}/juries`, { params });
     }
 }
 

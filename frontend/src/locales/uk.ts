@@ -326,7 +326,9 @@ export const uk = {
             info: "Інформація",
             categories: "Категорії",
             jury: "Журі",
-            teams: "Команди"
+            leaderboard: "Команди(Leaderboard)",
+            submissions: "Роботи надіслані на перевірку",
+            stats: "Statistics",
         },
         info: {
             name: "Назва раунду",
@@ -386,5 +388,15 @@ export const uk = {
             actions: "Дії"
         },
         "submit_button": "Надіслати роботу",
+        submissions: {
+            "auto_assign": "Автоматично призначити журі",
+            "auto_assign_title": "Автоматично призначити журі",
+            "auto_assign_desc": "Увведіть кількість журі на кожну роботу. Увага: ця дія видалить всі попередні призанчення!",
+        }
     },
+
+    languages: {
+        en: "Англійська",
+        uk: "Українська",
+    }
 };

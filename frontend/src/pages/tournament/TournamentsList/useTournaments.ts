@@ -15,32 +15,31 @@ export const useTournaments = () => {
     const isAdmin = isLoggedIn && userRole === "ADMIN";
     const isJury = isLoggedIn && userRole === "JURY";
 
-    // --- ПАРАМЕТРИ З URL (Єдине джерело істини) ---
+    // --- URL SOURCE OF TRUTH ---
     const defaultTab = isJury ? TABS.MY : TABS.AVAILABLE;
     const tabValue = Number(searchParams.get("tab")) || defaultTab;
     const page = Number(searchParams.get("page")) || 1;
+    const statusFilter = searchParams.get("status") || "DRAFT"; // Статус в URL
 
     const [tournaments, setTournaments] = useState<TournamentListResponseDto[]>([]);
     const [totalPages, setTotalPages] = useState(1);
     const [loading, setLoading] = useState(false);
+    const [isCreating, setIsCreating] = useState(false); // Стейт для форми створення
 
     const [searchQuery, setSearchQuery] = useState("");
     const [debouncedSearch, setDebouncedSearch] = useState("");
-    const [statusFilter, setStatusFilter] = useState<string>("DRAFT");
 
-    // 1. Дебаунс пошуку (залишаємо локальним стейтом, щоб не спамити URL при кожному символі)
     useEffect(() => {
         const timer = setTimeout(() => {
             setDebouncedSearch(searchQuery);
             setSearchParams(prev => {
-                prev.set("page", "1"); // Скидаємо на 1 сторінку при пошуку
+                prev.set("page", "1");
                 return prev;
-            });
+            }, { replace: true });
         }, 500);
         return () => clearTimeout(timer);
     }, [searchQuery, setSearchParams]);
 
-    // 2. Функція запиту
     const fetchTournaments = useCallback(async () => {
         setLoading(true);
         try {
@@ -80,20 +79,28 @@ export const useTournaments = () => {
         }
     }, [page, debouncedSearch, tabValue, statusFilter, isLoggedIn]);
 
-    // 3. Єдиний useEffect для запиту (спрацює тільки коли зміняться ключові параметри)
     useEffect(() => {
         fetchTournaments();
     }, [fetchTournaments]);
 
-    // --- ХЕНДЛЕРИ ОНОВЛЕННЯ URL ---
     const handleTabChange = (newValue: number) => {
-        setSearchParams({ tab: newValue.toString(), page: "1" });
+        const newParams: any = { tab: newValue.toString(), page: "1" };
+        // Зберігаємо фільтр статусу тільки якщо ми на вкладці адміна
+        if (newValue === TABS.ADMIN) newParams.status = statusFilter;
+        setSearchParams(newParams);
     };
 
-    const setPage = (newPage: number | ((prev: number) => number)) => {
-        const nextPage = typeof newPage === 'function' ? newPage(page) : newPage;
+    const setStatusFilter = (newStatus: string) => {
         setSearchParams(prev => {
-            prev.set("page", nextPage.toString());
+            prev.set("status", newStatus);
+            prev.set("page", "1");
+            return prev;
+        });
+    };
+
+    const setPage = (newPage: number) => {
+        setSearchParams(prev => {
+            prev.set("page", newPage.toString());
             return prev;
         });
     };
@@ -101,7 +108,7 @@ export const useTournaments = () => {
     return {
         tournaments, totalPages, loading, page, setPage,
         tabValue, handleTabChange, searchQuery, setSearchQuery,
-        statusFilter, setStatusFilter,
+        statusFilter, setStatusFilter, isCreating, setIsCreating,
         isAdmin, isJury, isLoggedIn, fetchTournaments
     };
 };

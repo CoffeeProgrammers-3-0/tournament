@@ -325,7 +325,9 @@ export const en = {
             info: "Information",
             categories: "Categories",
             jury: "Jury",
-            teams: "Teams"
+            leaderboard: "Teams(Leaderboard)",
+            submissions: "Submissions",
+            stats: "Statistics",
         },
         info: {
             name: "Round name",
@@ -385,5 +387,14 @@ export const en = {
             actions: "Actions"
         },
         "submit_button": "Submit work",
+        submissions: {
+            "auto_assign": "Auto assign juries for all submissions",
+            "auto_assign_title": "Auto assign juries",
+            "auto_assign_desc": "Enter number of juries per submission. Note: this will erase all existing jury assignments.",
+        }
     },
+    languages: {
+        en: "English",
+        uk: "Ukrainian",
+    }
 };

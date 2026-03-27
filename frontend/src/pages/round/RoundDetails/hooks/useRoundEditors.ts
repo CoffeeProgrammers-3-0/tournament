@@ -5,6 +5,7 @@ import {categoryService} from "../../../../services/impl/CategoryService";
 import {teamService} from "../../../../services/impl/TeamService";
 import {userService} from "../../../../services/impl/UserService";
 import {criteriaService} from "../../../../services/impl/CriteriaService";
+import {submissionService} from "../../../../services/impl/SubmissionService";
 
 import type {RoundFullResponseDto, RoundStatus, RoundUpdateRequestDto} from "../../../../entities/round/round.dto";
 import type {CategoryRequestDto} from "../../../../entities/category/category.dto";
@@ -27,10 +28,17 @@ type Params = {
     setRoundData: React.Dispatch<React.SetStateAction<RoundFullResponseDto | null>>;
     fetchCategories: () => Promise<void>;
     fetchJury: () => Promise<void>;
-    currentJury: UserResponseDto[];
+    fetchSubmissions: () => Promise<void>;
+    currentJury: UserResponseDto[]; // Це журі, вже призначені на раунд
 };
 
-export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, fetchJury, currentJury }: Params) => {
+export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, fetchJury, fetchSubmissions, currentJury }: Params) => {
+
+    const [autoAssignModalOpen, setAutoAssignModalOpen] = useState(false);
+    const [kValue, setKValue] = useState<number>(3);
+    const [submissionJuryModalOpen, setSubmissionJuryModalOpen] = useState(false);
+    const [selectedSubmissionId, setSelectedSubmissionId] = useState<number | null>(null);
+
     // --- States for Modals ---
     const [isEditingInfo, setIsEditingInfo] = useState(false);
     const [categoryModalOpen, setCategoryModalOpen] = useState(false);
@@ -52,9 +60,10 @@ export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, 
     const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
     const [newCriteriaText, setNewCriteriaText] = useState("");
 
-    // --- Logic: Search Debounce ---
+    // --- Logic: Search Debounce (ТІЛЬКИ для додавання журі в раунд) ---
     useEffect(() => {
         const delayDebounceFn = setTimeout(async () => {
+            // Ми робимо запит до сервера ТІЛЬКИ якщо відкрита модалка додавання до РАУНДУ
             if (!juryModalOpen) return;
 
             setIsSearching(true);
@@ -65,7 +74,7 @@ export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, 
                     size: 20
                 });
 
-                // Фільтруємо тих, хто вже доданий до цього раунду
+                // Фільтруємо тих, хто вже ВЖЕ є в раунді (щоб не додавати двічі)
                 const filtered = (response.content || []).filter(
                     (user) => !currentJury.some((j) => j.id === user.id)
                 );
@@ -80,6 +89,60 @@ export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, 
 
         return () => clearTimeout(delayDebounceFn);
     }, [inputValue, juryModalOpen, currentJury]);
+
+    // --- НОВЕ: Локальна фільтрація журі ТІЛЬКИ з поточного раунду для сабмішенів ---
+    const availableJuriesForSubmission = useMemo(() => {
+        if (!inputValue.trim()) return currentJury; // Якщо пошук пустий - показуємо всіх журі раунду
+
+        const lowerQ = inputValue.toLowerCase();
+        return currentJury.filter(j =>
+            j.fullName.toLowerCase().includes(lowerQ) ||
+            j.email.toLowerCase().includes(lowerQ)
+        );
+    }, [currentJury, inputValue]);
+
+    // ... (РЕШТА ФУНКЦІЙ БЕЗ ЗМІН) ...
+    const handleAutoAssignJuries = useCallback(async () => {
+        if (!id) return;
+        try {
+            await roundService.autoAssignJuries(Number(id), kValue);
+            setAutoAssignModalOpen(false);
+            await fetchSubmissions();
+            alert("Juries auto-assigned successfully!");
+        } catch (error) {
+            console.error("Error auto-assigning juries:", error);
+        }
+    }, [id, kValue, fetchSubmissions]);
+
+    const handleOpenSubmissionJuryModal = useCallback((submissionId: number) => {
+        setSelectedSubmissionId(submissionId);
+        setInputValue("");
+        setSubmissionJuryModalOpen(true);
+    }, []);
+
+    const handleAssignJuryToSubmission = useCallback(async (callback?: () => void) => {
+        if (!selectedSubmissionId || !selectedJuryToAssign) return;
+        try {
+            await submissionService.assignJury(selectedSubmissionId, selectedJuryToAssign.id);
+            setSubmissionJuryModalOpen(false);
+            setSelectedJuryToAssign(null);
+
+            // Викликаємо колбек, щоб SubmissionItem перевантажив своїх журі
+            if (callback) callback();
+            // Або якщо ми не передаємо колбек сюди, то просто fetchSubmissions,
+            // але краще оновлювати конкретну картку.
+        } catch (error) {
+            console.error("Error assigning jury:", error);
+        }
+    }, [selectedSubmissionId, selectedJuryToAssign]);
+
+    const handleRemoveJuryFromSubmission = useCallback(async (submissionId: number, juryId: number) => {
+        try {
+            await submissionService.removeJury(submissionId, juryId);
+        } catch (error) {
+            console.error("Error removing jury:", error);
+        }
+    }, []);
 
     // --- Handlers: Round Info ---
     const resetEditForm = useCallback(() => {
@@ -191,7 +254,7 @@ export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, 
 
     // --- Handlers: Jury Management ---
     const handleOpenJuryModal = useCallback(() => {
-        setInputValue(""); // Очищення вводу запустить useEffect для завантаження початкового списку
+        setInputValue("");
         setJuryModalOpen(true);
     }, []);
 
@@ -250,20 +313,18 @@ export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, 
     const criteriaList = Object.keys(aggregatedCriteria);
 
     return {
-        // Modal States
         isEditingInfo, setIsEditingInfo,
         categoryModalOpen, setCategoryModalOpen,
         juryModalOpen, setJuryModalOpen,
         statsModalOpen, setStatsModalOpen,
         criteriaModalOpen, setCriteriaModalOpen,
 
-        // Jury Search States
         availableJuries,
+        availableJuriesForSubmission, // НОВИЙ СТЕЙТ ДОДАННО ТУТ
         selectedJuryToAssign, setSelectedJuryToAssign,
         inputValue, setInputValue,
         isSearching,
 
-        // Data & Stats
         selectedStats,
         statsViewMode, setStatsViewMode,
         editFormData, setEditFormData,
@@ -274,7 +335,6 @@ export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, 
         juryList,
         criteriaList,
 
-        // Actions
         handleSaveUpdate,
         handleStatusChange,
         cancelEditing,
@@ -286,5 +346,14 @@ export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, 
         handleAssignJury,
         handleRemoveJury,
         handleOpenStats,
+
+        autoAssignModalOpen, setAutoAssignModalOpen,
+        kValue, setKValue,
+        submissionJuryModalOpen, setSubmissionJuryModalOpen,
+        selectedSubmissionId, setSelectedSubmissionId,
+        handleAutoAssignJuries,
+        handleOpenSubmissionJuryModal,
+        handleAssignJuryToSubmission,
+        handleRemoveJuryFromSubmission,
     };
 };
