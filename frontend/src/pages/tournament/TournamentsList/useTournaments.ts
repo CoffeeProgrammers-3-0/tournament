@@ -15,30 +15,32 @@ export const useTournaments = () => {
     const isAdmin = isLoggedIn && userRole === "ADMIN";
     const isJury = isLoggedIn && userRole === "JURY";
 
-    // Визначаємо поточну вкладку з URL або дефолтну
+    // --- ПАРАМЕТРИ З URL (Єдине джерело істини) ---
     const defaultTab = isJury ? TABS.MY : TABS.AVAILABLE;
-    const queryTab = searchParams.get("tab");
-    const urlTabValue = queryTab !== null ? parseInt(queryTab, 10) : defaultTab;
+    const tabValue = Number(searchParams.get("tab")) || defaultTab;
+    const page = Number(searchParams.get("page")) || 1;
 
     const [tournaments, setTournaments] = useState<TournamentListResponseDto[]>([]);
     const [totalPages, setTotalPages] = useState(1);
     const [loading, setLoading] = useState(false);
-    const [isCreating, setIsCreating] = useState(false);
 
-    const [tabValue, setTabValue] = useState(urlTabValue);
     const [searchQuery, setSearchQuery] = useState("");
     const [debouncedSearch, setDebouncedSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState<string>("DRAFT");
-    const [page, setPage] = useState(1);
 
-    // Синхронізуємо стейт вкладки, якщо URL змінився (наприклад, кнопками браузера)
+    // 1. Дебаунс пошуку (залишаємо локальним стейтом, щоб не спамити URL при кожному символі)
     useEffect(() => {
-        if (urlTabValue !== tabValue) {
-            setTabValue(urlTabValue);
-            setPage(1); // Скидаємо сторінку при зміні вкладки
-        }
-    }, [urlTabValue, tabValue]);
+        const timer = setTimeout(() => {
+            setDebouncedSearch(searchQuery);
+            setSearchParams(prev => {
+                prev.set("page", "1"); // Скидаємо на 1 сторінку при пошуку
+                return prev;
+            });
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [searchQuery, setSearchParams]);
 
+    // 2. Функція запиту
     const fetchTournaments = useCallback(async () => {
         setLoading(true);
         try {
@@ -78,26 +80,28 @@ export const useTournaments = () => {
         }
     }, [page, debouncedSearch, tabValue, statusFilter, isLoggedIn]);
 
-    // Виконуємо запит при будь-якій зміні залежностей fetchTournaments
+    // 3. Єдиний useEffect для запиту (спрацює тільки коли зміняться ключові параметри)
     useEffect(() => {
         fetchTournaments();
     }, [fetchTournaments]);
 
-    useEffect(() => {
-        const timer = setTimeout(() => setDebouncedSearch(searchQuery), 500);
-        return () => clearTimeout(timer);
-    }, [searchQuery]);
-
+    // --- ХЕНДЛЕРИ ОНОВЛЕННЯ URL ---
     const handleTabChange = (newValue: number) => {
-        setTabValue(newValue);
-        setSearchParams({ tab: newValue.toString() }); // Оновлюємо URL
-        setPage(1);
+        setSearchParams({ tab: newValue.toString(), page: "1" });
+    };
+
+    const setPage = (newPage: number | ((prev: number) => number)) => {
+        const nextPage = typeof newPage === 'function' ? newPage(page) : newPage;
+        setSearchParams(prev => {
+            prev.set("page", nextPage.toString());
+            return prev;
+        });
     };
 
     return {
         tournaments, totalPages, loading, page, setPage,
         tabValue, handleTabChange, searchQuery, setSearchQuery,
-        statusFilter, setStatusFilter, isCreating, setIsCreating,
+        statusFilter, setStatusFilter,
         isAdmin, isJury, isLoggedIn, fetchTournaments
     };
 };

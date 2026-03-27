@@ -33,4 +33,6 @@ export interface UserResponseForTeamDto {
     fullName: string;
     email: string;
     isLeader: boolean;
+    tournamentId: number;
+    tournamentName: string;
 }
