@@ -173,23 +173,26 @@ public class TeamController {
         return teamService.getStatisticsByRoundForUsersTeam(roundId, me);
     }
 
-    @PostMapping("/{team_id}/members")
+    @PostMapping("/{team_id}/tournaments/{tournament_id}/members")
     @Operation(summary = "Add team member", description = "Adds a new member to the team")
     public TeamFullResponse addMember(
             @Parameter(description = "ID of the team", example = "10")
             @PathVariable(value = "team_id") Long teamId,
+
+            @Parameter(description = "ID of the tournament", example = "2")
+            @PathVariable(value = "tournament_id") Long tournamentId,
 
             @Parameter(description = "User data for new team member")
             @RequestBody UserCreateRequestForTeam userCreateRequestForTeam,
 
             @Parameter(hidden = true)
             Authentication authentication) {
-        Team team = teamService.addMember(teamId, userCreateRequestForTeam);
+        Team team = teamService.addMember(teamId, tournamentId, userCreateRequestForTeam);
 
         return teamMapper.fromTeamToFullResponse(team);
     }
 
-    @DeleteMapping("/{team_id}/members/{user_id}")
+    @DeleteMapping("/{team_id}/tournaments/{tournament_id}/members/{user_id}")
     @Operation(summary = "Remove team member", description = "Removes a user from the team")
     public TeamFullResponse removeMember(
             @Parameter(description = "ID of the team", example = "10")
@@ -198,14 +201,17 @@ public class TeamController {
             @Parameter(description = "ID of the user", example = "5")
             @PathVariable(value = "user_id") Long userId,
 
+            @Parameter(description = "ID of the tournament", example = "2")
+            @PathVariable(value = "tournament_id") Long tournamentId,
+
             @Parameter(hidden = true)
             Authentication authentication) {
-        Team team = teamService.removeMember(teamId, userId);
+        Team team = teamService.removeMember(teamId, userId, tournamentId);
 
         return teamMapper.fromTeamToFullResponse(team);
     }
 
-    @PatchMapping("/{team_id}/set-leader/{user_id}")
+    @PatchMapping("/{team_id}/tournaments/{tournament_id}/set-leader/{user_id}")
     @Operation(summary = "Set team leader", description = "Sets a user as the leader of the team")
     public TeamFullResponse setLeader(
             @Parameter(description = "ID of the team", example = "10")
@@ -214,9 +220,12 @@ public class TeamController {
             @Parameter(description = "ID of the user who will become leader", example = "5")
             @PathVariable(value = "user_id") Long userId,
 
+            @Parameter(description = "ID of the tournament", example = "2")
+            @PathVariable(value = "tournament_id") Long tournamentId,
+
             @Parameter(hidden = true)
             Authentication authentication) {
-        Team team = teamService.setLeader(teamId, userId);
+        Team team = teamService.setLeader(teamId, userId, tournamentId);
 
         return teamMapper.fromTeamToFullResponse(team);
     }

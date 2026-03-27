@@ -25,15 +25,17 @@ public interface TeamService {
 
     Page<Team> findAllByUser(User user, Integer page, Integer size, String search);
 
+    @Transactional
+    Team setLeader(Long teamId, Long userId, Long tournamentId);
+
     StatisticResponse getStatisticsByRoundForTeam(Long roundId, Long teamId);
 
     StatisticResponse getStatisticsByRoundForUsersTeam(Long roundId, User user);
 
-    Team addMember(Long teamId, UserCreateRequestForTeam userCreateRequestForTeam);
+    @Transactional
+    Team addMember(Long teamId, Long tournamentId, UserCreateRequestForTeam userCreateRequestForTeam);
 
-    Team removeMember(Long teamId, Long userId);
-
-    Team setLeader(Long teamId, Long userId);
+    Team removeMember(Long teamId, Long userId, Long tournamentId);
 
     Page<Team> findAllByTournament(Integer page, Integer size, String search, Long tournamentId);
 

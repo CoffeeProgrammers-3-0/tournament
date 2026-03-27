@@ -158,12 +158,12 @@ public class TeamServiceImpl implements TeamService {
                 pageRequest);
     }
 
-    @Override
     @Transactional
-    public Team addMember(Long teamId, UserCreateRequestForTeam userCreateRequestForTeam) {
+    @Override
+    public Team addMember(Long teamId, Long tournamentId, UserCreateRequestForTeam userCreateRequestForTeam) {
         Team team = findById(teamId);
 
-        Tournament tournament = tournamentRepository.findOne(TournamentSpecification.byTeamId(teamId))
+        Tournament tournament = tournamentRepository.findOne(TournamentSpecification.byId(tournamentId))
                 .orElseThrow(() -> new EntityNotFoundException("Tournament not found"));
 
         if (team.getTeamParticipants().size() >= tournament.getMaxCountOfTeam()) {
@@ -203,7 +203,7 @@ public class TeamServiceImpl implements TeamService {
         team = teamRepository.save(team);
 
         if(userCreateRequestForTeam.getIsLeader()) {
-            setLeader(team, user.getId());
+            setLeader(team, user.getId(), tournamentId);
         }
 
         return teamRepository.save(team);
@@ -211,12 +211,12 @@ public class TeamServiceImpl implements TeamService {
 
     @Override
     @Transactional
-    public Team removeMember(Long teamId, Long userId) {
+    public Team removeMember(Long teamId, Long userId, Long tournamentId) {
         Team team = findById(teamId);
 
         TeamParticipant participantToRemove = team.getTeamParticipants()
                 .stream()
-                .filter(tp -> tp.getUser().getId().equals(userId))
+                .filter(tp -> tp.getUser().getId().equals(userId) && tp.getTournament().getId().equals(tournamentId))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("User is not a member of the team"));
 
@@ -228,22 +228,22 @@ public class TeamServiceImpl implements TeamService {
         return teamRepository.save(team);
     }
 
-    @Override
     @Transactional
-    public Team setLeader(Long teamId, Long userId) {
+    @Override
+    public Team setLeader(Long teamId, Long userId, Long tournamentId) {
         Team team = findById(teamId);
 
-        return teamRepository.save(setLeader(team, userId));
+        return teamRepository.save(setLeader(team, userId, tournamentId));
     }
 
-    private Team setLeader(Team team, Long userId) {
+    private Team setLeader(Team team, Long userId, Long tournamentId) {
         TeamParticipant participantToSetLeader = team.getTeamParticipants()
                 .stream()
-                .filter(tp -> tp.getUser().getId().equals(userId))
+                .filter(tp -> tp.getUser().getId().equals(userId) && tp.getTournament().getId().equals(tournamentId))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("User is not a member of the team"));
 
-        team.getTeamParticipants().forEach(tp -> tp.setIsLeader(false));
+        team.getTeamParticipants().stream().filter(tp -> tp.getTournament().getId().equals(tournamentId)).forEach(tp -> tp.setIsLeader(false));
         participantToSetLeader.setIsLeader(true);
 
         return team;
