@@ -82,6 +82,7 @@ export const RoundDetailsPage = () => {
                 }}
                 navigate={navigate}
                 submissionId={details.submissionId}
+                onDelete={editors.handleDeleteRound}
             />
 
             <Tabs value={details.tabValue} onChange={(_, v) => details.setTabValue(v)} sx={{ mb: 4 }} textColor="inherit" indicatorColor="primary" variant="scrollable" scrollButtons="auto">

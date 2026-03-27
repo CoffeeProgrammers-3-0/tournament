@@ -309,6 +309,24 @@ export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, 
         return result;
     }, [selectedStats]);
 
+    const handleDeleteRound = useCallback(async () => {
+        if (!id || !roundData) return;
+
+        const confirmMessage = "Are you sure you want to delete this round? This action cannot be undone.";
+        if (!window.confirm(confirmMessage)) return;
+
+        try {
+            await roundService.deleteRound(Number(id));
+            // Після видалення перенаправляємо користувача назад до турніру
+            // (Припускаємо, що у вас є доступ до navigate або передаємо його через параметри)
+            alert("Round deleted successfully");
+            window.location.href = `/home`;
+        } catch (error) {
+            console.error("Error deleting round:", error);
+            alert("Failed to delete round");
+        }
+    }, [id, roundData]);
+
     const juryList = selectedStats?.pointsPerJury ? Object.keys(selectedStats.pointsPerJury) : [];
     const criteriaList = Object.keys(aggregatedCriteria);
 
@@ -355,5 +373,7 @@ export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, 
         handleOpenSubmissionJuryModal,
         handleAssignJuryToSubmission,
         handleRemoveJuryFromSubmission,
+
+        handleDeleteRound,
     };
 };

@@ -4,6 +4,7 @@ import TrophyIcon from "@mui/icons-material/EmojiEvents";
 import {useTranslation} from "react-i18next";
 import type {RoundFullResponseDto} from "../../../../entities/round/round.dto";
 import HowToRegIcon from "@mui/icons-material/HowToReg";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 type Props = {
     roundData: RoundFullResponseDto;
@@ -13,6 +14,7 @@ type Props = {
     isUser: boolean;
     navigate: (path: string) => void;
     submissionId: number | null; // Додаємо цей проп
+    onDelete?: () => void;
 };
 
 export const RoundHeader = ({
@@ -22,7 +24,8 @@ export const RoundHeader = ({
                                 isEditingInfo,
                                 onEdit,
                                 navigate,
-                                submissionId
+                                submissionId,
+    onDelete
                             }: Props) => {
     const { t } = useTranslation();
     const handleSubmissionClick = () => {
@@ -68,22 +71,48 @@ export const RoundHeader = ({
                     </Box>
                 </Box>
 
-                {isAdmin && !isEditingInfo && (
-                    <Button
-                        variant="contained"
-                        startIcon={<EditIcon />}
-                        onClick={onEdit}
-                        sx={{
-                            borderRadius: "12px",
-                            fontWeight: 700,
-                            bgcolor: "white",
-                            color: "info.dark",
-                            "&:hover": { bgcolor: "#f0f0f0" },
-                        }}
-                    >
-                        {t("round_details.admin.edit_info")}
-                    </Button>
-                )}
+                <Box sx={{ display: "flex", gap: 2 }}> {/* Огортаємо кнопки в Box для вирівнювання */}
+
+                    {/* КНОПКА ВИДАЛЕННЯ: тільки для адміна і тільки в DRAFT */}
+                    {isAdmin && roundData.status === "DRAFT" && !isEditingInfo && (
+                        <Button
+                            variant="outlined"
+                            startIcon={<DeleteIcon />}
+                            onClick={onDelete}
+                            sx={{
+                                borderRadius: "12px",
+                                fontWeight: 700,
+                                color: "white",
+                                borderColor: "rgba(255,255,255,0.5)",
+                                "&:hover": {
+                                    bgcolor: "error.main",
+                                    borderColor: "error.main",
+                                    color: "white"
+                                },
+                            }}
+                        >
+                            {t("common.delete")}
+                        </Button>
+                    )}
+
+                    {isAdmin && !isEditingInfo && (
+                        <Button
+                            variant="contained"
+                            startIcon={<EditIcon />}
+                            onClick={onEdit}
+                            sx={{
+                                borderRadius: "12px",
+                                fontWeight: 700,
+                                bgcolor: "white",
+                                color: "info.dark",
+                                "&:hover": { bgcolor: "#f0f0f0" },
+                            }}
+                        >
+                            {t("round_details.admin.edit_info")}
+                        </Button>
+                    )}
+                </Box>
+
 
                 {roundData.status === "ACTIVE" && isUser && (
                     <Button
