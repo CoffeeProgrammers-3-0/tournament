@@ -18,4 +18,13 @@ public class TeamLeaderboardResponse {
 
     @Schema(description = "Total points scored by the team", example = "95.5")
     private Double points;
+
+    public TeamLeaderboardResponse(Long id, String name, String email, Double points) {
+        this.id = id;
+        this.name = name;
+        this.email = email;
+        this.points = points;
+    }
+
+    public TeamLeaderboardResponse() {}
 }

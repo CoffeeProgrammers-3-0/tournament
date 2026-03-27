@@ -18,4 +18,10 @@ public class UserResponseForTeam {
 
     @Schema(description = "Indicates if the user is the team leader", example = "true")
     private Boolean isLeader;
+
+    @Schema(description = "Id of a tournament", example = "1")
+    private Long tournamentId;
+
+    @Schema(description = "Name of the tournament", example = "CODE4FUTURE 2026")
+    private String tournamentName;
 }

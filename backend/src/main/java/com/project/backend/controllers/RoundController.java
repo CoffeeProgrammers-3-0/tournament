@@ -4,19 +4,28 @@ import com.project.backend.dto.round.RoundCreateRequest;
 import com.project.backend.dto.round.RoundFullResponse;
 import com.project.backend.dto.round.RoundListResponse;
 import com.project.backend.dto.round.RoundUpdateRequest;
+import com.project.backend.dto.team.TeamLeaderboardResponse;
+import com.project.backend.dto.user.UserResponse;
 import com.project.backend.dto.wrapper.PaginationListResponse;
 import com.project.backend.mappers.RoundMapper;
+import com.project.backend.mappers.UserMapper;
 import com.project.backend.models.Round;
+import com.project.backend.models.User;
 import com.project.backend.models.constants.RoundStatus;
 import com.project.backend.services.interfaces.EvaluationService;
 import com.project.backend.services.interfaces.RoundService;
+import com.project.backend.services.interfaces.TeamService;
+import com.project.backend.services.interfaces.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -27,6 +36,9 @@ public class RoundController {
     private final RoundService roundService;
     private final RoundMapper roundMapper;
     private final EvaluationService evaluationService;
+    private final TeamService teamService;
+    private final UserService userService;
+    private final UserMapper userMapper;
 
     @PostMapping("/{tournament_id}/rounds")
     @Operation(summary = "Create round", description = "Creates a new round inside the specified tournament")
@@ -149,5 +161,57 @@ public class RoundController {
             @Parameter(description = "Number of jury members per submission", example = "3")
             @RequestParam(value = "k") int k) {
         evaluationService.assignSubmissionsToJury(roundId, k);
+    }
+
+    @GetMapping("/rounds/{round_id}/leaderboard")
+    @Operation(summary = "Get my team statistics", description = "Returns leaderboard for the round")
+    public List<TeamLeaderboardResponse> getLeaderboardForRound(
+            @Parameter(description = "ID of the round", example = "2")
+            @PathVariable(value = "round_id") Long roundId,
+
+            @Parameter(description = "Points of the last team visible in leaderboard", example = "2.5")
+            @RequestParam(value = "last_team_points") Double lastTeamPoints,
+
+            @Parameter(description = "Id of the last team visible in leaderboard", example = "3")
+            @RequestParam(value = "last_team_id") Long lastTeamId,
+
+            @Parameter(description = "Page size", example = "10")
+            @RequestParam(value = "size") Integer size,
+
+            @Parameter(hidden = true)
+            Authentication authentication) {
+        return teamService.getAllStatsByRoundId(roundId, lastTeamPoints, lastTeamId, size);
+    }
+
+    @GetMapping("/rounds/{round_id}/juries")
+    @Operation(summary = "Get all juries by round", description = "Returns paginated list of users with JURY role by round")
+    public PaginationListResponse<UserResponse> getAllJuriesByRound(
+            @Parameter(description = "Search query for jury users", example = "john")
+            @RequestParam(value = "query", required = false) String query,
+
+            @Parameter(description = "Page number (starting from 0)", example = "0")
+            @RequestParam(value = "page") Integer page,
+
+            @Parameter(description = "Page size", example = "10")
+            @RequestParam(value = "size") Integer size,
+
+            @Parameter(description = "Round id", example = "1")
+            @PathVariable(value = "round_id") Long roundId,
+
+            @Parameter(hidden = true)
+            Authentication authentication) {
+        Page<User> userPage = userService.findAllJuriesUsersForRound(page, size, query, roundId);
+
+        PaginationListResponse<UserResponse> response = new PaginationListResponse<>();
+
+        response.setTotalPages(userPage.getTotalPages());
+        response.setContent(
+                userPage.getContent()
+                        .stream()
+                        .map(userMapper::fromUserToResponse)
+                        .toList()
+        );
+
+        return response;
     }
 }

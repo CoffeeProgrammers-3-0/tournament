@@ -5,6 +5,8 @@ import com.project.backend.models.User;
 import org.springframework.data.domain.Page;
 
 public interface SubmissionService {
+    boolean check(Long roundId, Long userId);
+
     Submission create(Long roundId, User creator, Submission submission);
 
     Submission update(Long submissionId, Submission submission);

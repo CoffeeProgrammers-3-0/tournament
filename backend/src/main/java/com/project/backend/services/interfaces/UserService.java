@@ -38,4 +38,6 @@ public interface UserService {
     Page<User> findAllJuriesUsersForRound(Integer page, Integer size, String query, Long roundId);
 
     User findUserByEmailOrNull(String email);
+
+    Page<User> findAllJuriesUsersForSubmission(Integer page, Integer size, String query, Long submissionId);
 }

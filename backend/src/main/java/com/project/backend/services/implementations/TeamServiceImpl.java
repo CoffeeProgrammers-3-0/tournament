@@ -2,6 +2,7 @@ package com.project.backend.services.implementations;
 
 import com.project.backend.dto.team.StatisticResponse;
 import com.project.backend.dto.team.StatisticRowDTO;
+import com.project.backend.dto.team.TeamLeaderboardResponse;
 import com.project.backend.dto.user.UserCreateRequestForTeam;
 import com.project.backend.models.Team;
 import com.project.backend.models.Tournament;
@@ -79,7 +80,7 @@ public class TeamServiceImpl implements TeamService {
             }
         }
 
-        Team savedTeam = teamRepository.save(team);
+        Team savedTeam = teamRepository.exists(TeamSpecification.byEmail(team.getEmail())) ? teamRepository.findOne(TeamSpecification.byEmail(team.getEmail())).orElseThrow(() -> new EntityNotFoundException("Team with email " + team.getEmail() + " not found")) : teamRepository.save(team);
 
         for (UserCreateRequestForTeam request : users) {
             User user = userService.findUserByEmailOrNull(request.getEmail());
@@ -280,5 +281,11 @@ public class TeamServiceImpl implements TeamService {
                         TeamSpecification.byTournamentId(tournamentId)
                 ),
                 pageRequest);
+    }
+
+    @Transactional
+    @Override
+    public List<TeamLeaderboardResponse> getAllStatsByRoundId(Long roundId, Double lastTeamPoints, Long lastTeam, Integer size) {
+        return teamRepository.findLeaderboard(roundId, lastTeamPoints, lastTeam, size);
     }
 }

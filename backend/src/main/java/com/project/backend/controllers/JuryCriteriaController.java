@@ -27,29 +27,9 @@ public class JuryCriteriaController {
     private final UserService userService;
     private final JurySubmissionCriteriaMapper jurySubmissionCriteriaMapper;
 
-    @PostMapping("/submission/{submission_id}/criteria/{criteria_id}")
-    @Operation(summary = "Set criteria score", description = "Sets a score for a specific submission criteria by the authenticated jury member")
-    public JuryCriteriaResponse set(
-            @Parameter(description = "ID of the submission being evaluated", example = "1")
-            @PathVariable(value = "submission_id") Long submissionId,
-
-            @Parameter(description = "ID of the criteria being scored", example = "5")
-            @PathVariable(value = "criteria_id") Long criteriaId,
-
-            @Parameter(description = "Score value for the criteria")
-            @RequestBody LongDTO longDTO,
-
-            @Parameter(hidden = true)
-            Authentication authentication) {
-        User jury = userService.findUserByAuth(authentication);
-        JurySubmissionCriteria jurySubmissionCriteria = jurySubmissionCriteriaService.create(submissionId, criteriaId, longDTO.getValue(), jury);
-
-        return jurySubmissionCriteriaMapper.fromJurySubmissionCriteriaToResponse(jurySubmissionCriteria);
-    }
-
     @PutMapping("/submission/{submission_id}/criteria/{criteria_id}")
     @Operation(summary = "Update criteria score", description = "Updates a previously given score for a submission criteria")
-    public JuryCriteriaResponse update(
+    public JuryCriteriaResponse set(
             @Parameter(description = "ID of the submission being evaluated", example = "1")
             @PathVariable(value = "submission_id") Long submissionId,
 
@@ -62,7 +42,7 @@ public class JuryCriteriaController {
             @Parameter(hidden = true)
             Authentication authentication) {
         User jury = userService.findUserByAuth(authentication);
-        JurySubmissionCriteria jurySubmissionCriteria = jurySubmissionCriteriaService.update(submissionId, criteriaId, longDTO.getValue(), jury);
+        JurySubmissionCriteria jurySubmissionCriteria = jurySubmissionCriteriaService.set(submissionId, criteriaId, longDTO.getValue(), jury);
 
         return jurySubmissionCriteriaMapper.fromJurySubmissionCriteriaToResponse(jurySubmissionCriteria);
     }

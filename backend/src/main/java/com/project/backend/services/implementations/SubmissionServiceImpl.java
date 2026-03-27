@@ -32,6 +32,11 @@ public class SubmissionServiceImpl implements SubmissionService {
     private final EvaluationService evaluationService;
 
     @Override
+    public boolean check(Long roundId, Long userId) {
+        return submissionRepository.exists(Specification.allOf(SubmissionSpecification.byRoundId(roundId), SubmissionSpecification.byUserTeam(userId)));
+    }
+
+    @Override
     public Submission create(Long roundId, User creator, Submission submission) {
         Round round = roundRepository.getReferenceById(roundId);
         Team team = teamRepository.findOne(Specification.allOf(TeamSpecification.byUserId(creator.getId()), TeamSpecification.byRoundId(roundId))).orElseThrow(() -> new EntityNotFoundException("Team for round with id " + roundId + " for user with id " + creator.getId() + " not found"));

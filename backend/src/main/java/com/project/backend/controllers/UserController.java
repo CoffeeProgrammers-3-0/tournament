@@ -118,36 +118,4 @@ public class UserController {
 
         return response;
     }
-
-    @GetMapping("/juriesByRound/{round_id}")
-    @Operation(summary = "Get all juries", description = "Returns paginated list of users with JURY role")
-    public PaginationListResponse<UserResponse> getAll(
-            @Parameter(description = "Search query for jury users", example = "john")
-            @RequestParam(value = "query", required = false) String query,
-
-            @Parameter(description = "Page number (starting from 0)", example = "0")
-            @RequestParam(value = "page") Integer page,
-
-            @Parameter(description = "Page size", example = "10")
-            @RequestParam(value = "size") Integer size,
-
-            @Parameter(description = "Round id", example = "1")
-            @PathVariable(value = "round_id") Long roundId,
-
-            @Parameter(hidden = true)
-            Authentication authentication) {
-        Page<User> userPage = userService.findAllJuriesUsersForRound(page, size, query, roundId);
-
-        PaginationListResponse<UserResponse> response = new PaginationListResponse<>();
-
-        response.setTotalPages(userPage.getTotalPages());
-        response.setContent(
-                userPage.getContent()
-                        .stream()
-                        .map(userMapper::fromUserToResponse)
-                        .toList()
-        );
-
-        return response;
-    }
 }

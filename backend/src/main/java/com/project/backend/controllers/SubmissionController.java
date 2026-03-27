@@ -3,8 +3,10 @@ package com.project.backend.controllers;
 import com.project.backend.dto.submission.SubmissionFullResponse;
 import com.project.backend.dto.submission.SubmissionListResponse;
 import com.project.backend.dto.submission.SubmissionRequest;
+import com.project.backend.dto.user.UserResponse;
 import com.project.backend.dto.wrapper.PaginationListResponse;
 import com.project.backend.mappers.SubmissionMapper;
+import com.project.backend.mappers.UserMapper;
 import com.project.backend.models.Submission;
 import com.project.backend.models.User;
 import com.project.backend.services.interfaces.SubmissionService;
@@ -27,6 +29,23 @@ public class SubmissionController {
     private final SubmissionService submissionService;
     private final UserService userService;
     private final SubmissionMapper submissionMapper;
+    private final UserMapper userMapper;
+
+    @GetMapping("/check/{round_id}")
+    @Operation(summary = "Check submission", description = "Checks if user's team has already sent a submission to the specified round")
+    public boolean check(
+            @Parameter(description = "ID of the round where the submission may be sent", example = "1")
+            @PathVariable(value = "round_id") Long roundId,
+
+            @Parameter(hidden = true)
+            Authentication authentication) {
+        User me = userService.findUserByAuth(authentication);
+
+        return submissionService.check(
+                roundId,
+                me.getId()
+        );
+    }
 
     @PostMapping("/send/{round_id}")
     @Operation(summary = "Send submission", description = "Creates and sends a submission to the specified round")
@@ -173,5 +192,37 @@ public class SubmissionController {
         Submission submission = submissionService.removeJury(submissionId, juryId);
 
         return submissionMapper.fromSubmissionToFullResponse(submission);
+    }
+
+    @GetMapping("/{submission_id}/juries")
+    @Operation(summary = "Get all juries by submission", description = "Returns paginated list of users with JURY role by submission")
+    public PaginationListResponse<UserResponse> getAllJuriesByRound(
+            @Parameter(description = "Search query for jury users", example = "john")
+            @RequestParam(value = "query", required = false) String query,
+
+            @Parameter(description = "Page number (starting from 0)", example = "0")
+            @RequestParam(value = "page") Integer page,
+
+            @Parameter(description = "Page size", example = "10")
+            @RequestParam(value = "size") Integer size,
+
+            @Parameter(description = "Submission id", example = "1")
+            @PathVariable(value = "submission_id") Long submissionId,
+
+            @Parameter(hidden = true)
+            Authentication authentication) {
+        Page<User> userPage = userService.findAllJuriesUsersForSubmission(page, size, query, submissionId);
+
+        PaginationListResponse<UserResponse> response = new PaginationListResponse<>();
+
+        response.setTotalPages(userPage.getTotalPages());
+        response.setContent(
+                userPage.getContent()
+                        .stream()
+                        .map(userMapper::fromUserToResponse)
+                        .toList()
+        );
+
+        return response;
     }
 }
