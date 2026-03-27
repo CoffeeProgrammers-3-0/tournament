@@ -15,19 +15,22 @@ import com.project.backend.models.Round;
 import com.project.backend.models.Team;
 import com.project.backend.models.User;
 import com.project.backend.models.constants.RoundStatus;
-import com.project.backend.services.interfaces.EvaluationService;
-import com.project.backend.services.interfaces.RoundService;
-import com.project.backend.services.interfaces.TeamService;
-import com.project.backend.services.interfaces.UserService;
+import com.project.backend.services.interfaces.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -43,6 +46,7 @@ public class RoundController {
     private final UserService userService;
     private final TeamMapper teamMapper;
     private final UserMapper userMapper;
+    private final ExcelExportService excelExportService;
 
     @PostMapping("/{tournament_id}/rounds")
     @Operation(summary = "Create round", description = "Creates a new round inside the specified tournament")
@@ -224,6 +228,23 @@ public class RoundController {
             @Parameter(hidden = true)
             Authentication authentication) {
         return teamService.getAllStatsByRoundId(roundId, lastTeamPoints, lastTeamId, size);
+    }
+
+    @GetMapping("/rounds/{round_id}/leaderboard/export")
+    @Operation(summary = "Returns an excel file with leaderboard", description = "Returns excel with leaderboard for the round")
+    public ResponseEntity<Resource> downloadScores(
+            @Parameter(description = "ID of the round", example = "2")
+            @PathVariable(value = "round_id") Long roundId
+    ) throws IOException {
+        List<TeamLeaderboardResponse> data = teamService.getAllStatsByRoundId(roundId);
+        byte[] excelBytes = excelExportService.exportToExcel(data);
+
+        ByteArrayResource resource = new ByteArrayResource(excelBytes);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=round_"+roundId+".xlsx")
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(resource);
     }
 
     @GetMapping("/rounds/{round_id}/juries")

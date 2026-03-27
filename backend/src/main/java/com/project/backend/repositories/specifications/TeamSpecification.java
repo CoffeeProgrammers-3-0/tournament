@@ -4,6 +4,8 @@ import com.project.backend.models.Team;
 import com.project.backend.models.join_tables.TeamParticipant;
 import com.project.backend.models.join_tables.TeamRound;
 import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -82,6 +84,23 @@ public class TeamSpecification {
             query.distinct(true);
             Join<Team, TeamRound> trJoin = root.join("teamRounds");
             return cb.equal(trJoin.get("round").get("id"), roundId);
+        };
+    }
+    public static Specification<Team> byRoundIdNot(Long roundId) {
+        log.debug("TeamSpecification.byRoundIdNot called with roundId={}", roundId);
+        if (roundId == null) return null;
+
+        return (root, query, cb) -> {
+            Subquery<Long> subquery = query.subquery(Long.class);
+            Root<TeamRound> tr = subquery.from(TeamRound.class);
+
+            subquery.select(cb.literal(1L))
+                    .where(
+                            cb.equal(tr.get("team").get("id"), root.get("id")),
+                            cb.equal(tr.get("round").get("id"), roundId)
+                    );
+
+            return cb.not(cb.exists(subquery));
         };
     }
 }

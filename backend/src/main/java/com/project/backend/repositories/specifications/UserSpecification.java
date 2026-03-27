@@ -5,6 +5,8 @@ import com.project.backend.models.constants.Role;
 import com.project.backend.models.join_tables.Jury;
 import com.project.backend.models.join_tables.JurySubmission;
 import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -69,6 +71,25 @@ public class UserSpecification {
             Join<User, JurySubmission> juryJoin = root.join("jurySubmissions");
 
             return cb.equal(juryJoin.get("submission").get("id"), submissionId);
+        };
+    }
+
+    public static Specification<User> juriesAvailableBySubmissionId(Long submissionId) {
+        log.debug("UserSpecification.juriesAvailableBySubmissionId called with submissionId={}", submissionId);
+        if (submissionId == null) return null;
+
+        return (root, query, cb) -> {
+
+            Subquery<Long> subquery = query.subquery(Long.class);
+            Root<JurySubmission> js = subquery.from(JurySubmission.class);
+
+            subquery.select(cb.literal(1L))
+                    .where(
+                            cb.equal(js.get("jury").get("id"), root.get("id")),
+                            cb.equal(js.get("submission").get("id"), submissionId)
+                    );
+
+            return cb.not(cb.exists(subquery));
         };
     }
 }

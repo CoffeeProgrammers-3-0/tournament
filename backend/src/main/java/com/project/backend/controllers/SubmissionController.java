@@ -196,7 +196,7 @@ public class SubmissionController {
 
     @GetMapping("/{submission_id}/juries")
     @Operation(summary = "Get all juries by submission", description = "Returns paginated list of users with JURY role by submission")
-    public PaginationListResponse<UserResponse> getAllJuriesByRound(
+    public PaginationListResponse<UserResponse> getAllJuriesBySubmission(
             @Parameter(description = "Search query for jury users", example = "john")
             @RequestParam(value = "query", required = false) String query,
 
@@ -212,6 +212,38 @@ public class SubmissionController {
             @Parameter(hidden = true)
             Authentication authentication) {
         Page<User> userPage = userService.findAllJuriesUsersForSubmission(page, size, query, submissionId);
+
+        PaginationListResponse<UserResponse> response = new PaginationListResponse<>();
+
+        response.setTotalPages(userPage.getTotalPages());
+        response.setContent(
+                userPage.getContent()
+                        .stream()
+                        .map(userMapper::fromUserToResponse)
+                        .toList()
+        );
+
+        return response;
+    }
+
+    @GetMapping("/{submission_id}/available-juries")
+    @Operation(summary = "Get all juries by submission", description = "Returns paginated list of users with JURY role by submission")
+    public PaginationListResponse<UserResponse> getAllAvailableJuriesBySubmission(
+            @Parameter(description = "Search query for jury users", example = "john")
+            @RequestParam(value = "query", required = false) String query,
+
+            @Parameter(description = "Page number (starting from 0)", example = "0")
+            @RequestParam(value = "page") Integer page,
+
+            @Parameter(description = "Page size", example = "10")
+            @RequestParam(value = "size") Integer size,
+
+            @Parameter(description = "Submission id", example = "1")
+            @PathVariable(value = "submission_id") Long submissionId,
+
+            @Parameter(hidden = true)
+            Authentication authentication) {
+        Page<User> userPage = userService.findAllAvailableJuriesUsersForSubmission(page, size, query, submissionId);
 
         PaginationListResponse<UserResponse> response = new PaginationListResponse<>();
 

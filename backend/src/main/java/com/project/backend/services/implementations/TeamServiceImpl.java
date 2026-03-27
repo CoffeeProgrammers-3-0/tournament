@@ -113,7 +113,7 @@ public class TeamServiceImpl implements TeamService {
         }
         savedTeam = teamRepository.save(savedTeam);
 
-        TeamCreatedEvent teamCreatedEvent = new TeamCreatedEvent(team, tournament);
+        TeamCreatedEvent teamCreatedEvent = new TeamCreatedEvent(savedTeam, tournament);
         eventPublisher.publishEvent(teamCreatedEvent);
 
         return savedTeam;
@@ -303,11 +303,13 @@ public class TeamServiceImpl implements TeamService {
 
     @Override
     public Page<Team> findAllByRoundNot(Integer page, Integer size, String search, Long roundId) {
+        Tournament tournament = tournamentRepository.findOne(TournamentSpecification.byRoundId(roundId)).orElseThrow(() -> new EntityNotFoundException("Tournament for round with id " + roundId + " not found"));
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "name"));
         return teamRepository.findAll(
                 Specification.allOf(
                         TeamSpecification.byName(search),
-                        Specification.not(TeamSpecification.byRoundId(roundId))
+                        TeamSpecification.byRoundIdNot(roundId),
+                        TeamSpecification.byTournamentId(tournament.getId())
                 ),
                 pageRequest);
     }
@@ -316,5 +318,11 @@ public class TeamServiceImpl implements TeamService {
     @Override
     public List<TeamLeaderboardResponse> getAllStatsByRoundId(Long roundId, Double lastTeamPoints, Long lastTeam, Integer size) {
         return teamRepository.findLeaderboard(roundId, lastTeamPoints, lastTeam, size);
+    }
+
+    @Transactional
+    @Override
+    public List<TeamLeaderboardResponse> getAllStatsByRoundId(Long roundId) {
+        return teamRepository.findLeaderboard(roundId);
     }
 }

@@ -40,4 +40,6 @@ public interface UserService {
     User findUserByEmailOrNull(String email);
 
     Page<User> findAllJuriesUsersForSubmission(Integer page, Integer size, String query, Long submissionId);
+
+    Page<User> findAllAvailableJuriesUsersForSubmission(Integer page, Integer size, String query, Long submissionId);
 }
