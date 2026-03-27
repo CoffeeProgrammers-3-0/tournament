@@ -24,68 +24,74 @@ import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import YouTubeIcon from "@mui/icons-material/YouTube";
 import DescriptionIcon from "@mui/icons-material/Description";
-
+import LockIcon from "@mui/icons-material/Lock"; // Нова іконка
 import {submissionService} from "../../services/impl/SubmissionService";
+import {roundService} from "../../services/impl/RoundService"; // Припускаємо наявність сервісу раундів
 import type {SubmissionFullResponseDto, SubmissionRequestDto} from "../../entities/submission/submission.dto.ts";
+import type {RoundFullResponseDto} from "../../entities/round/round.dto.ts";
 
 export const TeamSubmissionPage = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
-
-    // Отримуємо roundId та опціонально submissionId з роутера
-    // Наприклад: /rounds/:roundId/submission/:submissionId?
     const { roundId, submissionId } = useParams<{ roundId: string; submissionId?: string }>();
 
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
     const [existingSubmission, setExistingSubmission] = useState<SubmissionFullResponseDto | null>(null);
+    const [roundData, setRoundData] = useState<RoundFullResponseDto | null>(null);
 
-    // Стейт форми
     const [formData, setFormData] = useState<SubmissionRequestDto>({
         githubLink: "",
         videoLink: "",
         description: "",
     });
 
-    // Перевірка, чи є вже подана робота
-    useEffect(() => {
-        const fetchSubmission = async () => {
-            if (!submissionId) return; // Якщо ID немає, вважаємо, що це нове створення
+    // Визначаємо, чи заблокована форма
+    const isLocked = roundData?.status !== "ACTIVE";
 
+    useEffect(() => {
+        const fetchData = async () => {
             setLoading(true);
             try {
-                const data = await submissionService.getSubmissionById(Number(submissionId));
-                setExistingSubmission(data);
-                setFormData({
-                    githubLink: data.githubLink,
-                    videoLink: data.videoLink,
-                    description: data.description || ""
-                });
+                // 1. Завантажуємо дані раунду обов'язково
+                if (roundId) {
+                    const round = await roundService.getRoundById(Number(roundId));
+                    setRoundData(round);
+                }
+
+                // 2. Завантажуємо сабмішн, якщо він є
+                if (submissionId) {
+                    const data = await submissionService.getSubmissionById(Number(submissionId));
+                    setExistingSubmission(data);
+                    setFormData({
+                        githubLink: data.githubLink,
+                        videoLink: data.videoLink,
+                        description: data.description || ""
+                    });
+                }
             } catch (err: any) {
-                console.error("Failed to load submission", err);
-                setError(t('submission.errors.load_failed', 'Не вдалося завантажити дані подачі.'));
+                console.error("Failed to load data", err);
+                setError(t('submission.errors.load_failed'));
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchSubmission();
-    }, [submissionId, t]);
+        fetchData();
+    }, [roundId, submissionId, t]);
 
     const handleFormChange = (e: ChangeEvent<HTMLInputElement>) => {
+        if (isLocked) return; // Захист на рівні коду
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!roundId) {
-            setError(t('submission.errors.no_round', 'Помилка: Не вказано ID раунду.'));
-            return;
-        }
+        if (isLocked) return;
 
         setActionLoading(true);
         setError(null);
@@ -93,48 +99,34 @@ export const TeamSubmissionPage = () => {
 
         try {
             if (existingSubmission) {
-                // Оновлення існуючої роботи
                 const updated = await submissionService.updateSubmission(existingSubmission.id, formData);
                 setExistingSubmission(updated);
-                setSuccessMsg(t('submission.success.updated', 'Рішення успішно оновлено!'));
+                setSuccessMsg(t('submission.success.updated'));
             } else {
-                // Створення нової роботи
                 const created = await submissionService.sendSubmission(Number(roundId), formData);
                 setExistingSubmission(created);
-                setSuccessMsg(t('submission.success.created', 'Рішення успішно відправлено!'));
-
-                // Опціонально: оновити URL, щоб додати ID створеної роботи,
-                // navigate(`/rounds/${roundId}/submission/${created.id}`, { replace: true });
+                setSuccessMsg(t('submission.success.created'));
             }
         } catch (err: any) {
-            console.error("Failed to save submission", err);
-            setError(err.response?.data?.message || t('submission.errors.save_failed', 'Помилка збереження.'));
+            setError(err.response?.data?.message || t('submission.errors.save_failed'));
         } finally {
             setActionLoading(false);
         }
     };
 
     const handleDelete = async () => {
-        if (!existingSubmission) return;
+        if (!existingSubmission || isLocked) return;
 
-        if (!window.confirm(t('submission.actions.delete_confirm', 'Ви впевнені, що хочете видалити своє рішення? Цю дію неможливо скасувати.'))) {
-            return;
-        }
+        if (!window.confirm(t('submission.actions.delete_confirm'))) return;
 
         setActionLoading(true);
-        setError(null);
-
         try {
             await submissionService.deleteSubmission(existingSubmission.id);
             setExistingSubmission(null);
             setFormData({ githubLink: "", videoLink: "", description: "" });
-            setSuccessMsg(t('submission.success.deleted', 'Рішення було успішно видалено.'));
-
-            // За бажанням: повернутися назад після видалення
-            // setTimeout(() => navigate(-1), 1500);
+            setSuccessMsg(t('submission.success.deleted'));
         } catch (err: any) {
-            console.error("Failed to delete submission", err);
-            setError(err.response?.data?.message || t('submission.errors.delete_failed', 'Не вдалося видалити.'));
+            setError(err.response?.data?.message || t('submission.errors.delete_failed'));
         } finally {
             setActionLoading(false);
         }
@@ -153,7 +145,7 @@ export const TeamSubmissionPage = () => {
                 onClick={() => navigate(-1)}
                 sx={{ mb: 3, textTransform: "none", fontWeight: 600 }}
             >
-                {t('common.back', 'Назад')}
+                {t('common.back')}
             </Button>
 
             <Paper
@@ -164,40 +156,40 @@ export const TeamSubmissionPage = () => {
                     borderRadius: "24px",
                     boxShadow: "0 12px 40px rgba(0,0,0,0.08)",
                     position: "relative",
-                    overflow: "hidden"
+                    overflow: "hidden",
+                    bgcolor: isLocked ? "grey.50" : "background.paper"
                 }}
             >
-                {/* Декоративний елемент зверху */}
+                {/* Колірна смуга зверху змінюється, якщо раунд заблоковано */}
                 <Box sx={{
                     position: "absolute", top: 0, left: 0, right: 0, height: "6px",
-                    bgcolor: isEditMode ? "success.main" : "primary.main"
+                    bgcolor: isLocked ? "grey.400" : (isEditMode ? "success.main" : "primary.main")
                 }} />
 
                 <Box sx={{ mb: 4, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 2 }}>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                         <Avatar sx={{
-                            bgcolor: isEditMode ? "success.light" : "primary.light",
-                            color: isEditMode ? "success.main" : "primary.main",
+                            bgcolor: isLocked ? "grey.400" : (isEditMode ? "success.light" : "primary.light"),
+                            color: "white",
                             width: 56, height: 56
                         }}>
-                            <CloudUploadIcon />
+                            {isLocked ? <LockIcon /> : <CloudUploadIcon />}
                         </Avatar>
                         <Box>
-                            <Typography variant="h4" fontWeight={800} color="text.primary">
-                                {isEditMode
-                                    ? t('submission.title_update', 'Ваше рішення')
-                                    : t('submission.title_create', 'Завантаження рішення')}
+                            <Typography variant="h4" fontWeight={800} color={isLocked ? "text.secondary" : "text.primary"}>
+                                {isEditMode ? t('submission.title_update') : t('submission.title_create')}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
-                                {isEditMode
-                                    ? t('submission.subtitle_update', 'Ви можете оновити або видалити подані матеріали до дедлайну.')
-                                    : t('submission.subtitle_create', 'Завантажте посилання на репозиторій та відео-демо.')}
+                                {isLocked
+                                    ? t('submission.status.locked_description', 'Раунд завершено або не активовано. Редагування неможливе.')
+                                    : (isEditMode ? t('submission.subtitle_update') : t('submission.subtitle_create'))
+                                }
                             </Typography>
                         </Box>
                     </Box>
 
-                    {isEditMode && (
-                        <Tooltip title={t('submission.actions.delete', 'Видалити рішення')}>
+                    {isEditMode && !isLocked && (
+                        <Tooltip title={t('submission.actions.delete')}>
                             <IconButton color="error" onClick={handleDelete} disabled={actionLoading}>
                                 <DeleteOutlineIcon />
                             </IconButton>
@@ -207,22 +199,27 @@ export const TeamSubmissionPage = () => {
 
                 <Divider sx={{ mb: 4 }} />
 
+                {isLocked && (
+                    <Alert severity="warning" icon={<LockIcon />} sx={{ mb: 3, borderRadius: "12px" }}>
+                        {t('submission.alerts.locked', 'Цей раунд зараз неактивний. Ви можете переглянути подані дані, але не можете їх змінити.')}
+                    </Alert>
+                )}
+
                 {error && <Alert severity="error" sx={{ mb: 3, borderRadius: "12px" }}>{error}</Alert>}
                 {successMsg && <Alert severity="success" sx={{ mb: 3, borderRadius: "12px" }}>{successMsg}</Alert>}
 
                 <Grid container spacing={4}>
                     <Grid size={{ xs: 12 }}>
                         <Box sx={{ display: "flex", alignItems: "flex-end", gap: 2 }}>
-                            <GitHubIcon color="action" sx={{ mb: 1.5 }} />
+                            <GitHubIcon color={isLocked ? "disabled" : "action"} sx={{ mb: 1.5 }} />
                             <TextField
-                                label={t('submission.fields.github', 'Посилання на GitHub (обов’язково)')}
+                                label={t('submission.fields.github')}
                                 name="githubLink"
                                 fullWidth
                                 required
-                                placeholder="https://github.com/your-team/project"
                                 value={formData.githubLink}
                                 onChange={handleFormChange}
-                                disabled={actionLoading}
+                                disabled={actionLoading || isLocked}
                                 variant="standard"
                             />
                         </Box>
@@ -230,17 +227,15 @@ export const TeamSubmissionPage = () => {
 
                     <Grid size={{ xs: 12 }}>
                         <Box sx={{ display: "flex", alignItems: "flex-end", gap: 2 }}>
-                            <YouTubeIcon color="action" sx={{ mb: 1.5 }} />
+                            <YouTubeIcon color={isLocked ? "disabled" : "action"} sx={{ mb: 1.5 }} />
                             <TextField
-                                label={t('submission.fields.video', 'Відео-демо (обов’язково)')}
+                                label={t('submission.fields.video')}
                                 name="videoLink"
-                                type="url"
                                 fullWidth
                                 required
-                                placeholder="https://youtube.com/... або Google Drive"
                                 value={formData.videoLink}
                                 onChange={handleFormChange}
-                                disabled={actionLoading}
+                                disabled={actionLoading || isLocked}
                                 variant="standard"
                             />
                         </Box>
@@ -248,17 +243,16 @@ export const TeamSubmissionPage = () => {
 
                     <Grid size={{ xs: 12 }}>
                         <Box sx={{ display: "flex", gap: 2, mt: 1 }}>
-                            <DescriptionIcon color="action" sx={{ mt: 2 }} />
+                            <DescriptionIcon color={isLocked ? "disabled" : "action"} sx={{ mt: 2 }} />
                             <TextField
-                                label={t('submission.fields.description', 'Короткий опис проекту (що зроблено, як запускати)')}
+                                label={t('submission.fields.description')}
                                 name="description"
                                 multiline
                                 rows={4}
                                 fullWidth
-                                placeholder={t('submission.fields.description_placeholder', 'Коротко опишіть ваш проект...')}
                                 value={formData.description}
                                 onChange={handleFormChange}
-                                disabled={actionLoading}
+                                disabled={actionLoading || isLocked}
                             />
                         </Box>
                     </Grid>
@@ -269,35 +263,28 @@ export const TeamSubmissionPage = () => {
                         variant="outlined"
                         color="inherit"
                         onClick={() => navigate(-1)}
-                        disabled={actionLoading}
                         sx={{ borderRadius: "12px", px: 3 }}
                     >
-                        {t('common.cancel', 'Скасувати')}
+                        {isLocked ? t('common.close', 'Закрити') : t('common.cancel')}
                     </Button>
-                    <Button
-                        type="submit"
-                        variant="contained"
-                        color={isEditMode ? "success" : "primary"}
-                        startIcon={actionLoading ? <CircularProgress size={20} color="inherit" /> : (isEditMode ? <EditIcon /> : <SendIcon />)}
-                        disabled={actionLoading}
-                        sx={{
-                            px: 4,
-                            py: 1.5,
-                            borderRadius: "12px",
-                            fontWeight: 700,
-                            boxShadow: isEditMode
-                                ? "0 4px 14px 0 rgba(46,125,50,0.39)"
-                                : "0 4px 14px 0 rgba(0,118,255,0.39)"
-                        }}
-                    >
-                        {actionLoading
-                            ? t('common.loading', 'Завантаження...')
-                            : (isEditMode
-                                    ? t('submission.actions.update', 'Оновити рішення')
-                                    : t('submission.actions.submit', 'Відправити рішення')
-                            )
-                        }
-                    </Button>
+
+                    {!isLocked && (
+                        <Button
+                            type="submit"
+                            variant="contained"
+                            color={isEditMode ? "success" : "primary"}
+                            startIcon={actionLoading ? <CircularProgress size={20} color="inherit" /> : (isEditMode ? <EditIcon /> : <SendIcon />)}
+                            disabled={actionLoading}
+                            sx={{
+                                px: 4, py: 1.5, borderRadius: "12px", fontWeight: 700,
+                                boxShadow: isEditMode
+                                    ? "0 4px 14px 0 rgba(46,125,50,0.39)"
+                                    : "0 4px 14px 0 rgba(0,118,255,0.39)"
+                            }}
+                        >
+                            {actionLoading ? t('common.loading') : (isEditMode ? t('submission.actions.update') : t('submission.actions.submit'))}
+                        </Button>
+                    )}
                 </Box>
             </Paper>
         </Box>
