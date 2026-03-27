@@ -33,18 +33,18 @@ public class SubmissionController {
 
     @GetMapping("/check/{round_id}")
     @Operation(summary = "Check submission", description = "Checks if user's team has already sent a submission to the specified round")
-    public boolean check(
+    public Long check(
             @Parameter(description = "ID of the round where the submission may be sent", example = "1")
             @PathVariable(value = "round_id") Long roundId,
 
             @Parameter(hidden = true)
             Authentication authentication) {
         User me = userService.findUserByAuth(authentication);
-
-        return submissionService.check(
+        Submission submission = submissionService.check(
                 roundId,
                 me.getId()
         );
+        return submission == null ? -1 : submission.getId();
     }
 
     @PostMapping("/send/{round_id}")

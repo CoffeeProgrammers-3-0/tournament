@@ -32,8 +32,8 @@ public class SubmissionServiceImpl implements SubmissionService {
     private final EvaluationService evaluationService;
 
     @Override
-    public boolean check(Long roundId, Long userId) {
-        return submissionRepository.exists(Specification.allOf(SubmissionSpecification.byRoundId(roundId), SubmissionSpecification.byUserTeam(userId)));
+    public Submission check(Long roundId, Long userId) {
+        return submissionRepository.findOne(Specification.allOf(SubmissionSpecification.byRoundId(roundId), SubmissionSpecification.byUserTeam(userId))).orElse(null);
     }
 
     @Override
