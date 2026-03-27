@@ -1,8 +1,8 @@
-import {useCallback, useEffect, useState} from "react";
+import {useCallback, useEffect, useMemo, useState} from "react";
 import {useParams} from "react-router-dom";
 import Cookies from "js-cookie";
 import {teamService} from "../../../services/impl/TeamService";
-import type {TeamFullResponseDto, TeamUpdateRequestDto} from "../../../entities/team/team.dto.ts";
+import type {TeamFullResponseDto} from "../../../entities/team/team.dto.ts";
 import type {UserCreateRequestForTeamDto} from "../../../entities/user/user.dto.ts";
 
 export const useTeamDetails = () => {
@@ -12,7 +12,6 @@ export const useTeamDetails = () => {
 
     const [teamData, setTeamData] = useState<TeamFullResponseDto | null>(null);
     const [loading, setLoading] = useState(true);
-    const [isEditing, setIsEditing] = useState(false);
     const [tabValue, setTabValue] = useState(0);
 
     const fetchTeam = useCallback(async () => {
@@ -20,7 +19,6 @@ export const useTeamDetails = () => {
         setLoading(true);
         try {
             const data = await teamService.getTeamById(Number(id));
-            console.log(data)
             setTeamData(data);
         } catch (err) {
             console.error("Fetch error:", err);
@@ -31,15 +29,31 @@ export const useTeamDetails = () => {
 
     useEffect(() => { fetchTeam(); }, [fetchTeam]);
 
-    const isTeamLeader: boolean = !!teamData?.users?.find(u => u.id === currentUserId)?.isLeader;
-    const canControl: boolean = isAdmin || isTeamLeader;
+    // Групуємо учасників за турнірами
+    const membersByTournament = useMemo(() => {
+        if (!teamData?.users) return {};
+        return teamData.users.reduce((acc: any, user) => {
+            const tId = user.tournamentId;
+            if (!acc[tId]) {
+                acc[tId] = {
+                    name: user.tournamentName,
+                    members: []
+                };
+            }
+            acc[tId].members.push(user);
+            return acc;
+        }, {});
+    }, [teamData]);
 
-    const handleUpdate = async (payload: TeamUpdateRequestDto) => {
-        if (!teamData) return;
-        const updated = await teamService.updateTeam(teamData.id, payload);
-        setTeamData(updated);
-        setIsEditing(false);
-    };
+    // Перевірка: чи є користувач лідером у конкретному турнірі
+    const canManageTournament = useCallback((tournamentId: number) => {
+        if (isAdmin) return true;
+        return !!teamData?.users?.find(u =>
+            u.id === currentUserId &&
+            u.isLeader &&
+            u.tournamentId === tournamentId
+        );
+    }, [teamData, currentUserId, isAdmin]);
 
     const handleAddMember = async (member: UserCreateRequestForTeamDto) => {
         if (!teamData) return;
@@ -60,8 +74,8 @@ export const useTeamDetails = () => {
     };
 
     return {
-        teamData, loading, canControl, isAdmin, currentUserId,
-        isEditing, setIsEditing, tabValue, setTabValue,
-        handleUpdate, handleAddMember, handleDeleteMember, handlePromote
+        teamData, loading, isAdmin, currentUserId,
+        tabValue, setTabValue, membersByTournament,
+        canManageTournament, handleAddMember, handleDeleteMember, handlePromote
     };
 };
