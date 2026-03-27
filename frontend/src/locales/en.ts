@@ -417,7 +417,8 @@ export const en = {
     },
 
     submission: {
-        "title": "Submit Project",
+        "title_create": "Submit work",
+        "title_update": "Update submission",
         "subtitle": "Round: {{roundName}}",
         "fields": {
             "github": "GitHub / Repository Link",
@@ -430,6 +431,7 @@ export const en = {
             "submitted": "Project submitted",
             "edit": "Update Project"
         },
+        "alerts.locked": "This round is not active so you can`t change you submission",
         "submit_btn": "Submit for Review",
         "success": "Project saved successfully!"
     },

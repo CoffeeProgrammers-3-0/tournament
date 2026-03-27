@@ -68,16 +68,19 @@ class TeamService extends BaseService {
 
     // --- Member Management ---
 
-    public addMember(teamId: number, data: UserCreateRequestForTeamDto): Promise<TeamFullResponseDto> {
-        return this.post<TeamFullResponseDto>(`/${teamId}/members`, data);
+// У контролері: @PostMapping("/{team_id}/tournaments/{tournament_id}/members")
+    public addMember(teamId: number, tournamentId: number, data: UserCreateRequestForTeamDto): Promise<TeamFullResponseDto> {
+        return this.post<TeamFullResponseDto>(`/${teamId}/tournaments/${tournamentId}/members`, data);
     }
 
-    public removeMember(teamId: number, userId: number): Promise<TeamFullResponseDto> {
-        return this.delete<TeamFullResponseDto>(`/${teamId}/members/${userId}`);
+    // У контролері: @DeleteMapping("/{team_id}/tournaments/{tournament_id}/members/{user_id}")
+    public removeMember(teamId: number, userId: number, tournamentId: number): Promise<TeamFullResponseDto> {
+        return this.delete<TeamFullResponseDto>(`/${teamId}/tournaments/${tournamentId}/members/${userId}`);
     }
 
-    public setTeamLeader(teamId: number, userId: number): Promise<TeamFullResponseDto> {
-        return this.patch<TeamFullResponseDto>(`/${teamId}/set-leader/${userId}`);
+    // У контролері: @PatchMapping("/{team_id}/tournaments/{tournament_id}/set-leader/{user_id}")
+    public setTeamLeader(teamId: number, userId: number, tournamentId: number): Promise<TeamFullResponseDto> {
+        return this.patch<TeamFullResponseDto>(`/${teamId}/tournaments/${tournamentId}/set-leader/${userId}`);
     }
 }
 

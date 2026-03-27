@@ -9,16 +9,43 @@ export const MemberCard = ({ user, canControl, onPromote, onDelete }: any) => (
         borderColor: user.isLeader ? "secondary.main" : "divider"
     }} elevation={0}>
         <CardContent sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-            <Avatar sx={{ bgcolor: user.isLeader ? "secondary.main" : "grey.200" }}>{user.fullName.charAt(0)}</Avatar>
-            <Box sx={{ flexGrow: 1 }}>
+            <Avatar sx={{ bgcolor: user.isLeader ? "secondary.main" : "grey.200", flexShrink: 0 }}>
+                {user.fullName.charAt(0)}
+            </Avatar>
+
+            {/* Ключова зміна: minWidth: 0 дозволяє тексту стискатися всередині flex-контейнера */}
+            <Box sx={{ flexGrow: 1, minWidth: 0 }}>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                    <Typography variant="body1" fontWeight={700}>{user.fullName}</Typography>
-                    {user.isLeader && <StarsIcon fontSize="small" color="secondary" />}
+                    <Typography
+                        variant="body1"
+                        fontWeight={700}
+                        sx={{
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis"
+                        }}
+                    >
+                        {user.fullName}
+                    </Typography>
+                    {user.isLeader && <StarsIcon fontSize="small" color="secondary" sx={{ flexShrink: 0 }} />}
                 </Box>
-                <Typography variant="caption" color="text.secondary">{user.email}</Typography>
+
+                <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    display="block"
+                    sx={{
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis"
+                    }}
+                >
+                    {user.email}
+                </Typography>
             </Box>
+
             {canControl && (
-                <Box sx={{ display: "flex" }}>
+                <Box sx={{ display: "flex", flexShrink: 0 }}>
                     {!user.isLeader && (
                         <Tooltip title="Make Leader">
                             <IconButton size="small" color="secondary" onClick={() => onPromote(user.id)}>

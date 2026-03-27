@@ -54,7 +54,8 @@ export const TeamDetailsPage = () => {
             {tabValue === 0 && (
                 <Box>
                     {Object.entries(membersByTournament).map(([tId, data]: any) => {
-                        const manageStatus = canManageTournament(Number(tId));
+                        const tournamentIdNum = Number(tId); // Зберігаємо як число
+                        const manageStatus = canManageTournament(tournamentIdNum);
                         const isLocked = !manageStatus.can && manageStatus.reason === "TOURNAMENT_STARTED";
 
                         return (
@@ -73,7 +74,7 @@ export const TeamDetailsPage = () => {
                                     {manageStatus.can ? (
                                         <Button
                                             variant="contained" color="secondary" startIcon={<PersonAddIcon />}
-                                            onClick={() => setMemberModal({ open: true, tournamentId: Number(tId) })}
+                                            onClick={() => setMemberModal({ open: true, tournamentId: tournamentIdNum })}
                                             sx={{ borderRadius: "12px", color: "black" }}
                                         >
                                             {t("team_details.admin.add_member")}
@@ -95,13 +96,13 @@ export const TeamDetailsPage = () => {
                                                     open: true,
                                                     title: t("common.confirm_delete"),
                                                     text: `${t("team_details.confirm.remove_text")} ${user.fullName}?`,
-                                                    onConfirm: () => handleDeleteMember(user.id)
+                                                    onConfirm: () => handleDeleteMember(user.id, tournamentIdNum)
                                                 })}
                                                 onPromote={() => setConfirm({
                                                     open: true,
                                                     title: t("common.confirm_promote"),
                                                     text: `${t("team_details.confirm.promote_text")} ${user.fullName}?`,
-                                                    onConfirm: () => handlePromote(user.id)
+                                                    onConfirm: () => handlePromote(user.id, tournamentIdNum)
                                                 })}
                                             />
                                         </Grid>
@@ -123,10 +124,20 @@ export const TeamDetailsPage = () => {
                 </DialogContent>
                 <DialogActions sx={{ p: 3 }}>
                     <Button onClick={() => setMemberModal({ open: false, tournamentId: null })}>{t("common.cancel")}</Button>
-                    <Button variant="contained" color="secondary" onClick={() => {
-                        handleAddMember({...newMember, tournamentId: memberModal.tournamentId} as any);
-                        setMemberModal({ open: false, tournamentId: null });
-                    }}>{t("common.add")}</Button>
+                    <Button
+                        variant="contained"
+                        color="secondary"
+                        onClick={() => {
+                            if (memberModal.tournamentId) {
+                                // Передаємо ДВА аргументи, як того очікує ваш оновлений хук
+                                handleAddMember(newMember as any, memberModal.tournamentId);
+                            }
+                            setMemberModal({ open: false, tournamentId: null });
+                            setNewMember({ fullName: "", email: "", isLeader: false }); // Очищуємо поля після додавання
+                        }}
+                    >
+                        {t("common.add")}
+                    </Button>
                 </DialogActions>
             </Dialog>
 

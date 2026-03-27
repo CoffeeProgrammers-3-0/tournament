@@ -77,18 +77,21 @@ export const useTeamDetails = () => {
         return { can: true, reason: "LEADER_BEFORE_START" };
     }, [teamData, currentUserId, isAdmin, membersByTournament]);
 
-    const handleAddMember = async (member: UserCreateRequestForTeamDto) => {
-        const updated = await teamService.addMember(teamData!.id, member);
+    const handleAddMember = async (member: UserCreateRequestForTeamDto, tournamentId: number) => {
+        if (!teamData || !tournamentId) return;
+        const updated = await teamService.addMember(teamData.id, tournamentId, member);
         setTeamData(updated);
     };
 
-    const handleDeleteMember = async (userId: number) => {
-        const updated = await teamService.removeMember(teamData!.id, userId);
+    const handleDeleteMember = async (userId: number, tournamentId: number) => {
+        if (!teamData) return;
+        const updated = await teamService.removeMember(teamData.id, userId, tournamentId);
         setTeamData(updated);
     };
 
-    const handlePromote = async (userId: number) => {
-        const updated = await teamService.setTeamLeader(teamData!.id, userId);
+    const handlePromote = async (userId: number, tournamentId: number) => {
+        if (!teamData) return;
+        const updated = await teamService.setTeamLeader(teamData.id, userId, tournamentId);
         setTeamData(updated);
     };
 
