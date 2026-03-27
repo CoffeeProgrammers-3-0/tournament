@@ -165,6 +165,7 @@ export const uk = {
         "grading_rubric": "Рубрика оцінювання",
         "category_weight": "Вага",
         "score_0_100": "Бал 0-100",
+        "no_categories": "Немає доступних категорій",
     },
     juries: {
         "management_title": "Менеджемнт журі",
@@ -203,6 +204,7 @@ export const uk = {
     },
     common: {
         "save": "Зберегти",
+        "saving": "Зберігання...",
         "cancel": "Скасувати",
         "loading": "Завантаження...",
         "error": "Сталася помилка",

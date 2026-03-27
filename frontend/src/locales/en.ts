@@ -165,6 +165,7 @@ export const en = {
         "grading_rubric": "Grading Rubric",
         "category_weight": "Weight",
         "score_0_100": "Score 0-100",
+        "no_categories": "No categories available",
     },
     juries: {
         "management_title": "Management of Jury",
@@ -203,6 +204,7 @@ export const en = {
     },
     common: {
         "save": "Save",
+        "saving": "Saving...",
         "cancel": "Cancel",
         "loading": "Loading...",
         "error": "An error occurred",
