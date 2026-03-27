@@ -3,16 +3,21 @@ import EditIcon from "@mui/icons-material/Edit";
 import TrophyIcon from "@mui/icons-material/EmojiEvents";
 import {useTranslation} from "react-i18next";
 import type {RoundFullResponseDto} from "../../../../entities/round/round.dto";
+import HowToRegIcon from "@mui/icons-material/HowToReg";
 
 type Props = {
     roundData: RoundFullResponseDto;
     isAdmin: boolean;
     isEditingInfo: boolean;
     onEdit: () => void;
+    isUser: boolean;
+    navigate: (path: string) => void;
 };
 
-export const RoundHeader = ({ roundData, isAdmin, isEditingInfo, onEdit }: Props) => {
+export const RoundHeader = ({ roundData, isAdmin, isUser, isEditingInfo, onEdit, navigate }: Props) => {
     const { t } = useTranslation();
+
+
 
     return (
         <Paper
@@ -61,6 +66,26 @@ export const RoundHeader = ({ roundData, isAdmin, isEditingInfo, onEdit }: Props
                         }}
                     >
                         {t("round_details.admin.edit_info")}
+                    </Button>
+                )}
+
+                {roundData.status === "ACTIVE" && isUser && (
+                    <Button
+                        variant="contained"
+                        color="secondary"
+                        size="large"
+                        startIcon={<HowToRegIcon />}
+                        onClick={() => navigate(`/rounds/${roundData.id}/submission/`)}
+                        sx={{
+                            borderRadius: "16px",
+                            fontWeight: 800,
+                            px: 4,
+                            py: 2,
+                            color: "black",
+                            boxShadow: "0 10px 20px rgba(0,0,0,0.2)"
+                        }}
+                    >
+                        {t("round_details.submit_button")}
                     </Button>
                 )}
             </Box>

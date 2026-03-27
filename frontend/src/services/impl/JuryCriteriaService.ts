@@ -8,13 +8,6 @@ class JuryCriteriaService extends BaseService {
         super('/jury-criteria');
     }
 
-    public setScore(submissionId: number, criteriaId: number, data: LongDto): Promise<JuryCriteriaResponseDto> {
-        return this.post<JuryCriteriaResponseDto>(
-            `/submission/${submissionId}/criteria/${criteriaId}`,
-            data
-        );
-    }
-
     public updateScore(submissionId: number, criteriaId: number, data: LongDto): Promise<JuryCriteriaResponseDto> {
         return this.put<JuryCriteriaResponseDto>(
             `/submission/${submissionId}/criteria/${criteriaId}`,

@@ -383,6 +383,7 @@ export const en = {
         },
         common: {
             actions: "Actions"
-        }
+        },
+        "submit_button": "Submit work",
     },
 };

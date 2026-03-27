@@ -8,7 +8,7 @@ export interface StringRequestDto {
 }
 
 export interface LongDto {
-    count: number;
+    value: number;
 }
 
 export interface PaginationListResponseDto<T> {

@@ -1,7 +1,7 @@
 import {Box, CircularProgress, Tab, Tabs, Typography} from "@mui/material";
 import {useTranslation} from "react-i18next";
 import Cookies from "js-cookie";
-import {useParams} from "react-router-dom";
+import {useNavigate, useParams} from "react-router-dom";
 
 import {useRoundDetails} from "./RoundDetails/hooks/useRoundDetails";
 import {useRoundEditors} from "./RoundDetails/hooks/useRoundEditors";
@@ -19,7 +19,10 @@ import {CriteriaDialog} from "./RoundDetails/components/CriteriaDialog";
 export const RoundDetailsPage = () => {
     const { t } = useTranslation();
     const isAdmin = Cookies.get("role") === "ADMIN";
+    const isUser = Cookies.get("role") === "USER";
     const { id } = useParams<{ id: string }>();
+
+    const navigate = useNavigate();
 
     const details = useRoundDetails(id);
     const editors = useRoundEditors({
@@ -48,6 +51,7 @@ export const RoundDetailsPage = () => {
             <RoundHeader
                 roundData={details.roundData}
                 isAdmin={isAdmin}
+                isUser={isUser}
                 isEditingInfo={editors.isEditingInfo}
                 onEdit={() => {
                     editors.setEditFormData({
@@ -61,6 +65,7 @@ export const RoundDetailsPage = () => {
                     });
                     editors.setIsEditingInfo(true);
                 }}
+                navigate={navigate}
             />
 
             <Tabs value={details.tabValue} onChange={(_, v) => details.setTabValue(v)} sx={{ mb: 4 }} textColor="inherit" indicatorColor="primary">

@@ -384,6 +384,7 @@ export const uk = {
         },
         common: {
             actions: "Дії"
-        }
+        },
+        "submit_button": "Надіслати роботу",
     },
 };

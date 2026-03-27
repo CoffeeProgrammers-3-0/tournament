@@ -45,6 +45,7 @@ class AuthService {
             const refreshToken = Cookies.get("refreshToken");
             if (!refreshToken) {
                 console.log("No refresh token available");
+                this.redirectToKeycloak();
                 return false; // ПРОСТО ПОВЕРТАЄМО FALSE, НЕ РЕДИРЕКТИМО
             }
 
