@@ -141,6 +141,7 @@ export const en = {
     },
     jury: {
         "submissions_title": "Pending Reviews",
+        "submissions_subtitle": "Please check the projects submitted by the teams",
         "evaluate_title": "Project Evaluation",
         "team": "Team",
         "links": "Materials",
@@ -152,7 +153,18 @@ export const en = {
             "submit": "Complete Evaluation",
             "success": "Score submitted!"
         },
-        "criteria": "Evaluation Criteria"
+        "criteria": "Evaluation Criteria",
+        "actions": {
+            "evaluate": "Evaluate",
+            "save_scores": "Save Scores",
+        },
+        "round_label": "Round",
+        "view_github": "Link to github",
+        "view_video": "Link to YouTube/Google disk",
+        "submission_desc": "Project Description",
+        "grading_rubric": "Grading Rubric",
+        "category_weight": "Weight",
+        "score_0_100": "Score 0-100",
     },
     juries: {
         "management_title": "Management of Jury",
