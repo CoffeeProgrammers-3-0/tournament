@@ -33,9 +33,15 @@ export const RoundsTab = ({ state, formatDate, t, navigate }: any) => {
                     </FormControl>
                 </Box>
                 {state.isAdmin && (
-                    <Button variant="contained" color="secondary" startIcon={<AddIcon />} onClick={() => state.setRoundModalOpen(true)} sx={{ borderRadius: "12px", fontWeight: 700, color: "black" }}>
-                        {t("tournament_details.admin.add_round")}
-                    </Button>
+                    state.tournamentData.countOfRounds > state.rounds.length  || state.selectedRoundStatus === 'DRAFT' ? (
+                        <Button variant="contained" color="secondary" startIcon={<AddIcon />} onClick={() => state.setRoundModalOpen(true)} sx={{ borderRadius: "12px", fontWeight: 700, color: "black" }}>
+                            {t("tournament_details.admin.add_round")}
+                        </Button>
+                    ) : (
+                        <Button disabled variant="contained" color="secondary" startIcon={<AddIcon />} onClick={() => state.setRoundModalOpen(true)} sx={{ borderRadius: "12px", fontWeight: 700, color: "black" }}>
+                            {t("tournament_details.admin.add_round")}
+                        </Button>
+                    )
                 )}
             </Box>
 

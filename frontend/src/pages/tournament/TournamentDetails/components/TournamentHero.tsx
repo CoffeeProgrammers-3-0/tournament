@@ -13,7 +13,8 @@ export const TournamentHero = ({ state, formatDate, t, navigate }: any) => {
         setIsEditingInfo,
         isUserRegistered,
         tournamentId,
-        handleDeleteTournament
+        handleDeleteTournament,
+        setTabValue
     } = state;
 
     if (!tournamentData) return null;
@@ -86,7 +87,7 @@ export const TournamentHero = ({ state, formatDate, t, navigate }: any) => {
                                     variant="contained"
                                     color="secondary"
                                     startIcon={<EditIcon />}
-                                    onClick={() => setIsEditingInfo(true)}
+                                    onClick={() => {setIsEditingInfo(true); setTabValue(0)}}
                                     sx={{ borderRadius: "14px", fontWeight: 800, px: 3, py: 1.5, color: "black" }}
                                 >
                                     {t("tournament_details.admin.edit_info")}

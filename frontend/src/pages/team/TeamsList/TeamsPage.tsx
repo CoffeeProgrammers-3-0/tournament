@@ -1,6 +1,5 @@
 import {
     Box,
-    Button,
     CircularProgress,
     Container,
     Grid,
@@ -10,17 +9,14 @@ import {
     TextField,
     Typography
 } from "@mui/material";
-import AddIcon from "@mui/icons-material/Add";
 import SearchIcon from "@mui/icons-material/Search";
 import GroupsIcon from "@mui/icons-material/Groups";
 import {useTranslation} from "react-i18next";
-import {useNavigate} from "react-router-dom";
 import {useTeams} from "./useTeams";
 import {TeamCard} from "./components/TeamCard";
 
 export const TeamsPage = () => {
     const { t } = useTranslation();
-    const navigate = useNavigate();
 
     const {
         teams, loading, searchQuery, setSearchQuery,
@@ -45,22 +41,6 @@ export const TeamsPage = () => {
                         {t("teams.subtitle")}
                     </Typography>
                 </Box>
-
-                {isAdmin && (
-                    <Button
-                        variant="contained"
-                        color="secondary"
-                        startIcon={<AddIcon />}
-                        onClick={() => navigate("/admin/teams/create")}
-                        sx={{
-                            borderRadius: "14px", px: 4, py: 1.5,
-                            fontWeight: 700, color: "black",
-                            boxShadow: "0 8px 20px rgba(0,0,0,0.1)"
-                        }}
-                    >
-                        {t("teams.actions.create")}
-                    </Button>
-                )}
             </Box>
 
             {/* Filter Bar */}

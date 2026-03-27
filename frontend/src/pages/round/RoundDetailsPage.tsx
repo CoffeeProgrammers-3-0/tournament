@@ -79,6 +79,7 @@ export const RoundDetailsPage = () => {
                         status: details.roundData?.status || "DRAFT",
                     });
                     editors.setIsEditingInfo(true);
+                    details.setTabValue(0);
                 }}
                 navigate={navigate}
                 submissionId={details.submissionId}
@@ -219,6 +220,7 @@ export const RoundDetailsPage = () => {
                         {t("round_details.submissions.auto_assign_desc", "Enter the number of juries to assign to each submission (k):")}
                     </Typography>
                     <TextField
+                        required
                         type="number"
                         fullWidth
                         value={editors.kValue}
