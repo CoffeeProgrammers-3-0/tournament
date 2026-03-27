@@ -49,6 +49,9 @@ export const en = {
         "delete": "Delete",
         "add": "Add",
         "no_options": "No options available",
+        "confirm_promote": "Confirm promotion to leader",
+        "yes_confirm": "Confirm",
+        "no": "Cancel",
     },
 
     home: {
@@ -215,6 +218,14 @@ export const en = {
         }
     },
     team_details: {
+        "status": {
+            "locked_started": "Roster locked: Tournament has started"
+        },
+        "reasons": {
+            "TOURNAMENT_STARTED": "You cannot change members after the tournament starts.",
+            "NOT_LEADER": "Only the team leader can manage members.",
+            "NOT_FOUND": "Participation data not found."
+        },
         "not_found": "Team not found",
         "tabs": {
             "info": "Information",
@@ -257,7 +268,8 @@ export const en = {
             "add_member_failed": "Failed to add member",
             "remove_member_failed": "Error removing member",
             "promote_failed": "Failed to change leader"
-        }
+        },
+        "confirm.promote_text": "Promote to leader member",
     },
 
     jury: {
