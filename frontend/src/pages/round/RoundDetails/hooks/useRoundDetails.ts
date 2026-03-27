@@ -3,11 +3,12 @@ import {useNavigate} from "react-router-dom";
 
 import {roundService} from "../../../../services/impl/RoundService";
 import {categoryService} from "../../../../services/impl/CategoryService";
-import {userService} from "../../../../services/impl/UserService";
+import {submissionService} from "../../../../services/impl/SubmissionService";
 import type {RoundFullResponseDto} from "../../../../entities/round/round.dto";
 import type {CategoryResponseDto} from "../../../../entities/category/category.dto";
 import type {UserResponseDto} from "../../../../entities/user/user.dto";
 import type {TeamLeaderboardResponseDto} from "../../../../entities/team/team.dto";
+import type {SubmissionListResponseDto} from "../../../../entities/submission/submission.dto";
 
 export const useRoundDetails = (id?: string) => {
     const navigate = useNavigate();
@@ -20,6 +21,11 @@ export const useRoundDetails = (id?: string) => {
     const [categories, setCategories] = useState<CategoryResponseDto[]>([]);
     const [jury, setJury] = useState<UserResponseDto[]>([]);
     const [leaderboard, setLeaderboard] = useState<TeamLeaderboardResponseDto[]>([]);
+
+    // Нові стейти для сабмішенів
+    const [submissions, setSubmissions] = useState<SubmissionListResponseDto[]>([]);
+    const [submissionsPage, setSubmissionsPage] = useState(0);
+    const [submissionsTotalPages, setSubmissionsTotalPages] = useState(0);
 
     const fetchRound = useCallback(async () => {
         if (!id) return;
@@ -50,7 +56,7 @@ export const useRoundDetails = (id?: string) => {
         if (!id) return;
         setLoadingTab(true);
         try {
-            const response = await userService.getJuriesByRound({ page: 0, size: 20 }, Number(id));
+            const response = await roundService.getJuriesByRound(Number(id), { page: 0, size: 50 });
             setJury(response.content || []);
         } catch (error) {
             console.error("Error fetching jury for round:", error);
@@ -64,13 +70,29 @@ export const useRoundDetails = (id?: string) => {
         if (!id) return;
         setLoadingTab(true);
         try {
-            // Якщо endpoint уже готовий — розкоментуй:
-            // const data = await teamService.getLeaderboardByRound(Number(id));
-            // setLeaderboard(data.sort((a, b) => b.points - a.points));
-
-            setLeaderboard([]);
+            const data = await roundService.getLeaderboardForRound(Number(id), {
+                last_team_points: 0,
+                last_team_id: 0,
+                size: 50
+            });
+            setLeaderboard(data.sort((a, b) => b.points - a.points));
         } catch (error) {
             console.error("Error fetching leaderboard:", error);
+        } finally {
+            setLoadingTab(false);
+        }
+    }, [id]);
+
+    const fetchSubmissions = useCallback(async (page = 0) => {
+        if (!id) return;
+        setLoadingTab(true);
+        try {
+            const response = await submissionService.getSubmissionsByRound(Number(id), { page, size: 10 });
+            setSubmissions(response.content || []);
+            setSubmissionsTotalPages(response.totalPages || 0);
+            setSubmissionsPage(page);
+        } catch (error) {
+            console.error("Error fetching submissions:", error);
         } finally {
             setLoadingTab(false);
         }
@@ -84,7 +106,8 @@ export const useRoundDetails = (id?: string) => {
         if (tabValue === 1 && categories.length === 0) fetchCategories();
         if (tabValue === 2 && jury.length === 0) fetchJury();
         if (tabValue === 3 && leaderboard.length === 0) fetchLeaderboard();
-    }, [tabValue, categories.length, jury.length, leaderboard.length, fetchCategories, fetchJury, fetchLeaderboard]);
+        if (tabValue === 4 && submissions.length === 0) fetchSubmissions();
+    }, [tabValue, categories.length, jury.length, leaderboard.length, submissions.length, fetchCategories, fetchJury, fetchLeaderboard, fetchSubmissions]);
 
     return {
         navigate,
@@ -95,13 +118,14 @@ export const useRoundDetails = (id?: string) => {
         roundData,
         setRoundData,
         categories,
-        setCategories,
         jury,
-        setJury,
         leaderboard,
-        setLeaderboard,
+        submissions,
+        submissionsPage,
+        submissionsTotalPages,
         fetchCategories,
         fetchJury,
         fetchLeaderboard,
+        fetchSubmissions,
     };
 };

@@ -140,19 +140,31 @@ export const uk = {
         "success": "Роботу успішно збережено!"
     },
     jury: {
-        "submissions_title": "Роботи для оцінювання",
-        "evaluate_title": "Оцінювання проекту",
+        "submissions_title": "Очікують на розгляд",
+        "submissions_subtitle": "Будь ласка, перевірте проєкти, надіслані командами",
+        "evaluate_title": "Оцінювання проєкту",
         "team": "Команда",
         "links": "Матеріали",
-        "no_submissions": "Наразі немає робіт для перевірки",
+        "no_submissions": "Наразі немає проєктів для перевірки",
         "evaluation_form": {
             "score": "Бал",
             "comment": "Коментар для команди",
-            "placeholder_comment": "Ваші зауваження або поради...",
+            "placeholder_comment": "Ваші нотатки або поради...",
             "submit": "Завершити оцінювання",
-            "success": "Оцінку виставлено!"
+            "success": "Оцінку збережено!"
         },
-        "criteria": "Критерії оцінювання"
+        "criteria": "Критерії оцінювання",
+        "actions": {
+            "evaluate": "Оцінити",
+            "save_scores": "Зберегти бали",
+        },
+        "round_label": "Раунд",
+        "view_github": "Посилання на GitHub",
+        "view_video": "Посилання на YouTube/Google Диск",
+        "submission_desc": "Опис проєкту",
+        "grading_rubric": "Рубрика оцінювання",
+        "category_weight": "Вага",
+        "score_0_100": "Бал 0-100",
     },
     juries: {
         "management_title": "Менеджемнт журі",
@@ -326,7 +338,9 @@ export const uk = {
             info: "Інформація",
             categories: "Категорії",
             jury: "Журі",
-            teams: "Команди"
+            leaderboard: "Команди(Leaderboard)",
+            submissions: "Роботи надіслані на перевірку",
+            stats: "Statistics",
         },
         info: {
             name: "Назва раунду",
@@ -386,5 +400,15 @@ export const uk = {
             actions: "Дії"
         },
         "submit_button": "Надіслати роботу",
+        submissions: {
+            "auto_assign": "Автоматично призначити журі",
+            "auto_assign_title": "Автоматично призначити журі",
+            "auto_assign_desc": "Увведіть кількість журі на кожну роботу. Увага: ця дія видалить всі попередні призанчення!",
+        }
     },
+
+    languages: {
+        en: "Англійська",
+        uk: "Українська",
+    }
 };

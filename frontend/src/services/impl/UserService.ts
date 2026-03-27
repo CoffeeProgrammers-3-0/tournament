@@ -30,10 +30,6 @@ class UserService extends BaseService {
     public getJuries(params: {query?: string, page: number, size: number}): Promise<PaginationListResponseDto<UserResponseDto>> {
         return this.get<PaginationListResponseDto<UserResponseDto>>('/juries', { params });
     }
-
-    public getJuriesByRound(params: {query?: string, page: number, size: number}, roundId: number): Promise<PaginationListResponseDto<UserResponseDto>> {
-        return this.get<PaginationListResponseDto<UserResponseDto>>('/juriesByRound/'+roundId, { params });
-    }
 }
 
 export const userService = new UserService();

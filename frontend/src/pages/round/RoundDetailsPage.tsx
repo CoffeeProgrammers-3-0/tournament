@@ -1,4 +1,16 @@
-import {Box, CircularProgress, Tab, Tabs, Typography} from "@mui/material";
+import {
+    Box,
+    Button,
+    CircularProgress,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    Tab,
+    Tabs,
+    TextField,
+    Typography
+} from "@mui/material";
 import {useTranslation} from "react-i18next";
 import Cookies from "js-cookie";
 import {useNavigate, useParams} from "react-router-dom";
@@ -16,6 +28,8 @@ import {JuryDialog} from "./RoundDetails/components/JuryDialog";
 
 import {CriteriaDialog} from "./RoundDetails/components/CriteriaDialog";
 
+import {RoundSubmissionsTab} from "./RoundDetails/components/RoundSubmissionsTab";
+
 export const RoundDetailsPage = () => {
     const { t } = useTranslation();
     const isAdmin = Cookies.get("role") === "ADMIN";
@@ -31,7 +45,8 @@ export const RoundDetailsPage = () => {
         setRoundData: details.setRoundData,
         fetchCategories: details.fetchCategories,
         fetchJury: details.fetchJury,
-        currentJury: details.jury, // ДОДАНО ПАРАМЕТР
+        fetchSubmissions: details.fetchSubmissions, // ДОДАНО
+        currentJury: details.jury,
     });
 
     if (details.loading) {
@@ -68,11 +83,12 @@ export const RoundDetailsPage = () => {
                 navigate={navigate}
             />
 
-            <Tabs value={details.tabValue} onChange={(_, v) => details.setTabValue(v)} sx={{ mb: 4 }} textColor="inherit" indicatorColor="primary">
+            <Tabs value={details.tabValue} onChange={(_, v) => details.setTabValue(v)} sx={{ mb: 4 }} textColor="inherit" indicatorColor="primary" variant="scrollable" scrollButtons="auto">
                 <Tab label={t("round_details.tabs.info")} />
                 <Tab label={t("round_details.tabs.categories")} />
                 <Tab label={t("round_details.tabs.jury")} />
-                <Tab label={t("round_details.tabs.teams")} />
+                <Tab label={t("round_details.tabs.leaderboard")} /> {/* ЗМІНЕНО назву */}
+                {isAdmin && <Tab label={t("round_details.tabs.submissions")} />} {/* НОВИЙ ТАБ */}
             </Tabs>
 
             <RoundInfoTab
@@ -123,6 +139,21 @@ export const RoundDetailsPage = () => {
                 t={t}
             />
 
+            {isAdmin && (
+                <RoundSubmissionsTab
+                    tabValue={details.tabValue}
+                    submissions={details.submissions}
+                    loadingTab={details.loadingTab}
+                    page={details.submissionsPage}
+                    totalPages={details.submissionsTotalPages}
+                    onPageChange={details.fetchSubmissions}
+                    onAutoAssign={() => editors.setAutoAssignModalOpen(true)}
+                    onAssignManual={editors.handleOpenSubmissionJuryModal}
+                    onRemoveJury={editors.handleRemoveJuryFromSubmission} // ПЕРЕДАЄМО ХЕНДЛЕР ТУТ
+                    t={t}
+                />
+            )}
+
             <RoundStatsDialog
                 open={editors.statsModalOpen}
                 onClose={() => editors.setStatsModalOpen(false)}
@@ -144,22 +175,62 @@ export const RoundDetailsPage = () => {
                 t={t}
             />
 
+            {/* 1. Глобальний пошук: Додавання журі до самого РАУНДУ */}
             <JuryDialog
                 open={editors.juryModalOpen}
                 onClose={() => {
                     editors.setJuryModalOpen(false);
                     editors.setSelectedJuryToAssign(null);
                 }}
-                availableJuries={editors.availableJuries}
+                availableJuries={editors.availableJuries} // Результати з userService.getJuries
                 selectedJury={editors.selectedJuryToAssign}
                 setSelectedJury={editors.setSelectedJuryToAssign}
-                onSubmit={editors.handleAssignJury}
+                onSubmit={editors.handleAssignJury} // Викликає roundService.setJuryToRound
                 t={t}
-                // НОВІ ПРОПСИ:
                 inputValue={editors.inputValue}
                 onInputChange={editors.setInputValue}
-                loading={editors.isSearching}
+                loading={editors.isSearching} // Показує спінер під час запиту до БД
             />
+
+            {/* 2. Локальний вибір: Призначення журі на конкретний САБМІШЕН */}
+            <JuryDialog
+                open={editors.submissionJuryModalOpen}
+                onClose={() => {
+                    editors.setSubmissionJuryModalOpen(false);
+                    editors.setSelectedJuryToAssign(null);
+                }}
+                availableJuries={editors.availableJuriesForSubmission} // Тільки ті, хто вже в раунді
+                selectedJury={editors.selectedJuryToAssign}
+                setSelectedJury={editors.setSelectedJuryToAssign}
+                onSubmit={editors.handleAssignJuryToSubmission} // Викликає submissionService.assignJury
+                t={t}
+                inputValue={editors.inputValue}
+                onInputChange={editors.setInputValue}
+                loading={false} // Тут пошук миттєвий, лоадер не потрібен
+            />
+
+            {/* Модалка для авто-призначення */}
+            <Dialog open={editors.autoAssignModalOpen} onClose={() => editors.setAutoAssignModalOpen(false)}>
+                <DialogTitle>{t("round_details.submissions.auto_assign_title", "Auto Assign Juries")}</DialogTitle>
+                <DialogContent>
+                    <Typography sx={{ mb: 2 }}>
+                        {t("round_details.submissions.auto_assign_desc", "Enter the number of juries to assign to each submission (k):")}
+                    </Typography>
+                    <TextField
+                        type="number"
+                        fullWidth
+                        value={editors.kValue}
+                        onChange={(e) => editors.setKValue(Number(e.target.value))}
+                        inputProps={{ min: 1 }}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => editors.setAutoAssignModalOpen(false)}>{t("common.cancel")}</Button>
+                    <Button variant="contained" onClick={editors.handleAutoAssignJuries}>
+                        {t("common.apply")}
+                    </Button>
+                </DialogActions>
+            </Dialog>
 
             <CriteriaDialog
                 open={editors.criteriaModalOpen}
