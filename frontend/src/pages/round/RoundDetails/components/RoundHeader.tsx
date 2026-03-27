@@ -63,7 +63,7 @@ export const RoundHeader = ({
                             size="small"
                         />
                         <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                            {t("round_details.header.dates")} {roundData.startDate} — {roundData.endDate}
+                            {t("round_details.header.dates")} {roundData.startDate.replaceAll("-", ".").replace("T", " ")} — {roundData.endDate.replaceAll("-", ".").replace("T", " ")}
                         </Typography>
                         <Typography variant="body2" sx={{ opacity: 0.9, display: "flex", alignItems: "center", gap: 0.5 }}>
                             <TrophyIcon fontSize="small" /> {t("round_details.header.winners")} {roundData.countOfWinners}
