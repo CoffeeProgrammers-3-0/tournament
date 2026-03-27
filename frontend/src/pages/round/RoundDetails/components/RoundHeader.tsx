@@ -209,6 +209,28 @@ export const RoundHeader = ({
                                 : t("round_details.submit_button")}
                         </Button>
                     )}
+                    {roundData.status === "EVALUATED" || roundData.status === "SUBMISSION_CLOSED"
+                    && submissionId && submissionId > 0 && isUser && (
+                        <Button
+                            variant="contained"
+                            color="secondary"
+                            size="large"
+                            startIcon={<HowToRegIcon />}
+                            onClick={handleSubmissionClick}
+                            sx={{
+                                borderRadius: "16px",
+                                fontWeight: 800,
+                                px: 4,
+                                py: 2,
+                                color: "black",
+                                boxShadow: "0 10px 20px rgba(0,0,0,0.3)",
+                                "&:hover": { transform: "translateY(-2px)", boxShadow: "0 12px 24px rgba(0,0,0,0.4)" },
+                                transition: "all 0.2s"
+                            }}
+                        >
+                            {t("submission.status.submitted")}
+                        </Button>
+                    )}
                 </Box>
             </Box>
         </Paper>
