@@ -196,18 +196,18 @@ export const AppHeader = () => {
                 transformOrigin={{ horizontal: 'center', vertical: 'top' }}
                 anchorOrigin={{ horizontal: 'center', vertical: 'bottom' }}
             >
-                <MenuItem component={RouterLink} to="/tournaments" onClick={handleClose}>
+                <MenuItem component={RouterLink} to={role === 'ADMIN' ? "/tournaments?tab=4" : "/tournaments"} onClick={handleClose}>
                     <ListItemIcon><EmojiEventsIcon fontSize="small" color="primary" /></ListItemIcon>
                     {role === 'ADMIN' ? t("header.manageTournaments") : t("header.availableTournaments")}
                 </MenuItem>
 
                 {isLoggedIn && role === 'USER' && [
-                    <MenuItem key="current" component={RouterLink} to="/tournaments?tab=1" onClick={handleClose}>
+                    <MenuItem key="current" component={RouterLink} to="/tournaments?tab=2" onClick={handleClose}>
                         <ListItemIcon><PlayCircleOutlineIcon fontSize="small" color="warning" /></ListItemIcon>
                         {t("header.myCurrentTournaments")}
                     </MenuItem>,
                     <Divider key="divider" />,
-                    <MenuItem key="history" component={RouterLink} to="/tournaments?tab=2" onClick={handleClose}>
+                    <MenuItem key="history" component={RouterLink} to="/tournaments?tab=3" onClick={handleClose}>
                         <ListItemIcon><HistoryIcon fontSize="small" /></ListItemIcon>
                         {t("header.history")}
                     </MenuItem>
@@ -231,7 +231,7 @@ export const AppHeader = () => {
                     anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
                 >
                     <Box sx={{ px: 2, py: 1.5 }}>
-                        <Typography variant="subtitle2" fontWeight={700}>{t("header.role")}: {role}</Typography>
+                        <Typography variant="subtitle2" fontWeight={700}>{t("header.role")} {role}</Typography>
                     </Box>
                     <Divider />
                     <MenuItem component={RouterLink} to="/profile" onClick={handleClose}>

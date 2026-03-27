@@ -38,6 +38,7 @@ export const en = {
         "no_data": "No tournaments found",
         "tabs": {
             "available": "Available",
+            "my_registed": "I`m registered on",
             "my": "My Entries",
             "history": "Past",
             "admin": "Management"

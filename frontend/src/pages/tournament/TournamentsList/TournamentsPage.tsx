@@ -60,9 +60,10 @@ export const TournamentsPage = () => {
 
             <Box sx={{ mb: 4, display: "flex", flexDirection: { xs: "column", md: "row" }, alignItems: "center", justifyContent: "space-between", gap: 2 }}>
                 <Tabs value={tabValue} onChange={(_, v) => handleTabChange(v)}>
-                    {!isJury && <Tab value={TABS.AVAILABLE} label={t("tournaments.tabs.available")} />}
-                    {isLoggedIn && <Tab value={TABS.MY} label={t("tournaments.tabs.my")} />}
-                    {isLoggedIn && !isJury && <Tab value={TABS.HISTORY} label={t("tournaments.tabs.history")} />}
+                    {!isJury && !isAdmin && <Tab value={TABS.AVAILABLE} label={t("tournaments.tabs.available")} />}
+                    {isLoggedIn && !isAdmin && <Tab value={TABS.MY_REGISTED} label={t("tournaments.tabs.my_registed")} />}
+                    {isLoggedIn && !isAdmin && <Tab value={TABS.MY} label={t("tournaments.tabs.my")} />}
+                    {isLoggedIn && !isAdmin && !isJury && <Tab value={TABS.HISTORY} label={t("tournaments.tabs.history")} />}
                     {isAdmin && <Tab value={TABS.ADMIN} label={t("tournaments.tabs.admin")} sx={{ color: "error.main" }} />}
                 </Tabs>
 
