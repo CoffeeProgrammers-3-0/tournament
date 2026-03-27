@@ -40,15 +40,42 @@ export const RoundTeamsTab = ({ tabValue, leaderboard, loadingTab, roundData, on
             {loadingTab ? (
                 <CircularProgress sx={{ display: "block", mx: "auto", my: 4 }} />
             ) : (
-                <TableContainer component={Paper} elevation={0} sx={{ border: "1px solid #eee", borderRadius: "16px" }}>
-                    <Table>
-                        <TableHead sx={{ bgcolor: "grey.50" }}>
+                <TableContainer
+                    component={Paper}
+                    elevation={0}
+                    sx={{
+                        border: "1px solid #eee",
+                        borderRadius: "16px",
+                        // --- ADDED PROPERTIES ---
+                        maxHeight: "600px", // Adjust this height as needed
+                        overflowY: "auto",
+                        // Smooth scrollbar styling (optional)
+                        "&::-webkit-scrollbar": { width: "8px" },
+                        "&::-webkit-scrollbar-thumb": {
+                            backgroundColor: "#ccc",
+                            borderRadius: "10px"
+                        }
+                    }}
+                >
+                    <Table stickyHeader> {/* Added stickyHeader for better UX */}
+                        <TableHead>
                             <TableRow>
-                                <TableCell align="center" width="80px"><b>{t("round_details.teams.rank")}</b></TableCell>
-                                <TableCell><b>{t("round_details.teams.team_name")}</b></TableCell>
-                                <TableCell><b>{t("round_details.teams.email")}</b></TableCell>
-                                <TableCell align="right"><b>{t("round_details.teams.points")}</b></TableCell>
-                                <TableCell align="center" width="100px"><b>{t("round_details.common.actions")}</b></TableCell>
+                                {/* Make sure to set bgcolor here or in sx because sticky headers can be transparent */}
+                                <TableCell align="center" width="80px" sx={{ bgcolor: "grey.50", fontWeight: 700 }}>
+                                    {t("round_details.teams.rank")}
+                                </TableCell>
+                                <TableCell sx={{ bgcolor: "grey.50", fontWeight: 700 }}>
+                                    {t("round_details.teams.team_name")}
+                                </TableCell>
+                                <TableCell sx={{ bgcolor: "grey.50", fontWeight: 700 }}>
+                                    {t("round_details.teams.email")}
+                                </TableCell>
+                                <TableCell align="right" sx={{ bgcolor: "grey.50", fontWeight: 700 }}>
+                                    {t("round_details.teams.points")}
+                                </TableCell>
+                                <TableCell align="center" width="100px" sx={{ bgcolor: "grey.50", fontWeight: 700 }}>
+                                    {t("round_details.common.actions")}
+                                </TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>

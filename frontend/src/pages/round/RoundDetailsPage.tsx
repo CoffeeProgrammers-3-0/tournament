@@ -81,6 +81,7 @@ export const RoundDetailsPage = () => {
                     editors.setIsEditingInfo(true);
                 }}
                 navigate={navigate}
+                submissionId={details.submissionId}
             />
 
             <Tabs value={details.tabValue} onChange={(_, v) => details.setTabValue(v)} sx={{ mb: 4 }} textColor="inherit" indicatorColor="primary" variant="scrollable" scrollButtons="auto">

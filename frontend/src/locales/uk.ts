@@ -338,6 +338,7 @@ export const uk = {
             info: "Інформація",
             categories: "Категорії",
             jury: "Журі",
+            teams: "Команди",
             leaderboard: "Команди(Leaderboard)",
             submissions: "Роботи надіслані на перевірку",
             stats: "Statistics",

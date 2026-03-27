@@ -12,12 +12,28 @@ type Props = {
     onEdit: () => void;
     isUser: boolean;
     navigate: (path: string) => void;
+    submissionId: number | null; // Додаємо цей проп
 };
 
-export const RoundHeader = ({ roundData, isAdmin, isUser, isEditingInfo, onEdit, navigate }: Props) => {
+export const RoundHeader = ({
+                                roundData,
+                                isAdmin,
+                                isUser,
+                                isEditingInfo,
+                                onEdit,
+                                navigate,
+                                submissionId
+                            }: Props) => {
     const { t } = useTranslation();
-
-
+    const handleSubmissionClick = () => {
+        // Якщо id > 0, переходимо на редагування існуючого сабмішена
+        // Якщо id <= 0, йдемо на створення нового
+        if (submissionId && submissionId > 0) {
+            navigate(`/rounds/${roundData.id}/submission/${submissionId}`);
+        } else {
+            navigate(`/rounds/${roundData.id}/submission/`);
+        }
+    };
 
     return (
         <Paper
@@ -75,7 +91,7 @@ export const RoundHeader = ({ roundData, isAdmin, isUser, isEditingInfo, onEdit,
                         color="secondary"
                         size="large"
                         startIcon={<HowToRegIcon />}
-                        onClick={() => navigate(`/rounds/${roundData.id}/submission/`)}
+                        onClick={handleSubmissionClick} // Використовуємо нову функцію
                         sx={{
                             borderRadius: "16px",
                             fontWeight: 800,
@@ -85,7 +101,10 @@ export const RoundHeader = ({ roundData, isAdmin, isUser, isEditingInfo, onEdit,
                             boxShadow: "0 10px 20px rgba(0,0,0,0.2)"
                         }}
                     >
-                        {t("round_details.submit_button")}
+                        {/* Можна також змінити текст кнопки, якщо робота вже подана */}
+                        {submissionId && submissionId > 0
+                            ? t("submission.status.edit")
+                            : t("round_details.submit_button")}
                     </Button>
                 )}
             </Box>

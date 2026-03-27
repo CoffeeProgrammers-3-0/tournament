@@ -21,8 +21,8 @@ class SubmissionService extends BaseService {
         super('/submissions');
     }
 
-    public checkSubmission(roundId: number): Promise<boolean> {
-        return this.get<boolean>(`/check/${roundId}`);
+    public checkSubmission(roundId: number): Promise<Number> {
+        return this.get<Number>(`/check/${roundId}`);
     }
 
     public sendSubmission(roundId: number, data: SubmissionRequestDto): Promise<SubmissionFullResponseDto> {

@@ -337,6 +337,7 @@ export const en = {
             info: "Information",
             categories: "Categories",
             jury: "Jury",
+            teams: "Teams",
             leaderboard: "Teams(Leaderboard)",
             submissions: "Submissions",
             stats: "Statistics",

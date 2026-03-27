@@ -27,6 +27,19 @@ export const useRoundDetails = (id?: string) => {
     const [submissionsPage, setSubmissionsPage] = useState(0);
     const [submissionsTotalPages, setSubmissionsTotalPages] = useState(0);
 
+    const [submissionId, setSubmissionId] = useState<number | null>(null);
+
+    const fetchCheckSubmission = useCallback(async () => {
+        if (!id) return;
+        try {
+            const sid = await submissionService.checkSubmission(Number(id));
+            // Перетворюємо результат у число (про всяк випадок)
+            setSubmissionId(Number(sid));
+        } catch (error) {
+            console.error("Failed to check submission:", error);
+        }
+    }, [id]);
+
     const fetchRound = useCallback(async () => {
         if (!id) return;
         try {
@@ -71,9 +84,9 @@ export const useRoundDetails = (id?: string) => {
         setLoadingTab(true);
         try {
             const data = await roundService.getLeaderboardForRound(Number(id), {
-                last_team_points: 0,
+                last_team_points: 100,
                 last_team_id: 0,
-                size: 50
+                size: 10
             });
             setLeaderboard(data.sort((a, b) => b.points - a.points));
         } catch (error) {
@@ -100,7 +113,8 @@ export const useRoundDetails = (id?: string) => {
 
     useEffect(() => {
         fetchRound();
-    }, [fetchRound]);
+        fetchCheckSubmission(); // Викликаємо перевірку при завантаженні
+    }, [fetchRound, fetchCheckSubmission]);
 
     useEffect(() => {
         if (tabValue === 1 && categories.length === 0) fetchCategories();
@@ -127,5 +141,7 @@ export const useRoundDetails = (id?: string) => {
         fetchJury,
         fetchLeaderboard,
         fetchSubmissions,
+        submissionId,
+        fetchCheckSubmission
     };
 };
