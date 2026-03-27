@@ -15,6 +15,8 @@ public interface RoundService {
 
     Page<Round> findAllByTournament(Long tournamentId, Integer page, Integer size, String search, RoundStatus status);
 
+    Page<Round> findAllByRoundInSameTournament(Long roundId, Integer page, Integer size, String search, RoundStatus status);
+
     Round findById(Long roundId);
 
     void setJury(Long roundId, Long juryId);

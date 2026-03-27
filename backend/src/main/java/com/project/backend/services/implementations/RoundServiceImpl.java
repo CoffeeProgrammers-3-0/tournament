@@ -88,6 +88,12 @@ public class RoundServiceImpl implements RoundService {
     }
 
     @Override
+    public Page<Round> findAllByRoundInSameTournament(Long roundId, Integer page, Integer size, String search, RoundStatus status) {
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "startDate"));
+        return roundRepository.findAll(Specification.allOf(RoundSpecification.belongingToSameTournamentAs(roundId), RoundSpecification.byStatus(status)), pageRequest);
+    }
+
+    @Override
     public Round findById(Long roundId) {
         return roundRepository.findById(roundId).orElseThrow(() -> new EntityNotFoundException("Round with id " + roundId + " not found"));
     }

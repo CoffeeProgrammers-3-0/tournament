@@ -49,6 +49,9 @@ export const uk = {
         "delete": "Видалити",
         "add": "Додати",
         "no_options": "Немає опцій",
+        "confirm_promote": "Підтвердження підвищення до лідера",
+        "yes_confirm": "Підтвердити",
+        "no": "Скасувати",
     },
 
     home: {
@@ -215,6 +218,14 @@ export const uk = {
         }
     },
     team_details: {
+        "status": {
+            "locked_started": "Заблоковано для змін"
+        },
+        "reasons": {
+            "TOURNAMENT_STARTED": "Не можна змінити склад команди коли турнір почався",
+            "NOT_LEADER": "Тільки лідер команди може змінювати",
+            "NOT_FOUND": "Не знайдено такого учасника"
+        },
         "not_found": "Команду не знайдено",
         "tabs": {
             "info": "Інформація",
@@ -257,7 +268,8 @@ export const uk = {
             "add_member_failed": "Не вдалося додати учасника",
             "remove_member_failed": "Помилка при видаленні",
             "promote_failed": "Не вдалося змінити капітана"
-        }
+        },
+        "confirm.promote_text": "Підвищити до лідера корпистувача",
     },
 
     jury: {

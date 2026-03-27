@@ -3,6 +3,8 @@ package com.project.backend.repositories.specifications;
 import com.project.backend.models.Round;
 import com.project.backend.models.Tournament;
 import com.project.backend.models.constants.RoundStatus;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -25,6 +27,22 @@ public class RoundSpecification {
 
         return (root, query, cb) ->
                 cb.equal(root.get("tournament").get("id"), tournamentId);
+    }
+
+    public static Specification<Round> belongingToSameTournamentAs(Long roundId) {
+        return (root, query, cb) -> {
+            if (roundId == null) return null;
+
+            // 1. Create a subquery to find the Tournament associated with the given roundId
+            Subquery<Long> tournamentIdSubquery = query.subquery(Long.class);
+            Root<Round> subqueryRoot = tournamentIdSubquery.from(Round.class);
+
+            tournamentIdSubquery.select(subqueryRoot.get("tournament").get("id"))
+                    .where(cb.equal(subqueryRoot.get("id"), roundId));
+
+            // 2. Filter the main Round query by that Tournament ID
+            return cb.equal(root.get("tournament").get("id"), tournamentIdSubquery);
+        };
     }
 
     public static Specification<Round> byTournament(Tournament tournament) {

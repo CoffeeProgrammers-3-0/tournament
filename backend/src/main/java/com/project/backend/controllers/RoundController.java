@@ -124,6 +124,45 @@ public class RoundController {
         return response;
     }
 
+    @GetMapping("/roundsByRound/{round_id}")
+    @Operation(summary = "Get tournament rounds", description = "Returns paginated list of rounds for a tournament with optional search and filtering by status found by round in the same tournament")
+    public PaginationListResponse<RoundListResponse> getAllByRound(
+            @Parameter(description = "Search rounds by name", example = "Final")
+            @RequestParam(value = "search", required = false) String search,
+
+            @Parameter(description = "Page number (starting from 0)", example = "0")
+            @RequestParam(value = "page") Integer page,
+
+            @Parameter(description = "Page size", example = "10")
+            @RequestParam(value = "size") Integer size,
+
+            @Parameter(description = "Round status filter", example = "ACTIVE")
+            @RequestParam(value = "status") RoundStatus status,
+
+            @Parameter(description = "ID of the round", example = "1")
+            @PathVariable(value = "round_id") Long round_id) {
+
+        Page<Round> roundPage = roundService.findAllByRoundInSameTournament(
+                round_id,
+                page,
+                size,
+                search,
+                status
+        );
+
+        PaginationListResponse<RoundListResponse> response = new PaginationListResponse<>();
+
+        response.setTotalPages(roundPage.getTotalPages());
+        response.setContent(
+                roundPage.getContent()
+                        .stream()
+                        .map(roundMapper::fromRoundToListResponse)
+                        .toList()
+        );
+
+        return response;
+    }
+
     @GetMapping("/rounds/{round_id}")
     @Operation(summary = "Get round by ID", description = "Returns detailed information about a round")
     public RoundFullResponse getById(
