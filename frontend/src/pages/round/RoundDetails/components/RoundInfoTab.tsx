@@ -4,6 +4,7 @@ import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
 import DOMPurify from "dompurify";
 import type {RoundFullResponseDto, RoundStatus, RoundUpdateRequestDto} from "../../../../entities/round/round.dto";
+import {ErrorMessages} from "../../../../components/main/ErrorMessages.tsx";
 
 // Налаштування панелі інструментів для редактора
 const quillModules = {
@@ -45,6 +46,7 @@ type Props = {
     handleSaveUpdate: () => Promise<void>;
     cancelEditing: () => void;
     t: (key: string, options?: any) => string;
+    errors: string[];
 };
 
 export const RoundInfoTab = ({
@@ -57,6 +59,7 @@ export const RoundInfoTab = ({
                                  handleSaveUpdate,
                                  cancelEditing,
                                  t,
+    errors
                              }: Props) => {
     if (tabValue !== 0) return null;
 
@@ -67,6 +70,7 @@ export const RoundInfoTab = ({
 
     return (
         <Grid container spacing={4}>
+            <ErrorMessages errors={errors}/>
             <Grid size={{ xs: 12, md: 8 }}>
                 {isEditingInfo ? (
                     <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>

@@ -14,6 +14,7 @@ import {
     Typography
 } from "@mui/material";
 import type {UserResponseDto} from "../../../../entities/user/user.dto";
+import {ErrorMessages} from "../../../../components/main/ErrorMessages.tsx";
 
 type Props = {
     open: boolean;
@@ -30,12 +31,13 @@ type Props = {
     totalPages: number;
     onPageChange: (event: React.ChangeEvent<unknown>, value: number) => void;
     disabledIds?: number[];
+    errors: string[];
 };
 
 export const JuryDialog = ({
                                open, onClose, availableJuries, selectedJury, setSelectedJury,
                                onSubmit, t, inputValue, onInputChange, loading,
-                               page, totalPages, onPageChange, disabledIds = []
+                               page, totalPages, onPageChange, disabledIds = [], errors
                            }: Props) => {
     return (
         <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -43,6 +45,7 @@ export const JuryDialog = ({
 
             <DialogContent dividers sx={{ display: "flex", flexDirection: "column", gap: 2, minHeight: 400 }}>
                 {/* Поле пошуку */}
+                <ErrorMessages errors={errors}/>
                 <TextField
                     label={t("common.search")}
                     variant="outlined"

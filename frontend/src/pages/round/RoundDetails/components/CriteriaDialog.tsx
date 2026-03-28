@@ -1,4 +1,5 @@
 import {Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField} from "@mui/material";
+import {ErrorMessages} from "../../../../components/main/ErrorMessages.tsx";
 
 type Props = {
     open: boolean;
@@ -7,13 +8,16 @@ type Props = {
     setNewCriteriaText: (text: string) => void;
     onSubmit: () => void;
     t: (key: string) => string;
+    errors: string[];
 };
 
-export const CriteriaDialog = ({ open, onClose, newCriteriaText, setNewCriteriaText, onSubmit, t }: Props) => {
+export const CriteriaDialog = ({
+                                   open, onClose, newCriteriaText, setNewCriteriaText, onSubmit, t, errors }: Props) => {
     return (
         <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
             <DialogTitle fontWeight={700}>{t("round_details.categories.add_criteria")}</DialogTitle>
             <DialogContent sx={{ pt: "16px !important" }}>
+                <ErrorMessages errors={errors}/>
                 <TextField
                     fullWidth
                     label={t("round_details.categories.criteria_text")}

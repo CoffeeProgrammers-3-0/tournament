@@ -53,6 +53,7 @@ export const uk = {
         "yes_confirm": "Підтвердити",
         "no": "Скасувати",
         "search": "Пошук",
+        "errors": "Виправте ці помилки"
     },
 
     home: {
@@ -377,7 +378,7 @@ export const uk = {
                 "title": "Призначити суддю",
                 "id": "Введіть ID судді",
                 "submit": "Призначити",
-                "select": "Оберіть журі"
+                "select": "Оберіть журі",
             }
         },
         "categories": {

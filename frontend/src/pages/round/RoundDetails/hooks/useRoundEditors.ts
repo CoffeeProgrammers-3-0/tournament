@@ -34,7 +34,6 @@ type Params = {
     fetchCategories: () => Promise<void>;
     fetchJury: () => Promise<void>;
     fetchSubmissions: () => Promise<void>;
-    currentJury: UserResponseDto[];
 };
 
 type ConfirmDialogConfig = {
@@ -46,8 +45,18 @@ type ConfirmDialogConfig = {
     isLoading?: boolean;
 };
 
-export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, fetchJury, fetchSubmissions, currentJury }: Params) => {
+export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, fetchJury, fetchSubmissions }: Params) => {
     const roundId = Number(id);
+    const [errors, setErrors] = useState<string[]>([]);
+    const clearErrors = useCallback(() => setErrors([]), []);
+
+    // --- Обгортка для автоматичного очищення помилок при закритті модалок ---
+    const withErrorClear = useCallback((setter: React.Dispatch<React.SetStateAction<boolean>>) => {
+        return (value: boolean | ((prev: boolean) => boolean)) => {
+            if (value === false) clearErrors(); // Очищаємо помилки, якщо вікно закривається
+            setter(value);
+        };
+    }, [clearErrors]);
 
     // --- Pagination States ---
     const [juryPage, setJuryPage] = useState(1);
@@ -102,15 +111,26 @@ export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, 
     });
 
     // --- Confirm Dialog Helpers ---
-    const closeConfirm = useCallback(() => setConfirmDialog(prev => ({ ...prev, open: false })), []);
+    const closeConfirm = useCallback(() => {
+        setConfirmDialog(prev => ({ ...prev, open: false }));
+        clearErrors(); // Очищаємо помилки при закритті діалогу підтвердження
+    }, [clearErrors]);
+
     const triggerConfirm = useCallback((config: Omit<ConfirmDialogConfig, 'open'>) => {
         setConfirmDialog({ ...config, open: true });
+    }, []);
+
+    // --- Helper to handle errors ---
+    const handleError = useCallback((error: any, defaultMessage: string) => {
+        const messages = error.response?.data?.messages;
+        setErrors(Array.isArray(messages) ? messages : [defaultMessage]);
     }, []);
 
     // --- Export Handler ---
     const handleExportLeaderboard = useCallback(async () => {
         if (!roundId) return;
         setIsExporting(true);
+        clearErrors();
         try {
             const blob = await roundService.exportLeaderboard(roundId);
             const url = window.URL.createObjectURL(blob);
@@ -121,13 +141,13 @@ export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, 
             link.click();
             link.remove();
             window.URL.revokeObjectURL(url);
-        } catch (error) {
-            console.error("Export error:", error);
+        } catch (error: any) {
+            handleError(error, "Помилка експорту лідерборду");
             triggerConfirm({ title: "Export Failed", description: "Failed to download leaderboard file.", confirmColor: "error", onConfirm: closeConfirm });
         } finally {
             setIsExporting(false);
         }
-    }, [roundId, closeConfirm, triggerConfirm]);
+    }, [roundId, closeConfirm, triggerConfirm, clearErrors, handleError]);
 
     // --- Search Handlers ---
     const handleSearchChange = useCallback((value: string) => {
@@ -145,7 +165,7 @@ export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, 
                 const response = await userService.getJuries({ query: inputValue, page: juryPage - 1, size: 10 });
                 setAvailableJuries(response.content || []);
                 setJuryTotalPages(response.totalPages === 0 ? 1 : response.totalPages);
-            } catch (error) {
+            } catch (error: any) {
                 console.error("Search error:", error);
             } finally {
                 setIsSearching(false);
@@ -167,7 +187,7 @@ export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, 
                 });
                 setAvailableSubmissionJuries(response.content || []);
                 setSubJuryTotalPages(response.totalPages === 0 ? 1 : response.totalPages);
-            } catch (error) {
+            } catch (error: any) {
                 console.error("Error fetching submission juries:", error);
             } finally {
                 setIsSubJurySearching(false);
@@ -178,69 +198,75 @@ export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, 
 
     // --- Modal Openers ---
     const handleOpenJuryModal = useCallback(() => {
+        clearErrors();
         setInputValue(""); setJuryPage(1); setSelectedJuryToAssign(null); setJuryModalOpen(true);
-    }, []);
+    }, [clearErrors]);
 
     const handleOpenSubmissionJuryModal = useCallback((submissionId: number) => {
+        clearErrors();
         setSelectedSubmissionId(submissionId); setInputValue(""); setSubJuryPage(1);
         setSelectedJuryToAssign(null); setSubmissionJuryModalOpen(true);
-    }, []);
+    }, [clearErrors]);
 
     const handleOpenAddMissingModal = useCallback(async () => {
         if (!roundId) return;
+        clearErrors();
         setIsTeamsLoading(true);
         setAddMissingModalOpen(true);
         try {
             const response = await roundService.getTeamsNotInRound(roundId, { page: 0, size: 500 });
             setMissingTeams(response.content || []);
             setSelectedMissingIds([]);
-        } catch (error) {
-            console.error(error);
+        } catch (error: any) {
+            handleError(error, "Помилка завантаження відсутніх команд");
         } finally {
             setIsTeamsLoading(false);
         }
-    }, [roundId]);
+    }, [roundId, clearErrors, handleError]);
 
     const handleOpenAdvanceModal = useCallback(async () => {
+        clearErrors();
         setTargetAdvanceRoundId(null);
         setAdvanceModalOpen(true);
         try {
             const rounds = await roundService.getRoundsByRound(roundId, {page: 0, size: 100, status: 'DRAFT'});
             setTournamentRounds(rounds.content);
-        } catch (error) {
-            console.error(error);
+        } catch (error: any) {
+            handleError(error, "Помилка завантаження раундів");
         }
-    }, [roundId]);
+    }, [roundId, clearErrors, handleError]);
 
     // --- Actions ---
     const handleConfirmAddMissing = useCallback(async () => {
         if (!roundId || selectedMissingIds.length === 0) return;
+        clearErrors();
         setIsTeamsLoading(true);
         try {
             await roundService.assignTeams(roundId, selectedMissingIds);
             setAddMissingModalOpen(false);
             await fetchSubmissions();
             triggerConfirm({ title: "Success", description: "Teams assigned successfully!", onConfirm: closeConfirm });
-        } catch (error) {
-            triggerConfirm({ title: "Error", description: "Failed to assign teams", confirmColor: "error", onConfirm: closeConfirm });
+        } catch (error: any) {
+            handleError(error, "Помилка призначення команд");
         } finally {
             setIsTeamsLoading(false);
         }
-    }, [roundId, selectedMissingIds, fetchSubmissions, closeConfirm, triggerConfirm]);
+    }, [roundId, selectedMissingIds, fetchSubmissions, closeConfirm, triggerConfirm, clearErrors, handleError]);
 
     const handleConfirmAdvance = useCallback(async () => {
         if (!targetAdvanceRoundId || selectedAdvanceIds.length === 0) return;
+        clearErrors();
         setIsTeamsLoading(true);
         try {
             await roundService.assignTeams(targetAdvanceRoundId, selectedAdvanceIds);
             setAdvanceModalOpen(false);
             triggerConfirm({ title: "Success", description: "Teams successfully advanced!", onConfirm: closeConfirm });
-        } catch (error) {
-            triggerConfirm({ title: "Error", description: "Failed to advance teams", confirmColor: "error", onConfirm: closeConfirm });
+        } catch (error: any) {
+            handleError(error, "Помилка переведення команд");
         } finally {
             setIsTeamsLoading(false);
         }
-    }, [targetAdvanceRoundId, selectedAdvanceIds, closeConfirm, triggerConfirm]);
+    }, [targetAdvanceRoundId, selectedAdvanceIds, closeConfirm, triggerConfirm, clearErrors, handleError]);
 
     const handleUnassignTeam = useCallback((teamId: number) => {
         triggerConfirm({
@@ -248,36 +274,43 @@ export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, 
             description: "Remove this team from the current round?",
             confirmColor: "error",
             onConfirm: async () => {
-                await roundService.unassignTeams(roundId, [teamId]);
-                await fetchSubmissions();
-                closeConfirm();
+                clearErrors();
+                try {
+                    await roundService.unassignTeams(roundId, [teamId]);
+                    await fetchSubmissions();
+                    closeConfirm();
+                } catch (error: any) {
+                    handleError(error, "Помилка видалення команди");
+                }
             }
         });
-    }, [roundId, fetchSubmissions, closeConfirm, triggerConfirm]);
+    }, [roundId, fetchSubmissions, closeConfirm, triggerConfirm, clearErrors, handleError]);
 
     const handleAssignJury = useCallback(async () => {
         if (!roundId || !selectedJuryToAssign) return;
+        clearErrors();
         try {
             await roundService.setJuryToRound(roundId, selectedJuryToAssign.id);
             setJuryModalOpen(false);
             setSelectedJuryToAssign(null);
             await fetchJury();
-        } catch (error) {
-            console.error(error);
+        } catch (error: any) {
+            handleError(error, "Помилка призначення журі");
         }
-    }, [fetchJury, roundId, selectedJuryToAssign]);
+    }, [fetchJury, roundId, selectedJuryToAssign, clearErrors, handleError]);
 
     const handleAssignJuryToSubmission = useCallback(async (callback?: () => void) => {
         if (!selectedSubmissionId || !selectedJuryToAssign) return;
+        clearErrors();
         try {
             await submissionService.assignJury(selectedSubmissionId, selectedJuryToAssign.id);
             setSubmissionJuryModalOpen(false);
             setSelectedJuryToAssign(null);
             if (callback) callback();
-        } catch (error) {
-            console.error(error);
+        } catch (error: any) {
+            handleError(error, "Помилка призначення журі до сабмішну");
         }
-    }, [selectedSubmissionId, selectedJuryToAssign]);
+    }, [selectedSubmissionId, selectedJuryToAssign, clearErrors, handleError]);
 
     const handleRemoveJuryFromSubmission = useCallback((submissionId: number, juryId: number) => {
         triggerConfirm({
@@ -285,27 +318,34 @@ export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, 
             description: "This jury member will no longer grade this submission. Continue?",
             confirmColor: "error",
             onConfirm: async () => {
-                await submissionService.removeJury(submissionId, juryId);
-                await fetchSubmissions();
-                closeConfirm();
+                clearErrors();
+                try {
+                    await submissionService.removeJury(submissionId, juryId);
+                    await fetchSubmissions();
+                    closeConfirm();
+                } catch (error: any) {
+                    handleError(error, "Помилка видалення журі з сабмішну");
+                }
             }
         });
-    }, [fetchSubmissions, closeConfirm, triggerConfirm]);
+    }, [fetchSubmissions, closeConfirm, triggerConfirm, clearErrors, handleError]);
 
     const handleAutoAssignJuries = useCallback(async () => {
         if (!roundId) return;
+        clearErrors();
         try {
             await roundService.autoAssignJuries(roundId, kValue);
             setAutoAssignModalOpen(false);
             await fetchSubmissions();
             triggerConfirm({ title: "Complete", description: `Juries assigned (k=${kValue}).`, onConfirm: closeConfirm });
-        } catch (error) {
-            triggerConfirm({ title: "Error", description: "Failed to auto-assign", confirmColor: "error", onConfirm: closeConfirm });
+        } catch (error: any) {
+            handleError(error, "Помилка автоматичного призначення журі");
         }
-    }, [roundId, kValue, fetchSubmissions, closeConfirm, triggerConfirm]);
+    }, [roundId, kValue, fetchSubmissions, closeConfirm, triggerConfirm, clearErrors, handleError]);
 
     const handleSaveUpdate = useCallback(async () => {
         if (!roundId || !roundData) return;
+        clearErrors();
         try {
             const payload = {
                 ...editFormData,
@@ -314,11 +354,11 @@ export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, 
             };
             const updated = await roundService.updateRound(roundId, payload as RoundUpdateRequestDto);
             setRoundData(updated);
-            setIsEditingInfo(false);
-        } catch (error) {
-            console.error(error);
+            setIsEditingInfo(false); // will automatically clear errors due to wrapper
+        } catch (error: any) {
+            handleError(error, "Помилка оновлення раунду");
         }
-    }, [editFormData, roundId, roundData, setRoundData]);
+    }, [editFormData, roundId, roundData, setRoundData, clearErrors, handleError]);
 
     const handleStatusChange = useCallback((newStatus: RoundStatus) => {
         const now = new Date();
@@ -359,15 +399,16 @@ export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, 
 
     const handleAddCategory = useCallback(async () => {
         if (!roundId) return;
+        clearErrors();
         try {
             await categoryService.createCategory(roundId, newCategoryData as CategoryRequestDto);
             setCategoryModalOpen(false);
             setNewCategoryData({ title: "", weight: 0.1 });
             await fetchCategories();
-        } catch (error) {
-            console.error(error);
+        } catch (error: any) {
+            handleError(error, "Помилка створення категорії");
         }
-    }, [fetchCategories, roundId, newCategoryData]);
+    }, [fetchCategories, roundId, newCategoryData, clearErrors, handleError]);
 
     const handleDeleteCategory = useCallback((categoryId: number) => {
         triggerConfirm({
@@ -375,25 +416,31 @@ export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, 
             description: "This will remove all its criteria. Continue?",
             confirmColor: "error",
             onConfirm: async () => {
-                await categoryService.deleteCategory(roundId, categoryId);
-                await fetchCategories();
-                closeConfirm();
+                clearErrors();
+                try {
+                    await categoryService.deleteCategory(roundId, categoryId);
+                    await fetchCategories();
+                    closeConfirm();
+                } catch (error: any) {
+                    handleError(error, "Помилка видалення категорії");
+                }
             }
         });
-    }, [roundId, fetchCategories, closeConfirm, triggerConfirm]);
+    }, [roundId, fetchCategories, closeConfirm, triggerConfirm, clearErrors, handleError]);
 
     const handleAddCriteria = useCallback(async () => {
         if (!selectedCategoryId || !newCriteriaText.trim()) return;
+        clearErrors();
         try {
             await criteriaService.createCriteria(selectedCategoryId, { text: newCriteriaText });
             setCriteriaModalOpen(false);
             setNewCriteriaText("");
             setSelectedCategoryId(null);
             await fetchCategories();
-        } catch (error) {
-            console.error(error);
+        } catch (error: any) {
+            handleError(error, "Помилка створення критерія");
         }
-    }, [selectedCategoryId, newCriteriaText, fetchCategories]);
+    }, [selectedCategoryId, newCriteriaText, fetchCategories, clearErrors, handleError]);
 
     const handleDeleteCriteria = useCallback((categoryId: number, criteriaId: number) => {
         triggerConfirm({
@@ -401,12 +448,17 @@ export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, 
             description: "Are you sure?",
             confirmColor: "error",
             onConfirm: async () => {
-                await criteriaService.deleteCriteria(categoryId, criteriaId);
-                await fetchCategories();
-                closeConfirm();
+                clearErrors();
+                try {
+                    await criteriaService.deleteCriteria(categoryId, criteriaId);
+                    await fetchCategories();
+                    closeConfirm();
+                } catch (error: any) {
+                    handleError(error, "Помилка видалення критерія");
+                }
             }
         });
-    }, [fetchCategories, closeConfirm, triggerConfirm]);
+    }, [fetchCategories, closeConfirm, triggerConfirm, clearErrors, handleError]);
 
     const handleRemoveJury = useCallback((juryId: number) => {
         triggerConfirm({
@@ -414,24 +466,30 @@ export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, 
             description: "Remove this jury from the round?",
             confirmColor: "error",
             onConfirm: async () => {
-                await roundService.removeJuryFromRound(roundId, juryId);
-                await fetchJury();
-                closeConfirm();
+                clearErrors();
+                try {
+                    await roundService.removeJuryFromRound(roundId, juryId);
+                    await fetchJury();
+                    closeConfirm();
+                } catch (error: any) {
+                    handleError(error, "Помилка видалення журі");
+                }
             }
         });
-    }, [fetchJury, roundId, closeConfirm, triggerConfirm]);
+    }, [fetchJury, roundId, closeConfirm, triggerConfirm, clearErrors, handleError]);
 
     const handleOpenStats = useCallback(async (teamId: number, e: React.MouseEvent) => {
         e.stopPropagation();
         if (!roundId) return;
+        clearErrors();
         try {
             const stats = await teamService.getTeamStats(teamId, roundId);
             setSelectedStats(stats);
             setStatsModalOpen(true);
-        } catch (error) {
-            console.error(error);
+        } catch (error: any) {
+            handleError(error, "Помилка завантаження статистики");
         }
-    }, [roundId]);
+    }, [roundId, clearErrors, handleError]);
 
     const handleDeleteRound = useCallback(() => {
         triggerConfirm({
@@ -439,11 +497,16 @@ export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, 
             description: "This action cannot be undone. Continue?",
             confirmColor: "error",
             onConfirm: async () => {
-                await roundService.deleteRound(roundId);
-                window.location.href = `/home`;
+                clearErrors();
+                try {
+                    await roundService.deleteRound(roundId);
+                    window.location.href = `/home`;
+                } catch (error: any) {
+                    handleError(error, "Помилка видалення раунду");
+                }
             }
         });
-    }, [roundId, triggerConfirm]);
+    }, [roundId, triggerConfirm, clearErrors, handleError]);
 
     const aggregatedCriteria = useMemo(() => {
         if (!selectedStats?.pointsPerJury) return {};
@@ -460,12 +523,19 @@ export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, 
     }, [selectedStats]);
 
     return {
-        // Modals
-        isEditingInfo, setIsEditingInfo, categoryModalOpen, setCategoryModalOpen,
-        juryModalOpen, setJuryModalOpen, statsModalOpen, setStatsModalOpen,
-        criteriaModalOpen, setCriteriaModalOpen, autoAssignModalOpen, setAutoAssignModalOpen,
-        submissionJuryModalOpen, setSubmissionJuryModalOpen, addMissingModalOpen, setAddMissingModalOpen,
-        advanceModalOpen, setAdvanceModalOpen,
+        // Errors
+        errors, clearErrors,
+
+        // Wrapped Modals (автоматично очищають помилки при закритті)
+        isEditingInfo, setIsEditingInfo: withErrorClear(setIsEditingInfo),
+        categoryModalOpen, setCategoryModalOpen: withErrorClear(setCategoryModalOpen),
+        juryModalOpen, setJuryModalOpen: withErrorClear(setJuryModalOpen),
+        statsModalOpen, setStatsModalOpen: withErrorClear(setStatsModalOpen),
+        criteriaModalOpen, setCriteriaModalOpen: withErrorClear(setCriteriaModalOpen),
+        autoAssignModalOpen, setAutoAssignModalOpen: withErrorClear(setAutoAssignModalOpen),
+        submissionJuryModalOpen, setSubmissionJuryModalOpen: withErrorClear(setSubmissionJuryModalOpen),
+        addMissingModalOpen, setAddMissingModalOpen: withErrorClear(setAddMissingModalOpen),
+        advanceModalOpen, setAdvanceModalOpen: withErrorClear(setAdvanceModalOpen),
 
         // Teams
         missingTeams, selectedMissingIds, setSelectedMissingIds, tournamentRounds,
@@ -479,7 +549,7 @@ export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, 
         juryTotalPages, subJuryPage, setSubJuryPage, subJuryTotalPages,
         handleOpenJuryModal, handleOpenSubmissionJuryModal, handleAssignJury, handleRemoveJury,
         handleAssignJuryToSubmission, handleRemoveJuryFromSubmission, handleAutoAssignJuries,
-        handleSearchChange,
+        handleSearchChange, setKValue, kValue,
 
         // Forms & Stats
         selectedStats, statsViewMode, setStatsViewMode, editFormData, setEditFormData,
@@ -489,9 +559,9 @@ export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, 
         criteriaList: Object.keys(aggregatedCriteria),
 
         // Handlers
-        handleSaveUpdate, handleStatusChange, cancelEditing: () => { resetEditForm(); setIsEditingInfo(false); },
+        handleSaveUpdate, handleStatusChange, cancelEditing: () => { resetEditForm(); clearErrors(); setIsEditingInfo(false); },
         handleAddCategory, handleDeleteCategory, handleAddCriteria, handleDeleteCriteria,
         handleOpenStats, handleDeleteRound, handleExportLeaderboard, isExporting,
-        confirmDialog, closeConfirm
+        confirmDialog, closeConfirm,
     };
 };

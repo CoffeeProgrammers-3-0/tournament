@@ -21,7 +21,8 @@ import PersonRemoveIcon from "@mui/icons-material/PersonRemove";
 import FastForwardIcon from "@mui/icons-material/FastForward";
 import type {TeamLeaderboardResponseDto} from "../../../../entities/team/team.dto";
 import type {RoundFullResponseDto} from "../../../../entities/round/round.dto";
-import FileDownloadIcon from "@mui/icons-material/FileDownload"; // Додайте імпорт
+import FileDownloadIcon from "@mui/icons-material/FileDownload";
+import {ErrorMessages} from "../../../../components/main/ErrorMessages.tsx"; // Додайте імпорт
 
 type Props = {
     tabValue: number;
@@ -37,11 +38,12 @@ type Props = {
     onUnassignTeam: (teamId: number) => void;
     onExportLeaderboard: () => void;
     isExporting: boolean;
+    errors: string[];
 };
 
 export const RoundTeamsTab = ({
                                   tabValue, leaderboard, loadingTab, roundData, onOpenStats, navigate, t,
-                                  isAdmin, onOpenAddMissingTeamsModal, onOpenAdvanceTeamsModal, onUnassignTeam, onExportLeaderboard, isExporting,
+                                  isAdmin, onOpenAddMissingTeamsModal, onOpenAdvanceTeamsModal, onUnassignTeam, onExportLeaderboard, isExporting, errors
                               }: Props) => {
     if (tabValue !== 3) return null;
 
@@ -51,6 +53,7 @@ export const RoundTeamsTab = ({
                 <Typography variant="h5" fontWeight={700}>
                     {t("round_details.tabs.teams")}
                 </Typography>
+                <ErrorMessages errors={errors}/>
 
                 <Button
                     variant="outlined"

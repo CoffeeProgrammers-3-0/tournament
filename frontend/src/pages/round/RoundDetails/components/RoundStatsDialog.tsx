@@ -18,6 +18,7 @@ import {
 import ViewListIcon from "@mui/icons-material/ViewList";
 import ViewModuleIcon from "@mui/icons-material/ViewModule";
 import type {StatisticResponseDto} from "../../../../entities/team/team.dto";
+import {ErrorMessages} from "../../../../components/main/ErrorMessages.tsx";
 
 type Props = {
     open: boolean;
@@ -29,6 +30,7 @@ type Props = {
     juryList: string[];
     criteriaList: string[];
     t: (key: string, options?: any) => string;
+    errors: string[];
 };
 
 export const RoundStatsDialog = ({
@@ -41,6 +43,7 @@ export const RoundStatsDialog = ({
                                      juryList,
                                      criteriaList,
                                      t,
+    errors
                                  }: Props) => {
     return (
         <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
@@ -70,6 +73,7 @@ export const RoundStatsDialog = ({
                     </DialogTitle>
 
                     <DialogContent dividers sx={{ p: 0 }}>
+                        <ErrorMessages errors={errors}/>
                         <TableContainer>
                             <Table size="medium">
                                 <TableHead sx={{ bgcolor: "grey.50" }}>

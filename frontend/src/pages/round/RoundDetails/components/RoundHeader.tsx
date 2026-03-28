@@ -7,6 +7,7 @@ import HowToRegIcon from "@mui/icons-material/HowToReg";
 import DeleteIcon from "@mui/icons-material/Delete";
 import {useTranslation} from "react-i18next";
 import type {RoundFullResponseDto} from "../../../../entities/round/round.dto";
+import {ErrorMessages} from "../../../../components/main/ErrorMessages.tsx";
 
 type Props = {
     roundData: RoundFullResponseDto;
@@ -17,6 +18,7 @@ type Props = {
     navigate: (path: string) => void;
     submissionId: number | null;
     onDelete?: () => void;
+    errors: string[];
 };
 
 export const RoundHeader = ({
@@ -27,7 +29,8 @@ export const RoundHeader = ({
                                 onEdit,
                                 navigate,
                                 submissionId,
-                                onDelete
+                                onDelete,
+    errors
                             }: Props) => {
     const { t } = useTranslation();
     const [timeLeft, setTimeLeft] = useState<string>("");
@@ -93,6 +96,7 @@ export const RoundHeader = ({
                 overflow: "hidden"
             }}
         >
+            <ErrorMessages errors={errors}/>
             <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 2 }}>
                 <Box>
                     <Typography variant="h3" fontWeight={800}>{roundData.name}</Typography>

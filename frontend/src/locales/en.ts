@@ -53,6 +53,7 @@ export const en = {
         "yes_confirm": "Confirm",
         "no": "Cancel",
         "search": "Search",
+        "errors": "Solve this errors"
     },
 
     home: {

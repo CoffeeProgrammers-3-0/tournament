@@ -13,6 +13,7 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import type {CategoryResponseDto} from "../../../../entities/category/category.dto";
+import {ErrorMessages} from "../../../../components/main/ErrorMessages.tsx";
 
 type Props = {
     tabValue: number;
@@ -24,11 +25,12 @@ type Props = {
     onOpenCriteriaModal: (categoryId: number) => void;
     onDeleteCriteria: (categoryId: number, criteriaId: number) => void;
     t: (key: string, options?: any) => string;
+    errors: string[];
 };
 
 export const RoundCategoriesTab = ({
                                        tabValue, categories, loadingTab, isAdmin,
-                                       onOpenCategoryModal, onDeleteCategory, onOpenCriteriaModal, onDeleteCriteria, t
+                                       onOpenCategoryModal, onDeleteCategory, onOpenCriteriaModal, onDeleteCriteria, t, errors
                                    }: Props) => {
     if (tabValue !== 1) return null;
 
@@ -36,6 +38,7 @@ export const RoundCategoriesTab = ({
         <Box>
             <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3, alignItems: "center" }}>
                 <Typography variant="h5" fontWeight={700}>{t("round_details.tabs.categories")}</Typography>
+                <ErrorMessages errors={errors}/>
                 {isAdmin && (
                     <Button variant="contained" color="primary" startIcon={<AddIcon />} onClick={onOpenCategoryModal}>
                         {t("round_details.categories.add_category")}

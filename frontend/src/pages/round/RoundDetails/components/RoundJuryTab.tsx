@@ -14,6 +14,7 @@ import PersonAddAlt1Icon from "@mui/icons-material/PersonAddAlt1";
 import GavelIcon from "@mui/icons-material/Gavel";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import type {UserResponseDto} from "../../../../entities/user/user.dto";
+import {ErrorMessages} from "../../../../components/main/ErrorMessages.tsx";
 
 type Props = {
     tabValue: number;
@@ -23,15 +24,18 @@ type Props = {
     onOpenJuryModal: () => void;
     onRemoveJury: (juryId: number) => void;
     t: (key: string, options?: any) => string;
+    errors: string[];
 };
 
-export const RoundJuryTab = ({ tabValue, jury, loadingTab, isAdmin, onOpenJuryModal, onRemoveJury, t }: Props) => {
+export const RoundJuryTab = ({
+                                 tabValue, jury, loadingTab, isAdmin, onOpenJuryModal, onRemoveJury, t, errors }: Props) => {
     if (tabValue !== 2) return null;
 
     return (
         <Box>
             <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3, alignItems: "center" }}>
                 <Typography variant="h5" fontWeight={700}>{t("round_details.tabs.jury")}</Typography>
+                <ErrorMessages errors={errors}/>
                 {isAdmin && (
                     <Button variant="outlined" color="primary" startIcon={<PersonAddAlt1Icon />} onClick={onOpenJuryModal}>
                         {t("round_details.jury.assign")}
