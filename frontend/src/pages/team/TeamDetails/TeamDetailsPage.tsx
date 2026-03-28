@@ -33,12 +33,13 @@ export const TeamDetailsPage = () => {
         teamData, loading, isAdmin, currentUserId,
         tabValue, setTabValue, membersByTournament,
         canManageTournament, handleAddMember, handleDeleteMember, handlePromote,
-        errors, clearErrors, isActionLoading
+        errors, clearErrors, isActionLoading,
+        isEditingHeader, setIsEditingHeader, headerForm, setHeaderForm, handleUpdateTeam
     } = useTeamDetails();
 
-    const [memberModal, setMemberModal] = useState<{open: boolean, tournamentId: number | null}>({ open: false, tournamentId: null });
+    const [memberModal, setMemberModal] = useState<{ open: boolean, tournamentId: number | null }>({ open: false, tournamentId: null });
     const [newMember, setNewMember] = useState({ fullName: "", email: "", isLeader: false });
-    const [confirm, setConfirm] = useState<{open: boolean, title: string, text: string, onConfirm: () => void} | null>(null);
+    const [confirm, setConfirm] = useState<{ open: boolean, title: string, text: string, onConfirm: () => void } | null>(null);
 
     if (loading) return <Box sx={{ display: "flex", justifyContent: "center", py: 10 }}><CircularProgress /></Box>;
     if (!teamData) return <Typography align="center" sx={{ mt: 5 }}>{t("common.not_found")}</Typography>;
@@ -51,7 +52,24 @@ export const TeamDetailsPage = () => {
 
     return (
         <Container maxWidth="lg" sx={{ pb: 6, pt: 1 }}>
-            <TeamHeader team={teamData} canControl={false} onEdit={() => {}} />
+            {/* Error alerts for header updates */}
+            {errors.length > 0 && !memberModal.open && (
+                <Box sx={{ mb: 3, p: 2, bgcolor: "#fee2e2", border: "1px solid #ef4444", borderRadius: "12px" }}>
+                    {errors.map((err, i) => <Typography key={i} color="error" variant="body2" fontWeight={600}>{err}</Typography>)}
+                </Box>
+            )}
+
+            <TeamHeader
+                team={teamData}
+                isAdmin={isAdmin}
+                isEditing={isEditingHeader}
+                formData={headerForm}
+                setFormData={setHeaderForm}
+                onEdit={() => setIsEditingHeader(true)}
+                onCancel={() => { setIsEditingHeader(false); clearErrors(); }}
+                onSave={handleUpdateTeam}
+                loading={isActionLoading}
+            />
 
             <Tabs value={tabValue} onChange={(_, v) => setTabValue(v)} textColor="secondary" indicatorColor="secondary" sx={{ mb: 4 }}>
                 <Tab label={t("team_details.tabs.members")} />

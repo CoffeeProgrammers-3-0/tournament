@@ -3,8 +3,7 @@ import type {
     StatisticResponseDto,
     TeamCreateRequestDto,
     TeamFullResponseDto,
-    TeamListResponseDto,
-    TeamUpdateRequestDto
+    TeamListResponseDto
 } from "../../entities/team/team.dto.ts";
 import type {UserCreateRequestForTeamDto} from "../../entities/user/user.dto.ts";
 import type {PaginationListResponseDto} from "../../entities/wrappers/wrapper.dto.ts";
@@ -30,7 +29,11 @@ class TeamService extends BaseService {
         return this.post<TeamFullResponseDto>(`/${tournamentId}`, data);
     }
 
-    public updateTeam(teamId: number, data: TeamUpdateRequestDto): Promise<TeamFullResponseDto> {
+    public updateTeam(teamId: number, data: {
+        name: string;
+        organization: string;
+        email: string
+    }): Promise<TeamFullResponseDto> {
         return this.put<TeamFullResponseDto>(`/${teamId}`, data);
     }
 
