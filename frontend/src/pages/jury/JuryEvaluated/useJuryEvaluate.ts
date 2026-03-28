@@ -14,19 +14,26 @@ export const useJuryEvaluate = () => {
 
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [errors, setErrors] = useState<string[]>([]);
+    const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+
     const [submission, setSubmission] = useState<SubmissionFullResponseDto | null>(null);
     const [categories, setCategories] = useState<CategoryResponseDto[]>([]);
     const [scores, setScores] = useState<Record<number, number>>({});
     const [existingScores, setExistingScores] = useState<Record<number, JuryCriteriaResponseDto>>({});
-    const [status, setStatus] = useState<{ type: 'success' | 'error', msg: string } | null>(null);
 
     useEffect(() => {
         const fetchData = async () => {
             if (!submissionId) return;
+            setLoading(true);
+            setErrors([]);
             try {
-                const subData = await submissionService.getSubmissionById(Number(submissionId));
+                const [subData, scoresData] = await Promise.all([
+                    submissionService.getSubmissionById(Number(submissionId)),
+                    juryCriteriaService.getMyScoresForSubmission(Number(submissionId))
+                ]);
+
                 const catData = await categoryService.getCategories(subData.round.id);
-                const scoresData = await juryCriteriaService.getMyScoresForSubmission(Number(submissionId));
 
                 const scoresMap: Record<number, number> = {};
                 const existingMap: Record<number, JuryCriteriaResponseDto> = {};
@@ -41,7 +48,7 @@ export const useJuryEvaluate = () => {
                 setScores(scoresMap);
                 setExistingScores(existingMap);
             } catch (err) {
-                setStatus({ type: 'error', msg: t('jury.errors.load_eval_failed') });
+                setErrors([t('jury.errors.load_eval_failed')]);
             } finally {
                 setLoading(false);
             }
@@ -51,6 +58,14 @@ export const useJuryEvaluate = () => {
 
     const handleScoreChange = (criteriaId: number, value: string) => {
         const numValue = parseInt(value, 10);
+        if (value === "") {
+            setScores(prev => {
+                const next = { ...prev };
+                delete next[criteriaId];
+                return next;
+            });
+            return;
+        }
         if (isNaN(numValue)) return;
         setScores(prev => ({ ...prev, [criteriaId]: Math.min(Math.max(numValue, 0), 100) }));
     };
@@ -58,7 +73,7 @@ export const useJuryEvaluate = () => {
     const handleSaveScores = async () => {
         if (!submissionId) return;
         setSaving(true);
-        setStatus(null);
+        setErrors([]);
 
         try {
             const promises = [];
@@ -68,29 +83,31 @@ export const useJuryEvaluate = () => {
                     if (points === undefined) continue;
 
                     const payload = { value: points };
-                    if (existingScores[criteria.id]) {
-                        if (existingScores[criteria.id].points !== points) {
-                            promises.push(juryCriteriaService.updateScore(Number(submissionId), criteria.id, payload));
-                        }
-                    } else {
+                    // Оновлюємо тільки якщо значення змінилося або ще не існує
+                    if (!existingScores[criteria.id] || existingScores[criteria.id].points !== points) {
                         promises.push(juryCriteriaService.updateScore(Number(submissionId), criteria.id, payload));
                     }
                 }
             }
-            await Promise.all(promises);
-            setStatus({ type: 'success', msg: t('jury.success.scores_saved') });
 
-            // Оновлення стану після успішного збереження
+            await Promise.all(promises);
+            setShowSuccessDialog(true);
+
+            // Рефреш локальних даних
             const updatedScores = await juryCriteriaService.getMyScoresForSubmission(Number(submissionId));
             const newExistingMap: Record<number, JuryCriteriaResponseDto> = {};
             updatedScores.forEach(sc => newExistingMap[sc.criteria.id] = sc);
             setExistingScores(newExistingMap);
-        } catch (err) {
-            setStatus({ type: 'error', msg: t('jury.errors.save_failed') });
+        } catch (err: any) {
+            const messages = err.response?.data?.messages;
+            setErrors(Array.isArray(messages) ? messages : [t('jury.errors.save_failed')]);
         } finally {
             setSaving(false);
         }
     };
 
-    return { submission, categories, scores, loading, saving, status, handleScoreChange, handleSaveScores, t };
+    return {
+        submission, categories, scores, loading, saving, errors, setErrors,
+        showSuccessDialog, setShowSuccessDialog, handleScoreChange, handleSaveScores, t
+    };
 };
