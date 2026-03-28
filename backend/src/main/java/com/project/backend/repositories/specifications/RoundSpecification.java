@@ -3,6 +3,7 @@ package com.project.backend.repositories.specifications;
 import com.project.backend.models.Round;
 import com.project.backend.models.Tournament;
 import com.project.backend.models.constants.RoundStatus;
+import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
 import lombok.extern.slf4j.Slf4j;
@@ -138,5 +139,17 @@ public class RoundSpecification {
 
         return (root, query, cb) ->
                 cb.greaterThanOrEqualTo(root.get("countOfWinners"), count);
+    }
+
+    public static Specification<Round> bySubmissionId(Long submissionId) {
+        log.debug("RoundSpecification.bySubmissionId called with submissionId={}", submissionId);
+        if (submissionId == null) return null;
+
+        return (root, query, cb) -> {
+            query.distinct(true);
+
+            Join<Object, Object> submissionJoin = root.join("submissions");
+            return cb.equal(submissionJoin.get("id"), submissionId);
+        };
     }
 }

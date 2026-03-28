@@ -2,9 +2,12 @@ package com.project.backend.services.implementations;
 
 import com.project.backend.dto.event.SendPasswordEvent;
 import com.project.backend.dto.wrapper.PasswordRequest;
+import com.project.backend.models.Round;
 import com.project.backend.models.User;
 import com.project.backend.models.constants.Role;
+import com.project.backend.repositories.RoundRepository;
 import com.project.backend.repositories.UserRepository;
+import com.project.backend.repositories.specifications.RoundSpecification;
 import com.project.backend.repositories.specifications.UserSpecification;
 import com.project.backend.services.interfaces.UserService;
 import com.project.backend.utils.PasswordGenerationUtil;
@@ -45,6 +48,7 @@ public class UserServiceImpl implements UserService {
     private final String clientUUID;
     private final Map<String, RoleRepresentation> clientRoles;
     private final WebClient webClient;
+    private final RoundRepository roundRepository;
 
     private final ApplicationEventPublisher eventPublisher;
 
@@ -288,9 +292,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Page<User> findAllAvailableJuriesUsersForSubmission(Integer page, Integer size, String query, Long submissionId) {
+        Round round = roundRepository.findOne(RoundSpecification.bySubmissionId(submissionId)).orElseThrow(() -> new EntityNotFoundException("Round for submission with id " + submissionId + " not found"));
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "fullName"));
         return userRepository.findAll(
-                Specification.allOf(UserSpecification.byRole(Role.JURY), UserSpecification.juriesAvailableBySubmissionId(submissionId), UserSpecification.byFullName(query)),
+                Specification.allOf(UserSpecification.juriesByRoundId(round.getId()), UserSpecification.juriesAvailableBySubmissionId(submissionId), UserSpecification.byFullName(query)),
                 pageRequest);
     }
 
