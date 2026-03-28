@@ -21,6 +21,7 @@ import PersonRemoveIcon from "@mui/icons-material/PersonRemove";
 import FastForwardIcon from "@mui/icons-material/FastForward";
 import type {TeamLeaderboardResponseDto} from "../../../../entities/team/team.dto";
 import type {RoundFullResponseDto} from "../../../../entities/round/round.dto";
+import FileDownloadIcon from "@mui/icons-material/FileDownload"; // Додайте імпорт
 
 type Props = {
     tabValue: number;
@@ -34,11 +35,13 @@ type Props = {
     onOpenAddMissingTeamsModal: () => void;
     onOpenAdvanceTeamsModal: () => void;
     onUnassignTeam: (teamId: number) => void;
+    onExportLeaderboard: () => void;
+    isExporting: boolean;
 };
 
 export const RoundTeamsTab = ({
                                   tabValue, leaderboard, loadingTab, roundData, onOpenStats, navigate, t,
-                                  isAdmin, onOpenAddMissingTeamsModal, onOpenAdvanceTeamsModal, onUnassignTeam
+                                  isAdmin, onOpenAddMissingTeamsModal, onOpenAdvanceTeamsModal, onUnassignTeam, onExportLeaderboard, isExporting,
                               }: Props) => {
     if (tabValue !== 3) return null;
 
@@ -48,6 +51,15 @@ export const RoundTeamsTab = ({
                 <Typography variant="h5" fontWeight={700}>
                     {t("round_details.tabs.teams")}
                 </Typography>
+
+                <Button
+                    variant="outlined"
+                    startIcon={isExporting ? <CircularProgress size={20} /> : <FileDownloadIcon />}
+                    onClick={onExportLeaderboard}
+                    disabled={isExporting || leaderboard.length === 0}
+                >
+                    {t("round_details.export_leaderboard")}
+                </Button>
 
                 {isAdmin && (
                     <Box sx={{ display: 'flex', gap: 2 }}>

@@ -28,6 +28,7 @@ import {JuryDialog} from "./RoundDetails/components/JuryDialog";
 import {CriteriaDialog} from "./RoundDetails/components/CriteriaDialog";
 import {RoundSubmissionsTab} from "./RoundDetails/components/RoundSubmissionsTab";
 import {AddMissingTeamsModal, AdvanceTeamsModal} from "./RoundDetails/components/TeamsModal";
+import {UniversalConfirmDialog} from "./RoundDetails/components/UniversalConfirmDialog.tsx";
 
 export const RoundDetailsPage = () => {
     const { t } = useTranslation();
@@ -78,7 +79,7 @@ export const RoundDetailsPage = () => {
                 <Tab label={t("round_details.tabs.info")} />
                 <Tab label={t("round_details.tabs.categories")} />
                 <Tab label={t("round_details.tabs.jury")} />
-                <Tab label={t("round_details.tabs.leaderboard")} />
+                {(isAdmin || details.roundData.status === "EVALUATED" || details.roundData.status === "SUBMISSION_CLOSED")&& <Tab label={t("round_details.tabs.leaderboard")} />}
                 {isAdmin && <Tab label={t("round_details.tabs.submissions")} />}
             </Tabs>
 
@@ -86,7 +87,7 @@ export const RoundDetailsPage = () => {
             <RoundInfoTab tabValue={details.tabValue} roundData={details.roundData} isAdmin={isAdmin} isEditingInfo={editors.isEditingInfo} editFormData={editors.editFormData} setEditFormData={editors.setEditFormData} handleStatusChange={editors.handleStatusChange} handleSaveUpdate={editors.handleSaveUpdate} cancelEditing={() => editors.setIsEditingInfo(false)} t={t} />
             <RoundCategoriesTab tabValue={details.tabValue} categories={details.categories} loadingTab={details.loadingTab} isAdmin={isAdmin} onOpenCategoryModal={() => editors.setCategoryModalOpen(true)} onDeleteCategory={editors.handleDeleteCategory} onOpenCriteriaModal={(cid) => { editors.setSelectedCategoryId(cid); editors.setCriteriaModalOpen(true); }} onDeleteCriteria={editors.handleDeleteCriteria} t={t} />
             <RoundJuryTab tabValue={details.tabValue} jury={details.jury} loadingTab={details.loadingTab} isAdmin={isAdmin} onOpenJuryModal={editors.handleOpenJuryModal} onRemoveJury={editors.handleRemoveJury} t={t} />
-            <RoundTeamsTab tabValue={details.tabValue} leaderboard={details.leaderboard} loadingTab={details.loadingTab} roundData={details.roundData} onOpenStats={editors.handleOpenStats} navigate={details.navigate} t={t} isAdmin={isAdmin} onOpenAddMissingTeamsModal={editors.handleOpenAddMissingModal} onOpenAdvanceTeamsModal={() => editors.handleOpenAdvanceModal(details.leaderboard, details.roundData!.countOfWinners)} onUnassignTeam={editors.handleUnassignTeam} />
+            <RoundTeamsTab tabValue={details.tabValue} leaderboard={details.leaderboard} loadingTab={details.loadingTab} roundData={details.roundData} onOpenStats={editors.handleOpenStats} navigate={details.navigate} t={t} isAdmin={isAdmin} onOpenAddMissingTeamsModal={editors.handleOpenAddMissingModal} onOpenAdvanceTeamsModal={() => editors.handleOpenAdvanceModal()} onUnassignTeam={editors.handleUnassignTeam} onExportLeaderboard={editors.handleExportLeaderboard} isExporting={editors.isExporting}/>
 
             {isAdmin && (
                 <RoundSubmissionsTab tabValue={details.tabValue} submissions={details.submissions} loadingTab={details.loadingTab} page={details.submissionsPage} totalPages={details.submissionsTotalPages} onPageChange={details.fetchSubmissions} onAutoAssign={() => editors.setAutoAssignModalOpen(true)} onAssignManual={editors.handleOpenSubmissionJuryModal} onRemoveJury={editors.handleRemoveJuryFromSubmission} t={t} />
@@ -151,6 +152,11 @@ export const RoundDetailsPage = () => {
                     <Button variant="contained" onClick={editors.handleAutoAssignJuries}>{t("common.apply")}</Button>
                 </DialogActions>
             </Dialog>
+
+            <UniversalConfirmDialog
+                config={editors.confirmDialog}
+                onClose={editors.closeConfirm}
+            />
         </Box>
     );
 };

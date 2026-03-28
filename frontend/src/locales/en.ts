@@ -52,6 +52,7 @@ export const en = {
         "confirm_promote": "Confirm promotion to leader",
         "yes_confirm": "Confirm",
         "no": "Cancel",
+        "search": "Search",
     },
 
     home: {
@@ -170,7 +171,7 @@ export const en = {
                 "name_placeholder": "Describe the tasks for participants in this stage...",
                 "start": "Start Date",
                 "end": "End Date",
-                "winners": "Teams advancing count",
+                "winners": "Team`s members advancing count",
                 "task": "Task Description",
                 "submit": "Create Round"
             }
@@ -337,10 +338,11 @@ export const en = {
         }
     },
     round_details: {
+        "export_leaderboard": "Export Leaderboard",
         "not_found": "Round not found",
         "header": {
             "dates": "Dates:",
-            "winners": "Winners:"
+            "winners": "Winners(members):"
         },
         "tabs": {
             "info": "Information",
@@ -356,7 +358,7 @@ export const en = {
             "status": "Status",
             "start_date": "Start",
             "end_date": "End",
-            "winners_count": "Number of winners",
+            "winners_count": "Number of winners(members)",
             "task": "Task",
             "requirements": "Requirements",
             "no_info": "No information"

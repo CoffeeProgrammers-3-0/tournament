@@ -38,7 +38,7 @@ export const TournamentDetailsPage = () => {
                 onChange={(_, v) => state.setTabValue(v)}
                 sx={{ mb: 4, borderBottom: 1, borderColor: 'divider', '& .MuiTab-root': { fontWeight: 700, fontSize: "1rem" } }}
             >
-                {((state.tournamentData.status === "RUNNING" || state.tournamentData.status === "FINISHED") ? ['info', 'rounds', 'teams'] : ['info', 'rounds']).map((label, idx) => (
+                {((state.tournamentData.status === "RUNNING" || state.tournamentData.status === "FINISHED" || state.isAdmin) ? ['info', 'rounds', 'teams'] : ['info', 'rounds']).map((label, idx) => (
                     <Tab key={idx} label={t(`tournament_details.tabs.${label}`)} />
                 ))}
             </Tabs>
@@ -47,8 +47,8 @@ export const TournamentDetailsPage = () => {
                 {state.tabValue === 0 && <InfoTab state={state} formatDate={formatDate} t={t} />}
                 {state.tabValue === 1 && <RoundsTab state={state} formatDate={formatDate} t={t} navigate={navigate} />}
                 {state.tabValue === 2
-                    && (state.tournamentData.status === "RUNNING" || state.tournamentData.status === "FINISHED")
-                    && <TeamsTab state={state} t={t} navigate={navigate} />}
+                    && ((state.tournamentData.status === "RUNNING" || state.tournamentData.status === "FINISHED" || state.isAdmin)
+                    && <TeamsTab state={state} t={t} navigate={navigate} />)}
             </Box>
 
             <CreateRoundDialog state={state} t={t} tournament={state.tournamentData}/>

@@ -14,11 +14,7 @@ import type {
     RoundUpdateRequestDto
 } from "../../../../entities/round/round.dto";
 import type {CategoryRequestDto} from "../../../../entities/category/category.dto";
-import type {
-    StatisticResponseDto,
-    TeamLeaderboardResponseDto,
-    TeamListResponseDto
-} from "../../../../entities/team/team.dto";
+import type {StatisticResponseDto, TeamListResponseDto} from "../../../../entities/team/team.dto";
 import type {UserResponseDto} from "../../../../entities/user/user.dto";
 
 const formatToLocalDateTime = (dateTimeStr: string) => {
@@ -41,72 +37,112 @@ type Params = {
     currentJury: UserResponseDto[];
 };
 
-export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, fetchJury, fetchSubmissions, currentJury }: Params) => {
+type ConfirmDialogConfig = {
+    open: boolean;
+    title: string;
+    description: string;
+    onConfirm: () => void | Promise<void>;
+    confirmColor?: "primary" | "error" | "secondary";
+    isLoading?: boolean;
+};
 
+export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, fetchJury, fetchSubmissions, currentJury }: Params) => {
+    const roundId = Number(id);
+
+    // --- Pagination States ---
     const [juryPage, setJuryPage] = useState(1);
     const [juryTotalPages, setJuryTotalPages] = useState(1);
-
     const [subJuryPage, setSubJuryPage] = useState(1);
     const [subJuryTotalPages, setSubJuryTotalPages] = useState(1);
 
-    // --- States for Modals ---
+    // --- Modal States ---
     const [isEditingInfo, setIsEditingInfo] = useState(false);
     const [categoryModalOpen, setCategoryModalOpen] = useState(false);
     const [juryModalOpen, setJuryModalOpen] = useState(false);
     const [statsModalOpen, setStatsModalOpen] = useState(false);
     const [criteriaModalOpen, setCriteriaModalOpen] = useState(false);
-
     const [autoAssignModalOpen, setAutoAssignModalOpen] = useState(false);
-    const [kValue, setKValue] = useState<number>(3);
     const [submissionJuryModalOpen, setSubmissionJuryModalOpen] = useState(false);
-    const [selectedSubmissionId, setSelectedSubmissionId] = useState<number | null>(null);
+    const [addMissingModalOpen, setAddMissingModalOpen] = useState(false);
+    const [advanceModalOpen, setAdvanceModalOpen] = useState(false);
 
-    // --- States for Jury Search ---
+    // --- Search & Selection States ---
     const [availableJuries, setAvailableJuries] = useState<UserResponseDto[]>([]);
+    const [availableSubmissionJuries, setAvailableSubmissionJuries] = useState<UserResponseDto[]>([]);
     const [selectedJuryToAssign, setSelectedJuryToAssign] = useState<UserResponseDto | null>(null);
+    const [selectedSubmissionId, setSelectedSubmissionId] = useState<number | null>(null);
     const [inputValue, setInputValue] = useState("");
     const [isSearching, setIsSearching] = useState(false);
+    const [isSubJurySearching, setIsSubJurySearching] = useState(false);
 
-    // --- States for Forms & Stats ---
+    // --- Data States ---
     const [selectedStats, setSelectedStats] = useState<StatisticResponseDto | null>(null);
     const [statsViewMode, setStatsViewMode] = useState<"aggregated" | "detailed">("aggregated");
     const [editFormData, setEditFormData] = useState<RoundUpdateRequestDto>({} as RoundUpdateRequestDto);
     const [newCategoryData, setNewCategoryData] = useState({ title: "", weight: 0.1 });
     const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
     const [newCriteriaText, setNewCriteriaText] = useState("");
-
-    // --- States for ADD MISSING TEAMS ---
-    const [addMissingModalOpen, setAddMissingModalOpen] = useState(false);
     const [missingTeams, setMissingTeams] = useState<TeamListResponseDto[]>([]);
     const [selectedMissingIds, setSelectedMissingIds] = useState<number[]>([]);
-
-    const [availableSubmissionJuries, setAvailableSubmissionJuries] = useState<UserResponseDto[]>([]);
-    const [isSubJurySearching, setIsSubJurySearching] = useState(false);
-
-    // --- States for ADVANCE TEAMS ---
-    const [advanceModalOpen, setAdvanceModalOpen] = useState(false);
     const [targetAdvanceRoundId, setTargetAdvanceRoundId] = useState<number | null>(null);
     const [selectedAdvanceIds, setSelectedAdvanceIds] = useState<number[]>([]);
     const [tournamentRounds, setTournamentRounds] = useState<RoundListResponseDto[]>([]);
 
+    const [kValue, setKValue] = useState<number>(3);
     const [isTeamsLoading, setIsTeamsLoading] = useState(false);
+    const [isExporting, setIsExporting] = useState(false);
 
+    const [confirmDialog, setConfirmDialog] = useState<ConfirmDialogConfig>({
+        open: false,
+        title: "",
+        description: "",
+        onConfirm: () => {},
+        confirmColor: "primary",
+        isLoading: false
+    });
+
+    // --- Confirm Dialog Helpers ---
+    const closeConfirm = useCallback(() => setConfirmDialog(prev => ({ ...prev, open: false })), []);
+    const triggerConfirm = useCallback((config: Omit<ConfirmDialogConfig, 'open'>) => {
+        setConfirmDialog({ ...config, open: true });
+    }, []);
+
+    // --- Export Handler ---
+    const handleExportLeaderboard = useCallback(async () => {
+        if (!roundId) return;
+        setIsExporting(true);
+        try {
+            const blob = await roundService.exportLeaderboard(roundId);
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `leaderboard_round_${roundId}_${new Date().toISOString().slice(0, 10)}.xlsx`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error("Export error:", error);
+            triggerConfirm({ title: "Export Failed", description: "Failed to download leaderboard file.", confirmColor: "error", onConfirm: closeConfirm });
+        } finally {
+            setIsExporting(false);
+        }
+    }, [roundId, closeConfirm, triggerConfirm]);
+
+    // --- Search Handlers ---
     const handleSearchChange = useCallback((value: string) => {
         setInputValue(value);
         setJuryPage(1);
         setSubJuryPage(1);
     }, []);
 
+    // Global Jury Search
     useEffect(() => {
+        if (!juryModalOpen) return;
         const delayDebounceFn = setTimeout(async () => {
-            if (!juryModalOpen) return;
             setIsSearching(true);
             try {
-                // Віднімаємо 1, бо бекенд починає з 0
                 const response = await userService.getJuries({ query: inputValue, page: juryPage - 1, size: 10 });
-
-                // ВАЖЛИВО: Не фільтруємо масив тут, щоб не зламати пагінацію.
-                // Ми передамо currentJury як disabledIds в компонент.
                 setAvailableJuries(response.content || []);
                 setJuryTotalPages(response.totalPages === 0 ? 1 : response.totalPages);
             } catch (error) {
@@ -115,99 +151,82 @@ export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, 
                 setIsSearching(false);
             }
         }, 400);
-
         return () => clearTimeout(delayDebounceFn);
     }, [inputValue, juryPage, juryModalOpen]);
 
-    // --- Пошук для САБМІШН журі ---
+    // Submission Specific Jury Search
     useEffect(() => {
+        if (!submissionJuryModalOpen || !selectedSubmissionId) return;
         const delayDebounceFn = setTimeout(async () => {
-            if (!submissionJuryModalOpen || !selectedSubmissionId) return;
-
             setIsSubJurySearching(true);
             try {
                 const response = await submissionService.getAvailableJuries(selectedSubmissionId, {
                     query: inputValue,
-                    page: subJuryPage - 1, // Віднімаємо 1 для бекенду
+                    page: subJuryPage - 1,
                     size: 10
                 });
-
                 setAvailableSubmissionJuries(response.content || []);
                 setSubJuryTotalPages(response.totalPages === 0 ? 1 : response.totalPages);
             } catch (error) {
-                console.error("Error fetching available submission juries:", error);
+                console.error("Error fetching submission juries:", error);
             } finally {
                 setIsSubJurySearching(false);
             }
         }, 400);
-
         return () => clearTimeout(delayDebounceFn);
     }, [inputValue, subJuryPage, submissionJuryModalOpen, selectedSubmissionId]);
 
-    // Оновлюємо відкриття модалок, щоб скидати вибране та сторінки
+    // --- Modal Openers ---
     const handleOpenJuryModal = useCallback(() => {
-        setInputValue("");
-        setJuryPage(1);
-        setSelectedJuryToAssign(null);
-        setJuryModalOpen(true);
+        setInputValue(""); setJuryPage(1); setSelectedJuryToAssign(null); setJuryModalOpen(true);
     }, []);
 
     const handleOpenSubmissionJuryModal = useCallback((submissionId: number) => {
-        setSelectedSubmissionId(submissionId);
-        setInputValue("");
-        setSubJuryPage(1);
-        setSelectedJuryToAssign(null);
-        setSubmissionJuryModalOpen(true);
+        setSelectedSubmissionId(submissionId); setInputValue(""); setSubJuryPage(1);
+        setSelectedJuryToAssign(null); setSubmissionJuryModalOpen(true);
     }, []);
 
-    // --- Actions for ADD MISSING ---
     const handleOpenAddMissingModal = useCallback(async () => {
-        if (!id) return;
+        if (!roundId) return;
         setIsTeamsLoading(true);
         setAddMissingModalOpen(true);
         try {
-            const response = await roundService.getTeamsNotInRound(Number(id), { page: 0, size: 500 });
+            const response = await roundService.getTeamsNotInRound(roundId, { page: 0, size: 500 });
             setMissingTeams(response.content || []);
             setSelectedMissingIds([]);
         } catch (error) {
-            console.error("Error fetching unassigned teams:", error);
+            console.error(error);
         } finally {
             setIsTeamsLoading(false);
         }
-    }, [id]);
+    }, [roundId]);
 
-    const handleConfirmAddMissing = useCallback(async () => {
-        if (!id || selectedMissingIds.length === 0) return;
-        setIsTeamsLoading(true);
-        try {
-            await roundService.assignTeams(Number(id), selectedMissingIds);
-            setAddMissingModalOpen(false);
-            setSelectedMissingIds([]);
-            await fetchSubmissions();
-        } catch (error) {
-            alert("Failed to assign teams");
-        } finally {
-            setIsTeamsLoading(false);
-        }
-    }, [id, selectedMissingIds, fetchSubmissions]);
-
-    // --- Actions for ADVANCE TEAMS ---
-    const handleOpenAdvanceModal = useCallback(async (currentLeaderboard: TeamLeaderboardResponseDto[], winnersCount: number) => {
-        // Pre-select the top N winners
-        const topTeamIds = currentLeaderboard.slice(0, winnersCount).map(t => t.id);
-        setSelectedAdvanceIds(topTeamIds);
+    const handleOpenAdvanceModal = useCallback(async () => {
         setTargetAdvanceRoundId(null);
         setAdvanceModalOpen(true);
-
-        // Fetch tournament rounds to populate the select dropdown (excluding current round)
         try {
-            // Assuming you have a method to get rounds by tournament ID. Adjust if your service is different.
-            const rounds = await roundService.getRoundsByRound(Number(roundData?.id), {page: 0, size: 100, status: 'DRAFT'});
+            const rounds = await roundService.getRoundsByRound(roundId, {page: 0, size: 100, status: 'DRAFT'});
             setTournamentRounds(rounds.content);
         } catch (error) {
-            console.error("Failed to fetch tournament rounds", error);
+            console.error(error);
         }
-    }, [id, roundData]);
+    }, [roundId]);
+
+    // --- Actions ---
+    const handleConfirmAddMissing = useCallback(async () => {
+        if (!roundId || selectedMissingIds.length === 0) return;
+        setIsTeamsLoading(true);
+        try {
+            await roundService.assignTeams(roundId, selectedMissingIds);
+            setAddMissingModalOpen(false);
+            await fetchSubmissions();
+            triggerConfirm({ title: "Success", description: "Teams assigned successfully!", onConfirm: closeConfirm });
+        } catch (error) {
+            triggerConfirm({ title: "Error", description: "Failed to assign teams", confirmColor: "error", onConfirm: closeConfirm });
+        } finally {
+            setIsTeamsLoading(false);
+        }
+    }, [roundId, selectedMissingIds, fetchSubmissions, closeConfirm, triggerConfirm]);
 
     const handleConfirmAdvance = useCallback(async () => {
         if (!targetAdvanceRoundId || selectedAdvanceIds.length === 0) return;
@@ -215,82 +234,38 @@ export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, 
         try {
             await roundService.assignTeams(targetAdvanceRoundId, selectedAdvanceIds);
             setAdvanceModalOpen(false);
-            alert("Teams successfully advanced to the next round!");
+            triggerConfirm({ title: "Success", description: "Teams successfully advanced!", onConfirm: closeConfirm });
         } catch (error) {
-            alert("Failed to advance teams");
+            triggerConfirm({ title: "Error", description: "Failed to advance teams", confirmColor: "error", onConfirm: closeConfirm });
         } finally {
             setIsTeamsLoading(false);
         }
-    }, [targetAdvanceRoundId, selectedAdvanceIds]);
+    }, [targetAdvanceRoundId, selectedAdvanceIds, closeConfirm, triggerConfirm]);
 
-    // --- Actions for UNASSIGN (Individual) ---
-    const handleUnassignTeam = useCallback(async (teamId: number) => {
-        if (!id || !window.confirm("Remove this team from the current round?")) return;
-        try {
-            await roundService.unassignTeams(Number(id), [teamId]);
-            await fetchSubmissions();
-        } catch (error) {
-            console.error("Error unassigning team:", error);
-        }
-    }, [id, fetchSubmissions]);
-
-    // --- Logic: Search Debounce (For Jury Modal) ---
-    useEffect(() => {
-        const delayDebounceFn = setTimeout(async () => {
-            if (!juryModalOpen) return;
-            setIsSearching(true);
-            try {
-                const response = await userService.getJuries({ query: inputValue, page: 0, size: 20 });
-                const filtered = (response.content || []).filter((user) => !currentJury.some((j) => j.id === user.id));
-                setAvailableJuries(filtered);
-            } catch (error) {
-                console.error("Search error:", error);
-            } finally {
-                setIsSearching(false);
+    const handleUnassignTeam = useCallback((teamId: number) => {
+        triggerConfirm({
+            title: "Remove Team",
+            description: "Remove this team from the current round?",
+            confirmColor: "error",
+            onConfirm: async () => {
+                await roundService.unassignTeams(roundId, [teamId]);
+                await fetchSubmissions();
+                closeConfirm();
             }
-        }, 400);
+        });
+    }, [roundId, fetchSubmissions, closeConfirm, triggerConfirm]);
 
-        return () => clearTimeout(delayDebounceFn);
-    }, [inputValue, juryModalOpen, currentJury]);
-
-    useEffect(() => {
-        const delayDebounceFn = setTimeout(async () => {
-            // Працює тільки коли відкрита модалка призначення на сабмішн
-            if (!submissionJuryModalOpen || !selectedSubmissionId) return;
-
-            setIsSubJurySearching(true);
-            try {
-                const response = await submissionService.getAvailableJuries(selectedSubmissionId, {
-                    query: inputValue,
-                    page: 0,
-                    size: 20
-                });
-                setAvailableSubmissionJuries(response.content || []);
-            } catch (error) {
-                console.error("Error fetching available submission juries:", error);
-            } finally {
-                setIsSubJurySearching(false);
-            }
-        }, 400);
-
-        return () => clearTimeout(delayDebounceFn);
-    }, [inputValue, submissionJuryModalOpen, selectedSubmissionId]);
-
-    // --- Remaining Handlers (Status, Jury, Categories, Criteria, Delete) ---
-    // (Kept exactly as your previous code to ensure nothing breaks)
-
-    const handleAutoAssignJuries = useCallback(async () => {
-        if (!id) return;
+    const handleAssignJury = useCallback(async () => {
+        if (!roundId || !selectedJuryToAssign) return;
         try {
-            await roundService.autoAssignJuries(Number(id), kValue);
-            setAutoAssignModalOpen(false);
-            await fetchSubmissions();
-            alert("Juries auto-assigned successfully!");
+            await roundService.setJuryToRound(roundId, selectedJuryToAssign.id);
+            setJuryModalOpen(false);
+            setSelectedJuryToAssign(null);
+            await fetchJury();
         } catch (error) {
-            console.error("Error auto-assigning juries:", error);
+            console.error(error);
         }
-    }, [id, kValue, fetchSubmissions]);
-
+    }, [fetchJury, roundId, selectedJuryToAssign]);
 
     const handleAssignJuryToSubmission = useCallback(async (callback?: () => void) => {
         if (!selectedSubmissionId || !selectedJuryToAssign) return;
@@ -300,17 +275,74 @@ export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, 
             setSelectedJuryToAssign(null);
             if (callback) callback();
         } catch (error) {
-            console.error("Error assigning jury:", error);
+            console.error(error);
         }
     }, [selectedSubmissionId, selectedJuryToAssign]);
 
-    const handleRemoveJuryFromSubmission = useCallback(async (submissionId: number, juryId: number) => {
+    const handleRemoveJuryFromSubmission = useCallback((submissionId: number, juryId: number) => {
+        triggerConfirm({
+            title: "Remove Jury",
+            description: "This jury member will no longer grade this submission. Continue?",
+            confirmColor: "error",
+            onConfirm: async () => {
+                await submissionService.removeJury(submissionId, juryId);
+                await fetchSubmissions();
+                closeConfirm();
+            }
+        });
+    }, [fetchSubmissions, closeConfirm, triggerConfirm]);
+
+    const handleAutoAssignJuries = useCallback(async () => {
+        if (!roundId) return;
         try {
-            await submissionService.removeJury(submissionId, juryId);
+            await roundService.autoAssignJuries(roundId, kValue);
+            setAutoAssignModalOpen(false);
+            await fetchSubmissions();
+            triggerConfirm({ title: "Complete", description: `Juries assigned (k=${kValue}).`, onConfirm: closeConfirm });
         } catch (error) {
-            console.error("Error removing jury:", error);
+            triggerConfirm({ title: "Error", description: "Failed to auto-assign", confirmColor: "error", onConfirm: closeConfirm });
         }
-    }, []);
+    }, [roundId, kValue, fetchSubmissions, closeConfirm, triggerConfirm]);
+
+    const handleSaveUpdate = useCallback(async () => {
+        if (!roundId || !roundData) return;
+        try {
+            const payload = {
+                ...editFormData,
+                startDate: formatToLocalDateTime(editFormData.startDate),
+                endDate: formatToLocalDateTime(editFormData.endDate),
+            };
+            const updated = await roundService.updateRound(roundId, payload as RoundUpdateRequestDto);
+            setRoundData(updated);
+            setIsEditingInfo(false);
+        } catch (error) {
+            console.error(error);
+        }
+    }, [editFormData, roundId, roundData, setRoundData]);
+
+    const handleStatusChange = useCallback((newStatus: RoundStatus) => {
+        const now = new Date();
+        let sDate = editFormData.startDate ? new Date(editFormData.startDate) : new Date();
+        let eDate = editFormData.endDate ? new Date(editFormData.endDate) : new Date(now.getTime() + 86400000);
+
+        if (newStatus === "DRAFT" && sDate <= now) {
+            sDate = new Date(now.getTime() + 86400000);
+            eDate = new Date(sDate.getTime() + 86400000);
+        } else if (newStatus === "ACTIVE") {
+            if (sDate > now) sDate = new Date(now.getTime() - 60000);
+            if (eDate <= now) eDate = new Date(now.getTime() + 86400000);
+        } else if (["SUBMISSION_CLOSED", "EVALUATED"].includes(newStatus)) {
+            if (eDate > now) eDate = new Date(now.getTime() - 60000);
+            if (sDate >= eDate) sDate = new Date(eDate.getTime() - 86400000);
+        }
+
+        setEditFormData(prev => ({
+            ...prev,
+            status: newStatus,
+            startDate: toDateTimeLocal(sDate),
+            endDate: toDateTimeLocal(eDate)
+        }));
+    }, [editFormData]);
 
     const resetEditForm = useCallback(() => {
         if (!roundData) return;
@@ -325,70 +357,30 @@ export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, 
         } as RoundUpdateRequestDto);
     }, [roundData]);
 
-    const handleSaveUpdate = useCallback(async () => {
-        if (!id || !roundData) return;
-        try {
-            const payload = {
-                ...editFormData,
-                startDate: formatToLocalDateTime(editFormData.startDate),
-                endDate: formatToLocalDateTime(editFormData.endDate),
-            };
-            const updated = await roundService.updateRound(Number(id), payload as RoundUpdateRequestDto);
-            setRoundData(updated);
-            setIsEditingInfo(false);
-        } catch (error) {
-            console.error("Update round error:", error);
-        }
-    }, [editFormData, id, roundData, setRoundData]);
-
-    const handleStatusChange = useCallback((newStatus: RoundStatus) => {
-        const now = new Date();
-        let newStartDate = editFormData.startDate ? new Date(editFormData.startDate) : new Date();
-        let newEndDate = editFormData.endDate ? new Date(editFormData.endDate) : new Date(now.getTime() + 86400000);
-
-        if (newStatus === "DRAFT") {
-            if (newStartDate <= now) {
-                newStartDate = new Date(now.getTime() + 86400000);
-                newEndDate = new Date(newStartDate.getTime() + 86400000);
-            }
-        } else if (newStatus === "ACTIVE") {
-            if (newStartDate > now) newStartDate = new Date(now.getTime() - 60000);
-            if (newEndDate <= now) newEndDate = new Date(now.getTime() + 86400000);
-        } else if (newStatus === "SUBMISSION_CLOSED" || newStatus === "EVALUATED") {
-            if (newEndDate > now) newEndDate = new Date(now.getTime() - 60000);
-            if (newStartDate >= newEndDate) newStartDate = new Date(newEndDate.getTime() - 86400000);
-        }
-
-        setEditFormData(prev => ({ ...prev, status: newStatus, startDate: toDateTimeLocal(newStartDate), endDate: toDateTimeLocal(newEndDate) }));
-    }, [editFormData.endDate, editFormData.startDate]);
-
-    const cancelEditing = useCallback(() => {
-        resetEditForm();
-        setIsEditingInfo(false);
-    }, [resetEditForm]);
-
     const handleAddCategory = useCallback(async () => {
-        if (!id) return;
+        if (!roundId) return;
         try {
-            await categoryService.createCategory(Number(id), newCategoryData as CategoryRequestDto);
+            await categoryService.createCategory(roundId, newCategoryData as CategoryRequestDto);
             setCategoryModalOpen(false);
             setNewCategoryData({ title: "", weight: 0.1 });
             await fetchCategories();
         } catch (error) {
-            console.error("Error creating category:", error);
+            console.error(error);
         }
-    }, [fetchCategories, id, newCategoryData]);
+    }, [fetchCategories, roundId, newCategoryData]);
 
-    const handleDeleteCategory = useCallback(async (categoryId: number) => {
-        if (!id) return;
-        if (!window.confirm("Are you sure you want to delete this category?")) return;
-        try {
-            await categoryService.deleteCategory(Number(id), categoryId);
-            await fetchCategories();
-        } catch (error) {
-            console.error("Error deleting category:", error);
-        }
-    }, [id, fetchCategories]);
+    const handleDeleteCategory = useCallback((categoryId: number) => {
+        triggerConfirm({
+            title: "Delete Category",
+            description: "This will remove all its criteria. Continue?",
+            confirmColor: "error",
+            onConfirm: async () => {
+                await categoryService.deleteCategory(roundId, categoryId);
+                await fetchCategories();
+                closeConfirm();
+            }
+        });
+    }, [roundId, fetchCategories, closeConfirm, triggerConfirm]);
 
     const handleAddCriteria = useCallback(async () => {
         if (!selectedCategoryId || !newCriteriaText.trim()) return;
@@ -399,59 +391,63 @@ export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, 
             setSelectedCategoryId(null);
             await fetchCategories();
         } catch (error) {
-            console.error("Error creating criteria:", error);
+            console.error(error);
         }
     }, [selectedCategoryId, newCriteriaText, fetchCategories]);
 
-    const handleDeleteCriteria = useCallback(async (categoryId: number, criteriaId: number) => {
-        if (!window.confirm("Are you sure you want to delete this criteria?")) return;
-        try {
-            await criteriaService.deleteCriteria(categoryId, criteriaId);
-            await fetchCategories();
-        } catch (error) {
-            console.error("Error deleting criteria:", error);
-        }
-    }, [fetchCategories]);
+    const handleDeleteCriteria = useCallback((categoryId: number, criteriaId: number) => {
+        triggerConfirm({
+            title: "Delete Criteria",
+            description: "Are you sure?",
+            confirmColor: "error",
+            onConfirm: async () => {
+                await criteriaService.deleteCriteria(categoryId, criteriaId);
+                await fetchCategories();
+                closeConfirm();
+            }
+        });
+    }, [fetchCategories, closeConfirm, triggerConfirm]);
 
-
-    const handleAssignJury = useCallback(async () => {
-        if (!id || !selectedJuryToAssign) return;
-        try {
-            await roundService.setJuryToRound(Number(id), selectedJuryToAssign.id);
-            setJuryModalOpen(false);
-            setSelectedJuryToAssign(null);
-            await fetchJury();
-        } catch (error) {
-            console.error("Error assigning jury:", error);
-        }
-    }, [fetchJury, id, selectedJuryToAssign]);
-
-    const handleRemoveJury = useCallback(async (juryId: number) => {
-        if (!id) return;
-        try {
-            await roundService.removeJuryFromRound(Number(id), juryId);
-            await fetchJury();
-        } catch (error) {
-            console.error("Error removing jury:", error);
-        }
-    }, [fetchJury, id]);
+    const handleRemoveJury = useCallback((juryId: number) => {
+        triggerConfirm({
+            title: "Remove Jury",
+            description: "Remove this jury from the round?",
+            confirmColor: "error",
+            onConfirm: async () => {
+                await roundService.removeJuryFromRound(roundId, juryId);
+                await fetchJury();
+                closeConfirm();
+            }
+        });
+    }, [fetchJury, roundId, closeConfirm, triggerConfirm]);
 
     const handleOpenStats = useCallback(async (teamId: number, e: React.MouseEvent) => {
         e.stopPropagation();
-        if (!id) return;
+        if (!roundId) return;
         try {
-            const stats = await teamService.getTeamStats(teamId, Number(id));
+            const stats = await teamService.getTeamStats(teamId, roundId);
             setSelectedStats(stats);
             setStatsModalOpen(true);
         } catch (error) {
-            console.error("Error fetching team stats:", error);
+            console.error(error);
         }
-    }, [id]);
+    }, [roundId]);
+
+    const handleDeleteRound = useCallback(() => {
+        triggerConfirm({
+            title: "Delete Round",
+            description: "This action cannot be undone. Continue?",
+            confirmColor: "error",
+            onConfirm: async () => {
+                await roundService.deleteRound(roundId);
+                window.location.href = `/home`;
+            }
+        });
+    }, [roundId, triggerConfirm]);
 
     const aggregatedCriteria = useMemo(() => {
-        if (!selectedStats || !selectedStats.pointsPerJury) return {};
+        if (!selectedStats?.pointsPerJury) return {};
         const result: Record<string, { total: number; count: number }> = {};
-
         Object.values(selectedStats.pointsPerJury).forEach(juryScores => {
             if (!juryScores) return;
             Object.entries(juryScores).forEach(([criteria, points]) => {
@@ -460,85 +456,42 @@ export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, 
                 result[criteria].count += 1;
             });
         });
-
         return result;
     }, [selectedStats]);
 
-    const handleDeleteRound = useCallback(async () => {
-        if (!id || !roundData) return;
-        if (!window.confirm("Are you sure you want to delete this round? This action cannot be undone.")) return;
-        try {
-            await roundService.deleteRound(Number(id));
-            alert("Round deleted successfully");
-            window.location.href = `/home`;
-        } catch (error) {
-            console.error("Error deleting round:", error);
-            alert("Failed to delete round");
-        }
-    }, [id, roundData]);
-
-    const juryList = selectedStats?.pointsPerJury ? Object.keys(selectedStats.pointsPerJury) : [];
-    const criteriaList = Object.keys(aggregatedCriteria);
-
     return {
-        // Core Modals & States
-        isEditingInfo, setIsEditingInfo,
-        categoryModalOpen, setCategoryModalOpen,
-        juryModalOpen, setJuryModalOpen,
-        statsModalOpen, setStatsModalOpen,
-        criteriaModalOpen, setCriteriaModalOpen,
-
-        // Team Management States
-        addMissingModalOpen, setAddMissingModalOpen,
-        missingTeams,
-        selectedMissingIds, setSelectedMissingIds,
+        // Modals
+        isEditingInfo, setIsEditingInfo, categoryModalOpen, setCategoryModalOpen,
+        juryModalOpen, setJuryModalOpen, statsModalOpen, setStatsModalOpen,
+        criteriaModalOpen, setCriteriaModalOpen, autoAssignModalOpen, setAutoAssignModalOpen,
+        submissionJuryModalOpen, setSubmissionJuryModalOpen, addMissingModalOpen, setAddMissingModalOpen,
         advanceModalOpen, setAdvanceModalOpen,
-        tournamentRounds,
-        targetAdvanceRoundId, setTargetAdvanceRoundId,
-        selectedAdvanceIds, setSelectedAdvanceIds,
-        isTeamsLoading,
 
-        // Team Management Handlers
-        handleOpenAddMissingModal,
-        handleConfirmAddMissing,
-        handleOpenAdvanceModal,
-        handleConfirmAdvance,
-        handleUnassignTeam,
+        // Teams
+        missingTeams, selectedMissingIds, setSelectedMissingIds, tournamentRounds,
+        targetAdvanceRoundId, setTargetAdvanceRoundId, selectedAdvanceIds, setSelectedAdvanceIds,
+        isTeamsLoading, handleOpenAddMissingModal, handleConfirmAddMissing,
+        handleOpenAdvanceModal, handleConfirmAdvance, handleUnassignTeam,
 
-        // Jury States
-        availableJuries,
-        selectedJuryToAssign, setSelectedJuryToAssign,
-        inputValue, setInputValue,
-        isSearching,
+        // Jury
+        availableJuries, availableSubmissionJuries, selectedJuryToAssign, setSelectedJuryToAssign,
+        inputValue, setInputValue, isSearching, isSubJurySearching, juryPage, setJuryPage,
+        juryTotalPages, subJuryPage, setSubJuryPage, subJuryTotalPages,
+        handleOpenJuryModal, handleOpenSubmissionJuryModal, handleAssignJury, handleRemoveJury,
+        handleAssignJuryToSubmission, handleRemoveJuryFromSubmission, handleAutoAssignJuries,
+        handleSearchChange,
 
-        // Form & Stats States
-        selectedStats,
-        statsViewMode, setStatsViewMode,
-        editFormData, setEditFormData,
-        newCategoryData, setNewCategoryData,
-        selectedCategoryId, setSelectedCategoryId,
-        newCriteriaText, setNewCriteriaText,
-        aggregatedCriteria,
-        juryList,
-        criteriaList,
+        // Forms & Stats
+        selectedStats, statsViewMode, setStatsViewMode, editFormData, setEditFormData,
+        newCategoryData, setNewCategoryData, selectedCategoryId, setSelectedCategoryId,
+        newCriteriaText, setNewCriteriaText, aggregatedCriteria,
+        juryList: selectedStats?.pointsPerJury ? Object.keys(selectedStats.pointsPerJury) : [],
+        criteriaList: Object.keys(aggregatedCriteria),
 
-        // Standard Handlers
-        handleSaveUpdate, handleStatusChange, cancelEditing,
+        // Handlers
+        handleSaveUpdate, handleStatusChange, cancelEditing: () => { resetEditForm(); setIsEditingInfo(false); },
         handleAddCategory, handleDeleteCategory, handleAddCriteria, handleDeleteCriteria,
-        handleOpenJuryModal, handleAssignJury, handleRemoveJury, handleOpenStats, handleDeleteRound,
-
-        // Auto Assign & Submissions
-        autoAssignModalOpen, setAutoAssignModalOpen,
-        kValue, setKValue,
-        submissionJuryModalOpen, setSubmissionJuryModalOpen,
-        selectedSubmissionId, setSelectedSubmissionId,
-        handleAutoAssignJuries,
-        handleOpenSubmissionJuryModal,
-        handleAssignJuryToSubmission,
-        handleRemoveJuryFromSubmission,
-        availableSubmissionJuries, // Додаємо в return
-        isSubJurySearching,
-        handleSearchChange,juryPage, setJuryPage, juryTotalPages,
-        subJuryPage, setSubJuryPage, subJuryTotalPages,
+        handleOpenStats, handleDeleteRound, handleExportLeaderboard, isExporting,
+        confirmDialog, closeConfirm
     };
 };
