@@ -5,7 +5,11 @@ import {roundService} from "../../../services/impl/RoundService";
 import {teamService} from "../../../services/impl/TeamService";
 
 import type {RoundListResponseDto, RoundStatus} from '../../../entities/round/round.dto';
-import type {TournamentFullResponseDto, TournamentUpdateRequestDto} from "../../../entities/tournament/tournament.dto";
+import type {
+    TournamentFullResponseDto,
+    TournamentStatus,
+    TournamentUpdateRequestDto
+} from "../../../entities/tournament/tournament.dto";
 import type {TeamListResponseDto} from "../../../entities/team/team.dto";
 import Cookies from "js-cookie";
 
@@ -100,8 +104,42 @@ export const useTournamentDetails = () => {
     }, [tabValue, tournamentId, selectedRoundStatus]);
 
     // --- ХЕНДЛЕРИ ТУРНІРУ ---
-    const handleStatusChange = (newStatus: string) => {
-        setEditFormData(prev => ({ ...prev, status: newStatus as any }));
+    const handleStatusChange = (newStatus: TournamentStatus) => {
+        // Функція-хелпер для отримання локальної дати у форматі YYYY-MM-DDTHH:mm
+        const getLocalDateTime = (date: Date) => {
+            const offset = date.getTimezoneOffset() * 60000; // зміщення в мілісекундах
+            const localISOTime = new Date(date.getTime() - offset).toISOString().slice(0, 16);
+            return localISOTime;
+        };
+
+        const nowDate = new Date();
+        const nowStr = getLocalDateTime(nowDate);
+
+        // Додаємо 24 години (86400000 мс)
+        const tomorrowDate = new Date(nowDate.getTime() + 86400000);
+        const tomorrowStr = getLocalDateTime(tomorrowDate);
+
+        setEditFormData(prev => {
+            const updated = { ...prev, status: newStatus };
+
+            switch (newStatus) {
+                case 'REGISTRATION':
+                    updated.startRegistration = nowStr;
+                    updated.endRegistration = tomorrowStr;
+                    updated.startTournament = tomorrowStr;
+                    break;
+
+                case 'RUNNING':
+                    updated.startTournament = nowStr;
+                    updated.endRegistration = nowStr;
+                    break;
+
+                case 'FINISHED':
+                    // Можна зафіксувати дату завершення, якщо є таке поле
+                    break;
+            }
+            return updated;
+        });
     };
 
     const handleSaveUpdate = async () => {

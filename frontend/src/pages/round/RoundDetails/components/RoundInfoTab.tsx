@@ -1,6 +1,38 @@
-import {Box, Button, Divider, Grid, MenuItem, TextField, Typography} from "@mui/material";
+import {Box, Button, Divider, Grid, MenuItem, Paper, TextField, Typography} from "@mui/material";
 import SaveIcon from "@mui/icons-material/Save";
+import ReactQuill from "react-quill-new";
+import "react-quill-new/dist/quill.snow.css";
+import DOMPurify from "dompurify";
 import type {RoundFullResponseDto, RoundStatus, RoundUpdateRequestDto} from "../../../../entities/round/round.dto";
+
+// Налаштування панелі інструментів для редактора
+const quillModules = {
+    toolbar: [
+        [{'header': [1, 2, 3, false]}],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{'list': 'ordered'}, {'list': 'bullet'}],
+        ['link', 'clean']
+    ],
+};
+
+// Стилі для того, щоб Quill виглядав як частина MUI
+const quillStyle = {
+    '.ql-toolbar': {
+        borderColor: 'rgba(0, 0, 0, 0.23)',
+        borderRadius: '4px 4px 0 0',
+        fontFamily: 'inherit',
+    },
+    '.ql-container': {
+        borderColor: 'rgba(0, 0, 0, 0.23)',
+        borderRadius: '0 0 4px 4px',
+        fontSize: '1rem',
+        minHeight: '150px',
+        fontFamily: 'inherit',
+    },
+    '.ql-editor': {
+        minHeight: '150px',
+    }
+};
 
 type Props = {
     tabValue: number;
@@ -27,6 +59,11 @@ export const RoundInfoTab = ({
                                  t,
                              }: Props) => {
     if (tabValue !== 0) return null;
+
+    // Функція для безпечного рендерингу HTML
+    const createMarkup = (html: string) => {
+        return { __html: DOMPurify.sanitize(html) };
+    };
 
     return (
         <Grid container spacing={4}>
@@ -80,25 +117,35 @@ export const RoundInfoTab = ({
                             value={editFormData.countOfWinners}
                             onChange={(e) => setEditFormData({ ...editFormData, countOfWinners: Number(e.target.value) })}
                         />
-                        <TextField
-                            fullWidth
-                            multiline
-                            rows={4}
-                            label={t("round_details.info.task")}
-                            value={editFormData.task}
-                            onChange={(e) => setEditFormData({ ...editFormData, task: e.target.value })}
-                        />
-                        <TextField
-                            fullWidth
-                            multiline
-                            rows={4}
-                            label={t("round_details.info.requirements")}
-                            value={editFormData.requirements}
-                            onChange={(e) => setEditFormData({ ...editFormData, requirements: e.target.value })}
-                        />
 
-                        <Box sx={{ display: "flex", gap: 2 }}>
-                            <Button variant="contained" startIcon={<SaveIcon />} onClick={handleSaveUpdate}>
+                        {/* Редактор для ЗАВДАННЯ */}
+                        <Box sx={quillStyle}>
+                            <Typography variant="caption" sx={{ color: 'text.secondary', ml: 1 }}>
+                                {t("round_details.info.task")}
+                            </Typography>
+                            <ReactQuill
+                                theme="snow"
+                                value={editFormData.task || ""}
+                                modules={quillModules}
+                                onChange={(val: any) => setEditFormData(prev => ({ ...prev, task: val }))}
+                            />
+                        </Box>
+
+                        {/* Редактор для ВИМОГ */}
+                        <Box sx={quillStyle}>
+                            <Typography variant="caption" sx={{ color: 'text.secondary', ml: 1 }}>
+                                {t("round_details.info.requirements")}
+                            </Typography>
+                            <ReactQuill
+                                theme="snow"
+                                value={editFormData.requirements || ""}
+                                modules={quillModules}
+                                onChange={(val: any) => setEditFormData(prev => ({ ...prev, requirements: val }))}
+                            />
+                        </Box>
+
+                        <Box sx={{ display: "flex", gap: 2, mt: 1 }}>
+                            <Button variant="contained" startIcon={<SaveIcon />} onClick={handleSaveUpdate} sx={{ fontWeight: 700 }}>
                                 {t("round_details.admin.save")}
                             </Button>
                             <Button variant="outlined" onClick={cancelEditing}>
@@ -112,18 +159,36 @@ export const RoundInfoTab = ({
                             <Typography variant="h6" fontWeight={700} gutterBottom color="primary.main">
                                 {t("round_details.info.task")}
                             </Typography>
-                            <Typography variant="body1" sx={{ whiteSpace: "pre-line", fontSize: "1.1rem", lineHeight: 1.8 }}>
-                                {roundData.task || t("round_details.info.no_info")}
-                            </Typography>
+                            <Paper variant="outlined" sx={{ p: 2, bgcolor: '#fafafa', borderRadius: 2 }}>
+                                <Typography
+                                    component="div"
+                                    sx={{
+                                        lineHeight: 1.8,
+                                        '& ul, & ol': { pl: 3 }, // Стилізація списків всередині HTML
+                                        fontSize: '1.05rem'
+                                    }}
+                                    dangerouslySetInnerHTML={createMarkup(roundData.task || t("round_details.info.no_info"))}
+                                />
+                            </Paper>
                         </Box>
+
                         <Divider />
+
                         <Box>
                             <Typography variant="h6" fontWeight={700} gutterBottom color="error.main">
                                 {t("round_details.info.requirements")}
                             </Typography>
-                            <Typography variant="body1" sx={{ whiteSpace: "pre-line", fontSize: "1.1rem", lineHeight: 1.8 }}>
-                                {roundData.requirements || t("round_details.info.no_info")}
-                            </Typography>
+                            <Paper variant="outlined" sx={{ p: 2, bgcolor: '#fafafa', borderRadius: 2 }}>
+                                <Typography
+                                    component="div"
+                                    sx={{
+                                        lineHeight: 1.8,
+                                        '& ul, & ol': { pl: 3 },
+                                        fontSize: '1.05rem'
+                                    }}
+                                    dangerouslySetInnerHTML={createMarkup(roundData.requirements || t("round_details.info.no_info"))}
+                                />
+                            </Paper>
                         </Box>
                     </Box>
                 )}

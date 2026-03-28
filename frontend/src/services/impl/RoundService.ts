@@ -35,6 +35,8 @@ class RoundService extends BaseService {
         super('/tournaments');
     }
 
+    // --- Робота з раундами ---
+
     public createRound(tournamentId: number, data: RoundCreateRequestDto): Promise<RoundFullResponseDto> {
         return this.post<RoundFullResponseDto>(`/${tournamentId}/rounds`, data);
     }
@@ -51,6 +53,7 @@ class RoundService extends BaseService {
         return this.get<PaginationListResponseDto<RoundListResponseDto>>(`/${tournamentId}/rounds`, { params });
     }
 
+    // Зверніть увагу: у контролері шлях /roundsByRound/{round_id}
     public getRoundsByRound(roundId: number, params: RoundQueryParams): Promise<PaginationListResponseDto<RoundListResponseDto>> {
         return this.get<PaginationListResponseDto<RoundListResponseDto>>(`/roundsByRound/${roundId}`, { params });
     }
@@ -58,6 +61,8 @@ class RoundService extends BaseService {
     public getRoundById(roundId: number): Promise<RoundFullResponseDto> {
         return this.get<RoundFullResponseDto>(`/rounds/${roundId}`);
     }
+
+    // --- Журі ---
 
     public setJuryToRound(roundId: number, juryId: number): Promise<void> {
         return this.post<void>(`/rounds/${roundId}/juries/${juryId}`);
@@ -71,46 +76,48 @@ class RoundService extends BaseService {
         return this.post<void>(`/rounds/${roundId}/auto-assign-juries`, {}, { params: { k } });
     }
 
-    public getLeaderboardForRound(roundId: number, params: LeaderboardQueryParams): Promise<TeamLeaderboardResponseDto[]> {
-        return this.get<TeamLeaderboardResponseDto[]>(`/rounds/${roundId}/leaderboard`, { params });
-    }
-
     public getJuriesByRound(roundId: number, params: {query?: string, page: number, size: number}): Promise<PaginationListResponseDto<UserResponseDto>> {
         return this.get<PaginationListResponseDto<UserResponseDto>>(`/rounds/${roundId}/juries`, { params });
     }
 
-    // --- Методи для керування командами в раунді ---
+    // --- Лідерборд ---
 
-    // PUT: /rounds/{round_id}/assign-teams?team_ids=1,2,3
+    public getLeaderboardForRound(roundId: number, params: LeaderboardQueryParams): Promise<TeamLeaderboardResponseDto[]> {
+        return this.get<TeamLeaderboardResponseDto[]>(`/rounds/${roundId}/leaderboard`, { params });
+    }
+
+    // Додано метод для експорту (повертає Blob для завантаження файлу)
+    public exportLeaderboard(roundId: number): Promise<Blob> {
+        return this.get<Blob>(`/rounds/${roundId}/leaderboard/export`, { responseType: 'blob' });
+    }
+
+    // --- Керування командами в раунді ---
+
     public assignTeams(roundId: number, teamIds: number[]): Promise<void> {
         return this.put<void>(`/rounds/${roundId}/assign-teams`, {}, {
-            params: { team_ids: teamIds.join(',') }
+            params: { team_ids: teamIds }
         });
     }
 
-    // DELETE: /rounds/{round_id}/unassign-teams?team_ids=1,2,3
     public unassignTeams(roundId: number, teamIds: number[]): Promise<void> {
         return this.delete<void>(`/rounds/${roundId}/unassign-teams`, {
-            params: { team_ids: teamIds.join(',') }
+            params: { team_ids: teamIds }
         });
     }
 
-    // PUT: /rounds/{round_id}/assign-all-teams
     public assignAllTeams(roundId: number): Promise<void> {
         return this.put<void>(`/rounds/${roundId}/assign-all-teams`);
     }
 
-    // DELETE: /rounds/{round_id}/unassign-all-teams
     public unassignAllTeams(roundId: number): Promise<void> {
         return this.delete<void>(`/rounds/${roundId}/unassign-all-teams`);
     }
 
-    // // GET: /rounds/{round_id}/teams
-    // public getTeamsInRound(roundId: number, params: TeamSearchParams): Promise<PaginationListResponseDto<TeamListResponseDto>> {
-    //     return this.get<PaginationListResponseDto<TeamListResponseDto>>(`/rounds/${roundId}/teams`, { params });
-    // }
+    // Розкоментував і виправив назву відповідно до контролера
+    public getTeamsInRound(roundId: number, params: TeamSearchParams): Promise<PaginationListResponseDto<TeamListResponseDto>> {
+        return this.get<PaginationListResponseDto<TeamListResponseDto>>(`/rounds/${roundId}/teams`, { params });
+    }
 
-    // GET: /rounds/{round_id}/not-teams (Команди турніру, яких немає в цьому раунді)
     public getTeamsNotInRound(roundId: number, params: TeamSearchParams): Promise<PaginationListResponseDto<TeamListResponseDto>> {
         return this.get<PaginationListResponseDto<TeamListResponseDto>>(`/rounds/${roundId}/not-teams`, { params });
     }

@@ -97,9 +97,45 @@ export const RoundDetailsPage = () => {
             <CategoryDialog open={editors.categoryModalOpen} onClose={() => editors.setCategoryModalOpen(false)} newCategoryData={editors.newCategoryData} setNewCategoryData={editors.setNewCategoryData} onSubmit={editors.handleAddCategory} t={t} />
             <CriteriaDialog open={editors.criteriaModalOpen} onClose={() => editors.setCriteriaModalOpen(false)} newCriteriaText={editors.newCriteriaText} setNewCriteriaText={editors.setNewCriteriaText} onSubmit={editors.handleAddCriteria} t={t} />
 
-            {/* Jury Management (Global & Submission-specific) */}
-            <JuryDialog open={editors.juryModalOpen} onClose={() => editors.setJuryModalOpen(false)} availableJuries={editors.availableJuries} selectedJury={editors.selectedJuryToAssign} setSelectedJury={editors.setSelectedJuryToAssign} onSubmit={editors.handleAssignJury} t={t} inputValue={editors.inputValue} onInputChange={editors.setInputValue} loading={editors.isSearching} />
-            <JuryDialog open={editors.submissionJuryModalOpen} onClose={() => editors.setSubmissionJuryModalOpen(false)} availableJuries={editors.availableJuriesForSubmission} selectedJury={editors.selectedJuryToAssign} setSelectedJury={editors.setSelectedJuryToAssign} onSubmit={editors.handleAssignJuryToSubmission} t={t} inputValue={editors.inputValue} onInputChange={editors.setInputValue} loading={false} />
+            {/* Модалка для Глобального журі раунду */}
+            <JuryDialog
+                open={editors.juryModalOpen}
+                onClose={() => editors.setJuryModalOpen(false)}
+                availableJuries={editors.availableJuries}
+                selectedJury={editors.selectedJuryToAssign}
+                setSelectedJury={editors.setSelectedJuryToAssign}
+                onSubmit={editors.handleAssignJury}
+                t={t}
+                inputValue={editors.inputValue}
+                onInputChange={editors.handleSearchChange}
+                loading={editors.isSearching}
+                // Пагінація
+                page={editors.juryPage}
+                totalPages={editors.juryTotalPages}
+                onPageChange={(_, newPage) => editors.setJuryPage(newPage)}
+                // Блокуємо тих, хто вже призначений в раунд
+                disabledIds={details.jury.map(j => j.id)}
+            />
+
+            {/* Модалка для Сабмішну */}
+            <JuryDialog
+                open={editors.submissionJuryModalOpen}
+                onClose={() => editors.setSubmissionJuryModalOpen(false)}
+                availableJuries={editors.availableSubmissionJuries}
+                selectedJury={editors.selectedJuryToAssign}
+                setSelectedJury={editors.setSelectedJuryToAssign}
+                onSubmit={editors.handleAssignJuryToSubmission}
+                t={t}
+                inputValue={editors.inputValue}
+                onInputChange={editors.handleSearchChange}
+                loading={editors.isSubJurySearching}
+                // Пагінація
+                page={editors.subJuryPage}
+                totalPages={editors.subJuryTotalPages}
+                onPageChange={(_, newPage) => editors.setSubJuryPage(newPage)}
+                // Тут disabledIds не потрібен, бо ендпоінт getAvailableJuries
+                // і так повертає лише тих, кого можна додати.
+            />
 
             {/* Teams Management Modals */}
             <AddMissingTeamsModal open={editors.addMissingModalOpen} onClose={() => editors.setAddMissingModalOpen(false)} teams={editors.missingTeams} selectedIds={editors.selectedMissingIds} onSelect={(tid: number) => editors.setSelectedMissingIds(prev => prev.includes(tid) ? prev.filter(x => x !== tid) : [...prev, tid])} onConfirm={editors.handleConfirmAddMissing} isLoading={editors.isTeamsLoading} />
@@ -108,7 +144,7 @@ export const RoundDetailsPage = () => {
             <Dialog open={editors.autoAssignModalOpen} onClose={() => editors.setAutoAssignModalOpen(false)}>
                 <DialogTitle>{t("round_details.submissions.auto_assign_title")}</DialogTitle>
                 <DialogContent>
-                    <TextField type="number" fullWidth value={editors.kValue} onChange={(e) => editors.setKValue(Number(e.target.value))} inputProps={{ min: 1 }} />
+                    <TextField type="number" fullWidth value={editors.kValue} onChange={(e) => editors.setKValue(Number(e.target.value))} inputProps={{ min: 2 }} />
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => editors.setAutoAssignModalOpen(false)}>{t("common.cancel")}</Button>

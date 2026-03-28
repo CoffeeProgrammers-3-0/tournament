@@ -7,7 +7,12 @@ import {userService} from "../../../../services/impl/UserService";
 import {criteriaService} from "../../../../services/impl/CriteriaService";
 import {submissionService} from "../../../../services/impl/SubmissionService";
 
-import type {RoundFullResponseDto, RoundStatus, RoundUpdateRequestDto} from "../../../../entities/round/round.dto";
+import type {
+    RoundFullResponseDto,
+    RoundListResponseDto,
+    RoundStatus,
+    RoundUpdateRequestDto
+} from "../../../../entities/round/round.dto";
 import type {CategoryRequestDto} from "../../../../entities/category/category.dto";
 import type {
     StatisticResponseDto,
@@ -37,6 +42,12 @@ type Params = {
 };
 
 export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, fetchJury, fetchSubmissions, currentJury }: Params) => {
+
+    const [juryPage, setJuryPage] = useState(1);
+    const [juryTotalPages, setJuryTotalPages] = useState(1);
+
+    const [subJuryPage, setSubJuryPage] = useState(1);
+    const [subJuryTotalPages, setSubJuryTotalPages] = useState(1);
 
     // --- States for Modals ---
     const [isEditingInfo, setIsEditingInfo] = useState(false);
@@ -69,13 +80,85 @@ export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, 
     const [missingTeams, setMissingTeams] = useState<TeamListResponseDto[]>([]);
     const [selectedMissingIds, setSelectedMissingIds] = useState<number[]>([]);
 
+    const [availableSubmissionJuries, setAvailableSubmissionJuries] = useState<UserResponseDto[]>([]);
+    const [isSubJurySearching, setIsSubJurySearching] = useState(false);
+
     // --- States for ADVANCE TEAMS ---
     const [advanceModalOpen, setAdvanceModalOpen] = useState(false);
     const [targetAdvanceRoundId, setTargetAdvanceRoundId] = useState<number | null>(null);
     const [selectedAdvanceIds, setSelectedAdvanceIds] = useState<number[]>([]);
-    const [tournamentRounds, setTournamentRounds] = useState<RoundFullResponseDto[]>([]);
+    const [tournamentRounds, setTournamentRounds] = useState<RoundListResponseDto[]>([]);
 
     const [isTeamsLoading, setIsTeamsLoading] = useState(false);
+
+    const handleSearchChange = useCallback((value: string) => {
+        setInputValue(value);
+        setJuryPage(1);
+        setSubJuryPage(1);
+    }, []);
+
+    useEffect(() => {
+        const delayDebounceFn = setTimeout(async () => {
+            if (!juryModalOpen) return;
+            setIsSearching(true);
+            try {
+                // Віднімаємо 1, бо бекенд починає з 0
+                const response = await userService.getJuries({ query: inputValue, page: juryPage - 1, size: 10 });
+
+                // ВАЖЛИВО: Не фільтруємо масив тут, щоб не зламати пагінацію.
+                // Ми передамо currentJury як disabledIds в компонент.
+                setAvailableJuries(response.content || []);
+                setJuryTotalPages(response.totalPages === 0 ? 1 : response.totalPages);
+            } catch (error) {
+                console.error("Search error:", error);
+            } finally {
+                setIsSearching(false);
+            }
+        }, 400);
+
+        return () => clearTimeout(delayDebounceFn);
+    }, [inputValue, juryPage, juryModalOpen]);
+
+    // --- Пошук для САБМІШН журі ---
+    useEffect(() => {
+        const delayDebounceFn = setTimeout(async () => {
+            if (!submissionJuryModalOpen || !selectedSubmissionId) return;
+
+            setIsSubJurySearching(true);
+            try {
+                const response = await submissionService.getAvailableJuries(selectedSubmissionId, {
+                    query: inputValue,
+                    page: subJuryPage - 1, // Віднімаємо 1 для бекенду
+                    size: 10
+                });
+
+                setAvailableSubmissionJuries(response.content || []);
+                setSubJuryTotalPages(response.totalPages === 0 ? 1 : response.totalPages);
+            } catch (error) {
+                console.error("Error fetching available submission juries:", error);
+            } finally {
+                setIsSubJurySearching(false);
+            }
+        }, 400);
+
+        return () => clearTimeout(delayDebounceFn);
+    }, [inputValue, subJuryPage, submissionJuryModalOpen, selectedSubmissionId]);
+
+    // Оновлюємо відкриття модалок, щоб скидати вибране та сторінки
+    const handleOpenJuryModal = useCallback(() => {
+        setInputValue("");
+        setJuryPage(1);
+        setSelectedJuryToAssign(null);
+        setJuryModalOpen(true);
+    }, []);
+
+    const handleOpenSubmissionJuryModal = useCallback((submissionId: number) => {
+        setSelectedSubmissionId(submissionId);
+        setInputValue("");
+        setSubJuryPage(1);
+        setSelectedJuryToAssign(null);
+        setSubmissionJuryModalOpen(true);
+    }, []);
 
     // --- Actions for ADD MISSING ---
     const handleOpenAddMissingModal = useCallback(async () => {
@@ -120,7 +203,7 @@ export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, 
         try {
             // Assuming you have a method to get rounds by tournament ID. Adjust if your service is different.
             const rounds = await roundService.getRoundsByRound(Number(roundData?.id), {page: 0, size: 100, status: 'DRAFT'});
-            setTournamentRounds(rounds.content.filter(r => r.id !== Number(id)));
+            setTournamentRounds(rounds.content);
         } catch (error) {
             console.error("Failed to fetch tournament rounds", error);
         }
@@ -170,11 +253,28 @@ export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, 
         return () => clearTimeout(delayDebounceFn);
     }, [inputValue, juryModalOpen, currentJury]);
 
-    const availableJuriesForSubmission = useMemo(() => {
-        if (!inputValue.trim()) return currentJury;
-        const lowerQ = inputValue.toLowerCase();
-        return currentJury.filter(j => j.fullName.toLowerCase().includes(lowerQ) || j.email.toLowerCase().includes(lowerQ));
-    }, [currentJury, inputValue]);
+    useEffect(() => {
+        const delayDebounceFn = setTimeout(async () => {
+            // Працює тільки коли відкрита модалка призначення на сабмішн
+            if (!submissionJuryModalOpen || !selectedSubmissionId) return;
+
+            setIsSubJurySearching(true);
+            try {
+                const response = await submissionService.getAvailableJuries(selectedSubmissionId, {
+                    query: inputValue,
+                    page: 0,
+                    size: 20
+                });
+                setAvailableSubmissionJuries(response.content || []);
+            } catch (error) {
+                console.error("Error fetching available submission juries:", error);
+            } finally {
+                setIsSubJurySearching(false);
+            }
+        }, 400);
+
+        return () => clearTimeout(delayDebounceFn);
+    }, [inputValue, submissionJuryModalOpen, selectedSubmissionId]);
 
     // --- Remaining Handlers (Status, Jury, Categories, Criteria, Delete) ---
     // (Kept exactly as your previous code to ensure nothing breaks)
@@ -191,11 +291,6 @@ export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, 
         }
     }, [id, kValue, fetchSubmissions]);
 
-    const handleOpenSubmissionJuryModal = useCallback((submissionId: number) => {
-        setSelectedSubmissionId(submissionId);
-        setInputValue("");
-        setSubmissionJuryModalOpen(true);
-    }, []);
 
     const handleAssignJuryToSubmission = useCallback(async (callback?: () => void) => {
         if (!selectedSubmissionId || !selectedJuryToAssign) return;
@@ -318,10 +413,6 @@ export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, 
         }
     }, [fetchCategories]);
 
-    const handleOpenJuryModal = useCallback(() => {
-        setInputValue("");
-        setJuryModalOpen(true);
-    }, []);
 
     const handleAssignJury = useCallback(async () => {
         if (!id || !selectedJuryToAssign) return;
@@ -416,7 +507,6 @@ export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, 
 
         // Jury States
         availableJuries,
-        availableJuriesForSubmission,
         selectedJuryToAssign, setSelectedJuryToAssign,
         inputValue, setInputValue,
         isSearching,
@@ -446,5 +536,9 @@ export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, 
         handleOpenSubmissionJuryModal,
         handleAssignJuryToSubmission,
         handleRemoveJuryFromSubmission,
+        availableSubmissionJuries, // Додаємо в return
+        isSubJurySearching,
+        handleSearchChange,juryPage, setJuryPage, juryTotalPages,
+        subJuryPage, setSubJuryPage, subJuryTotalPages,
     };
 };

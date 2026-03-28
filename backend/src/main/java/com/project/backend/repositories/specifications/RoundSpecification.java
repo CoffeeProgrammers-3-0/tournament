@@ -41,7 +41,10 @@ public class RoundSpecification {
                     .where(cb.equal(subqueryRoot.get("id"), roundId));
 
             // 2. Filter the main Round query by that Tournament ID
-            return cb.equal(root.get("tournament").get("id"), tournamentIdSubquery);
+            return cb.and(
+                    cb.equal(root.get("tournament").get("id"), tournamentIdSubquery),
+                    cb.notEqual(root.get("id"), roundId) // Виключаємо вхідний раунд
+            );
         };
     }
 
