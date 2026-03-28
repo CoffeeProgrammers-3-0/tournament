@@ -14,10 +14,11 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import SaveIcon from "@mui/icons-material/Save";
 import {useCreateTeam} from "./useCreateTeam";
 import {TeamMembersForm} from "./components/TeamMembersForm";
+import {ErrorMessages} from "../../../components/main/ErrorMessages.tsx";
 
 export const CreateTeamPage = () => {
     const {
-        formData, loading, fetchingTournament, error, success, limits,
+        formData, loading, fetchingTournament, errors, success, limits,
         handleTeamChange, handleUserChange, addUser, removeUser, handleSubmit,
         navigate, t
     } = useCreateTeam();
@@ -38,7 +39,7 @@ export const CreateTeamPage = () => {
 
                 <Divider sx={{ mb: 4 }} />
 
-                {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
+                <ErrorMessages errors={errors} />
                 {success && <Alert severity="success" sx={{ mb: 3 }}>{t("team_create.success")}</Alert>}
 
                 <Grid container spacing={3}>

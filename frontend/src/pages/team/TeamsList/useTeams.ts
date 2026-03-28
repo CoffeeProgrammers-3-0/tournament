@@ -6,11 +6,11 @@ import type {TeamListResponseDto} from "../../../entities/team/team.dto.ts";
 const ITEMS_PER_PAGE = 6;
 
 export const useTeams = () => {
-    const userRole = Cookies.get("role") || "USER";
-    const isAdmin = userRole === "ADMIN";
+    const isAdmin = Cookies.get("role") === "ADMIN";
 
     const [teams, setTeams] = useState<TeamListResponseDto[]>([]);
     const [loading, setLoading] = useState(true);
+    const [errors, setErrors] = useState<string[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [debouncedSearch, setDebouncedSearch] = useState("");
     const [page, setPage] = useState(1);
@@ -25,7 +25,7 @@ export const useTeams = () => {
 
     const fetchTeams = useCallback(async () => {
         setLoading(true);
-
+        setErrors([]);
         try {
             const params = {
                 page: page - 1,
@@ -39,8 +39,9 @@ export const useTeams = () => {
 
             setTeams(response.content ?? []);
             setTotalPages(response.totalPages ?? 1);
-        } catch (e) {
-            console.error(e);
+        } catch (e: any) {
+            const messages = e.response?.data?.messages;
+            setErrors(Array.isArray(messages) ? messages : ["Помилка завантаження"]);
         } finally {
             setLoading(false);
         }
@@ -51,36 +52,25 @@ export const useTeams = () => {
     }, [fetchTeams]);
 
     const deleteTeam = useCallback(async (teamId: number) => {
-        if (!isAdmin) return;
-
+        if (!isAdmin) return false;
+        setErrors([]);
         try {
             await teamService.deleteTeam(teamId);
-
             setTeams((prev) => {
                 const updated = prev.filter((t) => t.id !== teamId);
-
-                // якщо сторінка стала пустою
-                if (updated.length === 0 && page > 1) {
-                    setPage((p) => p - 1);
-                }
-
+                if (updated.length === 0 && page > 1) setPage((p) => p - 1);
                 return updated;
             });
-        } catch (e) {
-            console.error(e);
-            alert("Failed to delete team");
+            return true;
+        } catch (e: any) {
+            const messages = e.response?.data?.messages;
+            setErrors(Array.isArray(messages) ? messages : ["Не вдалося видалити команду"]);
+            return false;
         }
     }, [isAdmin, page]);
 
     return {
-        teams,
-        loading,
-        searchQuery,
-        setSearchQuery,
-        page,
-        setPage,
-        totalPages,
-        isAdmin,
-        deleteTeam
+        teams, loading, searchQuery, setSearchQuery,
+        page, setPage, totalPages, isAdmin, deleteTeam, errors, setErrors
     };
 };

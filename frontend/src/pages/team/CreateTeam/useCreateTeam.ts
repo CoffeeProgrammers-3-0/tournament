@@ -12,7 +12,7 @@ export const useCreateTeam = () => {
 
     const [loading, setLoading] = useState(false);
     const [fetchingTournament, setFetchingTournament] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const [errors, setErrors] = useState<string[]>([]);
     const [success, setSuccess] = useState(false);
 
     // Ліміти учасників
@@ -76,12 +76,20 @@ export const useCreateTeam = () => {
         }));
     };
 
+    const clearErrors = () => setErrors([]);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!tournamentId) return setError(t("team_create.errors.choose_tournament"));
+        clearErrors();
+
+        if (!tournamentId) {
+            setErrors([t("team_create.errors.choose_tournament")]);
+            return;
+        }
 
         if (formData.users.length < limits.min) {
-            return setError(t("team_create.errors.min_members", { count: limits.min }));
+            setErrors([t("team_create.errors.min_members", { count: limits.min })]);
+            return;
         }
 
         setLoading(true);
@@ -90,15 +98,17 @@ export const useCreateTeam = () => {
             setSuccess(true);
             setTimeout(() => navigate(`/tournaments/${tournamentId}`), 2000);
         } catch (err: any) {
-            setError(err.response?.data?.message || t("team_create.errors.error"));
+            const messages = err.response?.data?.messages;
+            // Якщо бекенд кидає масив messages — беремо його, інакше — стандартну помилку
+            setErrors(Array.isArray(messages) ? messages : [err.response?.data?.message || t("team_create.errors.error")]);
         } finally {
             setLoading(false);
         }
     };
 
     return {
-        formData, loading, fetchingTournament, error, success, limits,
+        formData, loading, fetchingTournament, errors, success, limits,
         handleTeamChange, handleUserChange, addUser, removeUser, handleSubmit,
-        navigate, t
+        navigate, t, clearErrors
     };
 };

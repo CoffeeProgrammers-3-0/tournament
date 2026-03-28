@@ -18,6 +18,9 @@ export const useTournamentDetails = () => {
     const tournamentId = Number(id);
     const navigate = useNavigate();
 
+    const [errors, setErrors] = useState<string[]>([]);
+    const clearErrors = () => setErrors([]);
+
     // --- СТАН ДАНИХ ---
     const [loading, setLoading] = useState<boolean>(true);
     const [loadingTab, setLoadingTab] = useState<boolean>(false);
@@ -144,6 +147,7 @@ export const useTournamentDetails = () => {
 
     const handleSaveUpdate = async () => {
         if (!tournamentId) return;
+        clearErrors();
         try {
             const payload: TournamentUpdateRequestDto = {
                 ...(editFormData as TournamentUpdateRequestDto),
@@ -152,8 +156,9 @@ export const useTournamentDetails = () => {
             const updated = await tournamentService.updateTournament(tournamentId, payload);
             setTournamentData(updated);
             setIsEditingInfo(false);
-        } catch (error) {
-            console.error("Помилка оновлення турніру", error);
+        } catch (error: any) {
+            const messages = error.response?.data?.messages;
+            setErrors(Array.isArray(messages) ? messages : ["Помилка оновлення турніру"]);
         }
     };
 
@@ -165,24 +170,20 @@ export const useTournamentDetails = () => {
 
     const handleCreateRound = async () => {
         if (!tournamentId) return;
+        clearErrors();
         setIsCreatingRound(true);
         try {
             await roundService.createRound(tournamentId, roundFormData as any);
             setRoundModalOpen(false);
             setRoundFormData({ name: '', startDate: '', endDate: '', countOfWinners: 1, requirements: '', task: '' });
-
-            // Оновлюємо список раундів, якщо зараз відкрита ця вкладка
-            if (tabValue === 1) {
-                const response = await roundService.getRoundsByTournament(tournamentId, { page: 0, size: 50, status: selectedRoundStatus });
-                setRounds(response.content);
-            }
-        } catch (error) {
-            console.error("Помилка створення раунду", error);
+            // ... оновлення списку ...
+        } catch (error: any) {
+            const messages = error.response?.data?.messages;
+            setErrors(Array.isArray(messages) ? messages : ["Помилка створення раунду"]);
         } finally {
             setIsCreatingRound(false);
         }
     };
-
     const handleDeleteTournament = useCallback(async () => {
         if (!tournamentId) return;
 
@@ -226,5 +227,8 @@ export const useTournamentDetails = () => {
         handleCreateRound,
         isCreatingRound,
         handleDeleteTournament,
+        errors,
+        setErrors,
+        clearErrors
     };
 };

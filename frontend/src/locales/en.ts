@@ -132,7 +132,7 @@ export const en = {
                 "startTournament": "Start Date",
                 "startReg": "Registration Start",
                 "endReg": "Registration End",
-                "maxTeams": "Max Teams",
+                "maxTeams": "Max members of Team",
                 "rounds": "Rounds Count"
             }
         }

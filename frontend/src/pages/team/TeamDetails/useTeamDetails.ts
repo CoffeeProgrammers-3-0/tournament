@@ -77,27 +77,56 @@ export const useTeamDetails = () => {
         return { can: true, reason: "LEADER_BEFORE_START" };
     }, [teamData, currentUserId, isAdmin, membersByTournament]);
 
+    const [errors, setErrors] = useState<string[]>([]);
+    const [isActionLoading, setIsActionLoading] = useState(false);
+
+    const clearErrors = () => setErrors([]);
+
     const handleAddMember = async (member: UserCreateRequestForTeamDto, tournamentId: number) => {
         if (!teamData || !tournamentId) return;
-        const updated = await teamService.addMember(teamData.id, tournamentId, member);
-        setTeamData(updated);
+        clearErrors();
+        setIsActionLoading(true);
+        try {
+            const updated = await teamService.addMember(teamData.id, tournamentId, member);
+            setTeamData(updated);
+            return true; // для закриття модалки в компоненті
+        } catch (err: any) {
+            const messages = err.response?.data?.messages;
+            setErrors(Array.isArray(messages) ? messages : ["Не вдалося додати учасника"]);
+            return false;
+        } finally {
+            setIsActionLoading(false);
+        }
     };
 
     const handleDeleteMember = async (userId: number, tournamentId: number) => {
         if (!teamData) return;
-        const updated = await teamService.removeMember(teamData.id, userId, tournamentId);
-        setTeamData(updated);
+        clearErrors();
+        try {
+            const updated = await teamService.removeMember(teamData.id, userId, tournamentId);
+            setTeamData(updated);
+        } catch (err: any) {
+            // Оскільки видалення зазвичай у простому діалозі,
+            // можемо вивести помилку через window.alert або окремий стейт
+            alert(err.response?.data?.messages?.[0] || "Помилка видалення");
+        }
     };
 
     const handlePromote = async (userId: number, tournamentId: number) => {
         if (!teamData) return;
-        const updated = await teamService.setTeamLeader(teamData.id, userId, tournamentId);
-        setTeamData(updated);
+        clearErrors();
+        try {
+            const updated = await teamService.setTeamLeader(teamData.id, userId, tournamentId);
+            setTeamData(updated);
+        } catch (err: any) {
+            alert(err.response?.data?.messages?.[0] || "Помилка призначення лідера");
+        }
     };
 
     return {
         teamData, loading, isAdmin, currentUserId,
         tabValue, setTabValue, membersByTournament,
-        canManageTournament, handleAddMember, handleDeleteMember, handlePromote
+        canManageTournament, handleAddMember, handleDeleteMember, handlePromote,
+        errors, clearErrors, isActionLoading,
     };
 };

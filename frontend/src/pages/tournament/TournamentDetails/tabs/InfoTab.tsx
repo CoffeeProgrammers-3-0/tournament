@@ -1,5 +1,6 @@
 import {Box, Button, Card, CardContent, Divider, Grid, MenuItem, Paper, TextField, Typography} from "@mui/material";
 import SaveIcon from "@mui/icons-material/Save";
+import {ErrorMessages} from "../../../../components/main/ErrorMessages.tsx";
 
 export const InfoTab = ({ state, formatDate, t }: any) => {
     return (
@@ -8,6 +9,7 @@ export const InfoTab = ({ state, formatDate, t }: any) => {
                 {state.isEditingInfo ? (
                     <Paper sx={{ p: 4, borderRadius: "24px", border: "1px solid #e0e0e0" }}>
                         <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                            <ErrorMessages errors={state.errors} />
                             <Grid container spacing={2}>
                                 <Grid size={{ xs: 12, sm: 8 }}>
                                     <TextField fullWidth label={t("tournaments.admin.fields.name")} value={state.editFormData.name} onChange={(e) => state.setEditFormData({ ...state.editFormData, name: e.target.value })} />
@@ -29,13 +31,13 @@ export const InfoTab = ({ state, formatDate, t }: any) => {
                                     <TextField fullWidth type="datetime-local" label={t("tournaments.admin.fields.startReg")} InputLabelProps={{ shrink: true }} value={state.editFormData.startRegistration} onChange={(e) => state.setEditFormData({ ...state.editFormData, startRegistration: e.target.value })} />
                                 </Grid>
                                 <Grid size={{xs: 12, sm: 6}}>
-                                    <TextField fullWidth type="datetime-local" label={t("tournaments.admin.fields.endReg")} InputLabelProps={{ shrink: true }} value={state.editFormData.endRegistration} onChange={(e) => state.setEditFormData({ ...state.editFormData, endRegistration: e.target.value })} />
+                                    <TextField fullWidth type="datetime-local" label={t("tournaments.admin.fields.endReg")} InputLabelProps={{ shrink: true }} value={state.editFormData.endRegistration} onChange={(e) => state.setEditFormData({ ...state.editFormData, endRegistration: e.target.value })} inputProps={{ min: state.editFormData.startRegistration || undefined }} />
                                 </Grid>
                                 <Grid size={{xs: 6, sm: 6}}>
-                                    <TextField fullWidth type="number" label={t("tournaments.admin.fields.maxTeams")} value={state.editFormData.maxCountOfTeam} onChange={(e) => state.setEditFormData({ ...state.editFormData, maxCountOfTeam: Number(e.target.value) })} />
+                                    <TextField fullWidth type="number" label={t("tournaments.admin.fields.maxTeams")} value={state.editFormData.maxCountOfTeam} onChange={(e) => state.setEditFormData({ ...state.editFormData, maxCountOfTeam: Number(e.target.value) })} inputProps={{ min: 1 }} />
                                 </Grid>
                                 <Grid size={{xs: 6, sm: 6}}>
-                                    <TextField fullWidth type="number" label={t("tournaments.admin.fields.rounds")} value={state.editFormData.countOfRounds} onChange={(e) => state.setEditFormData({ ...state.editFormData, countOfRounds: Number(e.target.value) })} />
+                                    <TextField fullWidth type="number" label={t("tournaments.admin.fields.rounds")} value={state.editFormData.countOfRounds} onChange={(e) => state.setEditFormData({ ...state.editFormData, countOfRounds: Number(e.target.value) })} inputProps={{ min: 1 }} />
                                 </Grid>
                             </Grid>
 

@@ -32,7 +32,8 @@ export const TeamDetailsPage = () => {
     const {
         teamData, loading, isAdmin, currentUserId,
         tabValue, setTabValue, membersByTournament,
-        canManageTournament, handleAddMember, handleDeleteMember, handlePromote
+        canManageTournament, handleAddMember, handleDeleteMember, handlePromote,
+        errors, clearErrors, isActionLoading
     } = useTeamDetails();
 
     const [memberModal, setMemberModal] = useState<{open: boolean, tournamentId: number | null}>({ open: false, tournamentId: null });
@@ -41,6 +42,12 @@ export const TeamDetailsPage = () => {
 
     if (loading) return <Box sx={{ display: "flex", justifyContent: "center", py: 10 }}><CircularProgress /></Box>;
     if (!teamData) return <Typography align="center" sx={{ mt: 5 }}>{t("common.not_found")}</Typography>;
+
+    const closeMemberModal = () => {
+        setMemberModal({ open: false, tournamentId: null });
+        setNewMember({ fullName: "", email: "", isLeader: false });
+        clearErrors();
+    };
 
     return (
         <Container maxWidth="lg" sx={{ pb: 6, pt: 1 }}>
@@ -114,40 +121,66 @@ export const TeamDetailsPage = () => {
                 </Box>
             )}
 
-            {/* MODAL: ADD MEMBER */}
-            <Dialog open={memberModal.open} onClose={() => setMemberModal({ open: false, tournamentId: null })} fullWidth maxWidth="xs">
-                <DialogTitle fontWeight={700}>{t("team_details.admin.member_modal.title")}</DialogTitle>
+            <Dialog open={memberModal.open} onClose={closeMemberModal} fullWidth maxWidth="xs" PaperProps={{ sx: { borderRadius: "24px" } }}>
+                <DialogTitle sx={{ fontWeight: 800 }}>{t("team_details.admin.member_modal.title")}</DialogTitle>
                 <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1 }}>
-                    <TextField fullWidth label="Full Name" value={newMember.fullName} onChange={e => setNewMember({...newMember, fullName: e.target.value})} />
-                    <TextField fullWidth label="Email" type="email" value={newMember.email} onChange={e => setNewMember({...newMember, email: e.target.value})} />
-                    <FormControlLabel control={<Checkbox checked={newMember.isLeader} onChange={e => setNewMember({...newMember, isLeader: e.target.checked})} />} label="Set as Leader" />
+
+                    {/* ВИВІД ПОМИЛОК ВСЕРЕДИНІ ДІАЛОГУ */}
+                    {errors.length > 0 && (
+                        <Box sx={{ bgcolor: "error.light", color: "error.contrastText", p: 2, borderRadius: "12px", mb: 1 }}>
+                            <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 0.5 }}>
+                                {t("common.errors.check_fields")}
+                            </Typography>
+                            <ul style={{ margin: 0, paddingLeft: "1.2rem", fontSize: "0.875rem" }}>
+                                {errors.map((err, i) => <li key={i}>{err}</li>)}
+                            </ul>
+                        </Box>
+                    )}
+
+                    <TextField fullWidth label="Full Name" value={newMember.fullName} onChange={e => setNewMember({...newMember, fullName: e.target.value})} variant="outlined" />
+                    <TextField fullWidth label="Email" type="email" value={newMember.email} onChange={e => setNewMember({...newMember, email: e.target.value})} variant="outlined" />
+                    <FormControlLabel control={<Checkbox checked={newMember.isLeader} onChange={e => setNewMember({...newMember, isLeader: e.target.checked})} color="secondary" />} label="Set as Leader" />
                 </DialogContent>
-                <DialogActions sx={{ p: 3 }}>
-                    <Button onClick={() => setMemberModal({ open: false, tournamentId: null })}>{t("common.cancel")}</Button>
+
+                <DialogActions sx={{ p: 3, gap: 1 }}>
+                    <Button onClick={closeMemberModal} sx={{ fontWeight: 600 }}>{t("common.cancel")}</Button>
                     <Button
                         variant="contained"
                         color="secondary"
-                        onClick={() => {
+                        disabled={isActionLoading}
+                        sx={{ borderRadius: "10px", px: 3, fontWeight: 700, color: "black" }}
+                        onClick={async () => {
                             if (memberModal.tournamentId) {
-                                // Передаємо ДВА аргументи, як того очікує ваш оновлений хук
-                                handleAddMember(newMember as any, memberModal.tournamentId);
+                                const success = await handleAddMember(newMember as any, memberModal.tournamentId);
+                                if (success) closeMemberModal();
                             }
-                            setMemberModal({ open: false, tournamentId: null });
-                            setNewMember({ fullName: "", email: "", isLeader: false }); // Очищуємо поля після додавання
                         }}
                     >
-                        {t("common.add")}
+                        {isActionLoading ? <CircularProgress size={24} /> : t("common.add")}
                     </Button>
                 </DialogActions>
             </Dialog>
 
-            {/* UNIVERSAL CONFIRM DIALOG */}
-            <Dialog open={!!confirm?.open} onClose={() => setConfirm(null)}>
-                <DialogTitle>{confirm?.title}</DialogTitle>
-                <DialogContent><DialogContentText>{confirm?.text}</DialogContentText></DialogContent>
-                <DialogActions sx={{ p: 2 }}>
-                    <Button onClick={() => setConfirm(null)} color="inherit">{t("common.no")}</Button>
-                    <Button onClick={() => { confirm?.onConfirm(); setConfirm(null); }} variant="contained" color="error" autoFocus>
+            {/* UNIVERSAL CONFIRM DIALOG (для видалення/промоуту) */}
+            <Dialog
+                open={!!confirm?.open}
+                onClose={() => setConfirm(null)}
+                PaperProps={{ sx: { borderRadius: "20px" } }}
+            >
+                <DialogTitle sx={{ fontWeight: 800 }}>{confirm?.title}</DialogTitle>
+                <DialogContent>
+                    <DialogContentText sx={{ color: "text.primary" }}>{confirm?.text}</DialogContentText>
+                </DialogContent>
+                <DialogActions sx={{ p: 3, gap: 1 }}>
+                    <Button onClick={() => setConfirm(null)} variant="outlined" sx={{ borderRadius: "10px" }}>
+                        {t("common.no")}
+                    </Button>
+                    <Button
+                        onClick={() => { confirm?.onConfirm(); setConfirm(null); }}
+                        variant="contained"
+                        color="error"
+                        sx={{ borderRadius: "10px", px: 3, fontWeight: 700 }}
+                    >
                         {t("common.yes_confirm")}
                     </Button>
                 </DialogActions>
