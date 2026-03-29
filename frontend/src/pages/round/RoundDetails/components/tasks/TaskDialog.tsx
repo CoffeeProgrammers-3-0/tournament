@@ -17,27 +17,37 @@ interface Props {
 
 export const TaskDialog = ({ open, onClose, formData, setFormData, onSubmit, isEditing, isLoading, t, errors }: Props) => {
     return (
-        <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-            <DialogTitle>
+        <Dialog
+            open={open}
+            onClose={onClose}
+            fullWidth
+            maxWidth="sm"
+            PaperProps={{ sx: { borderRadius: '16px', p: 1 } }}
+        >
+            <DialogTitle sx={{ fontWeight: 700, pb: 1 }}>
                 {isEditing ? t("round_details.tasks.edit_title") : t("round_details.tasks.create_title")}
             </DialogTitle>
             <DialogContent>
-                <Stack spacing={2} sx={{ mt: 1 }}>
+                <Stack spacing={2.5} sx={{ mt: 1 }}>
                     <ErrorMessages errors={errors} />
+
                     <TextField
                         label={t("round_details.tasks.form.title")}
                         fullWidth
                         value={formData.title}
                         onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                        variant="outlined"
                     />
+
                     <TextField
                         label={t("round_details.tasks.form.description")}
                         fullWidth
                         multiline
-                        rows={3}
+                        rows={6}
                         value={formData.description}
                         onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                     />
+
                     <Stack direction="row" spacing={2}>
                         <TextField
                             select
@@ -48,6 +58,7 @@ export const TaskDialog = ({ open, onClose, formData, setFormData, onSubmit, isE
                         >
                             {TASK_TYPES.map(type => <MenuItem key={type} value={type}>{type}</MenuItem>)}
                         </TextField>
+
                         <TextField
                             select
                             label={t("round_details.tasks.form.priority")}
@@ -58,6 +69,7 @@ export const TaskDialog = ({ open, onClose, formData, setFormData, onSubmit, isE
                             {TASK_PRIORITIES.map(p => <MenuItem key={p} value={p}>{p}</MenuItem>)}
                         </TextField>
                     </Stack>
+
                     <TextField
                         select
                         label={t("round_details.tasks.form.status")}
@@ -69,9 +81,17 @@ export const TaskDialog = ({ open, onClose, formData, setFormData, onSubmit, isE
                     </TextField>
                 </Stack>
             </DialogContent>
-            <DialogActions>
-                <Button onClick={onClose} disabled={isLoading}>{t("common.cancel")}</Button>
-                <Button variant="contained" onClick={onSubmit} disabled={isLoading}>
+
+            <DialogActions sx={{ px: 3, pb: 2 }}>
+                <Button onClick={onClose} disabled={isLoading} sx={{ textTransform: 'none', fontWeight: 600 }}>
+                    {t("common.cancel")}
+                </Button>
+                <Button
+                    variant="contained"
+                    onClick={onSubmit}
+                    disabled={isLoading}
+                    sx={{ textTransform: 'none', fontWeight: 600, borderRadius: '8px', px: 3 }}
+                >
                     {isLoading ? t("common.saving") : t("common.save")}
                 </Button>
             </DialogActions>

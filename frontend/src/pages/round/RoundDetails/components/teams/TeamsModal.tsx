@@ -11,6 +11,7 @@ import {
     InputLabel,
     List,
     ListItem,
+    ListItemButton,
     ListItemText,
     MenuItem,
     Modal,
@@ -64,9 +65,19 @@ export const AddMissingTeamsModal = ({
                     <List sx={{ maxHeight: 300, overflowY: 'auto', border: '1px solid', borderColor: 'divider', borderRadius: 2, bgcolor: 'background.default' }}>
                         {filteredTeams.length === 0 && <Typography p={2} textAlign="center" color="text.secondary">No teams found</Typography>}
                         {filteredTeams.map((team: any) => (
-                            <ListItem key={team.id} button onClick={() => onSelect(team.id)} sx={{ '&:hover': { bgcolor: 'action.hover' } }}>
-                                <Checkbox checked={selectedIds.includes(team.id)} color="primary" />
-                                <ListItemText primary={team.name} secondary={team.email} primaryTypographyProps={{ fontWeight: 500 }} />
+                            <ListItem key={team.id} disablePadding>
+                                <ListItemButton onClick={() => onSelect(team.id)} sx={{ '&:hover': { bgcolor: 'action.hover' } }}>
+                                    <Checkbox
+                                        checked={selectedIds.includes(team.id)}
+                                        color="primary"
+                                        disableRipple // Опціонально: вимикає зайвий ripple ефект на самому чекбоксі
+                                    />
+                                    <ListItemText
+                                        primary={team.name}
+                                        secondary={team.email}
+                                        primaryTypographyProps={{ fontWeight: 500 }}
+                                    />
+                                </ListItemButton>
                             </ListItem>
                         ))}
                     </List>
@@ -119,11 +130,38 @@ export const AdvanceTeamsModal = ({
 
                     <List sx={{ maxHeight: 350, overflowY: 'auto', border: '1px solid', borderColor: 'divider', borderRadius: 2, bgcolor: 'background.default' }}>
                         {leaderboard.map((team: any, index: number) => (
-                            <ListItem key={team.id} button onClick={() => onSelect(team.id)} sx={{ '&:hover': { bgcolor: 'action.hover' } }}>
-                                <Checkbox checked={selectedIds.includes(team.id)} color="primary" />
-                                <Box sx={{ width: 30, textAlign: 'center', mr: 1 }}><Typography fontWeight={700} color="text.secondary">#{index + 1}</Typography></Box>
-                                <ListItemText primary={team.name} secondary={`${team.points} pts`} primaryTypographyProps={{ fontWeight: 600 }} />
-                                {selectedIds.includes(team.id) && <Chip size="small" label="Advancing" color="success" variant="outlined" />}
+                            <ListItem key={team.id} disablePadding>
+                                <ListItemButton
+                                    onClick={() => onSelect(team.id)}
+                                    sx={{ '&:hover': { bgcolor: 'action.hover' } }}
+                                >
+                                    <Checkbox
+                                        checked={selectedIds.includes(team.id)}
+                                        color="primary"
+                                        disableRipple // Запобігає накладанню ефекту кліку чекбокса та кнопки
+                                    />
+
+                                    <Box sx={{ width: 30, textAlign: 'center', mr: 1 }}>
+                                        <Typography fontWeight={700} color="text.secondary">
+                                            #{index + 1}
+                                        </Typography>
+                                    </Box>
+
+                                    <ListItemText
+                                        primary={team.name}
+                                        secondary={`${team.points} pts`}
+                                        primaryTypographyProps={{ fontWeight: 600 }}
+                                    />
+
+                                    {selectedIds.includes(team.id) && (
+                                        <Chip
+                                            size="small"
+                                            label="Advancing"
+                                            color="success"
+                                            variant="outlined"
+                                        />
+                                    )}
+                                </ListItemButton>
                             </ListItem>
                         ))}
                     </List>

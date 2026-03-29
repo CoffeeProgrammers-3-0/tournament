@@ -122,22 +122,18 @@ export const useRoundDetails = (id?: string) => {
         fetchCheckSubmission(); // Викликаємо перевірку при завантаженні
     }, [fetchRound, fetchCheckSubmission]);
 
-    const fetchTasks = useCallback(async (page = 0) => {
+    const fetchTasks = useCallback(async (page = 0, showLoader = true) => {
         if (!id) return;
-        setLoadingTab(true);
+        if (showLoader) setLoadingTab(true); // Показуємо лоадер ТІЛЬКИ якщо це не фонове оновлення
         try {
-            // Використовуємо метод для поточної команди в цьому раунді
-            const response = await teamTaskService.getTasksForMyTeamAndRound(Number(id), {
-                page,
-                size: 10
-            });
+            const response = await teamTaskService.getTasksForMyTeamAndRound(Number(id), { page, size: 10 });
             setTasks(response.content || []);
             setTasksTotalPages(response.totalPages || 0);
             setTasksPage(page);
         } catch (error) {
             console.error("Error fetching tasks:", error);
         } finally {
-            setLoadingTab(false);
+            if (showLoader) setLoadingTab(false);
         }
     }, [id]);
 

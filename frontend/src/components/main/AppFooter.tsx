@@ -5,7 +5,7 @@ import Cookies from "js-cookie";
 import InstagramIcon from "@mui/icons-material/Instagram";
 import FacebookIcon from "@mui/icons-material/Facebook";
 import LinkedInIcon from "@mui/icons-material/LinkedIn";
-import YouTubeIcon from "@mui/icons-material/YouTube"; // Додаємо YouTube
+import YouTubeIcon from "@mui/icons-material/YouTube";
 import logo from "../../assets/logo.png";
 
 type role = 'ADMIN' | 'JURY' | 'USER' | null;
@@ -14,7 +14,11 @@ export const AppFooter = () => {
     const { t } = useTranslation();
 
     const isLoggedIn = Cookies.get("userId") !== undefined;
-    const role = Cookies.get("role") as role || 'USER';
+    // За замовчуванням ставимо USER, щоб неавторизовані бачили публічний контент
+    const role = (Cookies.get("role") as role) || 'USER';
+
+    // Динамічна ширина колонок: для Журі ховаємо турніри, тому розширюємо інші колонки
+    const mdColSize = role === 'JURY' ? 4 : 3;
 
     return (
         <Box component="footer" sx={{
@@ -29,7 +33,7 @@ export const AppFooter = () => {
                 <Grid container spacing={4} justifyContent="center">
 
                     {/* 1. Логотип та місія */}
-                    <Grid size={{xs: 12, md: 3}} sx={{ textAlign: { xs: "center", md: "left" } }}>
+                    <Grid size={{xs: 12, md: mdColSize}} sx={{ textAlign: { xs: "center", md: "left" } }}>
                         <Box component={RouterLink} to="/" sx={{ display: "inline-block", mb: 2 }}>
                             <Box component="img" src={logo} alt="Star for Life" sx={{ height: 50 }} />
                         </Box>
@@ -38,27 +42,46 @@ export const AppFooter = () => {
                         </Typography>
                     </Grid>
 
-                    {/* 2. ТУРНІРИ */}
-                    <Grid size={{xs: 6, md: 3}} sx={{ textAlign: "center" }}>
-                        <Typography fontWeight={800} color="text.primary" sx={{ mb: 2, fontSize: "0.9rem", textTransform: "uppercase", letterSpacing: 1 }}>
-                            {t("header.tournaments")}
-                        </Typography>
+                    {/* 2. ТУРНІРИ (Показуємо лише ADMIN та USER, як у хедері) */}
+                    {(role === 'ADMIN' || role === 'USER') && (
+                        <Grid size={{xs: 6, md: mdColSize}} sx={{ textAlign: "center" }}>
+                            <Typography fontWeight={800} color="text.primary" sx={{ mb: 2, fontSize: "0.9rem", textTransform: "uppercase", letterSpacing: 1 }}>
+                                {t("header.tournaments")}
+                            </Typography>
 
-                        <Link component={RouterLink} to="/tournaments" display="block" underline="hover" sx={{ mb: 1, color: "text.secondary", fontSize: "0.875rem" }}>
-                            {role === 'ADMIN' ? t("header.manageTournaments") : t("tournaments.tabs.available")}
-                        </Link>
-
-                        {isLoggedIn && role === 'USER' && (
-                            <Link component={RouterLink} to="/tournaments?tab=1" display="block" underline="hover" sx={{ color: "text.secondary", fontSize: "0.875rem" }}>
-                                {t("tournaments.tabs.my")}
-                            </Link>
-                        )}
-                    </Grid>
+                            {role === 'ADMIN' ? (
+                                <>
+                                    <Link component={RouterLink} to="/tournaments?tab=4" display="block" underline="hover" sx={{ mb: 1, color: "text.secondary", fontSize: "0.875rem" }}>
+                                        {t("header.manageTournaments")}
+                                    </Link>
+                                    <Link component={RouterLink} to="/tournaments" display="block" underline="hover" sx={{ color: "text.secondary", fontSize: "0.875rem" }}>
+                                        {t("header.availableTournaments")}
+                                    </Link>
+                                </>
+                            ) : (
+                                <>
+                                    <Link component={RouterLink} to="/tournaments" display="block" underline="hover" sx={{ mb: 1, color: "text.secondary", fontSize: "0.875rem" }}>
+                                        {t("header.availableTournaments")}
+                                    </Link>
+                                    {isLoggedIn && (
+                                        <>
+                                            <Link component={RouterLink} to="/tournaments?tab=2" display="block" underline="hover" sx={{ mb: 1, color: "text.secondary", fontSize: "0.875rem" }}>
+                                                {t("header.myCurrentTournaments")}
+                                            </Link>
+                                            <Link component={RouterLink} to="/tournaments?tab=3" display="block" underline="hover" sx={{ color: "text.secondary", fontSize: "0.875rem" }}>
+                                                {t("header.history")}
+                                            </Link>
+                                        </>
+                                    )}
+                                </>
+                            )}
+                        </Grid>
+                    )}
 
                     {/* 3. КОМАНДИ / УПРАВЛІННЯ */}
-                    <Grid size={{xs: 6, md: 3}} sx={{ textAlign: "center" }}>
+                    <Grid size={{xs: role === 'JURY' ? 12 : 6, md: mdColSize}} sx={{ textAlign: "center" }}>
                         <Typography fontWeight={800} color="text.primary" sx={{ mb: 2, fontSize: "0.9rem", textTransform: "uppercase", letterSpacing: 1 }}>
-                            {role === 'JURY' ? t("header.mySubmissions") : t("footer.teams")}
+                            {role === 'JURY' ? t("header.mySubmissions") : (role === 'ADMIN' ? t("header.adminPanel") : t("footer.teams", "Команди"))}
                         </Typography>
 
                         {role === 'ADMIN' && (
@@ -78,15 +101,15 @@ export const AppFooter = () => {
                             </Link>
                         )}
 
-                        {role === 'JURY' && (
+                        {role === 'JURY' && isLoggedIn && (
                             <Link component={RouterLink} to="/jury/submissions" display="block" underline="hover" sx={{ color: "text.secondary", fontSize: "0.875rem" }}>
                                 {t("header.mySubmissions")}
                             </Link>
                         )}
                     </Grid>
 
-                    {/* 4. Контакти та Соцмережі з ТВОЇМИ ЛІНКАМИ */}
-                    <Grid size={{xs: 12, md: 3}} sx={{ textAlign: { xs: "center", md: "right" } }}>
+                    {/* 4. Контакти та Соцмережі */}
+                    <Grid size={{xs: 12, md: mdColSize}} sx={{ textAlign: { xs: "center", md: "right" } }}>
                         <Typography fontWeight={800} color="text.primary" sx={{ mb: 2, fontSize: "0.9rem", textTransform: "uppercase", letterSpacing: 1 }}>
                             {t("footer.contacts")}
                         </Typography>
@@ -95,28 +118,16 @@ export const AppFooter = () => {
                         </Typography>
 
                         <Box sx={{ mt: 2, display: "flex", justifyContent: { xs: "center", md: "flex-end" }, gap: 1 }}>
-                            <IconButton
-                                sx={{ bgcolor: "grey.100", '&:hover': { bgcolor: "primary.light", color: "white" } }}
-                                size="small" href="https://www.instagram.com/starforlifeukraine" target="_blank"
-                            >
+                            <IconButton sx={{ bgcolor: "grey.100", '&:hover': { bgcolor: "primary.light", color: "white" } }} size="small" href="https://www.instagram.com/starforlifeukraine" target="_blank">
                                 <InstagramIcon fontSize="small" />
                             </IconButton>
-                            <IconButton
-                                sx={{ bgcolor: "grey.100", '&:hover': { bgcolor: "primary.light", color: "white" } }}
-                                size="small" href="https://www.facebook.com/starforlifeua" target="_blank"
-                            >
+                            <IconButton sx={{ bgcolor: "grey.100", '&:hover': { bgcolor: "primary.light", color: "white" } }} size="small" href="https://www.facebook.com/starforlifeua" target="_blank">
                                 <FacebookIcon fontSize="small" />
                             </IconButton>
-                            <IconButton
-                                sx={{ bgcolor: "grey.100", '&:hover': { bgcolor: "primary.light", color: "white" } }}
-                                size="small" href="https://www.linkedin.com/company/starforlifeua/" target="_blank"
-                            >
+                            <IconButton sx={{ bgcolor: "grey.100", '&:hover': { bgcolor: "primary.light", color: "white" } }} size="small" href="https://www.linkedin.com/company/starforlifeua/" target="_blank">
                                 <LinkedInIcon fontSize="small" />
                             </IconButton>
-                            <IconButton
-                                sx={{ bgcolor: "grey.100", '&:hover': { bgcolor: "primary.light", color: "white" } }}
-                                size="small" href="https://www.youtube.com/@starforlifeua" target="_blank"
-                            >
+                            <IconButton sx={{ bgcolor: "grey.100", '&:hover': { bgcolor: "primary.light", color: "white" } }} size="small" href="https://www.youtube.com/@starforlifeua" target="_blank">
                                 <YouTubeIcon fontSize="small" />
                             </IconButton>
                         </Box>
@@ -127,13 +138,7 @@ export const AppFooter = () => {
             {/* Нижня панель (Copyright) */}
             <Box sx={{ backgroundColor: "primary.main", color: "white", py: 2 }}>
                 <Container maxWidth="lg">
-                    <Box sx={{
-                        display: "flex",
-                        flexDirection: { xs: "column", sm: "row" },
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        gap: 1
-                    }}>
+                    <Box sx={{ display: "flex", flexDirection: { xs: "column", sm: "row" }, justifyContent: "space-between", alignItems: "center", gap: 1 }}>
                         <Typography variant="caption" sx={{ opacity: 0.8 }}>
                             © 2026 Star for Life Ukraine. {t("footer.rights")}
                         </Typography>

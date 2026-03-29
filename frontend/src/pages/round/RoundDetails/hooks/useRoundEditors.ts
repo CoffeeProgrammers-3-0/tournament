@@ -43,7 +43,8 @@ type Params = {
     fetchCategories: () => Promise<void>;
     fetchJury: () => Promise<void>;
     fetchSubmissions: () => Promise<void>;
-    fetchTasks: () => Promise<void>;
+    fetchTasks: (page?: number, showLoader?: boolean) => Promise<void>;
+    tasksPage: number;
 };
 
 type ConfirmDialogConfig = {
@@ -55,7 +56,7 @@ type ConfirmDialogConfig = {
     isLoading?: boolean;
 };
 
-export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, fetchJury, fetchSubmissions, fetchTasks }: Params) => {
+export const useRoundEditors = ({id, roundData, setRoundData, fetchCategories, fetchJury, fetchSubmissions, fetchTasks, tasksPage }: Params) => {
     const roundId = Number(id);
     const [errors, setErrors] = useState<string[]>([]);
     const clearErrors = useCallback(() => setErrors([]), []);
@@ -571,13 +572,13 @@ export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, 
                 await teamTaskService.createTask(Number(id), taskFormData);
             }
             setTaskModalOpen(false);
-            await fetchTasks();
+            await fetchTasks(tasksPage, true); // Оновлюємо таски
         } catch (error: any) {
             handleError(error, "Помилка збереження завдання");
         } finally {
             setIsTaskLoading(false);
         }
-    }, [id, selectedTask, taskFormData, fetchTasks, handleError, clearErrors]);
+    }, [id, selectedTask, taskFormData, fetchTasks, tasksPage, handleError, clearErrors]);
 
     const handleDeleteTask = useCallback((taskId: number) => {
         triggerConfirm({
@@ -588,32 +589,33 @@ export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, 
                 clearErrors();
                 try {
                     await teamTaskService.deleteTask(taskId);
-                    await fetchTasks();
+                    await fetchTasks(tasksPage, true); // Оновлюємо таски
                     closeConfirm();
                 } catch (error: any) {
                     handleError(error, "Помилка видалення завдання");
                 }
             }
         });
-    }, [fetchTasks, closeConfirm, triggerConfirm, clearErrors, handleError]);
+    }, [fetchTasks, tasksPage, closeConfirm, triggerConfirm, clearErrors, handleError]);
 
     const handleUpdateTaskMeta = useCallback(async (taskId: number, meta: { status?: TaskStatus; priority?: TaskPriority; type?: TaskType }) => {
         try {
             await teamTaskService.updateTaskMeta(taskId, meta);
-            await fetchTasks();
+            // Викликаємо фоновий фетч без лоадера!
+            await fetchTasks(tasksPage, false);
         } catch (error: any) {
             handleError(error, "Помилка оновлення статусу");
         }
-    }, [fetchTasks, handleError]);
+    }, [fetchTasks, tasksPage, handleError]);
 
     const handleAssignMe = useCallback(async (taskId: number, currentUserId: number) => {
         try {
             await teamTaskService.updateAssignee(taskId, currentUserId);
-            await fetchTasks();
+            await fetchTasks(tasksPage, true);
         } catch (error: any) {
             handleError(error, "Помилка призначення виконавця");
         }
-    }, [fetchTasks, handleError]);
+    }, [fetchTasks, tasksPage, handleError]);
 
     return {
         // Errors

@@ -32,6 +32,7 @@ import {UniversalConfirmDialog} from "./RoundDetails/components/UniversalConfirm
 import {ErrorMessages} from "../../components/main/ErrorMessages.tsx";
 import {TaskDialog} from "./RoundDetails/components/tasks/TaskDialog.tsx";
 import {RoundTasksTab} from "./RoundDetails/components/tasks/RoundTasksTab.tsx";
+import {useEffect} from "react";
 
 export const RoundDetailsPage = () => {
     const { t } = useTranslation();
@@ -49,6 +50,7 @@ export const RoundDetailsPage = () => {
         fetchJury: details.fetchJury,
         fetchSubmissions: details.fetchSubmissions,
         fetchTasks: details.fetchTasks,
+        tasksPage: details.tasksPage,
     });
 
     const TABS = [
@@ -66,6 +68,30 @@ export const RoundDetailsPage = () => {
 
     // Знаходимо реальний індекс активного таба в масиві TABS
     const activeTabId = TABS[details.tabValue]?.id;
+
+    useEffect(() => {
+        if (!activeTabId) return;
+
+        switch (activeTabId) {
+            case "categories":
+                details.fetchCategories();
+                break;
+            case "jury":
+                details.fetchJury();
+                break;
+            case "leaderboard":
+                details.fetchLeaderboard();
+                break;
+            case "submissions":
+                details.fetchSubmissions(0); // Скидаємо на 0 сторінку при переході
+                break;
+            case "tasks":
+                details.fetchTasks(0); // Скидаємо на 0 сторінку при переході
+                break;
+            default:
+                break;
+        }
+    }, [activeTabId]); // Реагує на зміну активного табу
 
     if (details.loading) return <Box sx={{ display: "flex", justifyContent: "center", mt: 10 }}><CircularProgress /></Box>;
     if (!details.roundData) return <Typography sx={{ textAlign: "center", mt: 5 }}>{t("round_details.not_found")}</Typography>;
@@ -135,7 +161,11 @@ export const RoundDetailsPage = () => {
                 <RoundSubmissionsTab submissions={details.submissions} loadingTab={details.loadingTab} page={details.submissionsPage} totalPages={details.submissionsTotalPages} onPageChange={details.fetchSubmissions} onAutoAssign={() => editors.setAutoAssignModalOpen(true)} onAssignManual={editors.handleOpenSubmissionJuryModal} onRemoveJury={editors.handleRemoveJuryFromSubmission} t={t} errors={editors.errors}/>
             )}
             {activeTabId === "tasks" && (
-                <RoundTasksTab tasks={details.tasks} loadingTab={details.loadingTab} onOpenTaskModal={editors.handleOpenTaskModal} onDeleteTask={editors.handleDeleteTask} onUpdateMeta={editors.handleUpdateTaskMeta} t={t}/>
+                <RoundTasksTab tasks={details.tasks} loadingTab={details.loadingTab}
+                               onOpenTaskModal={editors.handleOpenTaskModal}
+                               onDeleteTask={editors.handleDeleteTask}
+                               onUpdateMeta={editors.handleUpdateTaskMeta} t={t}
+                               onAssignMe={editors.handleAssignMe}/>
             )}
 
             {/* Dialogs */}
