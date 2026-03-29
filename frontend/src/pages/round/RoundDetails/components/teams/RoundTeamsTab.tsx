@@ -19,13 +19,12 @@ import InsertChartOutlinedIcon from "@mui/icons-material/InsertChartOutlined";
 import GroupAddIcon from "@mui/icons-material/GroupAdd";
 import PersonRemoveIcon from "@mui/icons-material/PersonRemove";
 import FastForwardIcon from "@mui/icons-material/FastForward";
-import type {TeamLeaderboardResponseDto} from "../../../../entities/team/team.dto";
-import type {RoundFullResponseDto} from "../../../../entities/round/round.dto";
+import type {TeamLeaderboardResponseDto} from "../../../../../entities/team/team.dto";
+import type {RoundFullResponseDto} from "../../../../../entities/round/round.dto";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
-import {ErrorMessages} from "../../../../components/main/ErrorMessages.tsx"; // Додайте імпорт
+import {ErrorMessages} from "../../../../../components/main/ErrorMessages.tsx"; // Додайте імпорт
 
 type Props = {
-    tabValue: number;
     leaderboard: TeamLeaderboardResponseDto[];
     loadingTab: boolean;
     roundData: RoundFullResponseDto;
@@ -42,10 +41,9 @@ type Props = {
 };
 
 export const RoundTeamsTab = ({
-                                  tabValue, leaderboard, loadingTab, roundData, onOpenStats, navigate, t,
+                                  leaderboard, loadingTab, roundData, onOpenStats, navigate, t,
                                   isAdmin, onOpenAddMissingTeamsModal, onOpenAdvanceTeamsModal, onUnassignTeam, onExportLeaderboard, isExporting, errors
                               }: Props) => {
-    if (tabValue !== 3) return null;
 
     return (
         <Box>

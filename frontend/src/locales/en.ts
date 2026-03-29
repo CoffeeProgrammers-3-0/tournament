@@ -353,6 +353,41 @@ export const en = {
             "leaderboard": "Teams(Leaderboard)",
             "submissions": "Submissions",
             "stats": "Statistics",
+            "tasks": "Team Tasks"
+        },
+        "tasks": {
+            "title": "Team Tasks",
+            "add_btn": "Add Task",
+            "empty": "No tasks found for your team in this round.",
+            "assigned_to": "Assigned to",
+            "edit_title": "Edit Task",
+            "create_title": "Create New Task",
+            "form": {
+                "title": "Task Title",
+                "description": "Description",
+                "type": "Task Type",
+                "priority": "Priority",
+                "status": "Current Status"
+            },
+            "enums": {
+                "status": {
+                    "TODO": "To Do",
+                    "IN_PROGRESS": "In Progress",
+                    "DONE": "Done",
+                    "BLOCKED": "Blocked"
+                },
+                "type": {
+                    "BUG": "Bug",
+                    "IMPROVEMENT": "Improvement",
+                    "FEATURE": "Feature",
+                    "OPTIONAL": "Optional"
+                },
+                "priority": {
+                    "HIGH": "High",
+                    "MEDIUM": "Medium",
+                    "LOW": "Low"
+                }
+            }
         },
         "info": {
             "name": "Round name",

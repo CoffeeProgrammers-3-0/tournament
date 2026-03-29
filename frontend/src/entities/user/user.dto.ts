@@ -1,5 +1,7 @@
 // ===== ENUM =====
 
+import type {TournamentStatus} from "../tournament/tournament.dto.ts";
+
 type Role = 'ADMIN' | 'USER' | 'JURY';
 
 // ===== REQUESTS =====
@@ -35,4 +37,5 @@ export interface UserResponseForTeamDto {
     isLeader: boolean;
     tournamentId: number;
     tournamentName: string;
+    tournamentStatus: TournamentStatus;
 }

@@ -13,9 +13,9 @@ import {
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import PersonAddAlt1Icon from "@mui/icons-material/PersonAddAlt1";
 import GavelIcon from "@mui/icons-material/Gavel";
-import {submissionService} from "../../../../services/impl/SubmissionService";
-import type {UserResponseDto} from "../../../../entities/user/user.dto";
-import type {SubmissionListResponseDto} from "../../../../entities/submission/submission.dto";
+import {submissionService} from "../../../../../services/impl/SubmissionService";
+import type {UserResponseDto} from "../../../../../entities/user/user.dto";
+import type {SubmissionListResponseDto} from "../../../../../entities/submission/submission.dto";
 
 type ItemProps = {
     submission: SubmissionListResponseDto;

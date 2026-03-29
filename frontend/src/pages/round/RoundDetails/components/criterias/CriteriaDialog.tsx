@@ -1,5 +1,5 @@
 import {Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField} from "@mui/material";
-import {ErrorMessages} from "../../../../components/main/ErrorMessages.tsx";
+import {ErrorMessages} from "../../../../../components/main/ErrorMessages.tsx";
 
 type Props = {
     open: boolean;

@@ -12,11 +12,10 @@ import {
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
-import type {CategoryResponseDto} from "../../../../entities/category/category.dto";
-import {ErrorMessages} from "../../../../components/main/ErrorMessages.tsx";
+import type {CategoryResponseDto} from "../../../../../entities/category/category.dto";
+import {ErrorMessages} from "../../../../../components/main/ErrorMessages.tsx";
 
 type Props = {
-    tabValue: number;
     categories: CategoryResponseDto[];
     loadingTab: boolean;
     isAdmin: boolean;
@@ -29,10 +28,9 @@ type Props = {
 };
 
 export const RoundCategoriesTab = ({
-                                       tabValue, categories, loadingTab, isAdmin,
+                                       categories, loadingTab, isAdmin,
                                        onOpenCategoryModal, onDeleteCategory, onOpenCriteriaModal, onDeleteCriteria, t, errors
                                    }: Props) => {
-    if (tabValue !== 1) return null;
 
     return (
         <Box>

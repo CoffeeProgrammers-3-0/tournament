@@ -13,11 +13,10 @@ import {
 import PersonAddAlt1Icon from "@mui/icons-material/PersonAddAlt1";
 import GavelIcon from "@mui/icons-material/Gavel";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
-import type {UserResponseDto} from "../../../../entities/user/user.dto";
-import {ErrorMessages} from "../../../../components/main/ErrorMessages.tsx";
+import type {UserResponseDto} from "../../../../../entities/user/user.dto";
+import {ErrorMessages} from "../../../../../components/main/ErrorMessages.tsx";
 
 type Props = {
-    tabValue: number;
     jury: UserResponseDto[];
     loadingTab: boolean;
     isAdmin: boolean;
@@ -28,8 +27,7 @@ type Props = {
 };
 
 export const RoundJuryTab = ({
-                                 tabValue, jury, loadingTab, isAdmin, onOpenJuryModal, onRemoveJury, t, errors }: Props) => {
-    if (tabValue !== 2) return null;
+                                 jury, loadingTab, isAdmin, onOpenJuryModal, onRemoveJury, t, errors }: Props) => {
 
     return (
         <Box>

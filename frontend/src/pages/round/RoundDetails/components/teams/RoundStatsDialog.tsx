@@ -17,8 +17,8 @@ import {
 } from "@mui/material";
 import ViewListIcon from "@mui/icons-material/ViewList";
 import ViewModuleIcon from "@mui/icons-material/ViewModule";
-import type {StatisticResponseDto} from "../../../../entities/team/team.dto";
-import {ErrorMessages} from "../../../../components/main/ErrorMessages.tsx";
+import type {StatisticResponseDto} from "../../../../../entities/team/team.dto";
+import {ErrorMessages} from "../../../../../components/main/ErrorMessages.tsx";
 
 type Props = {
     open: boolean;

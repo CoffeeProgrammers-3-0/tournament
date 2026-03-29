@@ -17,6 +17,15 @@ import type {CategoryRequestDto} from "../../../../entities/category/category.dt
 import type {StatisticResponseDto, TeamListResponseDto} from "../../../../entities/team/team.dto";
 import type {UserResponseDto} from "../../../../entities/user/user.dto";
 
+import type {
+    TaskPriority,
+    TaskStatus,
+    TaskType,
+    TeamTaskRequestDto,
+    TeamTaskResponseDto
+} from "../../../../entities/teamTask/teamtask.dto";
+import {teamTaskService} from "../../../../services/impl/TeamTaskService.ts";
+
 const formatToLocalDateTime = (dateTimeStr: string) => {
     if (!dateTimeStr) return "";
     return dateTimeStr.length === 16 ? `${dateTimeStr}:00` : dateTimeStr;
@@ -34,6 +43,7 @@ type Params = {
     fetchCategories: () => Promise<void>;
     fetchJury: () => Promise<void>;
     fetchSubmissions: () => Promise<void>;
+    fetchTasks: () => Promise<void>;
 };
 
 type ConfirmDialogConfig = {
@@ -45,7 +55,7 @@ type ConfirmDialogConfig = {
     isLoading?: boolean;
 };
 
-export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, fetchJury, fetchSubmissions }: Params) => {
+export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, fetchJury, fetchSubmissions, fetchTasks }: Params) => {
     const roundId = Number(id);
     const [errors, setErrors] = useState<string[]>([]);
     const clearErrors = useCallback(() => setErrors([]), []);
@@ -100,6 +110,17 @@ export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, 
     const [kValue, setKValue] = useState<number>(3);
     const [isTeamsLoading, setIsTeamsLoading] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
+
+    const [taskModalOpen, setTaskModalOpen] = useState(false);
+    const [selectedTask, setSelectedTask] = useState<TeamTaskResponseDto | null>(null);
+    const [isTaskLoading, setIsTaskLoading] = useState(false);
+    const [taskFormData, setTaskFormData] = useState<TeamTaskRequestDto>({
+        title: "",
+        description: "",
+        status: "TODO",
+        type: "FEATURE",
+        priority: "MEDIUM"
+    });
 
     const [confirmDialog, setConfirmDialog] = useState<ConfirmDialogConfig>({
         open: false,
@@ -522,6 +543,78 @@ export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, 
         return result;
     }, [selectedStats]);
 
+    const handleOpenTaskModal = useCallback((task?: TeamTaskResponseDto) => {
+        clearErrors();
+        if (task) {
+            setSelectedTask(task);
+            setTaskFormData({
+                title: task.title,
+                description: task.description,
+                status: task.status,
+                type: task.type,
+                priority: task.priority
+            });
+        } else {
+            setSelectedTask(null);
+            setTaskFormData({ title: "", description: "", status: "TODO", type: "FEATURE", priority: "MEDIUM" });
+        }
+        setTaskModalOpen(true);
+    }, [clearErrors]);
+
+    const handleSaveTask = useCallback(async () => {
+        clearErrors();
+        setIsTaskLoading(true);
+        try {
+            if (selectedTask) {
+                await teamTaskService.updateTask(selectedTask.id, taskFormData);
+            } else {
+                await teamTaskService.createTask(Number(id), taskFormData);
+            }
+            setTaskModalOpen(false);
+            await fetchTasks();
+        } catch (error: any) {
+            handleError(error, "Помилка збереження завдання");
+        } finally {
+            setIsTaskLoading(false);
+        }
+    }, [id, selectedTask, taskFormData, fetchTasks, handleError, clearErrors]);
+
+    const handleDeleteTask = useCallback((taskId: number) => {
+        triggerConfirm({
+            title: "Видалити завдання?",
+            description: "Цю дію неможливо скасувати.",
+            confirmColor: "error",
+            onConfirm: async () => {
+                clearErrors();
+                try {
+                    await teamTaskService.deleteTask(taskId);
+                    await fetchTasks();
+                    closeConfirm();
+                } catch (error: any) {
+                    handleError(error, "Помилка видалення завдання");
+                }
+            }
+        });
+    }, [fetchTasks, closeConfirm, triggerConfirm, clearErrors, handleError]);
+
+    const handleUpdateTaskMeta = useCallback(async (taskId: number, meta: { status?: TaskStatus; priority?: TaskPriority; type?: TaskType }) => {
+        try {
+            await teamTaskService.updateTaskMeta(taskId, meta);
+            await fetchTasks();
+        } catch (error: any) {
+            handleError(error, "Помилка оновлення статусу");
+        }
+    }, [fetchTasks, handleError]);
+
+    const handleAssignMe = useCallback(async (taskId: number, currentUserId: number) => {
+        try {
+            await teamTaskService.updateAssignee(taskId, currentUserId);
+            await fetchTasks();
+        } catch (error: any) {
+            handleError(error, "Помилка призначення виконавця");
+        }
+    }, [fetchTasks, handleError]);
+
     return {
         // Errors
         errors, clearErrors,
@@ -563,5 +656,12 @@ export const useRoundEditors = ({ id, roundData, setRoundData, fetchCategories, 
         handleAddCategory, handleDeleteCategory, handleAddCriteria, handleDeleteCriteria,
         handleOpenStats, handleDeleteRound, handleExportLeaderboard, isExporting,
         confirmDialog, closeConfirm,
+
+        // Task Exports
+        taskModalOpen, setTaskModalOpen: withErrorClear(setTaskModalOpen),
+        taskFormData, setTaskFormData,
+        isTaskLoading, selectedTask,
+        handleOpenTaskModal, handleSaveTask, handleDeleteTask,
+        handleUpdateTaskMeta, handleAssignMe,
     };
 };

@@ -353,6 +353,41 @@ export const uk = {
             "leaderboard": "Команди(Leaderboard)",
             "submissions": "Роботи надіслані на перевірку",
             "stats": "Statistics",
+            "tasks": "Завдання команди"
+        },
+        "tasks": {
+            "title": "Завдання команди",
+            "add_btn": "Додати завдання",
+            "empty": "Завдань для вашої команди в цьому раунді поки немає.",
+            "assigned_to": "Виконує",
+            "edit_title": "Редагувати завдання",
+            "create_title": "Створити нове завдання",
+            "form": {
+                "title": "Назва завдання",
+                "description": "Опис",
+                "type": "Тип завдання",
+                "priority": "Пріоритет",
+                "status": "Поточний статус"
+            },
+            "enums": {
+                "status": {
+                    "TODO": "Треба зробити",
+                    "IN_PROGRESS": "В процесі",
+                    "DONE": "Готово",
+                    "BLOCKED": "Заблоковано"
+                },
+                "type": {
+                    "BUG": "Баг",
+                    "IMPROVEMENT": "Покращення",
+                    "FEATURE": "Фіча",
+                    "OPTIONAL": "Опціонально"
+                },
+                "priority": {
+                    "HIGH": "Високий",
+                    "MEDIUM": "Середній",
+                    "LOW": "Низький"
+                }
+            }
         },
         "info": {
             "name": "Назва раунду",

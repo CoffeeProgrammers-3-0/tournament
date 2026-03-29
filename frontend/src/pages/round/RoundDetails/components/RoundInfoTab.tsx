@@ -36,7 +36,6 @@ const quillStyle = {
 };
 
 type Props = {
-    tabValue: number;
     roundData: RoundFullResponseDto;
     isAdmin: boolean;
     isEditingInfo: boolean;
@@ -50,7 +49,6 @@ type Props = {
 };
 
 export const RoundInfoTab = ({
-                                 tabValue,
                                  roundData,
                                  isEditingInfo,
                                  editFormData,
@@ -61,7 +59,6 @@ export const RoundInfoTab = ({
                                  t,
     errors
                              }: Props) => {
-    if (tabValue !== 0) return null;
 
     // Функція для безпечного рендерингу HTML
     const createMarkup = (html: string) => {

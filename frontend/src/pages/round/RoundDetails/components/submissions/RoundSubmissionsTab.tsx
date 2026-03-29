@@ -1,11 +1,10 @@
 import {Box, Button, CircularProgress, Pagination, Stack, Typography,} from "@mui/material";
 import AutoModeIcon from "@mui/icons-material/AutoMode";
-import type {SubmissionListResponseDto} from "../../../../entities/submission/submission.dto";
+import type {SubmissionListResponseDto} from "../../../../../entities/submission/submission.dto";
 import SubmissionItem from "./SubmissionItem.tsx";
-import {ErrorMessages} from "../../../../components/main/ErrorMessages.tsx";
+import {ErrorMessages} from "../../../../../components/main/ErrorMessages.tsx";
 
 type Props = {
-    tabValue: number;
     submissions: SubmissionListResponseDto[];
     loadingTab: boolean;
     page: number;
@@ -19,10 +18,9 @@ type Props = {
 };
 
 export const RoundSubmissionsTab = ({
-                                        tabValue, submissions, loadingTab, page, totalPages,
+                                        submissions, loadingTab, page, totalPages,
                                         onPageChange, onAutoAssign, onAssignManual, onRemoveJury, t, errors
                                     }: Props) => {
-    if (tabValue !== 4) return null;
 
     return (
         <Box>

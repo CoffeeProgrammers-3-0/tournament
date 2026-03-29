@@ -20,7 +20,6 @@ import {
 } from "@mui/material";
 import {useTranslation} from "react-i18next";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
-
 import LockIcon from "@mui/icons-material/Lock";
 
 import {useTeamDetails} from "./useTeamDetails";
@@ -52,7 +51,6 @@ export const TeamDetailsPage = () => {
 
     return (
         <Container maxWidth="lg" sx={{ pb: 6, pt: 1 }}>
-            {/* Error alerts for header updates */}
             {errors.length > 0 && !memberModal.open && (
                 <Box sx={{ mb: 3, p: 2, bgcolor: "#fee2e2", border: "1px solid #ef4444", borderRadius: "12px" }}>
                     {errors.map((err, i) => <Typography key={i} color="error" variant="body2" fontWeight={600}>{err}</Typography>)}
@@ -79,7 +77,7 @@ export const TeamDetailsPage = () => {
             {tabValue === 0 && (
                 <Box>
                     {Object.entries(membersByTournament).map(([tId, data]: any) => {
-                        const tournamentIdNum = Number(tId); // Зберігаємо як число
+                        const tournamentIdNum = Number(tId);
                         const manageStatus = canManageTournament(tournamentIdNum);
                         const isLocked = !manageStatus.can && manageStatus.reason === "TOURNAMENT_STARTED";
 
@@ -142,8 +140,6 @@ export const TeamDetailsPage = () => {
             <Dialog open={memberModal.open} onClose={closeMemberModal} fullWidth maxWidth="xs" PaperProps={{ sx: { borderRadius: "24px" } }}>
                 <DialogTitle sx={{ fontWeight: 800 }}>{t("team_details.admin.member_modal.title")}</DialogTitle>
                 <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1 }}>
-
-                    {/* ВИВІД ПОМИЛОК ВСЕРЕДИНІ ДІАЛОГУ */}
                     {errors.length > 0 && (
                         <Box sx={{ bgcolor: "error.light", color: "error.contrastText", p: 2, borderRadius: "12px", mb: 1 }}>
                             <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 0.5 }}>
@@ -179,7 +175,6 @@ export const TeamDetailsPage = () => {
                 </DialogActions>
             </Dialog>
 
-            {/* UNIVERSAL CONFIRM DIALOG (для видалення/промоуту) */}
             <Dialog
                 open={!!confirm?.open}
                 onClose={() => setConfirm(null)}
