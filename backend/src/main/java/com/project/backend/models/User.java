@@ -46,4 +46,10 @@ public class User {
 
     @OneToMany(mappedBy = "jury", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<JurySubmission> jurySubmissions = new HashSet<>();
+
+    @OneToMany(mappedBy = "creator", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<TeamTask> tasksAsCreator = new HashSet<>();
+
+    @OneToMany(mappedBy = "assignee")
+    private Set<TeamTask> tasksAsAssignee = new HashSet<>();
 }

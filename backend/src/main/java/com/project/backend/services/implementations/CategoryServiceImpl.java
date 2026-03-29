@@ -12,17 +12,20 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional(readOnly = true)
 public class CategoryServiceImpl implements CategoryService {
     private final CategoryRepository categoryRepository;
     private final RoundRepository roundRepository;
 
     @Override
+    @Transactional
     public Category create(Long roundId, Category category) {
         Round round = roundRepository.findById(roundId).orElseThrow(() -> new EntityNotFoundException("Round with id " + roundId + " not found"));
         category.setRound(round);
@@ -30,6 +33,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    @Transactional
     public Category update(Long categoryId, Category category) {
         Category categoryToUpdate = findById(categoryId);
         categoryToUpdate.setWeight(category.getWeight());
@@ -38,6 +42,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    @Transactional
     public void delete(Long categoryId) {
         Category category = findById(categoryId);
         categoryRepository.delete(category);

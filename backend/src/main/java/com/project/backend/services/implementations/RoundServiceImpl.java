@@ -15,7 +15,6 @@ import com.project.backend.repositories.*;
 import com.project.backend.repositories.specifications.*;
 import com.project.backend.services.interfaces.RoundService;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -24,6 +23,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +31,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional(readOnly = true)
 public class RoundServiceImpl implements RoundService {
     private final RoundRepository roundRepository;
     private final TournamentRepository tournamentRepository;
@@ -61,6 +62,7 @@ public class RoundServiceImpl implements RoundService {
     }
 
     @Override
+    @Transactional
     public Round update(Long roundId, Round round) {
         Round roundToUpdate = findById(roundId);
 
@@ -76,6 +78,7 @@ public class RoundServiceImpl implements RoundService {
     }
 
     @Override
+    @Transactional
     public void delete(Long roundId) {
         Round round = findById(roundId);
         roundRepository.delete(round);
@@ -99,6 +102,7 @@ public class RoundServiceImpl implements RoundService {
     }
 
     @Override
+    @Transactional
     public void setJury(Long roundId, Long juryId) {
         if(juryRepository.exists(JurySpecification.byUserIdAndRoundId(juryId, roundId))) {
             throw new IllegalStateException("Jury with id " + juryId + " is already assigned to round with id " + roundId);

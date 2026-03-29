@@ -7,8 +7,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.security.core.Authentication;
 
 public interface UserService {
-    User createUserKeycloak(User user);
-
     User updateUser(User user, long userId);
 
     User updateUserKeycloak(User user, long userId);

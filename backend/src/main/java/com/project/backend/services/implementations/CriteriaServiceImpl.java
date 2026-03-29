@@ -9,15 +9,18 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional(readOnly = true)
 public class CriteriaServiceImpl implements CriteriaService {
     private final CriteriaRepository criteriaRepository;
     private final CategoryRepository categoryRepository;
 
     @Override
+    @Transactional
     public Criteria create(Long categoryId, String text) {
         Category category = categoryRepository.findById(categoryId).orElseThrow(() -> new EntityNotFoundException("Category with id " + categoryId + " not found"));
         Criteria criteria = new Criteria();
@@ -27,6 +30,7 @@ public class CriteriaServiceImpl implements CriteriaService {
     }
 
     @Override
+    @Transactional
     public Criteria update(Long criteriaId, String text) {
         Criteria criteriaToUpdate = findById(criteriaId);
         criteriaToUpdate.setText(text);
@@ -38,6 +42,7 @@ public class CriteriaServiceImpl implements CriteriaService {
     }
 
     @Override
+    @Transactional
     public void delete(Long criteriaId) {
         Criteria criteria = findById(criteriaId);
         criteriaRepository.delete(criteria);

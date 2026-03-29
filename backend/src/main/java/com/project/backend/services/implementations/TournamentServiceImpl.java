@@ -14,20 +14,24 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional(readOnly = true)
 public class TournamentServiceImpl implements TournamentService {
     private final TournamentRepository tournamentRepository;
 
     @Override
+    @Transactional
     public Tournament create(Tournament tournament) {
         tournament.setStatus(TournamentStatus.DRAFT);
         return tournamentRepository.save(tournament);
     }
 
     @Override
+    @Transactional
     public Tournament update(Long tournamentId, Tournament tournament) {
         Tournament tournamentToUpdate = findById(tournamentId);
         tournamentToUpdate.setName(tournament.getName());
@@ -42,6 +46,7 @@ public class TournamentServiceImpl implements TournamentService {
     }
 
     @Override
+    @Transactional
     public void delete(Long tournamentId) {
         Tournament tournament = findById(tournamentId);
         tournamentRepository.delete(tournament);

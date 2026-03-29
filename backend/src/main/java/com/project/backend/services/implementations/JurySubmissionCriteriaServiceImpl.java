@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -24,14 +25,15 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional(readOnly = true)
 public class JurySubmissionCriteriaServiceImpl implements JurySubmissionCriteriaService {
     private final JurySubmissionCriteriaRepository jurySubmissionCriteriaRepository;
     private final JurySubmissionRepository jurySubmissionRepository;
     private final CriteriaRepository criteriaRepository;
 
     @Override
+    @Transactional
     public JurySubmissionCriteria set(Long submissionId, Long criteriaId, Long value, User jury) {
-        // 1. Находим или создаём объект JurySubmission
         JurySubmission jurySubmission = findJurySubmissionById(submissionId, jury.getId());
 
         JurySubmissionCriteriaId id = new JurySubmissionCriteriaId();

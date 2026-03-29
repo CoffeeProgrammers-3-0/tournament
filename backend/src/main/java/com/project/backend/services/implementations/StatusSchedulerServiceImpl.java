@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional(readOnly = true)
 public class StatusSchedulerServiceImpl {
 
     private final TournamentRepository tournamentRepository;

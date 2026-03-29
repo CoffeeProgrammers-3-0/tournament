@@ -1,5 +1,6 @@
 package com.project.backend.dto.user;
 
+import com.project.backend.models.constants.TournamentStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -24,4 +25,7 @@ public class UserResponseForTeam {
 
     @Schema(description = "Name of the tournament", example = "CODE4FUTURE 2026")
     private String tournamentName;
+
+    @Schema(description = "Status of the tournament", example = "RUNNING")
+    private TournamentStatus tournamentStatus;
 }

@@ -19,10 +19,12 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional(readOnly = true)
 public class SubmissionServiceImpl implements SubmissionService {
     private final SubmissionRepository submissionRepository;
     private final RoundRepository roundRepository;
@@ -37,6 +39,7 @@ public class SubmissionServiceImpl implements SubmissionService {
     }
 
     @Override
+    @Transactional
     public Submission create(Long roundId, User creator, Submission submission) {
         Round round = roundRepository.getReferenceById(roundId);
         Team team = teamRepository.findOne(Specification.allOf(TeamSpecification.byUserId(creator.getId()), TeamSpecification.byRoundId(roundId))).orElseThrow(() -> new EntityNotFoundException("Team for round with id " + roundId + " for user with id " + creator.getId() + " not found"));
@@ -46,6 +49,7 @@ public class SubmissionServiceImpl implements SubmissionService {
     }
 
     @Override
+    @Transactional
     public Submission update(Long submissionId, Submission submission) {
         Submission submissionToUpdate = findById(submissionId);
         submissionToUpdate.setDescription(submission.getDescription());
@@ -55,6 +59,7 @@ public class SubmissionServiceImpl implements SubmissionService {
     }
 
     @Override
+    @Transactional
     public void delete(Long submissionId) {
         Submission submission = findById(submissionId);
         submissionRepository.delete(submission);
@@ -78,6 +83,7 @@ public class SubmissionServiceImpl implements SubmissionService {
     }
 
     @Override
+    @Transactional
     public Submission setJury(Long submissionId, Long juryId) {
         if(jurySubmissionRepository.exists(Specification.allOf(JurySubmissionSpecification.bySubmissionId(submissionId), JurySubmissionSpecification.byJuryId(juryId)))) {
             throw new IllegalStateException("Jury with id " + juryId + " is already assigned to submission with id " + submissionId);
@@ -97,6 +103,7 @@ public class SubmissionServiceImpl implements SubmissionService {
     }
 
     @Override
+    @Transactional
     public Submission removeJury(Long submissionId, Long juryId) {
         if(!jurySubmissionRepository.exists(Specification.allOf(JurySubmissionSpecification.bySubmissionId(submissionId), JurySubmissionSpecification.byJuryId(juryId)))) {
             throw new IllegalStateException("Jury with id " + juryId + " is not assigned to submission with id " + submissionId);

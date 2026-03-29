@@ -20,6 +20,7 @@ public interface UserMapper {
     @Mapping(target = "email", source = "user.email")
     @Mapping(target = "tournamentId", source = "tournament.id")
     @Mapping(target = "tournamentName", source = "tournament.name")
+    @Mapping(target = "tournamentStatus", source = "tournament.status")
     UserResponseForTeam fromTeamParticipantToResponseForTeam(TeamParticipant teamParticipant);
 
 }

@@ -17,10 +17,10 @@ import com.project.backend.repositories.specifications.JurySpecification;
 import com.project.backend.repositories.specifications.JurySubmissionSpecification;
 import com.project.backend.repositories.specifications.SubmissionSpecification;
 import com.project.backend.services.interfaces.EvaluationService;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -29,6 +29,7 @@ import java.util.List;
 @Service
 @Slf4j
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class EvaluationServiceImpl implements EvaluationService {
     private final SubmissionRepository submissionRepository;
     private final JurySubmissionRepository jurySubmissionRepository;
@@ -86,15 +87,17 @@ public class EvaluationServiceImpl implements EvaluationService {
         return jurySubmissionRepository.exists(JurySubmissionSpecification.bySubmissionIdAndJuryId(sub.getId(), currentJury.getId()));
     }
 
+    @Transactional
     private void saveAssignment(User judge, Submission sub) {
         JurySubmission assignment = new JurySubmission();
         assignment.setJury(judge);
         assignment.setSubmission(sub);
+        assignment = jurySubmissionRepository.save(assignment);
         fillWithZeroPoints(assignment);
-        jurySubmissionRepository.save(assignment);
     }
 
     @Override
+    @Transactional
     public void fillWithZeroPoints(JurySubmission assignment) {
         Round round = assignment.getSubmission().getRound();
 
