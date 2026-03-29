@@ -1,7 +1,8 @@
 package com.project.backend.controllers;
 
+import com.project.backend.dto.teamTask.TeamTaskFullResponse;
+import com.project.backend.dto.teamTask.TeamTaskListResponse;
 import com.project.backend.dto.teamTask.TeamTaskRequest;
-import com.project.backend.dto.teamTask.TeamTaskResponse;
 import com.project.backend.dto.wrapper.PaginationListResponse;
 import com.project.backend.mappers.TeamTaskMapper;
 import com.project.backend.models.TeamTask;
@@ -34,7 +35,7 @@ public class TeamTaskController {
 
     @PostMapping("/{round_id}")
     @Operation(summary = "Create team task", description = "Creates a new task for a team")
-    public TeamTaskResponse createTask(
+    public TeamTaskListResponse createTask(
             @Parameter(description = "ID of the round", example = "1")
             @PathVariable(value = "round_id") Long roundId,
 
@@ -43,20 +44,20 @@ public class TeamTaskController {
 
             @Parameter(hidden = true) Authentication authentication) {
         User creator = userService.findUserByAuth(authentication);
-        return teamTaskMapper.fromTeamTaskToResponse(
+        return teamTaskMapper.fromTeamTaskToListResponse(
                 teamTaskService.createTask(creator, roundId, teamTaskMapper.fromRequestToTeamTask(teamTaskRequest))
         );
     }
 
     @PutMapping("/{team_task_id}")
     @Operation(summary = "Update team task", description = "Updates an existing task")
-    public TeamTaskResponse updateTask(
+    public TeamTaskListResponse updateTask(
             @Parameter(description = "ID of the team task", example = "1")
             @PathVariable(value = "team_task_id") Long teamTaskId,
 
             @Parameter(description = "Team task update request")
             @Valid @RequestBody TeamTaskRequest teamTaskRequest) {
-        return teamTaskMapper.fromTeamTaskToResponse(
+        return teamTaskMapper.fromTeamTaskToListResponse(
                 teamTaskService.updateTask(teamTaskId, teamTaskMapper.fromRequestToTeamTask(teamTaskRequest))
         );
     }
@@ -69,9 +70,17 @@ public class TeamTaskController {
         teamTaskService.deleteTask(teamTaskId);
     }
 
+    @GetMapping("/{team_task_id}")
+    @Operation(summary = "Get team task", description = "Gets a task by its ID")
+    public TeamTaskFullResponse getTask(
+            @Parameter(description = "ID of the team task", example = "1")
+            @PathVariable(value = "team_task_id") Long teamTaskId) {
+        return teamTaskMapper.fromTeamTaskToFullResponse(teamTaskService.findById(teamTaskId));
+    }
+
     @PatchMapping("/{team_task_id}/update-meta")
     @Operation(summary = "Update task meta", description = "Updates status, priority, or type of the task")
-    public TeamTaskResponse updateTaskMeta(
+    public TeamTaskListResponse updateTaskMeta(
             @Parameter(description = "ID of the team task", example = "1")
             @PathVariable(value = "team_task_id") Long teamTaskId,
 
@@ -83,27 +92,27 @@ public class TeamTaskController {
 
             @Parameter(description = "Task type filter", example = "BUG")
             @RequestParam(required = false) TaskType type) {
-        return teamTaskMapper.fromTeamTaskToResponse(
+        return teamTaskMapper.fromTeamTaskToListResponse(
                 teamTaskService.updateTaskMeta(teamTaskId, status, priority, type)
         );
     }
 
     @PatchMapping("/{team_task_id}/assign/{assignee_id}")
     @Operation(summary = "Assign task", description = "Assigns a user to the task")
-    public TeamTaskResponse updateAssignee(
+    public TeamTaskListResponse updateAssignee(
             @Parameter(description = "ID of the team task", example = "1")
             @PathVariable(value = "team_task_id") Long teamTaskId,
 
             @Parameter(description = "ID of the assignee", example = "2")
             @PathVariable(value = "assignee_id") Long assigneeId) {
-        return teamTaskMapper.fromTeamTaskToResponse(
+        return teamTaskMapper.fromTeamTaskToListResponse(
                 teamTaskService.updateAssignee(teamTaskId, assigneeId)
         );
     }
 
     @GetMapping("/round/{round_id}/my")
     @Operation(summary = "Get tasks for my team and round", description = "Returns paginated list of tasks for the authenticated user's team in the given round")
-    public PaginationListResponse<TeamTaskResponse> getTasksForMyTeamAndRound(
+    public PaginationListResponse<TeamTaskListResponse> getTasksForMyTeamAndRound(
             @Parameter(description = "ID of the round", example = "1")
             @PathVariable(value = "round_id") Long roundId,
 
@@ -129,17 +138,17 @@ public class TeamTaskController {
         User me = userService.findUserByAuth(authentication);
         Page<TeamTask> teamTaskPage = teamTaskService.findAllByTeamIdAndRoundId(page, size, search, me, roundId, status, type, priority);
 
-        PaginationListResponse<TeamTaskResponse> response = new PaginationListResponse<>();
+        PaginationListResponse<TeamTaskListResponse> response = new PaginationListResponse<>();
         response.setTotalPages(teamTaskPage.getTotalPages());
         response.setContent(teamTaskPage.getContent().stream()
-                .map(teamTaskMapper::fromTeamTaskToResponse)
+                .map(teamTaskMapper::fromTeamTaskToListResponse)
                 .toList());
         return response;
     }
 
     @GetMapping("/my")
     @Operation(summary = "Get my tasks", description = "Returns paginated list of tasks assigned to the authenticated user")
-    public PaginationListResponse<TeamTaskResponse> getMyTasks(
+    public PaginationListResponse<TeamTaskListResponse> getMyTasks(
             @Parameter(description = "Page number (starting from 0)", example = "0")
             @RequestParam(value = "page") Integer page,
 
@@ -162,10 +171,10 @@ public class TeamTaskController {
         User me = userService.findUserByAuth(authentication);
         Page<TeamTask> teamTaskPage = teamTaskService.findAllForUser(page, size, search, me, status, type, priority);
 
-        PaginationListResponse<TeamTaskResponse> response = new PaginationListResponse<>();
+        PaginationListResponse<TeamTaskListResponse> response = new PaginationListResponse<>();
         response.setTotalPages(teamTaskPage.getTotalPages());
         response.setContent(teamTaskPage.getContent().stream()
-                .map(teamTaskMapper::fromTeamTaskToResponse)
+                .map(teamTaskMapper::fromTeamTaskToListResponse)
                 .toList());
         return response;
     }

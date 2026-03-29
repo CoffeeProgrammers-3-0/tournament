@@ -127,4 +127,9 @@ public class TeamTaskServiceImpl implements TeamTaskService {
                 pageRequest
         );
     }
+
+    @Override
+    public TeamTask findById(Long teamTaskId) {
+        return teamTaskRepository.findById(teamTaskId).orElseThrow(() -> new EntityNotFoundException("Team task with id " + teamTaskId + " not found"));
+    }
 }

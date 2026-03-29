@@ -22,4 +22,6 @@ public interface TeamTaskService {
     Page<TeamTask> findAllByTeamIdAndRoundId(Integer page, Integer size, String search, User user, Long roundId, TaskStatus status, TaskType type, TaskPriority priority);
 
     Page<TeamTask> findAllForUser(Integer page, Integer size, String search, User user, TaskStatus status, TaskType type, TaskPriority priority);
+
+    TeamTask findById(Long teamTaskId);
 }
