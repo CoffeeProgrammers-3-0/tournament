@@ -6,6 +6,8 @@ import com.project.backend.models.constants.Role;
 import org.springframework.data.domain.Page;
 import org.springframework.security.core.Authentication;
 
+import java.util.List;
+
 public interface UserService {
     User updateUser(User user, long userId);
 
@@ -40,4 +42,6 @@ public interface UserService {
     Page<User> findAllJuriesUsersForSubmission(Integer page, Integer size, String query, Long submissionId);
 
     Page<User> findAllAvailableJuriesUsersForSubmission(Integer page, Integer size, String query, Long submissionId);
+
+    List<User> findAllUsersOfUsersTeam(User user, Long roundId);
 }

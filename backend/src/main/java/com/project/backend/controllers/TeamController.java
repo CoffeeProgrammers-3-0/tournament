@@ -2,8 +2,10 @@ package com.project.backend.controllers;
 
 import com.project.backend.dto.team.*;
 import com.project.backend.dto.user.UserCreateRequestForTeam;
+import com.project.backend.dto.user.UserResponse;
 import com.project.backend.dto.wrapper.PaginationListResponse;
 import com.project.backend.mappers.TeamMapper;
+import com.project.backend.mappers.UserMapper;
 import com.project.backend.models.Team;
 import com.project.backend.models.User;
 import com.project.backend.services.interfaces.TeamService;
@@ -17,6 +19,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @Slf4j
@@ -25,6 +29,7 @@ import org.springframework.web.bind.annotation.*;
 public class TeamController {
     private final TeamService teamService;
     private final UserService userService;
+    private final UserMapper userMapper;
     private final TeamMapper teamMapper;
 
     @GetMapping("/check/{tournament_id}")
@@ -253,5 +258,18 @@ public class TeamController {
                 .toList());
 
         return response;
+    }
+
+    @GetMapping("/round/{round_id}/users")
+    @Operation(summary = "Get user by round", description = "Returns list of users for the specified round of my team")
+    public List<UserResponse> getAllUsersByRoundOfMyTeam(
+            @Parameter(description = "ID of the round", example = "1")
+            @PathVariable(value = "round_id") Long roundId,
+
+            @Parameter(hidden = true)
+            Authentication authentication
+    ) {
+        User me = userService.findUserByAuth(authentication);
+        return userService.findAllUsersOfUsersTeam(me, roundId).stream().map(userMapper::fromUserToResponse).toList();
     }
 }

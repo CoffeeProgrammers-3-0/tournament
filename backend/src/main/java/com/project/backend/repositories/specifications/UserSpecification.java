@@ -1,10 +1,15 @@
 package com.project.backend.repositories.specifications;
 
+import com.project.backend.models.Round;
+import com.project.backend.models.Team;
+import com.project.backend.models.Tournament;
 import com.project.backend.models.User;
 import com.project.backend.models.constants.Role;
 import com.project.backend.models.join_tables.Jury;
 import com.project.backend.models.join_tables.JurySubmission;
+import com.project.backend.models.join_tables.TeamParticipant;
 import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
 import lombok.extern.slf4j.Slf4j;
@@ -90,6 +95,37 @@ public class UserSpecification {
                     );
 
             return cb.not(cb.exists(subquery));
+        };
+    }
+
+    public static Specification<User> teammatesInRound(Long userId, Long roundId) {
+        log.debug("UserSpecification.teammatesInRound called with userId={}, roundId={}", userId, roundId);
+        if (userId == null || roundId == null) return null;
+
+        return (root, query, cb) -> {
+            query.distinct(true);
+
+            Join<User, TeamParticipant> tp = root.join("teamParticipants");
+            Join<TeamParticipant, Team> team = tp.join("team");
+            Join<TeamParticipant, Tournament> tournament = tp.join("tournament");
+
+            Join<Tournament, Round> round = tournament.join("rounds");
+
+            Predicate roundCondition = cb.equal(round.get("id"), roundId);
+
+            Subquery<Long> subquery = query.subquery(Long.class);
+            Root<TeamParticipant> subTp = subquery.from(TeamParticipant.class);
+            Join<TeamParticipant, Tournament> subTournament = subTp.join("tournament");
+
+            subquery.select(subTp.get("team").get("id"))
+                    .where(
+                            cb.equal(subTp.get("user").get("id"), userId),
+                            cb.equal(subTournament.get("id"), tournament.get("id"))
+                    );
+
+            Predicate sameTeam = team.get("id").in(subquery);
+
+            return cb.and(roundCondition, sameTeam);
         };
     }
 }

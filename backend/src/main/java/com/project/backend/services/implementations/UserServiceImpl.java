@@ -310,4 +310,9 @@ public class UserServiceImpl implements UserService {
                         UserSpecification.byFullName(query)),
                 pageRequest);
     }
+
+    @Override
+    public List<User> findAllUsersOfUsersTeam(User user, Long roundId) {
+        return userRepository.findAll(UserSpecification.teammatesInRound(user.getId(), roundId), Sort.by(Sort.Direction.ASC, "fullName"));
+    }
 }
