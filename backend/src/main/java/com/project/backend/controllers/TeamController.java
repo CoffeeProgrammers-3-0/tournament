@@ -261,7 +261,7 @@ public class TeamController {
     }
 
     @GetMapping("/round/{round_id}/users")
-    @Operation(summary = "Get user by round", description = "Returns list of users for the specified round of my team")
+    @Operation(summary = "Get users by round", description = "Returns list of users for the specified round of my team")
     public List<UserResponse> getAllUsersByRoundOfMyTeam(
             @Parameter(description = "ID of the round", example = "1")
             @PathVariable(value = "round_id") Long roundId,
