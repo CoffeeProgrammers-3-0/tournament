@@ -11,6 +11,7 @@ import type {TeamLeaderboardResponseDto} from "../../../../entities/team/team.dt
 import type {SubmissionListResponseDto} from "../../../../entities/submission/submission.dto";
 import {teamTaskService} from "../../../../services/impl/TeamTaskService.ts";
 import type {TeamTaskResponseDto} from "../../../../entities/teamTask/teamtask.dto.ts";
+import {teamService} from "../../../../services/impl/TeamService.ts";
 
 export const useRoundDetails = (id?: string) => {
     const navigate = useNavigate();
@@ -34,6 +35,8 @@ export const useRoundDetails = (id?: string) => {
     const [tasks, setTasks] = useState<TeamTaskResponseDto[]>([]);
     const [tasksPage, setTasksPage] = useState(0);
     const [tasksTotalPages, setTasksTotalPages] = useState(0);
+
+    const [myTeamUsers, setMyTeamUsers] = useState<UserResponseDto[]>([]);
 
     const fetchCheckSubmission = useCallback(async () => {
         if (!id) return;
@@ -117,6 +120,12 @@ export const useRoundDetails = (id?: string) => {
         }
     }, [id]);
 
+    const fetchAllMyTeammates = useCallback(async () => {
+        try {
+            setMyTeamUsers(await teamService.getAllUsersByRoundOfMyTeam(Number(id)));
+        } catch (error: any) {}
+    }, [id]);
+
     useEffect(() => {
         fetchRound();
         fetchCheckSubmission(); // Викликаємо перевірку при завантаженні
@@ -157,6 +166,6 @@ export const useRoundDetails = (id?: string) => {
         fetchSubmissions,
         submissionId,
         fetchCheckSubmission,
-        tasks, tasksPage, tasksTotalPages, fetchTasks
+        tasks, tasksPage, tasksTotalPages, fetchTasks, fetchAllMyTeammates, myTeamUsers
     };
 };
