@@ -50,7 +50,7 @@ export const GradingForm = ({ categories, scores, onScoreChange, disabled, t }: 
                                     flexWrap: "wrap",
                                     py: 1
                                 }}>
-                                    <Typography variant="body1" sx={{ flex: 1, fontWeight: 500 }}>
+                                    <Typography variant="body1" sx={{ flex: 1, fontWeight: 500, color: disabled ? 'text.secondary' : 'text.primary' }}>
                                         {criteria.text}
                                     </Typography>
                                     <TextField
@@ -62,7 +62,15 @@ export const GradingForm = ({ categories, scores, onScoreChange, disabled, t }: 
                                         disabled={disabled}
                                         InputProps={{
                                             endAdornment: <InputAdornment position="end">/ 100</InputAdornment>,
-                                            sx: { borderRadius: '10px', fontWeight: 700 }
+                                            sx: {
+                                                borderRadius: '10px',
+                                                fontWeight: 700,
+                                                // Робимо текст більш контрастним у стані disabled
+                                                '&.Mui-disabled': {
+                                                    WebkitTextFillColor: 'rgba(0, 0, 0, 0.87)',
+                                                    bgcolor: 'action.hover'
+                                                }
+                                            }
                                         }}
                                         sx={{ width: "130px" }}
                                     />

@@ -1,4 +1,17 @@
-import {Box, Button, Card, CardContent, Divider, Grid, MenuItem, Paper, TextField, Typography} from "@mui/material";
+import {
+    Alert,
+    AlertTitle,
+    Box,
+    Button,
+    Card,
+    CardContent,
+    Divider,
+    Grid,
+    MenuItem,
+    Paper,
+    TextField,
+    Typography
+} from "@mui/material";
 import SaveIcon from "@mui/icons-material/Save";
 import {ErrorMessages} from "../../../../components/main/ErrorMessages.tsx";
 
@@ -10,6 +23,11 @@ export const InfoTab = ({ state, formatDate, t }: any) => {
                     <Paper sx={{ p: 4, borderRadius: "24px", border: "1px solid #e0e0e0" }}>
                         <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
                             <ErrorMessages errors={state.errors} />
+                            {state.tournamentData.status !== state.editFormData.status &&
+                                <Alert severity="warning" sx={{mb: 3, borderRadius: "16px"}}>
+                                    <AlertTitle sx={{fontWeight: 700}}>{t("common.warning")}</AlertTitle>
+                                </Alert>
+                            }
                             <Grid container spacing={2}>
                                 <Grid size={{ xs: 12, sm: 8 }}>
                                     <TextField fullWidth label={t("tournaments.admin.fields.name")} value={state.editFormData.name} onChange={(e) => state.setEditFormData({ ...state.editFormData, name: e.target.value })} />

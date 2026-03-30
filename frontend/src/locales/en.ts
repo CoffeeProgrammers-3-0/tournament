@@ -53,7 +53,9 @@ export const en = {
         "yes_confirm": "Confirm",
         "no": "Cancel",
         "search": "Search",
-        "errors": "Solve this errors"
+        "errors": "Solve this errors",
+        "warning": "Be carefully with changing status. System will change data auto to correct",
+        "ok": "Ok",
     },
 
     home: {
@@ -301,6 +303,8 @@ export const en = {
         "category_weight": "Weight",
         "score_0_100": "Score 0-100",
         "no_categories": "No categories available",
+        "info.round_evaluated": "This round is ended so you can`t evaluate it anymore.",
+        "success.scores_saved": "Scores saved successfully!",
     },
     juries: {
         "management_title": "Management of Jury",
