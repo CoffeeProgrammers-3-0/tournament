@@ -1,4 +1,5 @@
 import {
+    Alert,
     Box,
     Button,
     Card,
@@ -19,6 +20,7 @@ type Props = {
     categories: CategoryResponseDto[];
     loadingTab: boolean;
     isAdmin: boolean;
+    isReadOnly?: boolean; // ДОДАНО: проп для перевірки статусу EVALUATED
     onOpenCategoryModal: () => void;
     onDeleteCategory: (categoryId: number) => void;
     onOpenCriteriaModal: (categoryId: number) => void;
@@ -28,21 +30,31 @@ type Props = {
 };
 
 export const RoundCategoriesTab = ({
-                                       categories, loadingTab, isAdmin,
+                                       categories, loadingTab, isAdmin, isReadOnly,
                                        onOpenCategoryModal, onDeleteCategory, onOpenCriteriaModal, onDeleteCriteria, t, errors
                                    }: Props) => {
+
+    // Створюємо загальну змінну для перевірки прав на редагування
+    const canEdit = isAdmin && !isReadOnly;
 
     return (
         <Box>
             <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3, alignItems: "center" }}>
                 <Typography variant="h5" fontWeight={700}>{t("round_details.tabs.categories")}</Typography>
                 <ErrorMessages errors={errors}/>
-                {isAdmin && (
+                {canEdit && (
                     <Button variant="contained" color="primary" startIcon={<AddIcon />} onClick={onOpenCategoryModal}>
                         {t("round_details.categories.add_category")}
                     </Button>
                 )}
             </Box>
+
+            {/* ДОДАНО: Інформаційний банер, якщо раунд завершено */}
+            {isReadOnly && (
+                <Alert severity="info" sx={{ mb: 3, borderRadius: '16px', '& .MuiAlert-message': { fontWeight: 600 } }}>
+                    {t('round_details.categories.evaluated_info', 'Цей раунд завершено. Категорії та критерії доступні лише для перегляду і не можуть бути змінені.')}
+                </Alert>
+            )}
 
             {loadingTab ? (
                 <CircularProgress sx={{ display: "block", mx: "auto", my: 4 }} />
@@ -59,7 +71,7 @@ export const RoundCategoriesTab = ({
                                                 {t("round_details.categories.weight")} <b>{cat.weight}</b>
                                             </Typography>
                                         </Box>
-                                        {isAdmin && (
+                                        {canEdit && (
                                             <IconButton size="small" color="error" onClick={() => onDeleteCategory(cat.id)}>
                                                 <DeleteOutlineIcon fontSize="small" />
                                             </IconButton>
@@ -75,11 +87,12 @@ export const RoundCategoriesTab = ({
                                                 label={crit.text}
                                                 variant="filled"
                                                 size="small"
-                                                onDelete={isAdmin ? () => onDeleteCriteria(cat.id, crit.id) : undefined}
+                                                // Дозволяємо видаляти тільки якщо canEdit === true
+                                                onDelete={canEdit ? () => onDeleteCriteria(cat.id, crit.id) : undefined}
                                                 sx={{ bgcolor: "grey.200", fontWeight: 500 }}
                                             />
                                         ))}
-                                        {isAdmin && (
+                                        {canEdit && (
                                             <Chip
                                                 icon={<AddIcon fontSize="small" />}
                                                 label={t("round_details.categories.add_criteria")}

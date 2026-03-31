@@ -143,7 +143,19 @@ export const RoundDetailsPage = () => {
                 <RoundInfoTab roundData={details.roundData} isAdmin={isAdmin} isEditingInfo={editors.isEditingInfo} editFormData={editors.editFormData} setEditFormData={editors.setEditFormData} handleStatusChange={editors.handleStatusChange} handleSaveUpdate={editors.handleSaveUpdate} cancelEditing={() => editors.setIsEditingInfo(false)} t={t} errors={editors.errors}/>
             )}
             {activeTabId === "categories" && (
-                <RoundCategoriesTab categories={details.categories} loadingTab={details.loadingTab} isAdmin={isAdmin} onOpenCategoryModal={() => editors.setCategoryModalOpen(true)} onDeleteCategory={editors.handleDeleteCategory} onOpenCriteriaModal={(cid) => { editors.setSelectedCategoryId(cid); editors.setCriteriaModalOpen(true); }} onDeleteCriteria={editors.handleDeleteCriteria} t={t} errors={editors.errors}/>
+                <RoundCategoriesTab
+                    categories={details.categories}
+                    loadingTab={details.loadingTab}
+                    isAdmin={isAdmin}
+                    isReadOnly={details.roundData?.status === "EVALUATED"}
+
+                    onOpenCategoryModal={() => editors.setCategoryModalOpen(true)}
+                    onDeleteCategory={editors.handleDeleteCategory}
+                    onOpenCriteriaModal={(cid) => { editors.setSelectedCategoryId(cid); editors.setCriteriaModalOpen(true); }}
+                    onDeleteCriteria={editors.handleDeleteCriteria}
+                    t={t}
+                    errors={editors.errors}
+                />
             )}
             {activeTabId === "jury" && (
                 <RoundJuryTab jury={details.jury} loadingTab={details.loadingTab} isAdmin={isAdmin} onOpenJuryModal={editors.handleOpenJuryModal} onRemoveJury={editors.handleRemoveJury} t={t} errors={editors.errors}/>

@@ -355,15 +355,26 @@ export const useRoundEditors = ({id, roundData, setRoundData, fetchCategories, f
 
     const handleAutoAssignJuries = useCallback(async () => {
         if (!roundId) return;
-        clearErrors();
-        try {
-            await roundService.autoAssignJuries(roundId, kValue);
-            setAutoAssignModalOpen(false);
-            await fetchSubmissions();
-            triggerConfirm({ title: "Complete", description: `Juries assigned (k=${kValue}).`, onConfirm: closeConfirm });
-        } catch (error: any) {
-            handleError(error, "Помилка автоматичного призначення журі");
-        }
+        triggerConfirm({
+            title: "Auto-assign",
+            description: "Are you really sure to do this? It will rewrite all assignments and delete all points",
+            confirmColor: "error",
+            onConfirm: async () => {
+                clearErrors();
+                try {
+                    await roundService.autoAssignJuries(roundId, kValue);
+                    setAutoAssignModalOpen(false);
+                    await fetchSubmissions();
+                    triggerConfirm({
+                        title: "Complete",
+                        description: `Juries assigned (k=${kValue}).`,
+                        onConfirm: closeConfirm
+                    });
+                } catch (error: any) {
+                    handleError(error, "Помилка автоматичного призначення журі");
+                }
+            }
+        })
     }, [roundId, kValue, fetchSubmissions, closeConfirm, triggerConfirm, clearErrors, handleError]);
 
     const handleSaveUpdate = useCallback(async () => {

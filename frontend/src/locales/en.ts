@@ -454,7 +454,7 @@ export const en = {
         "submissions": {
             "auto_assign": "Auto assign juries for all submissions",
             "auto_assign_title": "Auto assign juries",
-            "auto_assign_desc": "Enter number of juries per submission. Note: this will erase all existing jury assignments.",
+            "auto_assign_desc": "Enter number of juries per submission. Note: this will erase all existing jury assignments and points.",
         }
     },
 
