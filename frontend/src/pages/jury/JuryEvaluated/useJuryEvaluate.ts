@@ -89,7 +89,7 @@ export const useJuryEvaluate = () => {
                     const points = scores[criteria.id];
                     if (points === undefined) continue;
 
-                    const payload = { value: points };
+                    const payload = { points: points };
                     // Оновлюємо тільки якщо значення змінилося або ще не існує
                     if (!existingScores[criteria.id] || existingScores[criteria.id].points !== points) {
                         promises.push(juryCriteriaService.updateScore(Number(submissionId), criteria.id, payload));

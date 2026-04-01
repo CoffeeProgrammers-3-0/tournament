@@ -5,3 +5,7 @@ export interface JuryCriteriaResponseDto {
     criteria: CriteriaResponseDto;
     points: number;
 }
+
+export interface JuryCriteriaRequestDto {
+    points: number;
+}

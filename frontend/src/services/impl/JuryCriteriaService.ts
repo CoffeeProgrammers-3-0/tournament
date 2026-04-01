@@ -1,14 +1,13 @@
 // services/JuryCriteriaService.ts
 import BaseService from '../BaseService';
-import type {JuryCriteriaResponseDto} from "../../entities/juryCriteria/juryCriteria.dto.ts";
-import type {LongDto} from "../../entities/wrappers/wrapper.dto.ts";
+import type {JuryCriteriaRequestDto, JuryCriteriaResponseDto} from "../../entities/juryCriteria/juryCriteria.dto.ts";
 
 class JuryCriteriaService extends BaseService {
     constructor() {
         super('/jury-criteria');
     }
 
-    public updateScore(submissionId: number, criteriaId: number, data: LongDto): Promise<JuryCriteriaResponseDto> {
+    public updateScore(submissionId: number, criteriaId: number, data: JuryCriteriaRequestDto): Promise<JuryCriteriaResponseDto> {
         return this.put<JuryCriteriaResponseDto>(
             `/submission/${submissionId}/criteria/${criteriaId}`,
             data
