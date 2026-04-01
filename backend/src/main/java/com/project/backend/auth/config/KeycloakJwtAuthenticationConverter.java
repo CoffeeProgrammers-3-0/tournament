@@ -2,6 +2,7 @@ package com.project.backend.auth.config;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
@@ -21,7 +22,8 @@ import static java.util.stream.Collectors.toSet;
 @Slf4j
 @Component
 public class KeycloakJwtAuthenticationConverter implements Converter<Jwt, AbstractAuthenticationToken> {
-    private final String clientId;
+    @Value("${client-id}")
+    private String clientId;
 
     @Override
     public AbstractAuthenticationToken convert(Jwt source) {

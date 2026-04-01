@@ -70,9 +70,9 @@ public class TeamTaskServiceImpl implements TeamTaskService {
         TeamTask teamTaskToUpdate = teamTaskRepository.findById(teamTaskId).orElseThrow(() -> new EntityNotFoundException("Team task with id " + teamTaskId + " not found"));
         teamTaskToUpdate.setTitle(teamTask.getTitle());
         teamTaskToUpdate.setDescription(teamTask.getDescription());
-        teamTaskToUpdate.setStatus(teamTaskToUpdate.getStatus() == null ? TaskStatus.TODO : teamTask.getStatus());
-        teamTaskToUpdate.setType(teamTask.getType());
-        teamTaskToUpdate.setPriority(teamTask.getPriority());
+        teamTaskToUpdate.setStatus(teamTask.getStatus() == null ? teamTaskToUpdate.getStatus() : teamTask.getStatus());
+        teamTaskToUpdate.setType(teamTask.getType() == null ? teamTaskToUpdate.getType() : teamTask.getType());
+        teamTaskToUpdate.setPriority(teamTask.getPriority() == null ? teamTaskToUpdate.getPriority() : teamTask.getPriority());
         return teamTaskRepository.save(teamTaskToUpdate);
     }
 
