@@ -19,4 +19,6 @@ public interface TournamentService {
     Page<Tournament> findAllByUserNot(Integer page, Integer size, String search, TournamentStatus status, User user);
 
     Tournament findById(Long tournamentId);
+
+    Tournament findByIdAdmin(Long tournamentId);
 }

@@ -56,4 +56,12 @@ public class CriteriaSpecification {
         return (root, query, cb) ->
                 cb.equal(root.get("category").get("round").get("id"), roundId);
     }
+
+    public static Specification<Criteria> byTextEqual(String text) {
+        log.debug("CriteriaSpecification.byTextEqual called with text={}", text);
+        if (text == null || text.isBlank()) return null;
+
+        return (root, query, cb) ->
+                cb.equal(root.get("text"), text);
+    }
 }

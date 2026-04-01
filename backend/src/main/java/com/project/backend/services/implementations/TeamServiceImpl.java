@@ -1,5 +1,6 @@
 package com.project.backend.services.implementations;
 
+import com.project.backend.auth.utils.SecurityUtil;
 import com.project.backend.dto.event.TeamCreatedEvent;
 import com.project.backend.dto.team.StatisticResponse;
 import com.project.backend.dto.team.StatisticRowDTO;
@@ -9,6 +10,7 @@ import com.project.backend.models.Team;
 import com.project.backend.models.Tournament;
 import com.project.backend.models.User;
 import com.project.backend.models.constants.Role;
+import com.project.backend.models.constants.TournamentStatus;
 import com.project.backend.models.ids.TeamParticipantId;
 import com.project.backend.models.join_tables.TeamParticipant;
 import com.project.backend.repositories.TeamParticipantRepository;
@@ -54,12 +56,12 @@ public class TeamServiceImpl implements TeamService {
     public Team create(Long tournamentId,
                        List<UserCreateRequestForTeam> users,
                        Team team) {
-        Tournament tournament = tournamentRepository.findById(tournamentId)
-                .orElseThrow(() -> new EntityNotFoundException("Tournament with id " + tournamentId + " not found"));
-
         if (users == null || users.isEmpty()) {
             throw new IllegalArgumentException("Team must contain at least one participant");
         }
+
+        Tournament tournament = tournamentRepository.findById(tournamentId)
+                .orElseThrow(() -> new EntityNotFoundException("Tournament with id " + tournamentId + " not found"));
 
         if (users.size() > tournament.getMaxCountOfTeam()) {
             throw new IllegalArgumentException("Number of participants exceeds tournament maxCountOfTeam");
@@ -168,6 +170,12 @@ public class TeamServiceImpl implements TeamService {
         Tournament tournament = tournamentRepository.findOne(TournamentSpecification.byId(tournamentId))
                 .orElseThrow(() -> new EntityNotFoundException("Tournament not found"));
 
+        if (!SecurityUtil.isAdmin()) {
+            if (tournament.getStatus() != TournamentStatus.REGISTRATION) {
+                throw new IllegalStateException("Only admins can add members after registration is closed.");
+            }
+        }
+
         if (team.getTeamParticipants().size() >= tournament.getMaxCountOfTeam()) {
             throw new IllegalStateException("Cannot add member: team has reached max number of participants");
         }
@@ -222,6 +230,14 @@ public class TeamServiceImpl implements TeamService {
     @Transactional
     public Team removeMember(Long teamId, Long userId, Long tournamentId) {
         Team team = findById(teamId);
+        Tournament tournament = tournamentRepository.findOne(TournamentSpecification.byId(tournamentId))
+                .orElseThrow(() -> new EntityNotFoundException("Tournament not found"));
+
+        if (!SecurityUtil.isAdmin()) {
+            if (tournament.getStatus() != TournamentStatus.REGISTRATION) {
+                throw new IllegalStateException("Only admins can remove members after registration is closed.");
+            }
+        }
 
         TeamParticipant participantToRemove = team.getTeamParticipants()
                 .stream()
@@ -240,6 +256,14 @@ public class TeamServiceImpl implements TeamService {
     @Transactional
     @Override
     public Team setLeader(Long teamId, Long userId, Long tournamentId) {
+        Tournament tournament = tournamentRepository.findById(tournamentId).orElseThrow(() -> new EntityNotFoundException("Tournament with id " + tournamentId + " not found"));
+
+        if (!SecurityUtil.isAdmin()) {
+            if (tournament.getStatus() != TournamentStatus.REGISTRATION) {
+                throw new IllegalStateException("Only admins can change leaders after registration is closed.");
+            }
+        }
+
         Team team = findById(teamId);
 
         team.getTeamParticipants()

@@ -19,6 +19,7 @@ import com.project.backend.services.interfaces.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ByteArrayResource;
@@ -27,7 +28,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -48,6 +49,7 @@ public class RoundController {
     private final UserMapper userMapper;
     private final ExcelExportService excelExportService;
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/{tournament_id}/rounds")
     @Operation(summary = "Create round", description = "Creates a new round inside the specified tournament")
     public RoundFullResponse create(
@@ -55,7 +57,7 @@ public class RoundController {
             @PathVariable(value = "tournament_id") Long tournamentId,
 
             @Parameter(description = "Round creation data")
-            @RequestBody RoundCreateRequest roundCreateRequest) {
+            @RequestBody @Valid RoundCreateRequest roundCreateRequest) {
         Round round = roundService.create(
                 tournamentId,
                 roundMapper.fromCreateRequestToRound(roundCreateRequest)
@@ -64,6 +66,7 @@ public class RoundController {
         return roundMapper.fromRoundToFullResponse(round);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/rounds/{round_id}")
     @Operation(summary = "Update round", description = "Updates an existing round")
     public RoundFullResponse update(
@@ -71,7 +74,7 @@ public class RoundController {
             @PathVariable(value = "round_id") Long roundId,
 
             @Parameter(description = "Updated round data")
-            @RequestBody RoundUpdateRequest roundUpdateRequest) {
+            @RequestBody @Valid RoundUpdateRequest roundUpdateRequest) {
         Round round = roundService.update(
                 roundId,
                 roundMapper.fromUpdateRequestToRound(roundUpdateRequest)
@@ -80,6 +83,7 @@ public class RoundController {
         return roundMapper.fromRoundToFullResponse(round);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/rounds/{round_id}")
     @Operation(summary = "Delete round", description = "Deletes a round by its ID")
     public void delete(
@@ -128,7 +132,7 @@ public class RoundController {
         return response;
     }
 
-    @GetMapping("/roundsByRound/{round_id}")
+    @GetMapping("/rounds-by-round/{round_id}")
     @Operation(summary = "Get tournament rounds", description = "Returns paginated list of rounds for a tournament with optional search and filtering by status found by round in the same tournament")
     public PaginationListResponse<RoundListResponse> getAllByRound(
             @Parameter(description = "Search rounds by name", example = "Final")
@@ -177,6 +181,7 @@ public class RoundController {
         return roundMapper.fromRoundToFullResponse(round);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/rounds/{round_id}/juries/{jury_id}")
     @Operation(summary = "Assign jury to round", description = "Assigns a jury member to the specified round")
     public void setJury(
@@ -188,6 +193,7 @@ public class RoundController {
         roundService.setJury(roundId, juryId);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/rounds/{round_id}/juries/{jury_id}")
     @Operation(summary = "Remove jury from round", description = "Removes a jury member from the specified round")
     public void removeJury(
@@ -199,6 +205,7 @@ public class RoundController {
         roundService.removeJury(roundId, juryId);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/rounds/{round_id}/auto-assign-juries")
     @Operation(summary = "Auto assign juries", description = "Automatically assigns submissions to jury members for evaluation")
     public void autoAssignJuries(
@@ -223,10 +230,7 @@ public class RoundController {
             @RequestParam(value = "last_team_id") Long lastTeamId,
 
             @Parameter(description = "Page size", example = "10")
-            @RequestParam(value = "size") Integer size,
-
-            @Parameter(hidden = true)
-            Authentication authentication) {
+            @RequestParam(value = "size") Integer size) {
         return teamService.getAllStatsByRoundId(roundId, lastTeamPoints, lastTeamId, size);
     }
 
@@ -260,10 +264,7 @@ public class RoundController {
             @RequestParam(value = "size") Integer size,
 
             @Parameter(description = "Round id", example = "1")
-            @PathVariable(value = "round_id") Long roundId,
-
-            @Parameter(hidden = true)
-            Authentication authentication) {
+            @PathVariable(value = "round_id") Long roundId) {
         Page<User> userPage = userService.findAllJuriesUsersForRound(page, size, query, roundId);
 
         PaginationListResponse<UserResponse> response = new PaginationListResponse<>();
@@ -279,6 +280,7 @@ public class RoundController {
         return response;
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/rounds/{round_id}/assign-teams")
     @Operation(summary = "Assign teams to round", description = "Assigns teams to an existing round")
     public void assignTeams(
@@ -293,6 +295,7 @@ public class RoundController {
         );
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/rounds/{round_id}/unassign-teams")
     @Operation(summary = "Unassign teams from round", description = "Unassigns teams from an existing round")
     public void unassignTeams(
@@ -307,6 +310,7 @@ public class RoundController {
         );
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/rounds/{round_id}/assign-all-teams")
     @Operation(summary = "Assign all teams to round", description = "Assigns all teams of tournament to an existing round")
     public void assignTeams(
@@ -317,6 +321,7 @@ public class RoundController {
         );
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/rounds/{round_id}/unassign-all-teams")
     @Operation(summary = "Unassign all teams from round", description = "Unassigns all teams of the tournament from an existing round")
     public void unassignTeams(
@@ -352,6 +357,7 @@ public class RoundController {
         return response;
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/rounds/{round_id}/not-teams")
     @Operation(summary = "Get teams by round not", description = "Returns paginated list of teams for the specified round")
     public PaginationListResponse<TeamListResponse> getAllTeamsByRoundNot(

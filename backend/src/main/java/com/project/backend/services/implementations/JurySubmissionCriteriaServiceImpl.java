@@ -34,23 +34,47 @@ public class JurySubmissionCriteriaServiceImpl implements JurySubmissionCriteria
     @Override
     @Transactional
     public JurySubmissionCriteria set(Long submissionId, Long criteriaId, Long value, User jury) {
+        if (submissionId == null || criteriaId == null || value == null || jury == null) {
+            throw new IllegalArgumentException("SubmissionId, criteriaId, value and jury must not be null");
+        }
+
+        if (jury.getId() == null) {
+            throw new IllegalArgumentException("Jury must have id");
+        }
+
+        if (value < 0) {
+            throw new IllegalArgumentException("Points value cannot be negative");
+        }
+
         JurySubmission jurySubmission = findJurySubmissionById(submissionId, jury.getId());
+
+        Criteria criteria = criteriaRepository.findById(criteriaId)
+                .orElseThrow(() -> new EntityNotFoundException("Criteria with id " + criteriaId + " not found"));
+
+        if (!criteria.getCategory().getRound().getId().equals(jurySubmission.getSubmission().getRound().getId())) {
+            throw new IllegalStateException("Criteria does not belong to the same round as submission");
+        }
 
         JurySubmissionCriteriaId id = new JurySubmissionCriteriaId();
         id.setJurySubmissionId(jurySubmission.getId());
         id.setCriteriaId(criteriaId);
 
         Optional<JurySubmissionCriteria> optional = jurySubmissionCriteriaRepository.findById(id);
+
         JurySubmissionCriteria jurySubmissionCriteria = optional.orElseGet(JurySubmissionCriteria::new);
+
+        if (optional.isPresent() && value.equals(jurySubmissionCriteria.getPoints())) {
+            log.debug("Skip update: same value {} for criteria {} and submission {}", value, criteriaId, submissionId);
+            return jurySubmissionCriteria;
+        }
 
         jurySubmissionCriteria.setId(id);
         jurySubmissionCriteria.setPoints(value);
-
-        Criteria criteria = criteriaRepository.findById(criteriaId)
-                .orElseThrow(() -> new EntityNotFoundException("Criteria with id "+criteriaId+" not found"));
         jurySubmissionCriteria.setCriteria(criteria);
-
         jurySubmissionCriteria.setJurySubmission(jurySubmission);
+
+        log.info("Set points {} for submission {} criteria {} by jury {}",
+                value, submissionId, criteriaId, jury.getId());
 
         return jurySubmissionCriteriaRepository.save(jurySubmissionCriteria);
     }

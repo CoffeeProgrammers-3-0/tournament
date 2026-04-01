@@ -1,5 +1,6 @@
 package com.project.backend.controllers;
 
+import com.project.backend.auth.utils.CurrentUserContainer;
 import com.project.backend.dto.team.*;
 import com.project.backend.dto.user.UserCreateRequestForTeam;
 import com.project.backend.dto.user.UserResponse;
@@ -13,10 +14,11 @@ import com.project.backend.services.interfaces.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -31,16 +33,14 @@ public class TeamController {
     private final UserService userService;
     private final UserMapper userMapper;
     private final TeamMapper teamMapper;
+    private final CurrentUserContainer currentUserContainer;
 
     @GetMapping("/check/{tournament_id}")
     @Operation(summary = "Check team registration", description = "Checks if the authenticated user is already registered in a team for the tournament")
     public boolean checkIfRegistered(
             @Parameter(description = "ID of the tournament", example = "1")
-            @PathVariable(value = "tournament_id") Long tournamentId,
-
-            @Parameter(hidden = true)
-            Authentication authentication) {
-        User me = userService.findUserByAuth(authentication);
+            @PathVariable(value = "tournament_id") Long tournamentId) {
+        User me = currentUserContainer.getUser();
 
         return teamService.check(tournamentId, me);
     }
@@ -52,10 +52,7 @@ public class TeamController {
             @PathVariable(value = "tournament_id") Long tournamentId,
 
             @Parameter(description = "Team creation data")
-            @RequestBody TeamCreateRequest teamCreateRequest,
-
-            @Parameter(hidden = true)
-            Authentication authentication) {
+            @RequestBody @Valid TeamCreateRequest teamCreateRequest) {
         Team team = teamService.create(
                 tournamentId,
                 teamCreateRequest.getUsers(),
@@ -65,6 +62,7 @@ public class TeamController {
         return teamMapper.fromTeamToFullResponse(team);
     }
 
+    @PreAuthorize("@userSecurity.isLeaderOfTeam(#teamId) or hasRole('ADMIN')")
     @PutMapping("/{team_id}")
     @Operation(summary = "Update team", description = "Updates team information")
     public TeamFullResponse update(
@@ -72,23 +70,18 @@ public class TeamController {
             @PathVariable(value = "team_id") Long teamId,
 
             @Parameter(description = "Updated team data")
-            @RequestBody TeamUpdateRequest teamUpdateRequest,
-
-            @Parameter(hidden = true)
-            Authentication authentication) {
+            @RequestBody @Valid TeamUpdateRequest teamUpdateRequest) {
         Team team = teamService.update(teamId, teamMapper.fromUpdateRequestToTeam(teamUpdateRequest));
 
         return teamMapper.fromTeamToFullResponse(team);
     }
 
+    @PreAuthorize("@userSecurity.isLeaderOfTeam(#teamId) or hasRole('ADMIN')")
     @DeleteMapping("/{team_id}")
     @Operation(summary = "Delete team", description = "Deletes a team by its ID")
     public void delete(
             @Parameter(description = "ID of the team", example = "10")
-            @PathVariable(value = "team_id") Long teamId,
-
-            @Parameter(hidden = true)
-            Authentication authentication) {
+            @PathVariable(value = "team_id") Long teamId) {
         teamService.delete(teamId);
     }
 
@@ -96,10 +89,7 @@ public class TeamController {
     @Operation(summary = "Get team by ID", description = "Returns full information about a team")
     public TeamFullResponse getById(
             @Parameter(description = "ID of the team", example = "10")
-            @PathVariable(value = "team_id") Long teamId,
-
-            @Parameter(hidden = true)
-            Authentication authentication) {
+            @PathVariable(value = "team_id") Long teamId) {
         Team team = teamService.findById(teamId);
 
         return teamMapper.fromTeamToFullResponse(team);
@@ -138,11 +128,8 @@ public class TeamController {
             @RequestParam(value = "page") Integer page,
 
             @Parameter(description = "Page size", example = "10")
-            @RequestParam(value = "size") Integer size,
-
-            @Parameter(hidden = true)
-            Authentication authentication) {
-        User me = userService.findUserByAuth(authentication);
+            @RequestParam(value = "size") Integer size) {
+        User me = currentUserContainer.getUser();
         Page<Team> teamPage = teamService.findAllByUser(me, page, size, search);
 
         PaginationListResponse<TeamListResponse> response = new PaginationListResponse<>();
@@ -155,6 +142,7 @@ public class TeamController {
         return response;
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'JURY')")
     @GetMapping("/{team_id}/statistics/{round_id}")
     @Operation(summary = "Get team statistics", description = "Returns statistics of a team for a specific round")
     public StatisticResponse getStatsForTeam(
@@ -166,18 +154,17 @@ public class TeamController {
         return teamService.getStatisticsByRoundForTeam(roundId, teamId);
     }
 
+    @PreAuthorize("@userSecurity.isMemberOfTheTeamInRound(#roundId)")
     @GetMapping("/statistics/{round_id}")
     @Operation(summary = "Get my team statistics", description = "Returns statistics for the authenticated user's team in the specified round")
     public StatisticResponse getStatsForMyTeam(
             @Parameter(description = "ID of the round", example = "2")
-            @PathVariable(value = "round_id") Long roundId,
-
-            @Parameter(hidden = true)
-            Authentication authentication) {
-        User me = userService.findUserByAuth(authentication);
+            @PathVariable(value = "round_id") Long roundId) {
+        User me = currentUserContainer.getUser();
         return teamService.getStatisticsByRoundForUsersTeam(roundId, me);
     }
 
+    @PreAuthorize("@userSecurity.isLeaderOfTeamInTournament(#teamId, #tournamentId) or hasRole('ADMIN')")
     @PostMapping("/{team_id}/tournaments/{tournament_id}/members")
     @Operation(summary = "Add team member", description = "Adds a new member to the team")
     public TeamFullResponse addMember(
@@ -188,15 +175,13 @@ public class TeamController {
             @PathVariable(value = "tournament_id") Long tournamentId,
 
             @Parameter(description = "User data for new team member")
-            @RequestBody UserCreateRequestForTeam userCreateRequestForTeam,
-
-            @Parameter(hidden = true)
-            Authentication authentication) {
+            @RequestBody @Valid UserCreateRequestForTeam userCreateRequestForTeam) {
         Team team = teamService.addMember(teamId, tournamentId, userCreateRequestForTeam);
 
         return teamMapper.fromTeamToFullResponse(team);
     }
 
+    @PreAuthorize("@userSecurity.isLeaderOfTeamInTournament(#teamId, #tournamentId) or hasRole('ADMIN')")
     @DeleteMapping("/{team_id}/tournaments/{tournament_id}/members/{user_id}")
     @Operation(summary = "Remove team member", description = "Removes a user from the team")
     public TeamFullResponse removeMember(
@@ -207,15 +192,13 @@ public class TeamController {
             @PathVariable(value = "user_id") Long userId,
 
             @Parameter(description = "ID of the tournament", example = "2")
-            @PathVariable(value = "tournament_id") Long tournamentId,
-
-            @Parameter(hidden = true)
-            Authentication authentication) {
+            @PathVariable(value = "tournament_id") Long tournamentId) {
         Team team = teamService.removeMember(teamId, userId, tournamentId);
 
         return teamMapper.fromTeamToFullResponse(team);
     }
 
+    @PreAuthorize("@userSecurity.isLeaderOfTeamInTournament(#teamId, #tournamentId) or hasRole('ADMIN')")
     @PatchMapping("/{team_id}/tournaments/{tournament_id}/set-leader/{user_id}")
     @Operation(summary = "Set team leader", description = "Sets a user as the leader of the team")
     public TeamFullResponse setLeader(
@@ -226,10 +209,7 @@ public class TeamController {
             @PathVariable(value = "user_id") Long userId,
 
             @Parameter(description = "ID of the tournament", example = "2")
-            @PathVariable(value = "tournament_id") Long tournamentId,
-
-            @Parameter(hidden = true)
-            Authentication authentication) {
+            @PathVariable(value = "tournament_id") Long tournamentId) {
         Team team = teamService.setLeader(teamId, userId, tournamentId);
 
         return teamMapper.fromTeamToFullResponse(team);
@@ -260,16 +240,14 @@ public class TeamController {
         return response;
     }
 
+    @PreAuthorize("@userSecurity.isMemberOfTheTeamInRound(#roundId)")
     @GetMapping("/round/{round_id}/users")
     @Operation(summary = "Get users by round", description = "Returns list of users for the specified round of my team")
     public List<UserResponse> getAllUsersByRoundOfMyTeam(
             @Parameter(description = "ID of the round", example = "1")
-            @PathVariable(value = "round_id") Long roundId,
-
-            @Parameter(hidden = true)
-            Authentication authentication
+            @PathVariable(value = "round_id") Long roundId
     ) {
-        User me = userService.findUserByAuth(authentication);
+        User me = currentUserContainer.getUser();
         return userService.findAllUsersOfUsersTeam(me, roundId).stream().map(userMapper::fromUserToResponse).toList();
     }
 }

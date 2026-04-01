@@ -1,5 +1,6 @@
 package com.project.backend.controllers;
 
+import com.project.backend.auth.utils.CurrentUserContainer;
 import com.project.backend.dto.submission.SubmissionFullResponse;
 import com.project.backend.dto.submission.SubmissionListResponse;
 import com.project.backend.dto.submission.SubmissionRequest;
@@ -14,9 +15,11 @@ import com.project.backend.services.interfaces.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,16 +33,15 @@ public class SubmissionController {
     private final UserService userService;
     private final SubmissionMapper submissionMapper;
     private final UserMapper userMapper;
+    private final CurrentUserContainer currentUserContainer;
 
+    @PreAuthorize("@userSecurity.isMemberOfTheTeamInRound(#roundId)")
     @GetMapping("/check/{round_id}")
     @Operation(summary = "Check submission", description = "Checks if user's team has already sent a submission to the specified round")
     public Long check(
             @Parameter(description = "ID of the round where the submission may be sent", example = "1")
-            @PathVariable(value = "round_id") Long roundId,
-
-            @Parameter(hidden = true)
-            Authentication authentication) {
-        User me = userService.findUserByAuth(authentication);
+            @PathVariable(value = "round_id") Long roundId) {
+        User me = currentUserContainer.getUser();
         Submission submission = submissionService.check(
                 roundId,
                 me.getId()
@@ -47,6 +49,7 @@ public class SubmissionController {
         return submission == null ? -1 : submission.getId();
     }
 
+    @PreAuthorize("@userSecurity.isMemberOfTheTeamInRound(#roundId)")
     @PostMapping("/send/{round_id}")
     @Operation(summary = "Send submission", description = "Creates and sends a submission to the specified round")
     public SubmissionFullResponse send(
@@ -54,11 +57,11 @@ public class SubmissionController {
             @PathVariable(value = "round_id") Long roundId,
 
             @Parameter(description = "Submission data")
-            @RequestBody SubmissionRequest submissionRequest,
+            @RequestBody @Valid SubmissionRequest submissionRequest,
 
             @Parameter(hidden = true)
             Authentication authentication) {
-        User me = userService.findUserByAuth(authentication);
+        User me = currentUserContainer.getUser();
         Submission submission = submissionService.create(
                 roundId,
                 me,
@@ -68,6 +71,7 @@ public class SubmissionController {
         return submissionMapper.fromSubmissionToFullResponse(submission);
     }
 
+    @PreAuthorize("@userSecurity.isMemberOfTheTeamInSubmission(#submissionId)")
     @PutMapping("/{submission_id}")
     @Operation(summary = "Update submission", description = "Updates an existing submission")
     public SubmissionFullResponse update(
@@ -75,10 +79,7 @@ public class SubmissionController {
             @PathVariable(value = "submission_id") Long submissionId,
 
             @Parameter(description = "Updated submission data")
-            @RequestBody SubmissionRequest submissionRequest,
-
-            @Parameter(hidden = true)
-            Authentication authentication) {
+            @RequestBody @Valid SubmissionRequest submissionRequest) {
         Submission submission = submissionService.update(
                 submissionId,
                 submissionMapper.fromRequestToSubmission(submissionRequest)
@@ -87,31 +88,28 @@ public class SubmissionController {
         return submissionMapper.fromSubmissionToFullResponse(submission);
     }
 
+    @PreAuthorize("@userSecurity.isMemberOfTheTeamInSubmission(#submissionId)")
     @DeleteMapping("/{submission_id}")
     @Operation(summary = "Delete submission", description = "Deletes a submission by its ID")
     public void delete(
             @Parameter(description = "ID of the submission to delete", example = "10")
-            @PathVariable(value = "submission_id") Long submissionId,
-
-            @Parameter(hidden = true)
-            Authentication authentication) {
+            @PathVariable(value = "submission_id") Long submissionId) {
         submissionService.delete(submissionId);
     }
 
+    @PreAuthorize("@userSecurity.isMemberOfTheTeamInSubmission(#submissionId) or hasAnyRole('ADMIN', 'JURY')")
     @GetMapping("/{submission_id}")
     @Operation(summary = "Get submission by ID", description = "Returns full information about a submission")
     public SubmissionFullResponse getById(
 
             @Parameter(description = "ID of the submission", example = "10")
-            @PathVariable(value = "submission_id") Long submissionId,
-
-            @Parameter(hidden = true)
-            Authentication authentication) {
+            @PathVariable(value = "submission_id") Long submissionId) {
         Submission submission = submissionService.findById(submissionId);
 
         return submissionMapper.fromSubmissionToFullResponse(submission);
     }
 
+    @PreAuthorize("hasRole('JURY')")
     @GetMapping("/my")
     @Operation(summary = "Get submissions for jury", description = "Returns paginated list of submissions assigned to the authenticated jury member")
     public PaginationListResponse<SubmissionListResponse> getAllForJury(
@@ -119,11 +117,8 @@ public class SubmissionController {
             @RequestParam(value = "page") Integer page,
 
             @Parameter(description = "Page size", example = "10")
-            @RequestParam(value = "size") Integer size,
-
-            @Parameter(hidden = true)
-            Authentication authentication) {
-        User me = userService.findUserByAuth(authentication);
+            @RequestParam(value = "size") Integer size) {
+        User me = currentUserContainer.getUser();
         Page<Submission> submissionPage = submissionService.findAllForJury(me, page, size);
 
         PaginationListResponse<SubmissionListResponse> response = new PaginationListResponse<>();
@@ -139,6 +134,7 @@ public class SubmissionController {
         return response;
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'JURY')")
     @GetMapping("/rounds/{round_id}")
     @Operation(summary = "Get submissions by round", description = "Returns paginated list of submissions for a specific round")
     public PaginationListResponse<SubmissionListResponse> getAllByRound(
@@ -149,10 +145,7 @@ public class SubmissionController {
             @RequestParam(value = "size") Integer size,
 
             @Parameter(description = "ID of the round", example = "1")
-            @PathVariable(value = "round_id") Long roundId,
-
-            @Parameter(hidden = true)
-            Authentication authentication) {
+            @PathVariable(value = "round_id") Long roundId) {
         Page<Submission> submissionPage = submissionService.findAllByRound(roundId, page, size);
 
         PaginationListResponse<SubmissionListResponse> response = new PaginationListResponse<>();
@@ -168,6 +161,7 @@ public class SubmissionController {
         return response;
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/{submission_id}/juries/{jury_id}")
     @Operation(summary = "Assign jury to submission", description = "Assigns a jury member to evaluate a submission")
     public SubmissionFullResponse setJury(
@@ -181,6 +175,7 @@ public class SubmissionController {
         return submissionMapper.fromSubmissionToFullResponse(submission);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{submission_id}/juries/{jury_id}")
     @Operation(summary = "Remove jury from submission", description = "Removes a jury member from a submission")
     public SubmissionFullResponse removeJury(
@@ -194,6 +189,7 @@ public class SubmissionController {
         return submissionMapper.fromSubmissionToFullResponse(submission);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{submission_id}/juries")
     @Operation(summary = "Get all juries by submission", description = "Returns paginated list of users with JURY role by submission")
     public PaginationListResponse<UserResponse> getAllJuriesBySubmission(
@@ -207,10 +203,7 @@ public class SubmissionController {
             @RequestParam(value = "size") Integer size,
 
             @Parameter(description = "Submission id", example = "1")
-            @PathVariable(value = "submission_id") Long submissionId,
-
-            @Parameter(hidden = true)
-            Authentication authentication) {
+            @PathVariable(value = "submission_id") Long submissionId) {
         Page<User> userPage = userService.findAllJuriesUsersForSubmission(page, size, query, submissionId);
 
         PaginationListResponse<UserResponse> response = new PaginationListResponse<>();
@@ -226,6 +219,7 @@ public class SubmissionController {
         return response;
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{submission_id}/available-juries")
     @Operation(summary = "Get all juries by submission", description = "Returns paginated list of users with JURY role by submission")
     public PaginationListResponse<UserResponse> getAllAvailableJuriesBySubmission(
@@ -239,10 +233,7 @@ public class SubmissionController {
             @RequestParam(value = "size") Integer size,
 
             @Parameter(description = "Submission id", example = "1")
-            @PathVariable(value = "submission_id") Long submissionId,
-
-            @Parameter(hidden = true)
-            Authentication authentication) {
+            @PathVariable(value = "submission_id") Long submissionId) {
         Page<User> userPage = userService.findAllAvailableJuriesUsersForSubmission(page, size, query, submissionId);
 
         PaginationListResponse<UserResponse> response = new PaginationListResponse<>();

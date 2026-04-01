@@ -4,12 +4,16 @@ import com.project.backend.models.constants.TaskPriority;
 import com.project.backend.models.constants.TaskStatus;
 import com.project.backend.models.constants.TaskType;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
 @Schema(name = "TeamTaskRequest", description = "DTO for creating or updating a team task")
 public class TeamTaskRequest {
 
+    @NotBlank(message = "Task title is required")
+    @Size(max = 255, message = "Task title is too long")
     @Schema(description = "Title of the task", example = "Fix login bug")
     private String title;
 

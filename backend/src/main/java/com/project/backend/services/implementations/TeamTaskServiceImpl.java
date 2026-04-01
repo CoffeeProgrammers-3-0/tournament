@@ -32,10 +32,23 @@ public class TeamTaskServiceImpl implements TeamTaskService {
     private final UserRepository userRepository;
     private final RoundRepository roundRepository;
     private final TeamRepository teamRepository;
+
     @Override
     @Transactional
     public TeamTask createTask(User creator, Long roundId, TeamTask teamTask) {
-        Round round = roundRepository.getReferenceById(roundId);
+        if (creator == null) {
+            throw new IllegalArgumentException("Creator cannot be null");
+        }
+        if (roundId == null) {
+            throw new IllegalArgumentException("RoundId cannot be null");
+        }
+        Round round = roundRepository.findById(roundId)
+                .orElseThrow(() -> new EntityNotFoundException("Round with id " + roundId + " not found"));
+
+        if (teamTask.getTitle() == null || teamTask.getTitle().isBlank()) {
+            throw new IllegalArgumentException("Task title cannot be empty");
+        }
+
         teamTask.setRound(round);
         teamTask.setCreator(creator);
         teamTask.setTeam(
@@ -44,7 +57,8 @@ public class TeamTaskServiceImpl implements TeamTaskService {
                                 TeamSpecification.byRoundId(roundId),
                                 TeamSpecification.byUserId(creator.getId())
                         )
-                ).orElseThrow(() -> new EntityNotFoundException("Team for user with id " + creator.getId() + " for round with id " + roundId + " not found"))
+                ).orElseThrow(() -> new EntityNotFoundException(
+                        "Team for user with id " + creator.getId() + " for round with id " + roundId + " not found"))
         );
         teamTask.setStatus(teamTask.getStatus() == null ? TaskStatus.TODO : teamTask.getStatus());
         return teamTaskRepository.save(teamTask);
@@ -65,6 +79,9 @@ public class TeamTaskServiceImpl implements TeamTaskService {
     @Override
     @Transactional
     public void deleteTask(Long teamTaskId) {
+        if (!teamTaskRepository.existsById(teamTaskId)) {
+            throw new EntityNotFoundException("Team task with id " + teamTaskId + " not found");
+        }
         teamTaskRepository.deleteById(teamTaskId);
     }
 
@@ -89,11 +106,19 @@ public class TeamTaskServiceImpl implements TeamTaskService {
     @Override
     @Transactional
     public TeamTask updateAssignee(Long teamTaskId, Long assigneeId) {
-        TeamTask teamTaskToUpdate = teamTaskRepository.findById(teamTaskId).orElseThrow(() -> new EntityNotFoundException("Team task with id " + teamTaskId + " not found"));
-        User assignee = userRepository.findById(assigneeId).orElseThrow(() -> new EntityNotFoundException("User with id " + assigneeId + " not found"));
+        if (assigneeId == null) {
+            throw new IllegalArgumentException("AssigneeId cannot be null");
+        }
+        TeamTask teamTaskToUpdate = findById(teamTaskId);
+        User assignee = userRepository.findById(assigneeId)
+                .orElseThrow(() -> new EntityNotFoundException("User with id " + assigneeId + " not found"));
+
+        if (teamTaskToUpdate.getTeam().getTeamParticipants()
+                .stream().noneMatch(tp -> tp.getUser().getId().equals(assigneeId))) {
+            throw new IllegalStateException("Cannot assign task to a user who is not in the team");
+        }
 
         teamTaskToUpdate.setAssignee(assignee);
-
         return teamTaskRepository.save(teamTaskToUpdate);
     }
 

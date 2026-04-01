@@ -1,5 +1,6 @@
 package com.project.backend.controllers;
 
+import com.project.backend.auth.utils.CurrentUserContainer;
 import com.project.backend.dto.teamTask.TeamTaskFullResponse;
 import com.project.backend.dto.teamTask.TeamTaskListResponse;
 import com.project.backend.dto.teamTask.TeamTaskRequest;
@@ -11,7 +12,6 @@ import com.project.backend.models.constants.TaskPriority;
 import com.project.backend.models.constants.TaskStatus;
 import com.project.backend.models.constants.TaskType;
 import com.project.backend.services.interfaces.TeamTaskService;
-import com.project.backend.services.interfaces.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -19,7 +19,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -31,8 +31,9 @@ public class TeamTaskController {
 
     private final TeamTaskService teamTaskService;
     private final TeamTaskMapper teamTaskMapper;
-    private final UserService userService;
+    private final CurrentUserContainer currentUserContainer;
 
+    @PreAuthorize("@userSecurity.isMemberOfTheTeamInRound(#roundId)")
     @PostMapping("/{round_id}")
     @Operation(summary = "Create team task", description = "Creates a new task for a team")
     public TeamTaskListResponse createTask(
@@ -40,15 +41,14 @@ public class TeamTaskController {
             @PathVariable(value = "round_id") Long roundId,
 
             @Parameter(description = "Team task creation request")
-            @Valid @RequestBody TeamTaskRequest teamTaskRequest,
-
-            @Parameter(hidden = true) Authentication authentication) {
-        User creator = userService.findUserByAuth(authentication);
+            @RequestBody @Valid TeamTaskRequest teamTaskRequest) {
+        User creator = currentUserContainer.getUser();
         return teamTaskMapper.fromTeamTaskToListResponse(
                 teamTaskService.createTask(creator, roundId, teamTaskMapper.fromRequestToTeamTask(teamTaskRequest))
         );
     }
 
+    @PreAuthorize("@userSecurity.isMemberOfTheTeamOfTheTeamTask(#teamTaskId)")
     @PutMapping("/{team_task_id}")
     @Operation(summary = "Update team task", description = "Updates an existing task")
     public TeamTaskListResponse updateTask(
@@ -56,12 +56,13 @@ public class TeamTaskController {
             @PathVariable(value = "team_task_id") Long teamTaskId,
 
             @Parameter(description = "Team task update request")
-            @Valid @RequestBody TeamTaskRequest teamTaskRequest) {
+            @RequestBody @Valid TeamTaskRequest teamTaskRequest) {
         return teamTaskMapper.fromTeamTaskToListResponse(
                 teamTaskService.updateTask(teamTaskId, teamTaskMapper.fromRequestToTeamTask(teamTaskRequest))
         );
     }
 
+    @PreAuthorize("@userSecurity.isMemberOfTheTeamOfTheTeamTask(#teamTaskId)")
     @DeleteMapping("/{team_task_id}")
     @Operation(summary = "Delete team task", description = "Deletes a task by its ID")
     public void deleteTask(
@@ -70,6 +71,7 @@ public class TeamTaskController {
         teamTaskService.deleteTask(teamTaskId);
     }
 
+    @PreAuthorize("@userSecurity.isMemberOfTheTeamOfTheTeamTask(#teamTaskId)")
     @GetMapping("/{team_task_id}")
     @Operation(summary = "Get team task", description = "Gets a task by its ID")
     public TeamTaskFullResponse getTask(
@@ -78,6 +80,7 @@ public class TeamTaskController {
         return teamTaskMapper.fromTeamTaskToFullResponse(teamTaskService.findById(teamTaskId));
     }
 
+    @PreAuthorize("@userSecurity.isMemberOfTheTeamOfTheTeamTask(#teamTaskId)")
     @PatchMapping("/{team_task_id}/update-meta")
     @Operation(summary = "Update task meta", description = "Updates status, priority, or type of the task")
     public TeamTaskListResponse updateTaskMeta(
@@ -97,6 +100,7 @@ public class TeamTaskController {
         );
     }
 
+    @PreAuthorize("@userSecurity.isMemberOfTheTeamOfTheTeamTask(#teamTaskId)")
     @PatchMapping("/{team_task_id}/assign/{assignee_id}")
     @Operation(summary = "Assign task", description = "Assigns a user to the task")
     public TeamTaskListResponse updateAssignee(
@@ -110,6 +114,7 @@ public class TeamTaskController {
         );
     }
 
+    @PreAuthorize("@userSecurity.isMemberOfTheTeamInRound(#roundId)")
     @GetMapping("/round/{round_id}/my")
     @Operation(summary = "Get tasks for my team and round", description = "Returns paginated list of tasks for the authenticated user's team in the given round")
     public PaginationListResponse<TeamTaskListResponse> getTasksForMyTeamAndRound(
@@ -132,10 +137,8 @@ public class TeamTaskController {
             @RequestParam(value = "type", required = false) TaskType type,
 
             @Parameter(description = "Task priority filter", example = "HIGH")
-            @RequestParam(value = "priority", required = false) TaskPriority priority,
-
-            @Parameter(hidden = true) Authentication authentication) {
-        User me = userService.findUserByAuth(authentication);
+            @RequestParam(value = "priority", required = false) TaskPriority priority) {
+        User me = currentUserContainer.getUser();
         Page<TeamTask> teamTaskPage = teamTaskService.findAllByTeamIdAndRoundId(page, size, search, me, roundId, status, type, priority);
 
         PaginationListResponse<TeamTaskListResponse> response = new PaginationListResponse<>();
@@ -165,10 +168,8 @@ public class TeamTaskController {
             @RequestParam(value = "type", required = false) TaskType type,
 
             @Parameter(description = "Task priority filter", example = "HIGH")
-            @RequestParam(value = "priority", required = false) TaskPriority priority,
-
-            @Parameter(hidden = true) Authentication authentication) {
-        User me = userService.findUserByAuth(authentication);
+            @RequestParam(value = "priority", required = false) TaskPriority priority) {
+        User me = currentUserContainer.getUser();
         Page<TeamTask> teamTaskPage = teamTaskService.findAllForUser(page, size, search, me, status, type, priority);
 
         PaginationListResponse<TeamTaskListResponse> response = new PaginationListResponse<>();

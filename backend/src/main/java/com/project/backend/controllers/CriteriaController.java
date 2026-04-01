@@ -1,15 +1,17 @@
 package com.project.backend.controllers;
 
+import com.project.backend.dto.criteria.CriteriaRequest;
 import com.project.backend.dto.criteria.CriteriaResponse;
-import com.project.backend.dto.wrapper.StringRequest;
 import com.project.backend.mappers.CriteriaMapper;
 import com.project.backend.models.Criteria;
 import com.project.backend.services.interfaces.CriteriaService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -21,6 +23,7 @@ public class CriteriaController {
     private final CriteriaService criteriaService;
     private final CriteriaMapper criteriaMapper;
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     @Operation(summary = "Create criteria", description = "Creates a new criteria inside the specified category")
     public CriteriaResponse create(
@@ -28,12 +31,13 @@ public class CriteriaController {
             @PathVariable(value = "category_id") Long categoryId,
 
             @Parameter(description = "Criteria text data")
-            @RequestBody StringRequest stringRequest) {
-        Criteria criteria = criteriaService.create(categoryId, stringRequest.getText());
+            @RequestBody @Valid CriteriaRequest criteriaRequest) {
+        Criteria criteria = criteriaService.create(categoryId, criteriaRequest.getText());
 
         return criteriaMapper.fromCriteriaToResponse(criteria);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{criteria_id}")
     @Operation(summary = "Update criteria", description = "Updates an existing criteria")
     public CriteriaResponse update(
@@ -41,12 +45,13 @@ public class CriteriaController {
             @PathVariable(value = "criteria_id") Long criteriaId,
 
             @Parameter(description = "Updated criteria text")
-            @RequestBody StringRequest stringRequest) {
-        Criteria criteria = criteriaService.update(criteriaId, stringRequest.getText());
+            @RequestBody @Valid CriteriaRequest criteriaRequest) {
+        Criteria criteria = criteriaService.update(criteriaId, criteriaRequest.getText());
 
         return criteriaMapper.fromCriteriaToResponse(criteria);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{criteria_id}")
     @Operation(summary = "Delete criteria", description = "Deletes a criteria by its ID")
     public void delete(

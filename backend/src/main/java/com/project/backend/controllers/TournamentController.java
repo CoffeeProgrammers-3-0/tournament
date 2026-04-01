@@ -1,5 +1,6 @@
 package com.project.backend.controllers;
 
+import com.project.backend.auth.utils.CurrentUserContainer;
 import com.project.backend.dto.tournament.TournamentCreateRequest;
 import com.project.backend.dto.tournament.TournamentFullResponse;
 import com.project.backend.dto.tournament.TournamentListResponse;
@@ -10,14 +11,14 @@ import com.project.backend.models.Tournament;
 import com.project.backend.models.User;
 import com.project.backend.models.constants.TournamentStatus;
 import com.project.backend.services.interfaces.TournamentService;
-import com.project.backend.services.interfaces.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -27,17 +28,15 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Tournaments", description = "API for managing tournaments")
 public class TournamentController {
     private final TournamentService tournamentService;
-    private final UserService userService;
     private final TournamentMapper tournamentMapper;
+    private final CurrentUserContainer currentUserContainer;
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     @Operation(summary = "Create tournament", description = "Creates a new tournament")
     public TournamentFullResponse create(
             @Parameter(description = "Tournament creation data")
-            @RequestBody TournamentCreateRequest tournamentCreateRequest,
-
-            @Parameter(hidden = true)
-            Authentication authentication) {
+            @RequestBody @Valid TournamentCreateRequest tournamentCreateRequest) {
         Tournament tournament = tournamentService.create(
                 tournamentMapper.fromCreateRequestToTournament(tournamentCreateRequest)
         );
@@ -45,6 +44,7 @@ public class TournamentController {
         return tournamentMapper.fromTournamentToFullResponse(tournament);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{tournament_id}")
     @Operation(summary = "Update tournament", description = "Updates an existing tournament")
     public TournamentFullResponse update(
@@ -52,10 +52,7 @@ public class TournamentController {
             @PathVariable(value = "tournament_id") Long tournamentId,
 
             @Parameter(description = "Updated tournament data")
-            @RequestBody TournamentUpdateRequest tournamentUpdateRequest,
-
-            @Parameter(hidden = true)
-            Authentication authentication) {
+            @RequestBody @Valid TournamentUpdateRequest tournamentUpdateRequest) {
         Tournament tournament = tournamentService.update(
                 tournamentId,
                 tournamentMapper.fromUpdateRequestToTournament(tournamentUpdateRequest)
@@ -64,14 +61,12 @@ public class TournamentController {
         return tournamentMapper.fromTournamentToFullResponse(tournament);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{tournament_id}")
     @Operation(summary = "Delete tournament", description = "Deletes a tournament by its ID")
     public void delete(
             @Parameter(description = "ID of the tournament to delete", example = "1")
-            @PathVariable(value = "tournament_id") Long tournamentId,
-
-            @Parameter(hidden = true)
-            Authentication authentication) {
+            @PathVariable(value = "tournament_id") Long tournamentId) {
         tournamentService.delete(tournamentId);
     }
 
@@ -87,8 +82,8 @@ public class TournamentController {
             @Parameter(description = "Page size", example = "10")
             @RequestParam(value = "size") Integer size,
 
-            @Parameter(description = "Tournament status filter", example = "ACTIVE")
-            @RequestParam(value = "status") TournamentStatus status) {
+            @Parameter(description = "Tournament status filter", example = "RUNNING")
+            @RequestParam(value = "status", required = false) TournamentStatus status) {
         Page<Tournament> tournamentPage = tournamentService.findAll(page, size, search, status);
 
         PaginationListResponse<TournamentListResponse> response = new PaginationListResponse<>();
@@ -105,7 +100,7 @@ public class TournamentController {
     }
 
     @GetMapping("/my")
-    @Operation(summary = "Get my tournaments", description = "Returns paginated list of tournaments created by the authenticated user")
+    @Operation(summary = "Get my tournaments", description = "Returns paginated list of tournaments where user participate")
     public PaginationListResponse<TournamentListResponse> getAllMy(
             @Parameter(description = "Search tournaments by name", example = "Hackathon")
             @RequestParam(value = "search", required = false) String search,
@@ -116,12 +111,9 @@ public class TournamentController {
             @Parameter(description = "Page size", example = "10")
             @RequestParam(value = "size") Integer size,
 
-            @Parameter(description = "Tournament status filter", example = "ACTIVE")
-            @RequestParam(value = "status") TournamentStatus status,
-
-            @Parameter(hidden = true)
-            Authentication authentication) {
-        User me = userService.findUserByAuth(authentication);
+            @Parameter(description = "Tournament status filter", example = "RUNNING")
+            @RequestParam(value = "status", required = false) TournamentStatus status) {
+        User me = currentUserContainer.getUser();
         Page<Tournament> tournamentPage = tournamentService.findAllByUser(page, size, search, status, me);
 
         PaginationListResponse<TournamentListResponse> response = new PaginationListResponse<>();
@@ -147,11 +139,8 @@ public class TournamentController {
             @RequestParam(value = "page") Integer page,
 
             @Parameter(description = "Page size", example = "10")
-            @RequestParam(value = "size") Integer size,
-
-            @Parameter(hidden = true)
-            Authentication authentication) {
-        User me = userService.findUserByAuth(authentication);
+            @RequestParam(value = "size") Integer size) {
+        User me = currentUserContainer.getUser();
         Page<Tournament> tournamentPage = tournamentService.findAllByUserNot(
                 page,
                 size,
@@ -179,6 +168,17 @@ public class TournamentController {
             @Parameter(description = "ID of the tournament", example = "1")
             @PathVariable(value = "tournament_id") Long tournamentId) {
         Tournament tournament = tournamentService.findById(tournamentId);
+
+        return tournamentMapper.fromTournamentToFullResponse(tournament);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/admin/{tournament_id}")
+    @Operation(summary = "Get tournament by ID", description = "Returns detailed information about a tournament for admin")
+    public TournamentFullResponse getByIdAdmin(
+            @Parameter(description = "ID of the tournament", example = "1")
+            @PathVariable(value = "tournament_id") Long tournamentId) {
+        Tournament tournament = tournamentService.findByIdAdmin(tournamentId);
 
         return tournamentMapper.fromTournamentToFullResponse(tournament);
     }

@@ -7,6 +7,7 @@ import com.project.backend.models.Tournament;
 import com.project.backend.models.User;
 import com.project.backend.models.constants.Role;
 import com.project.backend.models.constants.RoundStatus;
+import com.project.backend.models.constants.TournamentStatus;
 import com.project.backend.models.ids.JuryId;
 import com.project.backend.models.ids.TeamRoundId;
 import com.project.backend.models.join_tables.Jury;
@@ -46,41 +47,105 @@ public class RoundServiceImpl implements RoundService {
     @Override
     @Transactional
     public Round create(Long tournamentId, Round round) {
-        Tournament tournament = tournamentRepository.findOne(TournamentSpecification.byId(tournamentId)).orElseThrow(() -> new EntityNotFoundException("Tournament not found"));
-        long actualCountOfRounds = roundRepository.count(RoundSpecification.byTournamentId(tournamentId));
-        if(actualCountOfRounds >= tournament.getCountOfRounds()) {
-            throw new IllegalStateException("Tournament already has max count of rounds, change this value in tournament settings");
+
+        if (tournamentId == null || round == null) {
+            throw new IllegalArgumentException("TournamentId and round must not be null");
         }
+
+        Tournament tournament = tournamentRepository.findOne(
+                TournamentSpecification.byId(tournamentId)
+        ).orElseThrow(() -> new EntityNotFoundException("Tournament not found"));
+
+        long actualCountOfRounds = roundRepository.count(
+                RoundSpecification.byTournamentId(tournamentId)
+        );
+
+        if (actualCountOfRounds >= tournament.getCountOfRounds()) {
+            throw new IllegalStateException("Tournament already has max count of rounds");
+        }
+
+        if (round.getStartDate() == null || round.getEndDate() == null) {
+            throw new IllegalArgumentException("StartDate and EndDate must not be null");
+        }
+
+        if (round.getStartDate().isAfter(round.getEndDate())) {
+            throw new IllegalStateException("Start date must be before end date");
+        }
+
+        if (round.getStartDate().isBefore(tournament.getStartTournament())) {
+            throw new IllegalStateException("Start date must be after or equal to tournament start date");
+        }
+
         round.setTournament(tournament);
         round.setStatus(RoundStatus.DRAFT);
-        round = roundRepository.save(round);
 
-        RoundCreatedEvent roundCreatedEvent = new RoundCreatedEvent(round);
-        eventPublisher.publishEvent(roundCreatedEvent);
+        Round saved = roundRepository.save(round);
 
-        return round;
+        eventPublisher.publishEvent(new RoundCreatedEvent(saved));
+
+        return saved;
     }
 
     @Override
     @Transactional
     public Round update(Long roundId, Round round) {
-        Round roundToUpdate = findById(roundId);
 
-        roundToUpdate.setName(round.getName());
-        roundToUpdate.setRequirements(round.getRequirements());
-        roundToUpdate.setStatus(round.getStatus());
-        roundToUpdate.setEndDate(round.getEndDate());
-        roundToUpdate.setStartDate(round.getStartDate());
-        roundToUpdate.setTask(round.getTask());
-        roundToUpdate.setCountOfWinners(round.getCountOfWinners());
+        if (roundId == null || round == null) {
+            throw new IllegalArgumentException("RoundId and round must not be null");
+        }
 
-        return roundRepository.save(roundToUpdate);
+        Round existing = findById(roundId);
+        Tournament tournament = existing.getTournament();
+
+        if (tournament.getStatus() == TournamentStatus.FINISHED) {
+            throw new IllegalStateException("Cannot update rounds of finished tournament");
+        }
+
+        if (existing.getStatus() == RoundStatus.EVALUATED) {
+            throw new IllegalStateException("Cannot modify evaluated round");
+        }
+
+        if (round.getStartDate() != null && round.getEndDate() != null &&
+                round.getStartDate().isAfter(round.getEndDate())) {
+            throw new IllegalStateException("Invalid dates");
+        }
+
+        if(teamRoundRepository.count(TeamRoundSpecification.byRoundId(roundId)) > 0) {
+            if(round.getStatus() == RoundStatus.DRAFT) {
+                throw new IllegalArgumentException("Can not set round status to draft, because round already has a team");
+            }
+        }
+
+        existing.setName(round.getName());
+        existing.setRequirements(round.getRequirements());
+        existing.setStatus(round.getStatus());
+        existing.setEndDate(round.getEndDate());
+        existing.setTask(round.getTask());
+        existing.setCountOfWinners(round.getCountOfWinners());
+
+        return roundRepository.save(existing);
     }
 
     @Override
     @Transactional
     public void delete(Long roundId) {
+
+        if (roundId == null) {
+            throw new IllegalArgumentException("RoundId must not be null");
+        }
+
         Round round = findById(roundId);
+        Tournament tournament = round.getTournament();
+
+        if (tournament.getStatus() == TournamentStatus.RUNNING ||
+                tournament.getStatus() == TournamentStatus.FINISHED) {
+            throw new IllegalStateException("Cannot delete round after tournament start");
+        }
+
+        if (round.getStatus() != RoundStatus.DRAFT) {
+            throw new IllegalStateException("Only DRAFT rounds can be deleted");
+        }
+
         roundRepository.delete(round);
     }
 
@@ -104,23 +169,34 @@ public class RoundServiceImpl implements RoundService {
     @Override
     @Transactional
     public void setJury(Long roundId, Long juryId) {
-        if(juryRepository.exists(JurySpecification.byUserIdAndRoundId(juryId, roundId))) {
-            throw new IllegalStateException("Jury with id " + juryId + " is already assigned to round with id " + roundId);
+
+        if (roundId == null || juryId == null) {
+            throw new IllegalArgumentException("RoundId and juryId must not be null");
         }
 
         Round round = findById(roundId);
-        User juryUser = userRepository.findById(juryId).orElseThrow(() -> new EntityNotFoundException("User not found"));
 
-        if(juryUser.getRole() != Role.JURY) {
-            throw new IllegalStateException("User must have jury role to be jury");
+        if (round.getStatus() == RoundStatus.EVALUATED) {
+            throw new IllegalStateException("Cannot assign jury after evaluation started");
         }
 
-        JuryId juryEmbeddedId = new JuryId();
-        juryEmbeddedId.setRoundId(roundId);
-        juryEmbeddedId.setUserId(juryId);
+        if (juryRepository.exists(JurySpecification.byUserIdAndRoundId(juryId, roundId))) {
+            throw new IllegalStateException("Jury already assigned");
+        }
+
+        User juryUser = userRepository.findById(juryId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+        if (juryUser.getRole() != Role.JURY) {
+            throw new IllegalStateException("User must have jury role");
+        }
+
+        JuryId id = new JuryId();
+        id.setRoundId(roundId);
+        id.setUserId(juryId);
 
         Jury jury = new Jury();
-        jury.setId(juryEmbeddedId);
+        jury.setId(id);
         jury.setRound(round);
         jury.setUser(juryUser);
 
@@ -130,33 +206,63 @@ public class RoundServiceImpl implements RoundService {
     @Override
     @Transactional
     public void removeJury(Long roundId, Long juryId) {
-        if(!juryRepository.exists(JurySpecification.byUserIdAndRoundId(juryId, roundId))) {
-            throw new IllegalStateException("Jury with id " + juryId + " is not assigned to round with id " + roundId);
+
+        Round round = findById(roundId);
+
+        if (round.getStatus() == RoundStatus.EVALUATED) {
+            throw new IllegalStateException("Cannot modify jury after evaluation ended");
+        }
+
+        if (!juryRepository.exists(JurySpecification.byUserIdAndRoundId(juryId, roundId))) {
+            throw new IllegalStateException("Jury not assigned");
         }
 
         juryRepository.delete(JurySpecification.byUserIdAndRoundId(juryId, roundId));
-        jurySubmissionRepository.delete(JurySubmissionSpecification.byJuryId(juryId));
+
+        jurySubmissionRepository.delete(
+                Specification.allOf(
+                        JurySubmissionSpecification.byJuryId(juryId),
+                        JurySubmissionSpecification.byRoundId(roundId)
+                )
+        );
     }
 
     @Override
     @Transactional
     public void assignTeams(Long roundId, List<Long> teamIds) {
-        Round round = roundRepository.getReferenceById(roundId);
-        Team team;
+
+        if (roundId == null || teamIds == null || teamIds.isEmpty()) {
+            throw new IllegalArgumentException("Invalid input");
+        }
+
+        Round round = findById(roundId);
+
+        if (round.getStatus() == RoundStatus.SUBMISSION_CLOSED ||
+                round.getStatus() == RoundStatus.EVALUATED) {
+            throw new IllegalStateException("Cannot assign teams after submission closed");
+        }
+
         List<TeamRound> teamRounds = new ArrayList<>();
-        for(Long teamId : teamIds) {
-            team = teamRepository.getReferenceById(teamId);
 
-            TeamRoundId teamRoundId = new TeamRoundId();
-            teamRoundId.setTeamId(teamId);
-            teamRoundId.setRoundId(roundId);
+        for (Long teamId : teamIds) {
 
-            TeamRound teamRound = new TeamRound();
-            teamRound.setId(teamRoundId);
-            teamRound.setTeam(team);
-            teamRound.setRound(round);
+            if (teamRoundRepository.exists(
+                    Specification.allOf(TeamRoundSpecification.byRoundId(roundId), TeamRoundSpecification.byTeamId(teamId)))) {
+                continue;
+            }
 
-            teamRounds.add(teamRound);
+            Team team = teamRepository.getReferenceById(teamId);
+
+            TeamRoundId id = new TeamRoundId();
+            id.setRoundId(roundId);
+            id.setTeamId(teamId);
+
+            TeamRound tr = new TeamRound();
+            tr.setId(id);
+            tr.setRound(round);
+            tr.setTeam(team);
+
+            teamRounds.add(tr);
         }
 
         teamRoundRepository.saveAll(teamRounds);
@@ -165,15 +271,24 @@ public class RoundServiceImpl implements RoundService {
     @Override
     @Transactional
     public void unassignTeams(Long roundId, List<Long> teamIds) {
-        List<TeamRoundId> teamRoundIds = new ArrayList<>();
-        TeamRoundId teamRoundId;
-        for(Long teamId : teamIds) {
-            teamRoundId = new TeamRoundId();
-            teamRoundId.setRoundId(roundId);
-            teamRoundId.setTeamId(teamId);
-            teamRoundIds.add(teamRoundId);
+
+        Round round = findById(roundId);
+
+        if (round.getStatus() == RoundStatus.SUBMISSION_CLOSED ||
+                round.getStatus() == RoundStatus.EVALUATED) {
+            throw new IllegalStateException("Cannot modify teams after submission closed");
         }
-        teamRoundRepository.deleteAllById(teamRoundIds);
+
+        List<TeamRoundId> ids = new ArrayList<>();
+
+        for (Long teamId : teamIds) {
+            TeamRoundId id = new TeamRoundId();
+            id.setRoundId(roundId);
+            id.setTeamId(teamId);
+            ids.add(id);
+        }
+
+        teamRoundRepository.deleteAllById(ids);
     }
 
     @Override

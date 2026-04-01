@@ -1,5 +1,6 @@
 package com.project.backend.controllers;
 
+import com.project.backend.auth.utils.CurrentUserContainer;
 import com.project.backend.dto.user.UserCreateRequest;
 import com.project.backend.dto.user.UserResponse;
 import com.project.backend.dto.user.UserUpdateRequest;
@@ -11,10 +12,11 @@ import com.project.backend.services.interfaces.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -25,15 +27,14 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
     private final UserService userService;
     private final UserMapper userMapper;
+    private final CurrentUserContainer currentUserContainer;
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/juries")
     @Operation(summary = "Create jury user", description = "Creates a new user with JURY role")
     public UserResponse createJury(
             @Parameter(description = "User creation data")
-            @RequestBody UserCreateRequest userCreateRequest,
-
-            @Parameter(hidden = true)
-            Authentication authentication) {
+            @RequestBody @Valid UserCreateRequest userCreateRequest) {
         User user = userService.createUser(
                 userMapper.fromCreateRequestToUser(userCreateRequest),
                 Role.JURY
@@ -42,6 +43,7 @@ public class UserController {
         return userMapper.fromUserToResponse(user);
     }
 
+    @PreAuthorize("@userSecurity.checkUser(#userId) or hasRole('ADMIN')")
     @PutMapping("/{user_id}")
     @Operation(summary = "Update user", description = "Updates user information")
     public UserResponse update(
@@ -49,10 +51,7 @@ public class UserController {
             @PathVariable(value = "user_id") Long userId,
 
             @Parameter(description = "Updated user data")
-            @RequestBody UserUpdateRequest userUpdateRequest,
-
-            @Parameter(hidden = true)
-            Authentication authentication) {
+            @RequestBody @Valid UserUpdateRequest userUpdateRequest) {
         User user = userService.updateUser(
                 userMapper.fromUpdateRequestToUser(userUpdateRequest),
                 userId
@@ -61,23 +60,19 @@ public class UserController {
         return userMapper.fromUserToResponse(user);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{user_id}")
     @Operation(summary = "Delete user", description = "Deletes a user by ID")
     public void delete(
             @Parameter(description = "ID of the user to delete", example = "1")
-            @PathVariable(value = "user_id") Long userId,
-
-            @Parameter(hidden = true)
-            Authentication authentication) {
+            @PathVariable(value = "user_id") Long userId) {
         userService.delete(userId);
     }
 
     @GetMapping("/my")
     @Operation(summary = "Get my profile", description = "Returns profile of the authenticated user")
-    public UserResponse my(
-            @Parameter(hidden = true)
-            Authentication authentication) {
-        User me = userService.findUserByAuth(authentication);
+    public UserResponse my() {
+        User me = currentUserContainer.getUser();
         return userMapper.fromUserToResponse(me);
     }
 
@@ -90,6 +85,7 @@ public class UserController {
         return userMapper.fromUserToResponse(user);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/juries")
     @Operation(summary = "Get all juries", description = "Returns paginated list of users with JURY role")
     public PaginationListResponse<UserResponse> getAll(
@@ -100,10 +96,7 @@ public class UserController {
             @RequestParam(value = "page") Integer page,
 
             @Parameter(description = "Page size", example = "10")
-            @RequestParam(value = "size") Integer size,
-
-            @Parameter(hidden = true)
-            Authentication authentication) {
+            @RequestParam(value = "size") Integer size) {
         Page<User> userPage = userService.findAllByRole(page, size, query, Role.JURY);
 
         PaginationListResponse<UserResponse> response = new PaginationListResponse<>();

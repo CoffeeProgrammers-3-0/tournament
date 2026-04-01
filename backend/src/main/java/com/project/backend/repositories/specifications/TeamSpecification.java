@@ -1,5 +1,6 @@
 package com.project.backend.repositories.specifications;
 
+import com.project.backend.models.Submission;
 import com.project.backend.models.Team;
 import com.project.backend.models.join_tables.TeamParticipant;
 import com.project.backend.models.join_tables.TeamRound;
@@ -101,6 +102,18 @@ public class TeamSpecification {
                     );
 
             return cb.not(cb.exists(subquery));
+        };
+    }
+
+    public static Specification<Team> bySubmissionId(Long submissionId) {
+        log.debug("TeamSpecification.bySubmissionId called with submissionId={}", submissionId);
+        if (submissionId == null) return null;
+
+        return (root, query, cb) -> {
+            query.distinct(true);
+
+            Join<Team, Submission> submissionJoin = root.join("submissions");
+            return cb.equal(submissionJoin.get("id"), submissionId);
         };
     }
 }

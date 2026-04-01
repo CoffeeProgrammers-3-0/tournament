@@ -1,12 +1,16 @@
 package com.project.backend.dto.team;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
 @Schema(name = "TeamUpdateRequest", description = "DTO for updating an existing team")
 public class TeamUpdateRequest {
 
+    @NotBlank(message = "Team name is required")
+    @Size(max = 255, message = "Team name is too long")
     @Schema(description = "Name of the team", example = "Coffee Programmers")
     private String name;
 

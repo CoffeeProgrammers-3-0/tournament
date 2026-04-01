@@ -8,8 +8,10 @@ import com.project.backend.services.interfaces.CategoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,6 +25,7 @@ public class CategoryController {
     private final CategoryService categoryService;
     private final CategoryMapper categoryMapper;
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     @Operation(summary = "Create category", description = "Creates a new category inside the specified round")
     public CategoryResponse create(
@@ -30,12 +33,13 @@ public class CategoryController {
             @PathVariable(value = "round_id") Long roundId,
 
             @Parameter(description = "Category data for creation")
-            @RequestBody CategoryRequest categoryRequest) {
+            @RequestBody @Valid CategoryRequest categoryRequest) {
         Category category = categoryService.create(roundId, categoryMapper.fromRequestToCategory(categoryRequest));
 
         return categoryMapper.fromCategoryToResponse(category);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{category_id}")
     @Operation(summary = "Update category", description = "Updates an existing category")
     public CategoryResponse update(
@@ -43,12 +47,13 @@ public class CategoryController {
             @PathVariable(value = "category_id") Long categoryId,
 
             @Parameter(description = "Updated category data")
-            @RequestBody CategoryRequest categoryRequest) {
+            @RequestBody @Valid CategoryRequest categoryRequest) {
         Category category = categoryService.update(categoryId, categoryMapper.fromRequestToCategory(categoryRequest));
 
         return categoryMapper.fromCategoryToResponse(category);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{category_id}")
     @Operation(summary = "Delete category", description = "Deletes a category by its ID")
     public void delete(

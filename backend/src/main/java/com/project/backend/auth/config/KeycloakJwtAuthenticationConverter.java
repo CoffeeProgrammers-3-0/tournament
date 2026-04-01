@@ -24,20 +24,17 @@ public class KeycloakJwtAuthenticationConverter implements Converter<Jwt, Abstra
     private final String clientId;
 
     @Override
-    public AbstractAuthenticationToken convert(Jwt source)
-    {
+    public AbstractAuthenticationToken convert(Jwt source) {
         return new JwtAuthenticationToken(source, Stream.concat(new JwtGrantedAuthoritiesConverter().convert(source)
-                .stream(), extractResourceRoles(source).stream())
+                        .stream(), extractResourceRoles(source).stream())
                 .collect(toSet()));
     }
 
-    private Collection<? extends GrantedAuthority> extractResourceRoles(Jwt jwt)
-    {
+    private Collection<? extends GrantedAuthority> extractResourceRoles(Jwt jwt) {
         var resourceAccess = new HashMap<>(jwt.getClaim("resource_access"));
         var resourceRoles = new ArrayList<>();
 
-        if (resourceAccess.containsKey(clientId))
-        {
+        if (resourceAccess.containsKey(clientId)) {
             var resource = (Map<String, List<String>>) resourceAccess.get(clientId);
             resourceRoles.addAll(resource.get("roles"));
         }
