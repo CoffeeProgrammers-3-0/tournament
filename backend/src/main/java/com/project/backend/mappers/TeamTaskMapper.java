@@ -8,5 +8,5 @@ import org.mapstruct.Mapper;
 @Mapper(componentModel = "spring", uses = {UserMapper.class, TeamMapper.class, RoundMapper.class})
 public interface TeamTaskMapper {
     TeamTask fromRequestToTeamTask(TeamTaskRequest teamTaskRequest);
-    TeamTaskResponse fromTeamTaskToFullResponse(TeamTask teamTask);
+    TeamTaskResponse fromTeamTaskToResponse(TeamTask teamTask);
 }
