@@ -153,7 +153,7 @@ export const RoundTasksTab = ({ tasks, loadingTab, onOpenTaskModal, onDeleteTask
                                     <Box sx={{ flex: 1, minWidth: 0 }}>
                                         <Stack direction="row" alignItems="center" spacing={1}>
                                             <IconButton size="small" onClick={() => toggleExpand(task.id)} sx={{ color: 'primary.main' }}>
-                                                {isExpanded ? <KeyboardArrowUpIcon fontSize="small" /> : <KeyboardArrowDownIcon fontSize="small" />}
+                                                {isExpanded ? <KeyboardArrowUpIcon fontSize="medium" /> : <KeyboardArrowDownIcon fontSize="medium" />}
                                             </IconButton>
 
                                             {/* ПОЛЕ ВВОДУ АБО ЗВИЧАЙНИЙ ТЕКСТ ДЛЯ ЗАГОЛОВКА */}
