@@ -123,6 +123,7 @@ export const useRoundEditors = ({id, roundData, setRoundData, fetchCategories, f
         priority: "MEDIUM"
     });
 
+
     const [confirmDialog, setConfirmDialog] = useState<ConfirmDialogConfig>({
         open: false,
         title: "",
@@ -354,15 +355,26 @@ export const useRoundEditors = ({id, roundData, setRoundData, fetchCategories, f
 
     const handleAutoAssignJuries = useCallback(async () => {
         if (!roundId) return;
-        clearErrors();
-        try {
-            await roundService.autoAssignJuries(roundId, kValue);
-            setAutoAssignModalOpen(false);
-            await fetchSubmissions();
-            triggerConfirm({ title: "Complete", description: `Juries assigned (k=${kValue}).`, onConfirm: closeConfirm });
-        } catch (error: any) {
-            handleError(error, "Помилка автоматичного призначення журі");
-        }
+        triggerConfirm({
+            title: "Auto-assign",
+            description: "Are you really sure to do this? It will rewrite all assignments and delete all points",
+            confirmColor: "error",
+            onConfirm: async () => {
+                clearErrors();
+                try {
+                    await roundService.autoAssignJuries(roundId, kValue);
+                    setAutoAssignModalOpen(false);
+                    await fetchSubmissions();
+                    triggerConfirm({
+                        title: "Complete",
+                        description: `Juries assigned (k=${kValue}).`,
+                        onConfirm: closeConfirm
+                    });
+                } catch (error: any) {
+                    handleError(error, "Помилка автоматичного призначення журі");
+                }
+            }
+        })
     }, [roundId, kValue, fetchSubmissions, closeConfirm, triggerConfirm, clearErrors, handleError]);
 
     const handleSaveUpdate = useCallback(async () => {
@@ -562,6 +574,15 @@ export const useRoundEditors = ({id, roundData, setRoundData, fetchCategories, f
         setTaskModalOpen(true);
     }, [clearErrors]);
 
+    const handleUpdateTaskText = async (id: number, title: string, description: string) => {
+        try {
+            await teamTaskService.updateTask(id, { title, description } as any);
+            await fetchTasks(tasksPage, true);
+        } catch (error: any) {
+            handleError(error, "Помилка оновлення завдання");
+        }
+    };
+
     const handleSaveTask = useCallback(async () => {
         clearErrors();
         setIsTaskLoading(true);
@@ -617,6 +638,18 @@ export const useRoundEditors = ({id, roundData, setRoundData, fetchCategories, f
         }
     }, [fetchTasks, tasksPage, handleError]);
 
+    const handleAssignTeammate = useCallback(async (taskId: number, userId: number) => {
+        try {
+            await teamTaskService.updateAssignee(taskId, userId);
+            await fetchTasks(tasksPage, true);
+        } catch (error: any) {
+            handleError(error, "Помилка призначення виконавця");
+        }
+    }, [fetchTasks, tasksPage, handleError]);
+
+
+
+
     return {
         // Errors
         errors, clearErrors,
@@ -664,6 +697,6 @@ export const useRoundEditors = ({id, roundData, setRoundData, fetchCategories, f
         taskFormData, setTaskFormData,
         isTaskLoading, selectedTask,
         handleOpenTaskModal, handleSaveTask, handleDeleteTask,
-        handleUpdateTaskMeta, handleAssignMe,
+        handleUpdateTaskMeta, handleAssignMe, handleAssignTeammate, handleUpdateTaskText
     };
 };

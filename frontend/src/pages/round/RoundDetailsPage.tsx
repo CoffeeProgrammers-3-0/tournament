@@ -87,6 +87,7 @@ export const RoundDetailsPage = () => {
                 break;
             case "tasks":
                 details.fetchTasks(0); // Скидаємо на 0 сторінку при переході
+                details.fetchAllMyTeammates()
                 break;
             default:
                 break;
@@ -142,7 +143,19 @@ export const RoundDetailsPage = () => {
                 <RoundInfoTab roundData={details.roundData} isAdmin={isAdmin} isEditingInfo={editors.isEditingInfo} editFormData={editors.editFormData} setEditFormData={editors.setEditFormData} handleStatusChange={editors.handleStatusChange} handleSaveUpdate={editors.handleSaveUpdate} cancelEditing={() => editors.setIsEditingInfo(false)} t={t} errors={editors.errors}/>
             )}
             {activeTabId === "categories" && (
-                <RoundCategoriesTab categories={details.categories} loadingTab={details.loadingTab} isAdmin={isAdmin} onOpenCategoryModal={() => editors.setCategoryModalOpen(true)} onDeleteCategory={editors.handleDeleteCategory} onOpenCriteriaModal={(cid) => { editors.setSelectedCategoryId(cid); editors.setCriteriaModalOpen(true); }} onDeleteCriteria={editors.handleDeleteCriteria} t={t} errors={editors.errors}/>
+                <RoundCategoriesTab
+                    categories={details.categories}
+                    loadingTab={details.loadingTab}
+                    isAdmin={isAdmin}
+                    isReadOnly={details.roundData?.status === "EVALUATED"}
+
+                    onOpenCategoryModal={() => editors.setCategoryModalOpen(true)}
+                    onDeleteCategory={editors.handleDeleteCategory}
+                    onOpenCriteriaModal={(cid) => { editors.setSelectedCategoryId(cid); editors.setCriteriaModalOpen(true); }}
+                    onDeleteCriteria={editors.handleDeleteCriteria}
+                    t={t}
+                    errors={editors.errors}
+                />
             )}
             {activeTabId === "jury" && (
                 <RoundJuryTab jury={details.jury} loadingTab={details.loadingTab} isAdmin={isAdmin} onOpenJuryModal={editors.handleOpenJuryModal} onRemoveJury={editors.handleRemoveJury} t={t} errors={editors.errors}/>
@@ -161,11 +174,17 @@ export const RoundDetailsPage = () => {
                 <RoundSubmissionsTab submissions={details.submissions} loadingTab={details.loadingTab} page={details.submissionsPage} totalPages={details.submissionsTotalPages} onPageChange={details.fetchSubmissions} onAutoAssign={() => editors.setAutoAssignModalOpen(true)} onAssignManual={editors.handleOpenSubmissionJuryModal} onRemoveJury={editors.handleRemoveJuryFromSubmission} t={t} errors={editors.errors}/>
             )}
             {activeTabId === "tasks" && (
-                <RoundTasksTab tasks={details.tasks} loadingTab={details.loadingTab}
-                               onOpenTaskModal={editors.handleOpenTaskModal}
-                               onDeleteTask={editors.handleDeleteTask}
-                               onUpdateMeta={editors.handleUpdateTaskMeta} t={t}
-                               onAssignMe={editors.handleAssignMe}/>
+                <RoundTasksTab
+                    tasks={details.tasks}
+                    loadingTab={details.loadingTab}
+                    onOpenTaskModal={() => editors.setTaskModalOpen(true)} // Тепер просто відкриваємо
+                    onDeleteTask={editors.handleDeleteTask}
+                    onUpdateMeta={editors.handleUpdateTaskMeta}
+                    onUpdateTaskText={editors.handleUpdateTaskText} // <--- НОВЕ
+                    t={t}
+                    onAssignTeammate={editors.handleAssignTeammate}
+                    myTeamUsers={details.myTeamUsers || []}
+                />
             )}
 
             {/* Dialogs */}
@@ -221,7 +240,6 @@ export const RoundDetailsPage = () => {
                 formData={editors.taskFormData}
                 setFormData={editors.setTaskFormData}
                 onSubmit={editors.handleSaveTask}
-                isEditing={!!editors.selectedTask}
                 isLoading={editors.isTaskLoading}
                 t={t}
                 errors={editors.errors}

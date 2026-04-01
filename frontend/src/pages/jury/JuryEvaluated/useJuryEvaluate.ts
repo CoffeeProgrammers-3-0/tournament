@@ -71,7 +71,14 @@ export const useJuryEvaluate = () => {
     };
 
     const handleSaveScores = async () => {
-        if (!submissionId) return;
+        if (!submissionId || !submission) return;
+
+        // Додатковий запобіжник на фронтенді: не даємо зберегти, якщо статус EVALUATED
+        if (submission.round.status === "EVALUATED") {
+            setErrors([t('jury.errors.round_closed', 'Оцінювання для цього раунду вже завершено.')]);
+            return;
+        }
+
         setSaving(true);
         setErrors([]);
 
@@ -90,7 +97,9 @@ export const useJuryEvaluate = () => {
                 }
             }
 
-            await Promise.all(promises);
+            if (promises.length > 0) {
+                await Promise.all(promises);
+            }
             setShowSuccessDialog(true);
 
             // Рефреш локальних даних

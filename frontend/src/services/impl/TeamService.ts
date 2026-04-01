@@ -5,7 +5,7 @@ import type {
     TeamFullResponseDto,
     TeamListResponseDto
 } from "../../entities/team/team.dto.ts";
-import type {UserCreateRequestForTeamDto} from "../../entities/user/user.dto.ts";
+import type {UserCreateRequestForTeamDto, UserResponseDto} from "../../entities/user/user.dto.ts";
 import type {PaginationListResponseDto} from "../../entities/wrappers/wrapper.dto.ts";
 
 interface TeamQueryParams {
@@ -84,6 +84,10 @@ class TeamService extends BaseService {
     // У контролері: @PatchMapping("/{team_id}/tournaments/{tournament_id}/set-leader/{user_id}")
     public setTeamLeader(teamId: number, userId: number, tournamentId: number): Promise<TeamFullResponseDto> {
         return this.patch<TeamFullResponseDto>(`/${teamId}/tournaments/${tournamentId}/set-leader/${userId}`);
+    }
+
+    public getAllUsersByRoundOfMyTeam(roundId: number): Promise<UserResponseDto[]> {
+        return this.get<UserResponseDto[]>(`/round/${roundId}/users`);
     }
 }
 

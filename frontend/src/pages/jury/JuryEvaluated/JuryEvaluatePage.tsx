@@ -1,4 +1,5 @@
 import {
+    Alert,
     Box,
     Button,
     CircularProgress,
@@ -27,6 +28,9 @@ export const JuryEvaluatePage = () => {
     if (loading) return <Box sx={{ display: "flex", justifyContent: "center", py: 10 }}><CircularProgress thickness={5} /></Box>;
     if (!submission) return <Typography align="center" sx={{ mt: 10 }}>{t('common.no_data')}</Typography>;
 
+    // Визначаємо, чи доступне оцінювання
+    const isReadOnly = submission.round.status === "EVALUATED";
+
     return (
         <Box sx={{ pb: 8, maxWidth: "900px", mx: "auto", pt: 1 }}>
             <Button
@@ -37,8 +41,13 @@ export const JuryEvaluatePage = () => {
                 {t('common.back')}
             </Button>
 
-            {/* Всі помилки виводяться тут одним блоком */}
             <ErrorMessages errors={errors} />
+
+            {isReadOnly && (
+                <Alert severity="info" sx={{ mb: 3, borderRadius: '16px', '& .MuiAlert-message': { fontWeight: 600 } }}>
+                    {t('jury.info.round_evaluated', 'Цей раунд завершено. Оцінки доступні лише для перегляду і не можуть бути змінені.')}
+                </Alert>
+            )}
 
             <SubmissionDetails submission={submission} t={t} />
 
@@ -52,32 +61,35 @@ export const JuryEvaluatePage = () => {
                         categories={categories}
                         scores={scores}
                         onScoreChange={handleScoreChange}
-                        disabled={saving}
+                        disabled={saving || isReadOnly}
                         t={t}
                     />
 
-                    <Box sx={{ mt: 4, display: "flex", justifyContent: "flex-end" }}>
-                        <Button
-                            variant="contained" size="large"
-                            startIcon={saving ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
-                            onClick={handleSaveScores}
-                            disabled={saving}
-                            sx={{ borderRadius: "16px", px: 6, py: 2, fontWeight: 800, boxShadow: '0 8px 20px rgba(25, 118, 210, 0.3)' }}
-                        >
-                            {saving ? t('common.saving') : t('jury.actions.save_scores')}
-                        </Button>
-                    </Box>
+                    {/* Показуємо кнопку збереження ТІЛЬКИ якщо раунд не завершено */}
+                    {!isReadOnly && (
+                        <Box sx={{ mt: 4, display: "flex", justifyContent: "flex-end" }}>
+                            <Button
+                                variant="contained"
+                                size="large"
+                                startIcon={saving ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
+                                onClick={handleSaveScores}
+                                disabled={saving}
+                                sx={{ borderRadius: "16px", px: 6, py: 2, fontWeight: 800, boxShadow: '0 8px 20px rgba(25, 118, 210, 0.3)' }}
+                            >
+                                {saving ? t('common.saving') : t('jury.actions.save_scores')}
+                            </Button>
+                        </Box>
+                    )}
                 </>
             )}
 
-            {/* SUCCESS DIALOG замість Alert */}
             <Dialog
                 open={showSuccessDialog}
                 onClose={() => setShowSuccessDialog(false)}
                 PaperProps={{ sx: { borderRadius: "24px", p: 1, maxWidth: '400px', textAlign: 'center' } }}
             >
                 <DialogTitle sx={{ fontWeight: 900, fontSize: '1.5rem', pb: 1 }}>
-                    🎉 {t('common.success_title', 'Збережено!')}
+                    🎉 {t('common.success', 'Збережено!')}
                 </DialogTitle>
                 <DialogContent>
                     <DialogContentText sx={{ fontWeight: 500 }}>
