@@ -122,7 +122,8 @@ export const en = {
             "REGISTRATION": "Registration",
             "RUNNING": "Ongoing",
             "FINISHED": "Finished",
-            "DRAFT": "Draft"
+            "DRAFT": "Draft",
+            "ALL" : "ALL"
         },
         "admin": {
             "create_button": "Create Tournament",

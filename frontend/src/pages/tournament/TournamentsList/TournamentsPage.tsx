@@ -85,7 +85,7 @@ export const TournamentsPage = () => {
                             onChange={(e) => setStatusFilter(e.target.value)}
                             sx={{ minWidth: 150 }}
                         >
-                            {["DRAFT", "REGISTRATION", "RUNNING", "FINISHED"].map(status => (
+                            {["ALL", "DRAFT", "REGISTRATION", "RUNNING", "FINISHED"].map(status => (
                                 <MenuItem key={status} value={status}>{t(`tournaments.statuses.${status}`)}</MenuItem>
                             ))}
                         </TextField>

@@ -19,12 +19,15 @@ export const useTournaments = () => {
     const defaultTab = isJury ? TABS.MY : TABS.AVAILABLE;
     const tabValue = Number(searchParams.get("tab")) || defaultTab;
     const page = Number(searchParams.get("page")) || 1;
-    const statusFilter = searchParams.get("status") || "DRAFT"; // Статус в URL
+
+    // Змінено: за замовчуванням для адміна краще показувати "ALL" (всі),
+    // щоб адмін відразу бачив повний список турнірів без прихованих статусів.
+    const statusFilter = searchParams.get("status") || "ALL";
 
     const [tournaments, setTournaments] = useState<TournamentListResponseDto[]>([]);
     const [totalPages, setTotalPages] = useState(1);
     const [loading, setLoading] = useState(false);
-    const [isCreating, setIsCreating] = useState(false); // Стейт для форми створення
+    const [isCreating, setIsCreating] = useState(false);
 
     const [searchQuery, setSearchQuery] = useState("");
     const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -63,6 +66,7 @@ export const useTournaments = () => {
                     res = await tournamentService.getMyTournaments({ ...baseParams, status: "FINISHED" });
                     break;
                 case TABS.ADMIN:
+                    // ГОЛОВНЕ ВИПРАВЛЕННЯ: якщо ALL — статус взагалі не відправляється
                     const reqStatus = statusFilter === "ALL" ? undefined : (statusFilter as TournamentStatus);
                     res = await tournamentService.getAllTournaments({ ...baseParams, status: reqStatus });
                     break;
@@ -85,14 +89,21 @@ export const useTournaments = () => {
 
     const handleTabChange = (newValue: number) => {
         const newParams: any = { tab: newValue.toString(), page: "1" };
-        // Зберігаємо фільтр статусу тільки якщо ми на вкладці адміна
-        if (newValue === TABS.ADMIN) newParams.status = statusFilter;
+
+        // Зберігаємо фільтр статусу тільки якщо ми на вкладці адміна та статус не ALL
+        if (newValue === TABS.ADMIN && statusFilter !== "ALL") {
+            newParams.status = statusFilter;
+        }
         setSearchParams(newParams);
     };
 
     const setStatusFilter = (newStatus: string) => {
         setSearchParams(prev => {
-            prev.set("status", newStatus);
+            if (newStatus === "ALL") {
+                prev.delete("status"); // Повністю видаляємо статус з URL замість пустих рядків
+            } else {
+                prev.set("status", newStatus);
+            }
             prev.set("page", "1");
             return prev;
         });

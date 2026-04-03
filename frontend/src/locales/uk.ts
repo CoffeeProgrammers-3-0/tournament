@@ -122,7 +122,8 @@ export const uk = {
             "REGISTRATION": "Реєстрація",
             "RUNNING": "Триває",
             "FINISHED": "Завершено",
-            "DRAFT": "Чернетка"
+            "DRAFT": "Чернетка",
+            "ALL" : "Усі"
         },
         "admin": {
             "create_button": "Створити турнір",
