@@ -5,10 +5,9 @@ class AuthService {
     private static refreshPromise: Promise<boolean> | null = null;
 
     static redirectToKeycloak(): void {
-        localStorage.setItem('preLoginPath', window.location.pathname);
-
         const currentPath = window.location.pathname;
 
+        // Зберігаємо шлях, щоб повернутися на нього після авторизації
         if (currentPath !== '/callback' && currentPath !== '/login') {
             localStorage.setItem('preLoginPath', currentPath);
         } else {
@@ -19,6 +18,7 @@ class AuthService {
         const clientId = "coffee-programmers-client";
         const redirectUri = "http://localhost:3000/callback";
         const loginUrl = `${keycloakUrl}?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=openid`;
+
         window.location.href = loginUrl;
     }
 
@@ -27,14 +27,19 @@ class AuthService {
 
         try {
             await axios.post('http://localhost:8081/api/auth/logout', {}, {
-                params: {
-                    userId,
-                },
+                params: { userId },
                 withCredentials: true,
             });
-            this.redirectToKeycloak()
         } catch (e) {
             console.error("Logout failed", e);
+        } finally {
+            // Обов'язково чистимо кукі на випадок, якщо бекенд впав
+            Cookies.remove('accessToken');
+            Cookies.remove('refreshToken');
+            Cookies.remove('userId');
+
+            // Після логауту зазвичай повертають на головну сторінку як гостя
+            window.location.href = '/home';
         }
     }
 
@@ -43,9 +48,16 @@ class AuthService {
 
         this.refreshPromise = (async () => {
             const refreshToken = Cookies.get("refreshToken");
+            const hasAccessToken = Cookies.get('accessToken') !== undefined;
+            const isAuthed = Cookies.get("userId") !== undefined;
+
             if (!refreshToken) {
                 console.log("No refresh token available");
-                return false; // ПРОСТО ПОВЕРТАЄМО FALSE, НЕ РЕДИРЕКТИМО
+                if (isAuthed) {
+                    this.redirectToKeycloak();
+                    return false;
+                }
+                return false;
             }
 
             try {
@@ -60,7 +72,12 @@ class AuthService {
                 return true;
             } catch (error) {
                 console.error("Token refresh failed", error);
-                return false; // ТУТ ТЕЖ НЕ РЕДИРЕКТИМО
+
+                // Якщо спроба оновлення провалилася і користувач БУВ авторизований
+                if (hasAccessToken) {
+                    this.redirectToKeycloak();
+                }
+                return false;
             } finally {
                 this.refreshPromise = null;
             }

@@ -53,6 +53,7 @@ public class SecurityConfig {
                 regexMatcher(HttpMethod.GET, "^/api/teams$"),
                 regexMatcher(HttpMethod.GET, "^/api/teams/tournament/\\d+$"),
                 regexMatcher(HttpMethod.GET, "^/api/tournaments/\\d+$"),
+                regexMatcher(HttpMethod.GET, "^/api/tournaments(\\?.*)?$"), // TODO check all because only this worked
                 regexMatcher(HttpMethod.GET, "^/api/users/\\d+$")
         };
 

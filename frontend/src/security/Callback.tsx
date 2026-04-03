@@ -2,10 +2,10 @@ import React, {useEffect, useRef} from 'react';
 import {useNavigate} from 'react-router-dom';
 import {useTranslation} from 'react-i18next';
 import {Box, CircularProgress, Container, Paper, Typography} from '@mui/material';
-import {client} from '../utils/client';
+import {client} from '../utils/client'; // Assuming this is your configured Axios instance
 
 const Callback: React.FC = () => {
-    const {t} = useTranslation();
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const effectRan = useRef(false);
 
@@ -19,12 +19,14 @@ const Callback: React.FC = () => {
         if (code) {
             client.get(`/auth/callback?code=${encodeURIComponent(code)}`)
                 .then(() => {
+                    // Grab the saved path, default to /home
                     const returnPath = localStorage.getItem('preLoginPath') || '/home';
                     localStorage.removeItem('preLoginPath');
-                    navigate(returnPath);
+                    navigate(returnPath, { replace: true });
                 })
-                .catch(() => {
-                    alert('Помилка авторизації');
+                .catch((err) => {
+                    console.error("Auth error:", err);
+                    navigate('/login', { replace: true }); // Send back to login on failure
                 });
         }
     }, [navigate]);

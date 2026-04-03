@@ -1,4 +1,3 @@
-// security/AuthInit.tsx
 import React, {useEffect, useState} from 'react';
 import {useAuth} from './useAuth.tsx';
 import AuthService from '../services/auth/AuthService';
@@ -10,20 +9,20 @@ const AuthInit: React.FC<{ children: React.ReactElement }> = ({ children }) => {
 
     useEffect(() => {
         const initAuth = async () => {
-            // Якщо ми не авторизовані в стейті, пробуємо рефрешнути токен
             if (!isAuthenticated()) {
                 try {
-                    // AuthService.refresh() має повертати проміс або оновлювати стейт
+                    // Try to silently refresh the token in the background
                     await AuthService.refresh();
                 } catch (e) {
-                    console.log("User is guest");
+                    // If it fails, they are simply a guest. Do nothing.
+                    console.log("No valid session found. User is a guest.");
                 }
             }
+            // FINALLY block equivalent - always load the app!
             setIsLoaded(true);
         };
 
         initAuth();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     if (!isLoaded) {
