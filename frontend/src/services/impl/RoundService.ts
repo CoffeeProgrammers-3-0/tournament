@@ -55,7 +55,7 @@ class RoundService extends BaseService {
 
     // Зверніть увагу: у контролері шлях /roundsByRound/{round_id}
     public getRoundsByRound(roundId: number, params: RoundQueryParams): Promise<PaginationListResponseDto<RoundListResponseDto>> {
-        return this.get<PaginationListResponseDto<RoundListResponseDto>>(`/roundsByRound/${roundId}`, { params });
+        return this.get<PaginationListResponseDto<RoundListResponseDto>>(`/rounds-by-round/${roundId}`, { params });
     }
 
     public getRoundById(roundId: number): Promise<RoundFullResponseDto> {

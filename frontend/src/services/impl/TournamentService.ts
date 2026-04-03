@@ -7,6 +7,7 @@ import type {
     TournamentUpdateRequestDto
 } from "../../entities/tournament/tournament.dto.ts";
 import type {PaginationListResponseDto} from "../../entities/wrappers/wrapper.dto.ts";
+import Cookies from "js-cookie";
 
 interface TournamentQueryParams {
     page: number;
@@ -46,7 +47,7 @@ class TournamentService extends BaseService {
     }
 
     public getTournamentById(tournamentId: number): Promise<TournamentFullResponseDto> {
-        return this.get<TournamentFullResponseDto>(`/${tournamentId}`);
+        return this.get<TournamentFullResponseDto>(Cookies.get("role") === "ADMIN" ? `/admin/${tournamentId}`:`/${tournamentId}`);
     }
 }
 
