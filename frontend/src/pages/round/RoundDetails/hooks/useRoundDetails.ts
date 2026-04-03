@@ -12,6 +12,7 @@ import type {SubmissionListResponseDto} from "../../../../entities/submission/su
 import {teamTaskService} from "../../../../services/impl/TeamTaskService.ts";
 import type {TeamTaskResponseDto} from "../../../../entities/teamTask/teamtask.dto.ts";
 import {teamService} from "../../../../services/impl/TeamService.ts";
+import Cookies from "js-cookie";
 
 export const useRoundDetails = (id?: string) => {
     const navigate = useNavigate();
@@ -128,7 +129,7 @@ export const useRoundDetails = (id?: string) => {
 
     useEffect(() => {
         fetchRound();
-        fetchCheckSubmission(); // Викликаємо перевірку при завантаженні
+        if(Cookies.get("role") === "USER") fetchCheckSubmission(); // Викликаємо перевірку при завантаженні
     }, [fetchRound, fetchCheckSubmission]);
 
     const fetchTasks = useCallback(async (page = 0, showLoader = true) => {

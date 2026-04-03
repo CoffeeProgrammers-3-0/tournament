@@ -6,7 +6,7 @@ import {categoryService} from "../../../services/impl/CategoryService";
 import {juryCriteriaService} from "../../../services/impl/JuryCriteriaService";
 import type {SubmissionFullResponseDto} from "../../../entities/submission/submission.dto.ts";
 import type {CategoryResponseDto} from "../../../entities/category/category.dto.ts";
-import type {JuryCriteriaResponseDto} from "../../../entities/juryCriteria/juryCriteria.dto.ts";
+import type {JuryCriteriaRequestDto, JuryCriteriaResponseDto} from "../../../entities/juryCriteria/juryCriteria.dto.ts";
 
 export const useJuryEvaluate = () => {
     const { submissionId } = useParams<{ submissionId: string }>();
@@ -89,7 +89,7 @@ export const useJuryEvaluate = () => {
                     const points = scores[criteria.id];
                     if (points === undefined) continue;
 
-                    const payload = { points: points };
+                    const payload : JuryCriteriaRequestDto = { points: points };
                     // Оновлюємо тільки якщо значення змінилося або ще не існує
                     if (!existingScores[criteria.id] || existingScores[criteria.id].points !== points) {
                         promises.push(juryCriteriaService.updateScore(Number(submissionId), criteria.id, payload));

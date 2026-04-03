@@ -85,7 +85,7 @@ export const useTournaments = () => {
 
     useEffect(() => {
         fetchTournaments();
-    }, [fetchTournaments]);
+    }, []);
 
     const handleTabChange = (newValue: number) => {
         const newParams: any = { tab: newValue.toString(), page: "1" };

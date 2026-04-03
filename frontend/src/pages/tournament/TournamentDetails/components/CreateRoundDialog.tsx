@@ -29,7 +29,8 @@ export const CreateRoundDialog = ({ state, t, tournament }: any) => {
                     <TextField required label={t("tournament_details.admin.create_modal.end")} name="endDate" type="datetime-local" value={roundFormData.endDate} onChange={handleRoundFormChange} fullWidth InputLabelProps={{ shrink: true }} inputProps={{ min: roundFormData.startDate || undefined }} />
                 </Box>
                 <TextField required label={t("tournament_details.admin.create_modal.winners")} name="countOfWinners" type="number" value={roundFormData.countOfWinners} onChange={handleRoundFormChange} fullWidth inputProps={{ min: 1 }} />
-                <TextField label={t("tournament_details.admin.create_modal.task")} name="task" value={roundFormData.task} onChange={handleRoundFormChange} multiline rows={4} fullWidth placeholder={t("tournament_details.admin.create_modal.name_placeholder")} />
+                <TextField required label={t("tournament_details.admin.create_modal.task")} name="task" value={roundFormData.task} onChange={handleRoundFormChange} multiline rows={4} fullWidth placeholder={t("tournament_details.admin.create_modal.name_placeholder")} />
+                <TextField required label={t("tournament_details.admin.create_modal.requ")} name="requirements" value={roundFormData.requirements} onChange={handleRoundFormChange} multiline rows={4} fullWidth placeholder={t("tournament_details.admin.create_modal.name_placeholder")} />
             </DialogContent>
             <DialogActions sx={{ p: 3, gap: 1 }}>
                 <Button onClick={() => setRoundModalOpen(false)} sx={{ fontWeight: 700, px: 3 }}>{t("common.cancel")}</Button>

@@ -173,6 +173,8 @@ export const useTournamentDetails = () => {
         clearErrors();
         setIsCreatingRound(true);
         try {
+            roundFormData.startDate = roundFormData.startDate + ":00";
+            roundFormData.endDate = roundFormData.endDate + ":00";
             await roundService.createRound(tournamentId, roundFormData as any);
             setRoundModalOpen(false);
             setRoundFormData({ name: '', startDate: '', endDate: '', countOfWinners: 1, requirements: '', task: '' });

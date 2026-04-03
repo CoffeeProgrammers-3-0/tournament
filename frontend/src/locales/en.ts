@@ -177,6 +177,7 @@ export const en = {
                 "end": "End Date",
                 "winners": "Team`s members advancing count",
                 "task": "Task Description",
+                "requ": "Requirements",
                 "submit": "Create Round"
             }
         }
