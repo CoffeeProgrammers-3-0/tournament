@@ -41,24 +41,24 @@ public class SecurityConfig {
                 "/api/auth/refresh",
         };
         RegexRequestMatcher[] getPermitAll = new RegexRequestMatcher[]{
-                regexMatcher(HttpMethod.GET, "^/api/rounds/\\d+/categories$"),
-                regexMatcher(HttpMethod.GET, "^/api/tournaments/\\d+/rounds$"),
-                regexMatcher(HttpMethod.GET, "^/api/tournaments/rounds-by-round/\\d+$"),
-                regexMatcher(HttpMethod.GET, "^/api/tournaments/rounds/\\d+$"),
-                regexMatcher(HttpMethod.GET, "^/api/tournaments/rounds/\\d+/leaderboard$"),
-                regexMatcher(HttpMethod.GET, "^/api/tournaments/rounds/\\d+/leaderboard/export$"),
-                regexMatcher(HttpMethod.GET, "^/api/tournaments/rounds/\\d+/juries$"),
-                regexMatcher(HttpMethod.GET, "^/api/tournaments/rounds/\\d+/teams$"),
-                regexMatcher(HttpMethod.GET, "^/api/teams/\\d+$"),
-                regexMatcher(HttpMethod.GET, "^/api/teams$"),
-                regexMatcher(HttpMethod.GET, "^/api/teams/tournament/\\d+$"),
-                regexMatcher(HttpMethod.GET, "^/api/tournaments/\\d+$"),
-                regexMatcher(HttpMethod.GET, "^/api/tournaments(\\?.*)?$"), // TODO check all because only this worked
-                regexMatcher(HttpMethod.GET, "^/api/users/\\d+$")
+                regexMatcher(HttpMethod.GET, "^/api/rounds/\\d+/categories(\\?.*)?$"),
+                regexMatcher(HttpMethod.GET, "^/api/tournaments/\\d+/rounds(\\?.*)?$"),
+                regexMatcher(HttpMethod.GET, "^/api/tournaments/rounds-by-round/\\d+(\\?.*)?$"),
+                regexMatcher(HttpMethod.GET, "^/api/tournaments/rounds/\\d+(\\?.*)?$"),
+                regexMatcher(HttpMethod.GET, "^/api/tournaments/rounds/\\d+/leaderboard(\\?.*)?$"),
+                regexMatcher(HttpMethod.GET, "^/api/tournaments/rounds/\\d+/leaderboard/export(\\?.*)?$"),
+                regexMatcher(HttpMethod.GET, "^/api/tournaments/rounds/\\d+/juries(\\?.*)?$"),
+                regexMatcher(HttpMethod.GET, "^/api/tournaments/rounds/\\d+/teams(\\?.*)?$"),
+                regexMatcher(HttpMethod.GET, "^/api/teams/\\d+(\\?.*)?$"),
+                regexMatcher(HttpMethod.GET, "^/api/teams(\\?.*)?$"),
+                regexMatcher(HttpMethod.GET, "^/api/teams/tournament/\\d+(\\?.*)?$"),
+                regexMatcher(HttpMethod.GET, "^/api/tournaments/\\d+(\\?.*)?$"),
+                regexMatcher(HttpMethod.GET, "^/api/tournaments(\\?.*)?$"),
+                regexMatcher(HttpMethod.GET, "^/api/users/\\d+(\\?.*)?$")
         };
 
         RegexRequestMatcher[] postPermitAll = new RegexRequestMatcher[]{
-                regexMatcher(HttpMethod.POST, "^/api/teams/\\d+$")
+                regexMatcher(HttpMethod.POST, "^/api/teams/\\d+(\\?.*)?$")
         };
         return http
                 .csrf(AbstractHttpConfigurer::disable)
