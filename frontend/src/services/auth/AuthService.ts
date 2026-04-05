@@ -1,6 +1,14 @@
 import axios from 'axios';
 import Cookies from 'js-cookie';
 
+// Збираємо всі посилання та параметри в один конфіг
+const AUTH_CONFIG = {
+    KEYCLOAK_AUTH_URL: import.meta.env.VITE_KEYCLOAK_AUTH_URL || "http://localhost:8080/realms/coffee-programmers/protocol/openid-connect/auth",
+    CLIENT_ID: import.meta.env.VITE_KEYCLOAK_CLIENT_ID || "coffee-programmers-client",
+    REDIRECT_URI: import.meta.env.VITE_REDIRECT_URI || `${window.location.origin}/callback`,
+    API_BASE_URL: import.meta.env.VITE_AUTH_API_URL || "http://localhost:8081"
+};
+
 class AuthService {
     private static refreshPromise: Promise<boolean> | null = null;
 
@@ -14,10 +22,7 @@ class AuthService {
             localStorage.setItem('preLoginPath', '/home');
         }
 
-        const keycloakUrl = "http://localhost:8080/realms/coffee-programmers/protocol/openid-connect/auth";
-        const clientId = "coffee-programmers-client";
-        const redirectUri = "http://localhost:3000/callback";
-        const loginUrl = `${keycloakUrl}?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=openid`;
+        const loginUrl = `${AUTH_CONFIG.KEYCLOAK_AUTH_URL}?client_id=${AUTH_CONFIG.CLIENT_ID}&redirect_uri=${encodeURIComponent(AUTH_CONFIG.REDIRECT_URI)}&response_type=code&scope=openid`;
 
         window.location.href = loginUrl;
     }
@@ -26,7 +31,7 @@ class AuthService {
         const userId = Cookies.get('userId');
 
         try {
-            await axios.post('http://localhost:8081/api/auth/logout', {}, {
+            await axios.post(`${AUTH_CONFIG.API_BASE_URL}/api/auth/logout`, {}, {
                 params: { userId },
                 withCredentials: true,
             });
@@ -62,7 +67,7 @@ class AuthService {
 
             try {
                 await axios.post(
-                    "http://localhost:8081/api/auth/refresh",
+                    `${AUTH_CONFIG.API_BASE_URL}/api/auth/refresh`,
                     {},
                     {
                         params: { refreshToken: encodeURIComponent(refreshToken) },
