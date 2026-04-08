@@ -24,6 +24,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import FastForwardIcon from "@mui/icons-material/FastForward";
 import GroupAddIcon from "@mui/icons-material/GroupAdd";
 import GroupIcon from "@mui/icons-material/Group";
+import {ErrorMessages} from "../../../../../components/main/ErrorMessages.tsx";
 
 type AddModalProps = {
     open: boolean;
@@ -34,12 +35,13 @@ type AddModalProps = {
     onSelectAll: (ids: number[]) => void;
     onConfirm: () => void;
     isLoading: boolean;
-    t: (key: string, options?: any) => string; // Added i18n prop
+    t: (key: string, options?: any) => string;
+    errors: string[];
 };
 
 // Modal 1: Add missing teams to the current round
 export const AddMissingTeamsModal = ({
-                                         open, onClose, teams, selectedIds, onSelect, onSelectAll, onConfirm, isLoading, t
+                                         open, onClose, teams, selectedIds, onSelect, onSelectAll, onConfirm, isLoading, t, errors
                                      }: AddModalProps) => {
     const [searchTerm, setSearchTerm] = useState("");
 
@@ -54,10 +56,16 @@ export const AddMissingTeamsModal = ({
                 width: 500, bgcolor: 'background.paper', borderRadius: 3, boxShadow: 24, overflow: 'hidden'
             }}>
                 <Box sx={{ p: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', bgcolor: 'grey.50' }}>
-                    <Typography variant="h6" fontWeight={700} display="flex" alignItems="center" gap={1}>
-                        <GroupAddIcon color="primary" /> {t("modals.add_teams.title")}
-                    </Typography>
-                    <IconButton onClick={onClose} size="small"><CloseIcon /></IconButton>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <GroupAddIcon color="primary" />
+                        <Typography variant="h6" fontWeight={700}>
+                            {t("modals.add_teams.title")}
+                        </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <ErrorMessages errors={errors} />
+                        <IconButton onClick={onClose} size="small"><CloseIcon /></IconButton>
+                    </Box>
                 </Box>
                 <Box sx={{ p: 3 }}>
                     <TextField
@@ -79,16 +87,8 @@ export const AddMissingTeamsModal = ({
                         {filteredTeams.map((team: any) => (
                             <ListItem key={team.id} disablePadding>
                                 <ListItemButton onClick={() => onSelect(team.id)} sx={{ '&:hover': { bgcolor: 'action.hover' } }}>
-                                    <Checkbox
-                                        checked={selectedIds.includes(team.id)}
-                                        color="primary"
-                                        disableRipple
-                                    />
-                                    <ListItemText
-                                        primary={team.name}
-                                        secondary={team.email}
-                                        primaryTypographyProps={{ fontWeight: 500 }}
-                                    />
+                                    <Checkbox checked={selectedIds.includes(team.id)} color="primary" disableRipple />
+                                    <ListItemText primary={team.name} secondary={team.email} primaryTypographyProps={{ fontWeight: 500 }} />
                                 </ListItemButton>
                             </ListItem>
                         ))}
@@ -119,12 +119,13 @@ type AdvanceModalProps = {
     setTargetRound: (id: number) => void;
     isLoading: boolean;
     maxCountOfTeam?: number;
-    t: (key: string, options?: any) => string; // Added i18n prop
+    errors: string[];
+    t: (key: string, options?: any) => string;
 };
 
 // Modal 2: Advance teams
 export const AdvanceTeamsModal = ({
-                                      open, onClose, leaderboard, selectedIds, onSelect, onConfirm, rounds, targetRound, setTargetRound, isLoading, maxCountOfTeam, t
+                                      open, onClose, leaderboard, selectedIds, onSelect, onConfirm, rounds, targetRound, setTargetRound, isLoading, maxCountOfTeam, t, errors
                                   }: AdvanceModalProps) => {
     return (
         <Modal open={open} onClose={onClose}>
@@ -133,10 +134,16 @@ export const AdvanceTeamsModal = ({
                 width: 550, bgcolor: 'background.paper', borderRadius: 3, boxShadow: 24, overflow: 'hidden'
             }}>
                 <Box sx={{ p: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', bgcolor: 'primary.main', color: 'white' }}>
-                    <Typography variant="h6" fontWeight={700} display="flex" alignItems="center" gap={1}>
-                        <FastForwardIcon /> {t("modals.advance_teams.title")}
-                    </Typography>
-                    <IconButton onClick={onClose} size="small" sx={{ color: 'white' }}><CloseIcon /></IconButton>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <FastForwardIcon />
+                        <Typography variant="h6" fontWeight={700}>
+                            {t("modals.advance_teams.title")}
+                        </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <ErrorMessages errors={errors} />
+                        <IconButton onClick={onClose} size="small" sx={{ color: 'white' }}><CloseIcon /></IconButton>
+                    </Box>
                 </Box>
 
                 <Box sx={{ p: 3 }}>
@@ -187,7 +194,7 @@ export const AdvanceTeamsModal = ({
                 </Box>
                 <Divider />
                 <Box sx={{ p: 2, display: 'flex', justifyContent: 'flex-end', gap: 1.5, bgcolor: 'grey.50' }}>
-                    <Button onClick={onClose}>{t("common.cancel")}</Button>
+                    <Button onClick={onClose} variant="outlined">{t("common.cancel")}</Button>
                     <Button variant="contained" disabled={!targetRound || selectedIds.length === 0 || isLoading} onClick={onConfirm}>
                         {t("modals.advance_teams.submit", { count: selectedIds.length })}
                     </Button>

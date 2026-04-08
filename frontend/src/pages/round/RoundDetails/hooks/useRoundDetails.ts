@@ -24,7 +24,10 @@ export const useRoundDetails = (id?: string) => {
     const [roundData, setRoundData] = useState<RoundFullResponseDto | null>(null);
     const [categories, setCategories] = useState<CategoryResponseDto[]>([]);
     const [jury, setJury] = useState<UserResponseDto[]>([]);
+
     const [leaderboard, setLeaderboard] = useState<TeamLeaderboardResponseDto[]>([]);
+    const [hasMore, setHasMore] = useState(true);
+    const [isNextPageLoading, setIsNextPageLoading] = useState(false);
 
     // Нові стейти для сабмішенів
     const [submissions, setSubmissions] = useState<SubmissionListResponseDto[]>([]);
@@ -89,22 +92,41 @@ export const useRoundDetails = (id?: string) => {
         }
     }, [id]);
 
-    const fetchLeaderboard = useCallback(async () => {
+    const loadLeaderboard = useCallback(async (isFirstLoad: boolean = false) => {
         if (!id) return;
-        setLoadingTab(true);
+        const lastTeam = !isFirstLoad && leaderboard.length > 0
+            ? leaderboard[leaderboard.length - 1]
+            : null;
+
+        if (isFirstLoad) {
+            setLoadingTab(true);
+            setHasMore(true);
+        } else {
+            setIsNextPageLoading(true);
+        }
+
         try {
+            const pageSize = 10;
             const data = await roundService.getLeaderboardForRound(Number(id), {
-                last_team_points: 100,
-                last_team_id: 0,
-                size: 10
+                last_team_points: lastTeam ? lastTeam.points : 9999,
+                last_team_id: lastTeam ? lastTeam.id : 0,
+                size: pageSize
             });
-            setLeaderboard(data.sort((a, b) => b.points - a.points));
+
+            setLeaderboard(prev => {
+                if (isFirstLoad) return data;
+                const combined = [...prev, ...data];
+                return combined.filter((v, i, a) => a.findIndex(t => t.id === v.id) === i);
+            });
+
+            setHasMore(data.length === pageSize);
         } catch (error) {
             console.error("Error fetching leaderboard:", error);
         } finally {
             setLoadingTab(false);
+            setIsNextPageLoading(false);
         }
-    }, [id]);
+    }, [id, leaderboard]);
 
     const fetchSubmissions = useCallback(async (page = 0) => {
         if (!id) return;
@@ -158,15 +180,16 @@ export const useRoundDetails = (id?: string) => {
         categories,
         jury,
         leaderboard,
+        setLeaderboard,
         submissions,
         submissionsPage,
         submissionsTotalPages,
         fetchCategories,
         fetchJury,
-        fetchLeaderboard,
+        loadLeaderboard,
         fetchSubmissions,
         submissionId,
         fetchCheckSubmission,
-        tasks, tasksPage, tasksTotalPages, fetchTasks, fetchAllMyTeammates, myTeamUsers
+        tasks, tasksPage, tasksTotalPages, fetchTasks, fetchAllMyTeammates, myTeamUsers, hasMore, isNextPageLoading
     };
 };

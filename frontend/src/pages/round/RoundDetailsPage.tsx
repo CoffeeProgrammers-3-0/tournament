@@ -81,7 +81,7 @@ export const RoundDetailsPage = () => {
                 details.fetchJury();
                 break;
             case "leaderboard":
-                details.fetchLeaderboard();
+                details.loadLeaderboard(true);
                 break;
             case "submissions":
                 details.fetchSubmissions(0); // Скидаємо на 0 сторінку при переході
@@ -162,14 +162,25 @@ export const RoundDetailsPage = () => {
                 <RoundJuryTab jury={details.jury} loadingTab={details.loadingTab} isAdmin={isAdmin} onOpenJuryModal={editors.handleOpenJuryModal} onRemoveJury={editors.handleRemoveJury} t={t} errors={editors.errors}/>
             )}
             {activeTabId === "leaderboard" && (
-                <RoundTeamsTab leaderboard={details.leaderboard} loadingTab={details.loadingTab}
-                               roundData={details.roundData} onOpenStats={editors.handleOpenStats}
-                               navigate={details.navigate} t={t} isAdmin={isAdmin}
-                               onOpenAddMissingTeamsModal={editors.handleOpenAddMissingModal}
-                               onOpenAdvanceTeamsModal={() => editors.handleOpenAdvanceModal()}
-                               onUnassignTeam={editors.handleUnassignTeam}
-                               onExportLeaderboard={editors.handleExportLeaderboard} isExporting={editors.isExporting}
-                               errors={editors.errors}/>
+                <RoundTeamsTab
+                    leaderboard={details.leaderboard}
+                    setLeaderboard={details.setLeaderboard}
+                    loadingTab={details.loadingTab}
+                    hasMore={details.hasMore}
+                    isNextPageLoading={details.isNextPageLoading}
+                    onLoadMore={() => details.loadLeaderboard(false)} // false means it's a pagination load
+                    roundData={details.roundData!}
+                    onOpenStats={editors.handleOpenStats}
+                    navigate={details.navigate}
+                    t={t}
+                    isAdmin={isAdmin}
+                    onOpenAddMissingTeamsModal={editors.handleOpenAddMissingModal}
+                    onOpenAdvanceTeamsModal={() => editors.handleOpenAdvanceModal()}
+                    onUnassignTeam={editors.handleUnassignTeam}
+                    onExportLeaderboard={editors.handleExportLeaderboard}
+                    isExporting={editors.isExporting}
+                    errors={editors.errors}
+                />
             )}
             {activeTabId === "submissions" && (
                 <RoundSubmissionsTab submissions={details.submissions} loadingTab={details.loadingTab} page={details.submissionsPage} totalPages={details.submissionsTotalPages} onPageChange={details.fetchSubmissions} onAutoAssign={() => editors.setAutoAssignModalOpen(true)} onAssignManual={editors.handleOpenSubmissionJuryModal} onRemoveJury={editors.handleRemoveJuryFromSubmission} t={t} errors={editors.errors}/>
@@ -247,8 +258,34 @@ export const RoundDetailsPage = () => {
             />
 
             {/* Teams Management Modals */}
-            <AddMissingTeamsModal open={editors.addMissingModalOpen} onClose={() => editors.setAddMissingModalOpen(false)} teams={editors.missingTeams} selectedIds={editors.selectedMissingIds} onSelect={(tid: number) => editors.setSelectedMissingIds(prev => prev.includes(tid) ? prev.filter(x => x !== tid) : [...prev, tid])} onConfirm={editors.handleConfirmAddMissing} isLoading={editors.isTeamsLoading} errors={editors.errors}/>
-            <AdvanceTeamsModal open={editors.advanceModalOpen} onClose={() => editors.setAdvanceModalOpen(false)} leaderboard={details.leaderboard} selectedIds={editors.selectedAdvanceIds} onSelect={(tid: number) => editors.setSelectedAdvanceIds(prev => prev.includes(tid) ? prev.filter(x => x !== tid) : [...prev, tid])} rounds={editors.tournamentRounds} targetRound={editors.targetAdvanceRoundId} setTargetRound={editors.setTargetAdvanceRoundId} onConfirm={editors.handleConfirmAdvance} isLoading={editors.isTeamsLoading} errors={editors.errors}/>
+            <AddMissingTeamsModal
+                open={editors.addMissingModalOpen}
+                onClose={() => editors.setAddMissingModalOpen(false)}
+                teams={editors.missingTeams}
+                selectedIds={editors.selectedMissingIds}
+                onSelect={(tid: number) => editors.setSelectedMissingIds(prev => prev.includes(tid) ? prev.filter(x => x !== tid) : [...prev, tid])}
+                onSelectAll={(ids: number[]) => editors.setSelectedMissingIds(ids)} // Added this
+                onConfirm={editors.handleConfirmAddMissing}
+                isLoading={editors.isTeamsLoading}
+                errors={editors.errors}
+                t={t}
+            />
+
+            <AdvanceTeamsModal
+                open={editors.advanceModalOpen}
+                onClose={() => editors.setAdvanceModalOpen(false)}
+                leaderboard={details.leaderboard}
+                selectedIds={editors.selectedAdvanceIds}
+                onSelect={(tid: number) => editors.setSelectedAdvanceIds(prev => prev.includes(tid) ? prev.filter(x => x !== tid) : [...prev, tid])}
+                rounds={editors.tournamentRounds}
+                targetRound={editors.targetAdvanceRoundId}
+                setTargetRound={editors.setTargetAdvanceRoundId}
+                onConfirm={editors.handleConfirmAdvance}
+                isLoading={editors.isTeamsLoading}
+                errors={editors.errors}
+                t={t}
+            />
+
 
             <Dialog open={editors.autoAssignModalOpen} onClose={() => editors.setAutoAssignModalOpen(false)}>
                 <DialogTitle>{t("round_details.submissions.auto_assign_title")}</DialogTitle>

@@ -1,3 +1,4 @@
+import {useEffect} from "react";
 import {
     Box,
     Button,
@@ -21,41 +22,124 @@ import PersonRemoveIcon from "@mui/icons-material/PersonRemove";
 import FastForwardIcon from "@mui/icons-material/FastForward";
 import GroupIcon from "@mui/icons-material/Group";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
+import {Client} from "@stomp/stompjs";
+import SockJS from "sockjs-client";
 import type {TeamLeaderboardResponseDto} from "../../../../../entities/team/team.dto";
 import type {RoundFullResponseDto} from "../../../../../entities/round/round.dto";
 import {ErrorMessages} from "../../../../../components/main/ErrorMessages.tsx";
 
 type Props = {
     leaderboard: TeamLeaderboardResponseDto[];
+    setLeaderboard: React.Dispatch<React.SetStateAction<TeamLeaderboardResponseDto[]>>;
     loadingTab: boolean;
+    hasMore: boolean;
+    isNextPageLoading: boolean;
+    onLoadMore: () => void;
     roundData: RoundFullResponseDto;
     onOpenStats: (teamId: number, e: React.MouseEvent) => void;
     navigate: (path: string) => void;
     t: (key: string, options?: any) => string;
     isAdmin: boolean;
     onOpenAddMissingTeamsModal: () => void;
-    onOpenAdvanceTeamsModal: () => void; // This should point to handleOpenAdvanceModal from the hook
+    onOpenAdvanceTeamsModal: () => void;
     onUnassignTeam: (teamId: number) => void;
     onExportLeaderboard: () => void;
     isExporting: boolean;
     errors: string[];
 };
 
+type WebSocketPayload = {
+    type: 'POINTS_CHANGED' | 'TEAM_DELETED' | 'TEAM_UNASSIGNED_FROM_ROUND' | 'TEAM_ASSIGNED_TO_ROUND';
+    content: any[];
+};
+
 export const RoundTeamsTab = ({
-                                  leaderboard,
-                                  loadingTab,
-                                  roundData,
-                                  onOpenStats,
-                                  navigate,
-                                  t,
-                                  isAdmin,
-                                  onOpenAddMissingTeamsModal,
-                                  onOpenAdvanceTeamsModal,
-                                  onUnassignTeam,
-                                  onExportLeaderboard,
-                                  isExporting,
-                                  errors
+                                  setLeaderboard, leaderboard, loadingTab, hasMore, isNextPageLoading, onLoadMore,
+                                  roundData, onOpenStats, navigate, t, isAdmin, onOpenAddMissingTeamsModal,
+                                  onOpenAdvanceTeamsModal, onUnassignTeam, onExportLeaderboard, isExporting, errors
                               }: Props) => {
+
+    useEffect(() => {
+        if (!roundData?.id) return;
+
+        const client = new Client({
+            webSocketFactory: () => new SockJS(`${import.meta.env.VITE_API_BASE_URL || ''}/ws`),
+            reconnectDelay: 5000,
+            heartbeatIncoming: 10000,
+            heartbeatOutgoing: 10000,
+            onConnect: () => {
+                console.log(`Connected to WebSocket for Round ${roundData.id}`);
+
+                client.subscribe(`/topic/rounds/${roundData.id}/leaderboard`, (message) => {
+                    const payload: WebSocketPayload = JSON.parse(message.body);
+                    const { type, content } = payload;
+
+                    setLeaderboard((prevLeaderboard) => {
+                        let updated = [...prevLeaderboard];
+
+                        switch (type) {
+                            case 'TEAM_ASSIGNED_TO_ROUND': {
+                                const newTeams = content.filter(
+                                    (newTeam: TeamLeaderboardResponseDto) => !prevLeaderboard.some(t => t.id === newTeam.id)
+                                );
+                                updated = [...prevLeaderboard, ...newTeams];
+                                break;
+                            }
+
+                            case 'TEAM_UNASSIGNED_FROM_ROUND':
+                            case 'TEAM_DELETED': {
+                                const idsToRemove = new Set(content.map((item: { id: number }) => item.id));
+                                updated = prevLeaderboard.filter(t => !idsToRemove.has(t.id));
+                                break;
+                            }
+
+                            case 'POINTS_CHANGED': {
+                                let newLeaderboard = [...prevLeaderboard];
+
+                                content.forEach((updatedTeam: TeamLeaderboardResponseDto) => {
+                                    const index = newLeaderboard.findIndex(t => t.id === updatedTeam.id);
+
+                                    if (index !== -1) {
+                                        newLeaderboard[index] = { ...newLeaderboard[index], ...updatedTeam };
+                                    } else {
+                                        const lowestVisiblePoints = newLeaderboard.length > 0
+                                            ? newLeaderboard[newLeaderboard.length - 1].points
+                                            : 0;
+
+                                        if (updatedTeam.points > lowestVisiblePoints) {
+                                            newLeaderboard.push(updatedTeam);
+                                        }
+                                    }
+                                });
+
+                                return newLeaderboard
+                                    .sort((a, b) => b.points - a.points || a.name.localeCompare(b.name))
+                                    .slice(0, prevLeaderboard.length > 20 ? prevLeaderboard.length : 20);
+                            }
+
+                            default:
+                                break;
+                        }
+
+                        return updated
+                            .sort((a, b) => b.points - a.points || b.id - a.id)
+                            .slice(0, Math.max(prevLeaderboard.length, 10)); // Keep the list from shrinking
+                        });
+                });
+            },
+            onStompError: (frame) => {
+                console.error('Broker reported error: ' + frame.headers['message']);
+                console.error('Additional details: ' + frame.body);
+            },
+        });
+
+        client.activate();
+
+        return () => {
+            client.deactivate();
+        };
+    }, [roundData?.id, setLeaderboard]);
+
     return (
         <Box>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
@@ -81,7 +165,7 @@ export const RoundTeamsTab = ({
                                 startIcon={<GroupAddIcon />}
                                 onClick={onOpenAddMissingTeamsModal}
                             >
-                                Add Missing Teams
+                                {t("modals.add_teams.title")}
                             </Button>
                             <Button
                                 variant="contained"
@@ -90,7 +174,7 @@ export const RoundTeamsTab = ({
                                 onClick={onOpenAdvanceTeamsModal}
                                 disabled={leaderboard.length === 0}
                             >
-                                Advance Teams
+                                {t("modals.advance_teams.title")}
                             </Button>
                         </>
                     )}
@@ -133,7 +217,7 @@ export const RoundTeamsTab = ({
                                         cursor: "pointer",
                                         transition: 'background-color 0.2s',
                                         '&:hover': { bgcolor: 'rgba(25, 118, 210, 0.04) !important' },
-                                        ...(index < roundData.countOfWinners && { bgcolor: 'rgba(76, 175, 80, 0.02)' })
+                                        ...(index < (roundData?.countOfWinners || 0) && { bgcolor: 'rgba(76, 175, 80, 0.02)' })
                                     }}
                                 >
                                     <TableCell align="center">
@@ -153,7 +237,7 @@ export const RoundTeamsTab = ({
                                     <TableCell align="right">
                                         <Chip
                                             label={team.points}
-                                            color={index < roundData.countOfWinners ? "success" : "default"}
+                                            color={index < (roundData?.countOfWinners || 0) ? "success" : "default"}
                                             variant="filled"
                                             sx={{ fontWeight: 700 }}
                                         />
@@ -188,6 +272,19 @@ export const RoundTeamsTab = ({
                             )}
                         </TableBody>
                     </Table>
+
+                    {/* The "Load More" Section */}
+                    {hasMore && (
+                        <Box sx={{ p: 2, textAlign: 'center', borderTop: '1px solid #eee' }}>
+                            <Button
+                                onClick={onLoadMore}
+                                disabled={isNextPageLoading}
+                                startIcon={isNextPageLoading && <CircularProgress size={16} />}
+                            >
+                                {isNextPageLoading ? t("common.loading") : t("common.load_more")}
+                            </Button>
+                        </Box>
+                    )}
                 </TableContainer>
             )}
         </Box>
