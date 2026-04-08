@@ -1,5 +1,6 @@
 package com.project.backend.services.implementations;
 
+import com.project.backend.dto.event.PointsChangedForTeamEvent;
 import com.project.backend.models.Round;
 import com.project.backend.models.Submission;
 import com.project.backend.models.Team;
@@ -15,6 +16,7 @@ import com.project.backend.services.interfaces.SubmissionService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -32,6 +34,8 @@ public class SubmissionServiceImpl implements SubmissionService {
     private final TeamRepository teamRepository;
     private final UserRepository userRepository;
     private final JurySubmissionRepository jurySubmissionRepository;
+
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public Submission check(Long roundId, Long userId) {
@@ -111,7 +115,11 @@ public class SubmissionServiceImpl implements SubmissionService {
             throw new IllegalStateException("Submissions allowed only in ACTIVE round");
         }
 
+        PointsChangedForTeamEvent event = new PointsChangedForTeamEvent(submission.getTeam().getId(),round.getId());
+
         submissionRepository.delete(submission);
+
+        eventPublisher.publishEvent(event);
     }
 
     @Override
@@ -168,6 +176,9 @@ public class SubmissionServiceImpl implements SubmissionService {
 
         jurySubmissionRepository.save(jurySubmission);
 
+        PointsChangedForTeamEvent event = new PointsChangedForTeamEvent(submission.getTeam().getId(),round.getId());
+        eventPublisher.publishEvent(event);
+
         return submission;
     }
 
@@ -198,6 +209,9 @@ public class SubmissionServiceImpl implements SubmissionService {
         jurySubmissionRepository.delete(
                 JurySubmissionSpecification.bySubmissionIdAndJuryId(submissionId, juryId)
         );
+
+        PointsChangedForTeamEvent event = new PointsChangedForTeamEvent(submission.getTeam().getId(),round.getId());
+        eventPublisher.publishEvent(event);
 
         return submission;
     }

@@ -1,9 +1,13 @@
 package com.project.backend.dto.team;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 @Schema(name = "TeamLeaderboardResponse", description = "DTO representing a team on the leaderboard")
 public class TeamLeaderboardResponse {
 
@@ -16,15 +20,9 @@ public class TeamLeaderboardResponse {
     @Schema(description = "Email of the team", example = "coffee.programmers@example.com")
     private String email;
 
+    @Schema(description = "Count of members in the team", example = "3")
+    private Long countOfMembers;
+
     @Schema(description = "Total points scored by the team", example = "95.5")
     private Double points;
-
-    public TeamLeaderboardResponse(Long id, String name, String email, Double points) {
-        this.id = id;
-        this.name = name;
-        this.email = email;
-        this.points = points;
-    }
-
-    public TeamLeaderboardResponse() {}
 }

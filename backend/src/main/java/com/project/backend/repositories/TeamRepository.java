@@ -23,11 +23,20 @@ public interface TeamRepository extends JpaRepository<Team, Long>, JpaSpecificat
                                                       @Param("roundId") Long roundId);
 
     @Query(value = """
-                WITH TargetTeams AS (
+                WITH CurrentTournament AS (
+                    SELECT tournament_id FROM tournament.rounds WHERE id = :roundId
+                ),
+                TargetTeams AS (
                     SELECT DISTINCT
                         tr.team_id AS team_id,
                         t.name AS team_name,
-                        t.email AS team_email
+                        t.email AS team_email,
+                        (
+                            SELECT COUNT(*) 
+                            FROM tournament.team_participants tp 
+                            WHERE tp.team_id = t.id 
+                            AND tp.tournament_id = (SELECT tournament_id FROM CurrentTournament)
+                        ) AS count_members
                     FROM tournament.team_rounds tr
                     JOIN tournament.teams t ON t.id = tr.team_id
                     WHERE tr.round_id = :roundId
@@ -62,6 +71,7 @@ public interface TeamRepository extends JpaRepository<Team, Long>, JpaSpecificat
                         tt.team_id,
                         tt.team_name,
                         tt.team_email,
+                        tt.count_members AS countOfMembers,
                         COALESCE(ss.total_points, 0) AS points
                     FROM TargetTeams tt
                     LEFT JOIN ScoredSubmissions ss ON tt.team_id = ss.team_id
@@ -82,11 +92,20 @@ public interface TeamRepository extends JpaRepository<Team, Long>, JpaSpecificat
     );
 
     @Query(value = """
-            WITH TargetTeams AS (
+            WITH CurrentTournament AS (
+                SELECT tournament_id FROM tournament.rounds WHERE id = :roundId
+            ),
+            TargetTeams AS (
                 SELECT DISTINCT
                     tr.team_id AS team_id,
                     t.name AS team_name,
-                    t.email AS team_email
+                    t.email AS team_email,
+                    (
+                        SELECT COUNT(*) 
+                        FROM tournament.team_participants tp 
+                        WHERE tp.team_id = t.id 
+                        AND tp.tournament_id = (SELECT tournament_id FROM CurrentTournament)
+                    ) AS count_members
                 FROM tournament.team_rounds tr
                 JOIN tournament.teams t ON t.id = tr.team_id
                 WHERE tr.round_id = :roundId
@@ -120,10 +139,71 @@ public interface TeamRepository extends JpaRepository<Team, Long>, JpaSpecificat
                 tt.team_id,
                 tt.team_name,
                 tt.team_email,
+                tt.count_members AS countOfMembers,
                 COALESCE(ss.total_points, 0) AS points
             FROM TargetTeams tt
             LEFT JOIN ScoredSubmissions ss ON tt.team_id = ss.team_id
             ORDER BY points DESC, tt.team_id DESC
             """, nativeQuery = true)
     List<TeamLeaderboardResponse> findLeaderboard(@Param("roundId") Long roundId);
+
+    @Query(value = """
+        WITH CurrentTournament AS (
+            SELECT tournament_id FROM tournament.rounds WHERE id = :roundId
+        ),
+        TargetTeams AS (
+            SELECT DISTINCT
+                tr.team_id AS team_id,
+                t.name AS team_name,
+                t.email AS team_email,
+                (
+                    SELECT COUNT(*) 
+                    FROM tournament.team_participants tp 
+                    WHERE tp.team_id = t.id 
+                    AND tp.tournament_id = (SELECT tournament_id FROM CurrentTournament)
+                ) AS count_members
+            FROM tournament.team_rounds tr
+            JOIN tournament.teams t ON t.id = tr.team_id
+            WHERE tr.round_id = :roundId
+              AND tr.team_id IN (:teamIds)
+        ),
+        ScoredSubmissions AS (
+            SELECT
+                s.team_id,
+                COALESCE(
+                    SUM(
+                        COALESCE(
+                            (jsc.points::numeric / NULLIF(sub.count_criteria, 0)) * cat.weight, 
+                            0
+                        )
+                    ) / NULLIF(COUNT(DISTINCT js.jury_id), 0),
+                    0
+                ) AS total_points
+            FROM tournament.submissions s
+            JOIN tournament.jury_submission js ON js.submission_id = s.id
+            JOIN tournament.jury_submission_criteria jsc ON jsc.jury_submission_id = js.id
+            JOIN tournament.criteria c ON jsc.criteria_id = c.id
+            JOIN tournament.categories cat ON c.category_id = cat.id
+            LEFT JOIN (
+                SELECT category_id, COUNT(*) AS count_criteria
+                FROM tournament.criteria
+                GROUP BY category_id
+            ) AS sub ON sub.category_id = cat.id
+            WHERE s.round_id = :roundId
+              AND s.team_id IN (:teamIds)
+            GROUP BY s.team_id
+        )
+        SELECT
+            tt.team_id,
+            tt.team_name,
+            tt.team_email,
+            tt.count_members AS countOfMembers,
+            COALESCE(ss.total_points, 0) AS points
+        FROM TargetTeams tt
+        LEFT JOIN ScoredSubmissions ss ON tt.team_id = ss.team_id
+        """, nativeQuery = true)
+    List<TeamLeaderboardResponse> findLeaderboardForTeams(
+            @Param("roundId") Long roundId,
+            @Param("teamIds") List<Long> teamIds
+    );
 }

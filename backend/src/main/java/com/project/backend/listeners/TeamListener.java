@@ -1,5 +1,6 @@
 package com.project.backend.listeners;
 
+import com.project.backend.dto.event.TeamAssignedToRoundEvent;
 import com.project.backend.dto.event.TeamCreatedEvent;
 import com.project.backend.models.Round;
 import com.project.backend.models.Team;
@@ -10,6 +11,7 @@ import com.project.backend.repositories.RoundRepository;
 import com.project.backend.repositories.TeamRoundRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +24,8 @@ import org.springframework.transaction.event.TransactionalEventListener;
 public class TeamListener {
     private final RoundRepository roundRepository;
     private final TeamRoundRepository teamRoundRepository;
+
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
@@ -40,6 +44,9 @@ public class TeamListener {
             teamRound.setRound(firstRound);
 
             teamRoundRepository.save(teamRound);
+
+            TeamAssignedToRoundEvent event1 = new TeamAssignedToRoundEvent(team.getId(), firstRound.getId());
+            eventPublisher.publishEvent(event1);
         }
     }
 }

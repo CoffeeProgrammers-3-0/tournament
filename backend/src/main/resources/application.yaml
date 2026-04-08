@@ -5,6 +5,7 @@ google:
   client-id: ${GOOGLE_CLIENT_ID}
   client-secret: ${GOOGLE_CLIENT_SECRET}
 keycloak-url: ${KEYCLOAK_URL}
+keycloak-container-url: ${KEYCLOAK_CONTAINER_URL}
 frontend-url: ${FRONTEND_URL}
 db-url: ${DB_URL}
 
@@ -13,8 +14,8 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          jwk-set-uri: ${KEYCLOAK_URL}/realms/${REALM}/protocol/openid-connect/certs
           issuer-uri: ${KEYCLOAK_URL}/realms/${REALM}
+          jwk-set-uri: ${KEYCLOAK_CONTAINER_URL}/realms/${REALM}/protocol/openid-connect/certs
       client:
         registration:
           coffee-programmers-client:
@@ -26,10 +27,9 @@ spring:
             provider: coffee-programmers-provider
         provider:
           coffee-programmers-provider:
-            authorization-uri: ${KEYCLOAK_URL}/realms/${REALM}/protocol/openid-connect/auth
-            token-uri: ${KEYCLOAK_URL}/realms/${REALM}/protocol/openid-connect/token
-            jwk-set-uri: ${KEYCLOAK_URL}/realms/${REALM}/protocol/openid-connect/certs
-            issuer-uri: ${KEYCLOAK_URL}/realms/${REALM}
+            authorization-uri: ${KEYCLOAK_CONTAINER_URL}/realms/${REALM}/protocol/openid-connect/auth
+            token-uri: ${KEYCLOAK_CONTAINER_URL}/realms/${REALM}/protocol/openid-connect/token
+            jwk-set-uri: ${KEYCLOAK_CONTAINER_URL}/realms/${REALM}/protocol/openid-connect/certs
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}

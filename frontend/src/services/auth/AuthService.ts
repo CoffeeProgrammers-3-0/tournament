@@ -3,10 +3,11 @@ import Cookies from 'js-cookie';
 
 // Збираємо всі посилання та параметри в один конфіг
 const AUTH_CONFIG = {
-    KEYCLOAK_AUTH_URL: import.meta.env.VITE_KEYCLOAK_AUTH_URL || "http://localhost:8080/realms/coffee-programmers/protocol/openid-connect/auth",
+    KEYCLOAK_AUTH_URL: import.meta.env.VITE_KEYCLOAK_URL || "http://localhost:8080/auth",
+    KEYCLOAK_REALM: import.meta.env.VITE_KEYCLOAK_REALM || "coffee-programmers",
     CLIENT_ID: import.meta.env.VITE_KEYCLOAK_CLIENT_ID || "coffee-programmers-client",
     REDIRECT_URI: import.meta.env.VITE_REDIRECT_URI || `${window.location.origin}/callback`,
-    API_BASE_URL: import.meta.env.VITE_AUTH_API_URL || "http://localhost:8081"
+    API_BASE_URL: import.meta.env.VITE_API_BASE_URL || "http://localhost:8081/api"
 };
 
 class AuthService {
@@ -22,7 +23,7 @@ class AuthService {
             localStorage.setItem('preLoginPath', '/home');
         }
 
-        const loginUrl = `${AUTH_CONFIG.KEYCLOAK_AUTH_URL}?client_id=${AUTH_CONFIG.CLIENT_ID}&redirect_uri=${encodeURIComponent(AUTH_CONFIG.REDIRECT_URI)}&response_type=code&scope=openid`;
+        const loginUrl = `${AUTH_CONFIG.KEYCLOAK_AUTH_URL}/realms/${AUTH_CONFIG.KEYCLOAK_REALM}/protocol/openid-connect/auth?client_id=${AUTH_CONFIG.CLIENT_ID}&redirect_uri=${encodeURIComponent(AUTH_CONFIG.REDIRECT_URI)}&response_type=code&scope=openid`;
 
         window.location.href = loginUrl;
     }
@@ -31,7 +32,7 @@ class AuthService {
         const userId = Cookies.get('userId');
 
         try {
-            await axios.post(`${AUTH_CONFIG.API_BASE_URL}/api/auth/logout`, {}, {
+            await axios.post(`${AUTH_CONFIG.API_BASE_URL}/auth/logout`, {}, {
                 params: { userId },
                 withCredentials: true,
             });
@@ -67,7 +68,7 @@ class AuthService {
 
             try {
                 await axios.post(
-                    `${AUTH_CONFIG.API_BASE_URL}/api/auth/refresh`,
+                    `${AUTH_CONFIG.API_BASE_URL}/auth/refresh`,
                     {},
                     {
                         params: { refreshToken: encodeURIComponent(refreshToken) },
