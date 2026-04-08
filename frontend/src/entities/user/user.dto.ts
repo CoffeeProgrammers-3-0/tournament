@@ -38,4 +38,5 @@ export interface UserResponseForTeamDto {
     tournamentId: number;
     tournamentName: string;
     tournamentStatus: TournamentStatus;
+    tournamentMaxCountOfTeam: number;
 }
