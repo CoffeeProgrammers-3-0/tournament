@@ -1,5 +1,6 @@
 package com.project.backend.services.implementations;
 
+import com.project.backend.dto.event.PointsChangedForTeamEvent;
 import com.project.backend.models.Criteria;
 import com.project.backend.models.User;
 import com.project.backend.models.ids.JurySubmissionCriteriaId;
@@ -14,6 +15,7 @@ import com.project.backend.services.interfaces.JurySubmissionCriteriaService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -30,6 +32,8 @@ public class JurySubmissionCriteriaServiceImpl implements JurySubmissionCriteria
     private final JurySubmissionCriteriaRepository jurySubmissionCriteriaRepository;
     private final JurySubmissionRepository jurySubmissionRepository;
     private final CriteriaRepository criteriaRepository;
+
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -75,14 +79,21 @@ public class JurySubmissionCriteriaServiceImpl implements JurySubmissionCriteria
 
         log.info("Set points {} for submission {} criteria {} by jury {}",
                 value, submissionId, criteriaId, jury.getId());
+        jurySubmissionCriteria = jurySubmissionCriteriaRepository.save(jurySubmissionCriteria);
 
-        return jurySubmissionCriteriaRepository.save(jurySubmissionCriteria);
+        PointsChangedForTeamEvent event = new PointsChangedForTeamEvent(
+                jurySubmissionCriteria.getJurySubmission().getSubmission().getTeam().getId(),
+                jurySubmissionCriteria.getJurySubmission().getSubmission().getRound().getId()
+        );
+        eventPublisher.publishEvent(event);
+
+        return jurySubmissionCriteria;
     }
 
     private JurySubmissionCriteria findById(Long jurySubmissionId, Long criteriaId) {
         return jurySubmissionCriteriaRepository.findOne(Specification.allOf(
-                JurySubmissionCriteriaSpecification.byJurySubmissionId(jurySubmissionId),
-                JurySubmissionCriteriaSpecification.byCriteriaId(criteriaId)
+                        JurySubmissionCriteriaSpecification.byJurySubmissionId(jurySubmissionId),
+                        JurySubmissionCriteriaSpecification.byCriteriaId(criteriaId)
                 )
         ).orElseThrow(() -> new EntityNotFoundException("JurySubmissionCriteria for JurySubmission with id " + jurySubmissionId + " and criteria with id " + criteriaId + " not found"));
     }

@@ -21,6 +21,7 @@ public interface UserMapper {
     @Mapping(target = "tournamentId", source = "tournament.id")
     @Mapping(target = "tournamentName", source = "tournament.name")
     @Mapping(target = "tournamentStatus", source = "tournament.status")
+    @Mapping(target = "tournamentMaxCountOfTeam", source = "tournament.maxCountOfTeam")
     UserResponseForTeam fromTeamParticipantToResponseForTeam(TeamParticipant teamParticipant);
 
 }

@@ -6,4 +6,10 @@ export default defineConfig({
   define: {
     global: "window",
   },
+  server: {
+      allowedHosts: [
+        'frontend',
+        'localhost'
+      ]
+    }
 });

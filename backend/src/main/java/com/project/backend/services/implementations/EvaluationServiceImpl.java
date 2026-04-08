@@ -1,5 +1,6 @@
 package com.project.backend.services.implementations;
 
+import com.project.backend.dto.event.PointsChangedForTeamEvent;
 import com.project.backend.models.Submission;
 import com.project.backend.models.User;
 import com.project.backend.models.join_tables.Jury;
@@ -13,6 +14,7 @@ import com.project.backend.repositories.specifications.SubmissionSpecification;
 import com.project.backend.services.interfaces.EvaluationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +31,8 @@ public class EvaluationServiceImpl implements EvaluationService {
     private final SubmissionRepository submissionRepository;
     private final JurySubmissionRepository jurySubmissionRepository;
     private final JuryRepository juryRepository;
+
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     @Override
@@ -83,7 +87,13 @@ public class EvaluationServiceImpl implements EvaluationService {
                 }
             }
         }
+        List<Long> teamIds = submissions.stream().map(s -> s.getTeam().getId()).distinct().toList();
+        List<PointsChangedForTeamEvent> events = teamIds.stream().map(id -> new PointsChangedForTeamEvent(id, roundId)).toList();
 
         jurySubmissionRepository.saveAll(assignmentsToSave);
+
+        for(PointsChangedForTeamEvent event : events) {
+            eventPublisher.publishEvent(event);
+        }
     }
 }

@@ -28,4 +28,7 @@ public class UserResponseForTeam {
 
     @Schema(description = "Status of the tournament", example = "RUNNING")
     private TournamentStatus tournamentStatus;
+
+    @Schema(description = "Maximum size of the team", example = "5")
+    private Integer tournamentMaxCountOfTeam;
 }

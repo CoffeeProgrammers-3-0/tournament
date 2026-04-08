@@ -1,83 +1,125 @@
-services:
-  localhost:
-    image: alpine:latest
-    command: sleep infinity
-    ports:
-      - "8080:8080"
-      - "8081:8081"
+version: "3.9"
 
+services:
   postgres-keycloak:
     image: postgres:17
-    container_name: postgres-keycloak
+    profiles: ["dev", "prod"]
     environment:
-      POSTGRES_DB: keycloak
-      POSTGRES_USER: keycloak
-      POSTGRES_PASSWORD: password
+      POSTGRES_DB: ${POSTGRES_KEYCLOAK_DB}
+      POSTGRES_USER: ${POSTGRES_KEYCLOAK_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_KEYCLOAK_PASSWORD}
     volumes:
       - pgdata-keycloak:/var/lib/postgresql/data
-
-  keycloak:
-    image: quay.io/keycloak/keycloak:26.2.5
-    container_name: keycloak
-    command: start-dev --import-realm --spi-theme-static-max-age=-1 --spi-theme-cache-themes=false --spi-theme-cache-templates=false
-    environment:
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
-      KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://postgres-keycloak:5432/keycloak
-      KC_DB_USERNAME: keycloak
-      KC_DB_PASSWORD: password
-    depends_on:
-      - postgres-keycloak
-    volumes:
-      - ./coffee-programmers-realm.json:/opt/keycloak/data/import/coffee-programmers-realm.json
-      - ./themes:/opt/keycloak/themes
-    network_mode: "service:localhost"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_KEYCLOAK_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   postgres-backend:
     image: postgres:17
-    container_name: postgres-backend
+    profiles: ["dev", "prod"]
     environment:
-      POSTGRES_DB: backend
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
+      POSTGRES_DB: ${POSTGRES_BACKEND_DB}
+      POSTGRES_USER: ${POSTGRES_BACKEND_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_BACKEND_PASSWORD}
     volumes:
       - pgdata-backend:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_BACKEND_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.2.5
+    profiles: ["dev", "prod"]
+    command: start-dev --import-realm
+    ports:
+      - "${KEYCLOAK_PORT}:${KEYCLOAK_PORT}"
+    environment:
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres-keycloak:5432/${POSTGRES_KEYCLOAK_DB}
+      KC_DB_USERNAME: ${POSTGRES_KEYCLOAK_USER}
+      KC_DB_PASSWORD: ${POSTGRES_KEYCLOAK_PASSWORD}
+      KC_HTTP_RELATIVE_PATH: /auth
+      KC_PROXY: edge
+      KC_HOSTNAME: ${KEYCLOAK_URL}
+    depends_on:
+      postgres-keycloak:
+        condition: service_healthy
+    volumes:
+      - ./coffee-programmers-realm.json:/opt/keycloak/data/import/coffee-programmers-realm.json
+      - ./themes:/opt/keycloak/themes
 
   backend:
     build: ./backend
-    depends_on:
-      - postgres-backend
-      - keycloak
+    profiles: ["dev", "prod"]
+    ports:
+      - "${BACKEND_PORT}:${BACKEND_PORT}"
     environment:
-      - PORT=8081
-      - CLOUD_KEY=${CLOUD_KEY}
-      - EMAIL_ADDRESS=${EMAIL_ADDRESS}
-      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
-      - DB_URL=jdbc:postgresql://postgres-backend:5432/backend
-      - DB_USERNAME=postgres
-      - DB_PASSWORD=password
-      - KEYCLOAK_URL=http://localhost:8080
-      - FRONTEND_URL=http://localhost:3000
-      - REALM=coffee-programmers
-      - CLIENT_ID=coffee-programmers-client
-      - CLIENT_SECRET=QRZGWTnEuxoXNo7eML4qXyZ3ru4xzrIY
-    command: ["sh", "-c", "mvn clean package -DskipTests && java -jar target/*.jar"]
-    network_mode: "service:localhost"
+      PORT: ${BACKEND_PORT}
+      DB_URL: jdbc:postgresql://postgres-backend:5432/${POSTGRES_BACKEND_DB}
+      DB_USERNAME: ${POSTGRES_BACKEND_USER}
+      DB_PASSWORD: ${POSTGRES_BACKEND_PASSWORD}
+      KEYCLOAK_URL: ${KEYCLOAK_URL}
+      KEYCLOAK_CONTAINER_URL: http://keycloak:8080/auth
+      FRONTEND_URL: ${FRONTEND_URL}
+      REALM: ${REALM}
+      CLIENT_ID: ${CLIENT_ID}
+      CLIENT_SECRET: ${KC_CLIENT_SECRET}
+    depends_on:
+      postgres-backend:
+        condition: service_healthy
+
+  frontend-dev:
+    profiles: ["dev"]
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "${FRONTEND_PORT}:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      VITE_KEYCLOAK_URL: ${KEYCLOAK_URL}
+      VITE_KEYCLOAK_REALM: ${REALM}
+      VITE_KEYCLOAK_CLIENT_ID: ${CLIENT_ID}
+      VITE_REDIRECT_URI: ${FRONTEND_URL}/callback
+      VITE_API_BASE_URL: ${API_URL}
+    command: npm run dev -- --host
 
   frontend:
-     build: ./frontend
-     ports:
-       - "3000:3000"
-     depends_on:
-       - backend
-     volumes:
-       - ./frontend:/app
-       - /app/node_modules
-     environment:
-       - CHOKIDAR_USEPOLLING=true
+    profiles: ["prod"]
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_KEYCLOAK_URL: ${KEYCLOAK_URL}
+        VITE_KEYCLOAK_REALM: ${REALM}
+        VITE_KEYCLOAK_CLIENT_ID: ${CLIENT_ID}
+        VITE_REDIRECT_URI: ${FRONTEND_URL}/callback
+        VITE_API_BASE_URL: ${API_URL}
+    volumes:
+      - frontend_static:/usr/share/nginx/html
+
+
+  nginx:
+    image: nginx:stable
+    profiles: ["prod"]
+    ports:
+      - "80:80"
+    depends_on:
+      - frontend
+      - backend
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - frontend_static:/usr/share/nginx/html:ro
 
 volumes:
   pgdata-keycloak:
   pgdata-backend:
+  frontend_static:

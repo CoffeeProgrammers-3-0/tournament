@@ -2,10 +2,12 @@ package com.project.backend.services.implementations;
 
 import com.project.backend.auth.utils.SecurityUtil;
 import com.project.backend.dto.event.TeamCreatedEvent;
+import com.project.backend.dto.event.TeamDeletedEvent;
 import com.project.backend.dto.team.StatisticResponse;
 import com.project.backend.dto.team.StatisticRowDTO;
 import com.project.backend.dto.team.TeamLeaderboardResponse;
 import com.project.backend.dto.user.UserCreateRequestForTeam;
+import com.project.backend.models.Round;
 import com.project.backend.models.Team;
 import com.project.backend.models.Tournament;
 import com.project.backend.models.User;
@@ -13,9 +15,11 @@ import com.project.backend.models.constants.Role;
 import com.project.backend.models.constants.TournamentStatus;
 import com.project.backend.models.ids.TeamParticipantId;
 import com.project.backend.models.join_tables.TeamParticipant;
+import com.project.backend.repositories.RoundRepository;
 import com.project.backend.repositories.TeamParticipantRepository;
 import com.project.backend.repositories.TeamRepository;
 import com.project.backend.repositories.TournamentRepository;
+import com.project.backend.repositories.specifications.RoundSpecification;
 import com.project.backend.repositories.specifications.TeamParticipantSpecification;
 import com.project.backend.repositories.specifications.TeamSpecification;
 import com.project.backend.repositories.specifications.TournamentSpecification;
@@ -41,6 +45,7 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class TeamServiceImpl implements TeamService {
     private final TeamRepository teamRepository;
+    private final RoundRepository roundRepository;
     private final TeamParticipantRepository teamParticipantRepository;
     private final TournamentRepository tournamentRepository;
     private final UserService userService;
@@ -138,7 +143,11 @@ public class TeamServiceImpl implements TeamService {
     @Transactional
     public void delete(Long teamId) {
         Team team = findById(teamId);
+        List<Long> rounds = roundRepository.findAll(RoundSpecification.byTeamId(teamId)).stream().map(Round::getId).toList();
         teamRepository.delete(team);
+
+        TeamDeletedEvent teamDeletedEvent = new TeamDeletedEvent(teamId, rounds);
+        eventPublisher.publishEvent(teamDeletedEvent);
     }
 
     @Override

@@ -1,6 +1,9 @@
 package com.project.backend.services.implementations;
 
+import com.project.backend.dto.event.PointsChangedForTeamEvent;
 import com.project.backend.dto.event.RoundCreatedEvent;
+import com.project.backend.dto.event.TeamAssignedToRoundEvent;
+import com.project.backend.dto.event.TeamUnassignedFromRoundEvent;
 import com.project.backend.models.Round;
 import com.project.backend.models.Team;
 import com.project.backend.models.Tournament;
@@ -11,6 +14,7 @@ import com.project.backend.models.constants.TournamentStatus;
 import com.project.backend.models.ids.JuryId;
 import com.project.backend.models.ids.TeamRoundId;
 import com.project.backend.models.join_tables.Jury;
+import com.project.backend.models.join_tables.JurySubmission;
 import com.project.backend.models.join_tables.TeamRound;
 import com.project.backend.repositories.*;
 import com.project.backend.repositories.specifications.*;
@@ -218,13 +222,18 @@ public class RoundServiceImpl implements RoundService {
         }
 
         juryRepository.delete(JurySpecification.byUserIdAndRoundId(juryId, roundId));
+        List<JurySubmission> jurySubmissions = jurySubmissionRepository.findAll(Specification.allOf(
+                JurySubmissionSpecification.byJuryId(juryId),
+                JurySubmissionSpecification.byRoundId(roundId)
+        ));
 
-        jurySubmissionRepository.delete(
-                Specification.allOf(
-                        JurySubmissionSpecification.byJuryId(juryId),
-                        JurySubmissionSpecification.byRoundId(roundId)
-                )
-        );
+        List<Long> teamIds = jurySubmissions.stream().map(js -> js.getSubmission().getTeam().getId()).distinct().toList();
+        List<PointsChangedForTeamEvent> events = new ArrayList<>();
+        for(Long teamId : teamIds) {
+            events.add(new PointsChangedForTeamEvent(teamId, roundId));
+        }
+
+        jurySubmissionRepository.deleteAll(jurySubmissions);
     }
 
     @Override
@@ -243,6 +252,7 @@ public class RoundServiceImpl implements RoundService {
         }
 
         List<TeamRound> teamRounds = new ArrayList<>();
+        List<TeamAssignedToRoundEvent> events = new ArrayList<>();
 
         for (Long teamId : teamIds) {
 
@@ -263,9 +273,15 @@ public class RoundServiceImpl implements RoundService {
             tr.setTeam(team);
 
             teamRounds.add(tr);
+
+            events.add(new TeamAssignedToRoundEvent(teamId, roundId));
         }
 
         teamRoundRepository.saveAll(teamRounds);
+
+        for(TeamAssignedToRoundEvent event : events) {
+            eventPublisher.publishEvent(event);
+        }
     }
 
     @Override
@@ -280,15 +296,20 @@ public class RoundServiceImpl implements RoundService {
         }
 
         List<TeamRoundId> ids = new ArrayList<>();
+        List<TeamUnassignedFromRoundEvent> events = new ArrayList<>();
 
         for (Long teamId : teamIds) {
             TeamRoundId id = new TeamRoundId();
             id.setRoundId(roundId);
             id.setTeamId(teamId);
             ids.add(id);
+            events.add(new TeamUnassignedFromRoundEvent(teamId, roundId));
         }
 
         teamRoundRepository.deleteAllById(ids);
+        for(TeamUnassignedFromRoundEvent event : events) {
+            eventPublisher.publishEvent(event);
+        }
     }
 
     @Override
