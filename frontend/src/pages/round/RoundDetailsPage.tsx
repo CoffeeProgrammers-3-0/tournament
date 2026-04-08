@@ -51,6 +51,7 @@ export const RoundDetailsPage = () => {
         fetchSubmissions: details.fetchSubmissions,
         fetchTasks: details.fetchTasks,
         tasksPage: details.tasksPage,
+        leaderboard: details.leaderboard,
     });
 
     const TABS = [

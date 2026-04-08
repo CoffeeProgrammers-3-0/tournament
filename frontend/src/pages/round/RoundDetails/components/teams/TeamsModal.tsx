@@ -23,11 +23,24 @@ import SearchIcon from "@mui/icons-material/Search";
 import CloseIcon from "@mui/icons-material/Close";
 import FastForwardIcon from "@mui/icons-material/FastForward";
 import GroupAddIcon from "@mui/icons-material/GroupAdd";
+import GroupIcon from "@mui/icons-material/Group";
+
+type AddModalProps = {
+    open: boolean;
+    onClose: () => void;
+    teams: any[];
+    selectedIds: number[];
+    onSelect: (id: number) => void;
+    onSelectAll: (ids: number[]) => void;
+    onConfirm: () => void;
+    isLoading: boolean;
+    t: (key: string, options?: any) => string; // Added i18n prop
+};
 
 // Modal 1: Add missing teams to the current round
 export const AddMissingTeamsModal = ({
-                                         open, onClose, teams, selectedIds, onSelect, onSelectAll, onConfirm, isLoading
-                                     }: any) => {
+                                         open, onClose, teams, selectedIds, onSelect, onSelectAll, onConfirm, isLoading, t
+                                     }: AddModalProps) => {
     const [searchTerm, setSearchTerm] = useState("");
 
     const filteredTeams = useMemo(() =>
@@ -42,35 +55,34 @@ export const AddMissingTeamsModal = ({
             }}>
                 <Box sx={{ p: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', bgcolor: 'grey.50' }}>
                     <Typography variant="h6" fontWeight={700} display="flex" alignItems="center" gap={1}>
-                        <GroupAddIcon color="primary" /> Add Teams to Round
+                        <GroupAddIcon color="primary" /> {t("modals.add_teams.title")}
                     </Typography>
                     <IconButton onClick={onClose} size="small"><CloseIcon /></IconButton>
                 </Box>
-
                 <Box sx={{ p: 3 }}>
                     <TextField
-                        fullWidth size="small" placeholder="Search teams..." variant="outlined"
+                        fullWidth size="small" placeholder={t("modals.add_teams.search_placeholder")} variant="outlined"
                         value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} sx={{ mb: 2 }}
                         InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> }}
                     />
 
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                        <Typography variant="subtitle2" color="text.secondary">Available Teams:</Typography>
+                        <Typography variant="subtitle2" color="text.secondary">{t("modals.add_teams.available_header")}</Typography>
                         <Button size="small" sx={{ p: 0, minWidth: 'auto', textTransform: 'none' }}
                                 onClick={() => onSelectAll(filteredTeams.map((t: any) => t.id))}>
-                            Select All
+                            {t("modals.add_teams.select_all")}
                         </Button>
                     </Box>
 
                     <List sx={{ maxHeight: 300, overflowY: 'auto', border: '1px solid', borderColor: 'divider', borderRadius: 2, bgcolor: 'background.default' }}>
-                        {filteredTeams.length === 0 && <Typography p={2} textAlign="center" color="text.secondary">No teams found</Typography>}
+                        {filteredTeams.length === 0 && <Typography p={2} textAlign="center" color="text.secondary">{t("modals.add_teams.no_teams")}</Typography>}
                         {filteredTeams.map((team: any) => (
                             <ListItem key={team.id} disablePadding>
                                 <ListItemButton onClick={() => onSelect(team.id)} sx={{ '&:hover': { bgcolor: 'action.hover' } }}>
                                     <Checkbox
                                         checked={selectedIds.includes(team.id)}
                                         color="primary"
-                                        disableRipple // Опціонально: вимикає зайвий ripple ефект на самому чекбоксі
+                                        disableRipple
                                     />
                                     <ListItemText
                                         primary={team.name}
@@ -85,9 +97,9 @@ export const AddMissingTeamsModal = ({
 
                 <Divider />
                 <Box sx={{ p: 2, display: 'flex', justifyContent: 'flex-end', gap: 1.5, bgcolor: 'grey.50' }}>
-                    <Button onClick={onClose} variant="outlined" color="inherit">Cancel</Button>
+                    <Button onClick={onClose} variant="outlined" color="inherit">{t("common.cancel")}</Button>
                     <Button variant="contained" disabled={selectedIds.length === 0 || isLoading} onClick={onConfirm} sx={{ px: 4, borderRadius: 2 }}>
-                        Add ({selectedIds.length})
+                        {t("modals.add_teams.submit", { count: selectedIds.length })}
                     </Button>
                 </Box>
             </Box>
@@ -95,10 +107,25 @@ export const AddMissingTeamsModal = ({
     );
 };
 
-// Modal 2: Advance teams to another round (Pre-selects winners)
+type AdvanceModalProps = {
+    open: boolean;
+    onClose: () => void;
+    leaderboard: any[];
+    selectedIds: number[];
+    onSelect: (id: number) => void;
+    onConfirm: () => void;
+    rounds: any[];
+    targetRound: number | null;
+    setTargetRound: (id: number) => void;
+    isLoading: boolean;
+    maxCountOfTeam?: number;
+    t: (key: string, options?: any) => string; // Added i18n prop
+};
+
+// Modal 2: Advance teams
 export const AdvanceTeamsModal = ({
-                                      open, onClose, leaderboard, selectedIds, onSelect, onConfirm, rounds, targetRound, setTargetRound, isLoading
-                                  }: any) => {
+                                      open, onClose, leaderboard, selectedIds, onSelect, onConfirm, rounds, targetRound, setTargetRound, isLoading, maxCountOfTeam, t
+                                  }: AdvanceModalProps) => {
     return (
         <Modal open={open} onClose={onClose}>
             <Box sx={{
@@ -107,71 +134,62 @@ export const AdvanceTeamsModal = ({
             }}>
                 <Box sx={{ p: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', bgcolor: 'primary.main', color: 'white' }}>
                     <Typography variant="h6" fontWeight={700} display="flex" alignItems="center" gap={1}>
-                        <FastForwardIcon /> Advance Teams to Next Round
+                        <FastForwardIcon /> {t("modals.advance_teams.title")}
                     </Typography>
                     <IconButton onClick={onClose} size="small" sx={{ color: 'white' }}><CloseIcon /></IconButton>
                 </Box>
 
                 <Box sx={{ p: 3 }}>
                     <FormControl fullWidth sx={{ mb: 3 }}>
-                        <InputLabel>Target Round</InputLabel>
+                        <InputLabel>{t("modals.advance_teams.target_round")}</InputLabel>
                         <Select
                             value={targetRound || ""}
                             onChange={(e) => setTargetRound(Number(e.target.value))}
-                            label="Target Round"
+                            label={t("modals.advance_teams.target_round")}
                         >
                             {rounds.map((r: any) => <MenuItem key={r.id} value={r.id}>{r.name}</MenuItem>)}
                         </Select>
                     </FormControl>
 
                     <Typography variant="subtitle2" color="text.secondary" mb={1}>
-                        Review and select teams to advance (Winners pre-selected):
+                        {t("modals.advance_teams.subtitle")}
                     </Typography>
 
-                    <List sx={{ maxHeight: 350, overflowY: 'auto', border: '1px solid', borderColor: 'divider', borderRadius: 2, bgcolor: 'background.default' }}>
-                        {leaderboard.map((team: any, index: number) => (
-                            <ListItem key={team.id} disablePadding>
-                                <ListItemButton
-                                    onClick={() => onSelect(team.id)}
-                                    sx={{ '&:hover': { bgcolor: 'action.hover' } }}
-                                >
-                                    <Checkbox
-                                        checked={selectedIds.includes(team.id)}
-                                        color="primary"
-                                        disableRipple // Запобігає накладанню ефекту кліку чекбокса та кнопки
-                                    />
-
-                                    <Box sx={{ width: 30, textAlign: 'center', mr: 1 }}>
-                                        <Typography fontWeight={700} color="text.secondary">
-                                            #{index + 1}
-                                        </Typography>
-                                    </Box>
-
-                                    <ListItemText
-                                        primary={team.name}
-                                        secondary={`${team.points} pts`}
-                                        primaryTypographyProps={{ fontWeight: 600 }}
-                                    />
-
-                                    {selectedIds.includes(team.id) && (
-                                        <Chip
-                                            size="small"
-                                            label="Advancing"
-                                            color="success"
-                                            variant="outlined"
+                    <List sx={{ maxHeight: 350, overflowY: 'auto', border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
+                        {leaderboard.map((team: any, index: number) => {
+                            const isSelected = selectedIds.includes(team.id);
+                            return (
+                                <ListItem key={team.id} disablePadding>
+                                    <ListItemButton onClick={() => onSelect(team.id)}>
+                                        <Checkbox checked={isSelected} color="primary" />
+                                        <Box sx={{ width: 30, mr: 1 }}><Typography fontWeight={700} color="text.secondary">#{index + 1}</Typography></Box>
+                                        <ListItemText
+                                            primary={team.name}
+                                            secondary={
+                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+                                                    <Typography variant="caption" fontWeight={700} color="secondary">
+                                                        {team.points} {t("common.points_short")}
+                                                    </Typography>
+                                                    <Typography variant="caption" color="divider">|</Typography>
+                                                    <GroupIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
+                                                    <Typography variant="caption" color="text.secondary">
+                                                        {team.countOfMembers} {maxCountOfTeam ? `/ ${maxCountOfTeam}` : ''}
+                                                    </Typography>
+                                                </Box>
+                                            }
                                         />
-                                    )}
-                                </ListItemButton>
-                            </ListItem>
-                        ))}
+                                        {isSelected && <Chip size="small" label={t("modals.advance_teams.advancing_status")} color="success" variant="outlined" />}
+                                    </ListItemButton>
+                                </ListItem>
+                            );
+                        })}
                     </List>
                 </Box>
-
                 <Divider />
                 <Box sx={{ p: 2, display: 'flex', justifyContent: 'flex-end', gap: 1.5, bgcolor: 'grey.50' }}>
-                    <Button onClick={onClose} variant="outlined" color="inherit">Cancel</Button>
-                    <Button variant="contained" disabled={!targetRound || selectedIds.length === 0 || isLoading} onClick={onConfirm} sx={{ px: 4, borderRadius: 2 }}>
-                        Advance ({selectedIds.length}) Teams
+                    <Button onClick={onClose}>{t("common.cancel")}</Button>
+                    <Button variant="contained" disabled={!targetRound || selectedIds.length === 0 || isLoading} onClick={onConfirm}>
+                        {t("modals.advance_teams.submit", { count: selectedIds.length })}
                     </Button>
                 </Box>
             </Box>

@@ -56,6 +56,7 @@ export const en = {
         "errors": "Solve this errors",
         "warning": "Be carefully with changing status. System will change data auto to correct",
         "ok": "Ok",
+        "points_short": "pts"
     },
 
     home: {
@@ -180,6 +181,24 @@ export const en = {
                 "requ": "Requirements",
                 "submit": "Create Round"
             }
+        }
+    },
+
+    modals: {
+        "add_teams": {
+            "title": "Add Teams to Round",
+            "search_placeholder": "Search teams...",
+            "available_header": "Available Teams:",
+            "select_all": "Select All",
+            "no_teams": "No teams found",
+            "submit": "Add ({{count}})"
+        },
+        "advance_teams": {
+            "title": "Advance Teams",
+            "target_round": "Target Round",
+            "subtitle": "Review teams to advance (Winners pre-selected):",
+            "advancing_status": "Advancing",
+            "submit": "Advance ({{count}}) Teams"
         }
     },
 

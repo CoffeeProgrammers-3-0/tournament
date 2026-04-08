@@ -21,6 +21,7 @@ import {
 import {useTranslation} from "react-i18next";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import LockIcon from "@mui/icons-material/Lock";
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 
 import {useTeamDetails} from "./useTeamDetails";
 import {TeamHeader} from "./components/TeamHeader";
@@ -81,30 +82,75 @@ export const TeamDetailsPage = () => {
                         const manageStatus = canManageTournament(tournamentIdNum);
                         const isLocked = !manageStatus.can && manageStatus.reason === "TOURNAMENT_STARTED";
 
+                        // Додаємо логіку лімітів
+                        const currentCount = data.members.length;
+                        const maxMembers = data.maxMembers;
+                        const isMaxReached = currentCount >= maxMembers;
+                        const isMinMet = currentCount >= 3;
+
                         return (
                             <Box key={tId} sx={{ mb: 6 }}>
                                 <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", mb: 2 }}>
                                     <Box>
-                                        <Typography variant="h5" fontWeight={800} color="primary">{data.name}</Typography>
+                                        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                                            <Typography variant="h5" fontWeight={800} color="primary">
+                                                {data.name}
+                                            </Typography>
+                                            {/* Лічильник учасників */}
+                                            <Box sx={{
+                                                px: 1.5, py: 0.5, borderRadius: "8px",
+                                                bgcolor: isMaxReached ? "success.light" : (!isMinMet ? "error.light" : "grey.200"),
+                                                color: isMaxReached ? "success.dark" : (!isMinMet ? "error.dark" : "text.secondary"),
+                                                fontWeight: 800, fontSize: "0.85rem"
+                                            }}>
+                                                {currentCount} / {maxMembers}
+                                            </Box>
+                                        </Box>
+
+                                        {/* Попередження про мінімум учасників */}
+                                        {!isMinMet && (
+                                            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, color: "error.main", mt: 1 }}>
+                                                <WarningAmberIcon sx={{ fontSize: 18 }} />
+                                                <Typography variant="caption" fontWeight={700}>
+                                                    {t("team_details.warnings.min_members", { defaultValue: "Minimum 3 members required!" })}
+                                                </Typography>
+                                            </Box>
+                                        )}
+
                                         {isLocked && (
-                                            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, color: "warning.main", mt: 0.5 }}>
+                                            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, color: "warning.main", mt: 1 }}>
                                                 <LockIcon sx={{ fontSize: 16 }} />
                                                 <Typography variant="caption" fontWeight={700}>{t("team_details.status.locked_started")}</Typography>
                                             </Box>
                                         )}
                                     </Box>
 
+                                    {/* Логіка відображення кнопки додавання */}
                                     {manageStatus.can ? (
-                                        <Button
-                                            variant="contained" color="secondary" startIcon={<PersonAddIcon />}
-                                            onClick={() => setMemberModal({ open: true, tournamentId: tournamentIdNum })}
-                                            sx={{ borderRadius: "12px", color: "black" }}
-                                        >
-                                            {t("team_details.admin.add_member")}
-                                        </Button>
+                                        isMaxReached ? (
+                                            <Tooltip title={t("team_details.warnings.max_reached", { defaultValue: "Maximum members limit reached" })}>
+                                                <span>
+                                                    <Button variant="contained" disabled startIcon={<PersonAddIcon />} sx={{ borderRadius: "12px" }}>
+                                                        {t("team_details.admin.add_member")}
+                                                    </Button>
+                                                </span>
+                                            </Tooltip>
+                                        ) : (
+                                            <Button
+                                                variant="contained" color="secondary" startIcon={<PersonAddIcon />}
+                                                onClick={() => setMemberModal({ open: true, tournamentId: tournamentIdNum })}
+                                                sx={{ borderRadius: "12px", color: "black" }}
+                                            >
+                                                {t("team_details.admin.add_member")}
+                                            </Button>
+                                        )
                                     ) : !isAdmin && (
                                         <Tooltip title={t(`team_details.reasons.${manageStatus.reason}`)}>
-                                            <Box sx={{ opacity: 0.5 }}><Button variant="outlined" disabled startIcon={<PersonAddIcon />}>{t("team_details.admin.add_member")}</Button></Box>
+                                            <Box sx={{ opacity: 0.5 }}>
+                                                <Button variant="outlined" disabled startIcon={<PersonAddIcon />}>
+                                                    {t("team_details.admin.add_member")}
+                                                </Button>
+                                            </Box>
                                         </Tooltip>
                                     )}
                                 </Box>

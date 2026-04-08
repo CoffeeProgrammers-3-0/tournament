@@ -58,15 +58,15 @@ export const useTeamDetails = () => {
         }
     };
 
-    // Групуємо учасників та беремо статуси турнірів прямо з DTO
     const membersByTournament = useMemo(() => {
         if (!teamData?.users) return {};
-        return teamData.users.reduce((acc: any, user) => {
+        return teamData.users.reduce((acc: any, user: any) => { // Тут user має тип UserResponseForTeamDto
             const tId = user.tournamentId;
             if (!acc[tId]) {
                 acc[tId] = {
                     name: user.tournamentName,
                     status: user.tournamentStatus,
+                    maxMembers: user.tournamentMaxCountOfTeam, // Додаємо ліміт з DTO
                     members: []
                 };
             }

@@ -14,7 +14,11 @@ import type {
     RoundUpdateRequestDto
 } from "../../../../entities/round/round.dto";
 import type {CategoryRequestDto} from "../../../../entities/category/category.dto";
-import type {StatisticResponseDto, TeamListResponseDto} from "../../../../entities/team/team.dto";
+import type {
+    StatisticResponseDto,
+    TeamLeaderboardResponseDto,
+    TeamListResponseDto
+} from "../../../../entities/team/team.dto";
 import type {UserResponseDto} from "../../../../entities/user/user.dto";
 
 import type {
@@ -45,6 +49,7 @@ type Params = {
     fetchSubmissions: () => Promise<void>;
     fetchTasks: (page?: number, showLoader?: boolean) => Promise<void>;
     tasksPage: number;
+    leaderboard: TeamLeaderboardResponseDto[]
 };
 
 type ConfirmDialogConfig = {
@@ -56,7 +61,7 @@ type ConfirmDialogConfig = {
     isLoading?: boolean;
 };
 
-export const useRoundEditors = ({id, roundData, setRoundData, fetchCategories, fetchJury, fetchSubmissions, fetchTasks, tasksPage }: Params) => {
+export const useRoundEditors = ({id, roundData, setRoundData, fetchCategories, fetchJury, fetchSubmissions, fetchTasks, tasksPage, leaderboard }: Params) => {
     const roundId = Number(id);
     const [errors, setErrors] = useState<string[]>([]);
     const clearErrors = useCallback(() => setErrors([]), []);
@@ -148,6 +153,22 @@ export const useRoundEditors = ({id, roundData, setRoundData, fetchCategories, f
         const messages = error.response?.data?.messages;
         setErrors(Array.isArray(messages) ? messages : [defaultMessage]);
     }, []);
+
+    const handleOpenAdvanceModal = useCallback(async () => {
+        if (roundData && leaderboard) {
+            clearErrors();
+            setTargetAdvanceRoundId(null);
+            setAdvanceModalOpen(true);
+            const winnersCount = roundData.countOfWinners || 0;
+            const topTeamIds = leaderboard.slice(0, winnersCount).map(team => team.id);
+            setSelectedAdvanceIds(topTeamIds);
+            const rounds = await roundService.getRoundsByRound(roundId, {page: 0, size: 100, status: 'DRAFT'});
+            setTournamentRounds(rounds.content);
+        } else {
+            setSelectedAdvanceIds([]);
+        }
+        withErrorClear(setAdvanceModalOpen)(true); // Use your existing wrapper
+    }, [roundData, leaderboard, withErrorClear]);
 
     // --- Export Handler ---
     const handleExportLeaderboard = useCallback(async () => {
@@ -247,17 +268,6 @@ export const useRoundEditors = ({id, roundData, setRoundData, fetchCategories, f
         }
     }, [roundId, clearErrors, handleError]);
 
-    const handleOpenAdvanceModal = useCallback(async () => {
-        clearErrors();
-        setTargetAdvanceRoundId(null);
-        setAdvanceModalOpen(true);
-        try {
-            const rounds = await roundService.getRoundsByRound(roundId, {page: 0, size: 100, status: 'DRAFT'});
-            setTournamentRounds(rounds.content);
-        } catch (error: any) {
-            handleError(error, "Помилка завантаження раундів");
-        }
-    }, [roundId, clearErrors, handleError]);
 
     // --- Actions ---
     const handleConfirmAddMissing = useCallback(async () => {

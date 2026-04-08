@@ -34,6 +34,7 @@ export interface TeamLeaderboardResponseDto {
     name: string;
     email: string;
     points: number;
+    countOfMembers: number;
 }
 
 export interface StatisticResponseDto {
