@@ -145,14 +145,23 @@ export const useTournamentDetails = () => {
         });
     };
 
+    const formatToFullISO = (dateStr: string) => {
+        if (!dateStr) return dateStr;
+        return dateStr.length === 16 ? `${dateStr}:00` : dateStr;
+    };
+
     const handleSaveUpdate = async () => {
         if (!tournamentId) return;
         clearErrors();
         try {
+            // Формуємо payload, додаючи секунди до всіх дат
             const payload: TournamentUpdateRequestDto = {
                 ...(editFormData as TournamentUpdateRequestDto),
-                startTournament: (editFormData.endRegistration ?? editFormData.startTournament) as string,
+                startRegistration: formatToFullISO(editFormData.startRegistration as string),
+                endRegistration: formatToFullISO(editFormData.endRegistration as string),
+                startTournament: formatToFullISO((editFormData.endRegistration ?? editFormData.startTournament) as string) as string,
             };
+
             const updated = await tournamentService.updateTournament(tournamentId, payload);
             setTournamentData(updated);
             setIsEditingInfo(false);
