@@ -23,6 +23,12 @@ class UserService extends BaseService {
         return this.get<UserResponseDto>('/my');
     }
 
+    public getUserByEmail(email: string): Promise<UserResponseDto[]> {
+        return this.get<UserResponseDto[]>(`/by_email`, {
+            params: { email }
+        });
+    }
+
     public getUserById(userId: number): Promise<UserResponseDto> {
         return this.get<UserResponseDto>(`/${userId}`);
     }

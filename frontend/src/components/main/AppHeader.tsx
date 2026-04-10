@@ -36,6 +36,8 @@ import {useLanguage} from "../../i18n/useLanguage.ts";
 import Cookies from "js-cookie";
 import AuthService from "../../services/auth/AuthService.ts";
 
+import NotificationsIcon from "@mui/icons-material/Notifications";
+
 type role = 'ADMIN' | 'JURY' | 'USER' | null;
 
 export const AppHeader = () => {
@@ -101,6 +103,14 @@ export const AppHeader = () => {
                         <ListItemButton component={RouterLink} to="/admin/jury/managment">
                             <ListItemIcon><AdminPanelSettingsIcon color="primary" /></ListItemIcon>
                             <ListItemText primary={t("header.adminPanel")} />
+                        </ListItemButton>
+                    </ListItem>
+                )}
+                {isLoggedIn && (
+                    <ListItem disablePadding>
+                        <ListItemButton component={RouterLink} to="/notifications">
+                            <ListItemIcon><NotificationsIcon color="primary" /></ListItemIcon>
+                            <ListItemText primary={t("header.notifications") || "Notifications"} />
                         </ListItemButton>
                     </ListItem>
                 )}
@@ -175,6 +185,17 @@ export const AppHeader = () => {
                         <Button onClick={handleLangClick} sx={{ color: "text.secondary", fontWeight: 700, minWidth: { xs: 40, md: 60 } }}>
                             {language.toUpperCase()}
                         </Button>
+
+                        {/* НОВА ІКОНКА СПОВІЩЕНЬ */}
+                        {isLoggedIn && (
+                            <IconButton
+                                component={RouterLink}
+                                to="/notifications"
+                                sx={{ color: "text.secondary" }}
+                            >
+                                <NotificationsIcon />
+                            </IconButton>
+                        )}
 
                         {isLoggedIn ? (
                             <IconButton onClick={handleProfileClick} size="small">

@@ -1,7 +1,9 @@
-import {Box, Divider, Grid, IconButton, TextField, Typography} from "@mui/material";
+import {useRef, useState} from "react";
+import {Autocomplete, Box, CircularProgress, Divider, Grid, IconButton, TextField, Typography} from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
 import {useTranslation} from "react-i18next";
+import {userService} from "../../../../services/impl/UserService.ts";
 
 interface Props {
     users: any[];
@@ -14,6 +16,33 @@ interface Props {
 
 export const TeamMembersForm = ({ users, onChange, onAdd, onRemove, limits, isReadOnlyFirst }: Props) => {
     const { t } = useTranslation();
+
+    // Стан для пошуку
+    const [options, setOptions] = useState<any[]>([]);
+    const [loading, setLoading] = useState(false);
+    //const [open, setOpen] = useState<{ [key: number]: boolean }>({});
+    const debounceTimer = useRef<any>(null);
+
+    const handleSearch = (email: string) => {
+        if (email.length < 3) {
+            setOptions([]);
+            return;
+        }
+
+        setLoading(true);
+        if (debounceTimer.current) clearTimeout(debounceTimer.current);
+
+        debounceTimer.current = setTimeout(async () => {
+            try {
+                const results = await userService.getUserByEmail(email);
+                setOptions(results);
+            } catch (err) {
+                console.error("Search error", err);
+            } finally {
+                setLoading(false);
+            }
+        }, 500); // Затримка 500мс
+    };
 
     return (
         <Grid container spacing={3}>
@@ -39,13 +68,55 @@ export const TeamMembersForm = ({ users, onChange, onAdd, onRemove, limits, isRe
                             value={user.fullName}
                             onChange={e => onChange(idx, "fullName", e.target.value)}
                         />
-                        <TextField
-                            label={idx === 0 ? t("team_create.fields.leaders_email") : t("team_create.fields.members_email")}
-                            type="email" fullWidth required
+
+                        {/* Пошук по Email через Autocomplete */}
+                        <Autocomplete
+                            fullWidth
+                            freeSolo // Дозволяє вводити довільний текст, якщо юзера не знайдено
+                            options={options}
+                            getOptionLabel={(option) => typeof option === 'string' ? option : option.email}
+                            loading={loading}
                             disabled={idx === 0 && isReadOnlyFirst}
-                            value={user.email}
-                            onChange={e => onChange(idx, "email", e.target.value)}
+                            onInputChange={(_, value) => {
+                                onChange(idx, "email", value);
+                                handleSearch(value);
+                            }}
+                            onChange={(_, newValue: any) => {
+                                if (newValue && typeof newValue !== 'string') {
+                                    // Якщо обрали юзера зі списку - заповнюємо обидва поля
+                                    onChange(idx, "email", newValue.email);
+                                    onChange(idx, "fullName", newValue.fullName);
+                                }
+                            }}
+                            renderInput={(params) => (
+                                <TextField
+                                    {...params}
+                                    label={idx === 0 ? t("team_create.fields.leaders_email") : t("team_create.fields.members_email")}
+                                    required
+                                    type="email"
+                                    slotProps={{
+                                        input: {
+                                            ...params.InputProps,
+                                            endAdornment: (
+                                                <>
+                                                    {loading ? <CircularProgress color="inherit" size={20} /> : null}
+                                                    {params.InputProps.endAdornment}
+                                                </>
+                                            ),
+                                        },
+                                    }}
+                                />
+                            )}
+                            renderOption={(props, option) => (
+                                <li {...props}>
+                                    <Box>
+                                        <Typography variant="body1">{option.fullName}</Typography>
+                                        <Typography variant="caption" color="text.secondary">{option.email}</Typography>
+                                    </Box>
+                                </li>
+                            )}
                         />
+
                         <Box sx={{ display: "flex", alignSelf: "center" }}>
                             <IconButton
                                 color="error"
