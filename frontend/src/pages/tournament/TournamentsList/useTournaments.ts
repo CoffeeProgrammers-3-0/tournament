@@ -4,7 +4,7 @@ import Cookies from "js-cookie";
 import {tournamentService} from "../../../services/impl/TournamentService";
 import type {TournamentListResponseDto, TournamentStatus} from "../../../entities/tournament/tournament.dto.ts";
 
-export const TABS = { AVAILABLE: 0, MY_REGISTED: 1, MY: 2, HISTORY: 3, ADMIN: 4 };
+export const TABS = { MAIN: 0, ADMIN: 1 };
 const ITEMS_PER_PAGE = 6;
 
 export const useTournaments = () => {
@@ -16,13 +16,11 @@ export const useTournaments = () => {
     const isJury = isLoggedIn && userRole === "JURY";
 
     // --- URL SOURCE OF TRUTH ---
-    const defaultTab = isJury ? TABS.MY : TABS.AVAILABLE;
-    const tabValue = Number(searchParams.get("tab")) || defaultTab;
+    const tabValue = Number(searchParams.get("tab")) || TABS.MAIN;
     const page = Number(searchParams.get("page")) || 1;
 
-    // Змінено: за замовчуванням для адміна краще показувати "ALL" (всі),
-    // щоб адмін відразу бачив повний список турнірів без прихованих статусів.
-    const statusFilter = searchParams.get("status") || "ALL";
+    // Визначаємо фільтр з URL або ставимо дефолтний
+    const filter = searchParams.get("filter") || (tabValue === TABS.ADMIN ? "ALL" : (isJury ? "ACTIVE" : "AVAILABLE"));
 
     const [tournaments, setTournaments] = useState<TournamentListResponseDto[]>([]);
     const [totalPages, setTotalPages] = useState(1);
@@ -32,13 +30,13 @@ export const useTournaments = () => {
     const [searchQuery, setSearchQuery] = useState("");
     const [debouncedSearch, setDebouncedSearch] = useState("");
 
+    // Debounce для пошуку
     useEffect(() => {
         const timer = setTimeout(() => {
             setDebouncedSearch(searchQuery);
-            setSearchParams(prev => {
-                prev.set("page", "1");
-                return prev;
-            }, { replace: true });
+            if (searchQuery) {
+                setSearchParams(prev => { prev.set("page", "1"); return prev; }, { replace: true });
+            }
         }, 500);
         return () => clearTimeout(timer);
     }, [searchQuery, setSearchParams]);
@@ -50,26 +48,28 @@ export const useTournaments = () => {
             const baseParams = { page: apiPage, size: ITEMS_PER_PAGE, search: debouncedSearch || undefined };
             let res;
 
-            switch (tabValue) {
-                case TABS.AVAILABLE:
-                    res = isLoggedIn
-                        ? await tournamentService.getAvailableTournaments(baseParams)
-                        : await tournamentService.getAllTournaments({ ...baseParams, status: "REGISTRATION" });
-                    break;
-                case TABS.MY_REGISTED:
-                    res = await tournamentService.getMyTournaments({ ...baseParams, status: "REGISTRATION" });
-                    break;
-                case TABS.MY:
-                    res = await tournamentService.getMyTournaments({ ...baseParams, status: "RUNNING" });
-                    break;
-                case TABS.HISTORY:
-                    res = await tournamentService.getMyTournaments({ ...baseParams, status: "FINISHED" });
-                    break;
-                case TABS.ADMIN:
-                    // ГОЛОВНЕ ВИПРАВЛЕННЯ: якщо ALL — статус взагалі не відправляється
-                    const reqStatus = statusFilter === "ALL" ? undefined : (statusFilter as TournamentStatus);
-                    res = await tournamentService.getAllTournaments({ ...baseParams, status: reqStatus });
-                    break;
+            if (tabValue === TABS.ADMIN) {
+                const reqStatus = filter === "ALL" ? undefined : (filter as TournamentStatus);
+                res = await tournamentService.getAllTournaments({ ...baseParams, status: reqStatus });
+            } else {
+                switch (filter) {
+                    case "AVAILABLE":
+                        res = isLoggedIn
+                            ? await tournamentService.getAvailableTournaments(baseParams)
+                            : await tournamentService.getAllTournaments({ ...baseParams, status: "REGISTRATION" });
+                        break;
+                    case "REGISTERED":
+                        res = await tournamentService.getMyTournaments({ ...baseParams, status: "REGISTRATION" });
+                        break;
+                    case "ACTIVE":
+                        res = await tournamentService.getMyTournaments({ ...baseParams, status: "RUNNING" });
+                        break;
+                    case "HISTORY":
+                        res = await tournamentService.getMyTournaments({ ...baseParams, status: "FINISHED" });
+                        break;
+                    default:
+                        res = await tournamentService.getAvailableTournaments(baseParams);
+                }
             }
 
             if (res) {
@@ -81,29 +81,20 @@ export const useTournaments = () => {
         } finally {
             setLoading(false);
         }
-    }, [page, debouncedSearch, tabValue, statusFilter, isLoggedIn]);
+    }, [page, debouncedSearch, tabValue, filter, isLoggedIn]);
 
     useEffect(() => {
         fetchTournaments();
-    }, []);
+    }, [fetchTournaments]);
 
     const handleTabChange = (newValue: number) => {
-        const newParams: any = { tab: newValue.toString(), page: "1" };
-
-        // Зберігаємо фільтр статусу тільки якщо ми на вкладці адміна та статус не ALL
-        if (newValue === TABS.ADMIN && statusFilter !== "ALL") {
-            newParams.status = statusFilter;
-        }
-        setSearchParams(newParams);
+        const newFilter = newValue === TABS.ADMIN ? "ALL" : "AVAILABLE";
+        setSearchParams({ tab: newValue.toString(), page: "1", filter: newFilter });
     };
 
-    const setStatusFilter = (newStatus: string) => {
+    const setFilter = (newFilter: string) => {
         setSearchParams(prev => {
-            if (newStatus === "ALL") {
-                prev.delete("status"); // Повністю видаляємо статус з URL замість пустих рядків
-            } else {
-                prev.set("status", newStatus);
-            }
+            prev.set("filter", newFilter);
             prev.set("page", "1");
             return prev;
         });
@@ -119,7 +110,7 @@ export const useTournaments = () => {
     return {
         tournaments, totalPages, loading, page, setPage,
         tabValue, handleTabChange, searchQuery, setSearchQuery,
-        statusFilter, setStatusFilter, isCreating, setIsCreating,
+        filter, setFilter, isCreating, setIsCreating,
         isAdmin, isJury, isLoggedIn, fetchTournaments
     };
 };

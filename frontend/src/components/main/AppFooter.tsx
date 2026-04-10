@@ -14,10 +14,8 @@ export const AppFooter = () => {
     const { t } = useTranslation();
 
     const isLoggedIn = Cookies.get("userId") !== undefined;
-    // За замовчуванням ставимо USER, щоб неавторизовані бачили публічний контент
     const role = (Cookies.get("role") as role) || 'USER';
 
-    // Динамічна ширина колонок: для Журі ховаємо турніри, тому розширюємо інші колонки
     const mdColSize = role === 'JURY' ? 4 : 3;
 
     return (
@@ -32,7 +30,6 @@ export const AppFooter = () => {
             <Container maxWidth="lg" sx={{ pt: 6, pb: 4 }}>
                 <Grid container spacing={4} justifyContent="center">
 
-                    {/* 1. Логотип та місія */}
                     <Grid size={{xs: 12, md: mdColSize}} sx={{ textAlign: { xs: "center", md: "left" } }}>
                         <Box component={RouterLink} to="/" sx={{ display: "inline-block", mb: 2 }}>
                             <Box component="img" src={logo} alt="Star for Life" sx={{ height: 50 }} />
@@ -42,7 +39,6 @@ export const AppFooter = () => {
                         </Typography>
                     </Grid>
 
-                    {/* 2. ТУРНІРИ (Показуємо лише ADMIN та USER, як у хедері) */}
                     {(role === 'ADMIN' || role === 'USER') && (
                         <Grid size={{xs: 6, md: mdColSize}} sx={{ textAlign: "center" }}>
                             <Typography fontWeight={800} color="text.primary" sx={{ mb: 2, fontSize: "0.9rem", textTransform: "uppercase", letterSpacing: 1 }}>
@@ -51,24 +47,24 @@ export const AppFooter = () => {
 
                             {role === 'ADMIN' ? (
                                 <>
-                                    <Link component={RouterLink} to="/tournaments?tab=4" display="block" underline="hover" sx={{ mb: 1, color: "text.secondary", fontSize: "0.875rem" }}>
+                                    <Link component={RouterLink} to="/tournaments?tab=1&filter=ALL" display="block" underline="hover" sx={{ mb: 1, color: "text.secondary", fontSize: "0.875rem" }}>
                                         {t("header.manageTournaments")}
                                     </Link>
-                                    <Link component={RouterLink} to="/tournaments" display="block" underline="hover" sx={{ color: "text.secondary", fontSize: "0.875rem" }}>
+                                    <Link component={RouterLink} to="/tournaments?filter=AVAILABLE" display="block" underline="hover" sx={{ color: "text.secondary", fontSize: "0.875rem" }}>
                                         {t("header.availableTournaments")}
                                     </Link>
                                 </>
                             ) : (
                                 <>
-                                    <Link component={RouterLink} to="/tournaments" display="block" underline="hover" sx={{ mb: 1, color: "text.secondary", fontSize: "0.875rem" }}>
+                                    <Link component={RouterLink} to="/tournaments?filter=AVAILABLE" display="block" underline="hover" sx={{ mb: 1, color: "text.secondary", fontSize: "0.875rem" }}>
                                         {t("header.availableTournaments")}
                                     </Link>
                                     {isLoggedIn && (
                                         <>
-                                            <Link component={RouterLink} to="/tournaments?tab=2" display="block" underline="hover" sx={{ mb: 1, color: "text.secondary", fontSize: "0.875rem" }}>
+                                            <Link component={RouterLink} to="/tournaments?filter=ACTIVE" display="block" underline="hover" sx={{ mb: 1, color: "text.secondary", fontSize: "0.875rem" }}>
                                                 {t("header.myCurrentTournaments")}
                                             </Link>
-                                            <Link component={RouterLink} to="/tournaments?tab=3" display="block" underline="hover" sx={{ color: "text.secondary", fontSize: "0.875rem" }}>
+                                            <Link component={RouterLink} to="/tournaments?filter=HISTORY" display="block" underline="hover" sx={{ color: "text.secondary", fontSize: "0.875rem" }}>
                                                 {t("header.history")}
                                             </Link>
                                         </>
@@ -78,7 +74,6 @@ export const AppFooter = () => {
                         </Grid>
                     )}
 
-                    {/* 3. КОМАНДИ / УПРАВЛІННЯ */}
                     <Grid size={{xs: role === 'JURY' ? 12 : 6, md: mdColSize}} sx={{ textAlign: "center" }}>
                         <Typography fontWeight={800} color="text.primary" sx={{ mb: 2, fontSize: "0.9rem", textTransform: "uppercase", letterSpacing: 1 }}>
                             {role === 'JURY' ? t("header.mySubmissions") : (role === 'ADMIN' ? t("header.adminPanel") : t("footer.teams", "Команди"))}
@@ -108,7 +103,6 @@ export const AppFooter = () => {
                         )}
                     </Grid>
 
-                    {/* 4. Контакти та Соцмережі */}
                     <Grid size={{xs: 12, md: mdColSize}} sx={{ textAlign: { xs: "center", md: "right" } }}>
                         <Typography fontWeight={800} color="text.primary" sx={{ mb: 2, fontSize: "0.9rem", textTransform: "uppercase", letterSpacing: 1 }}>
                             {t("footer.contacts")}
@@ -135,7 +129,6 @@ export const AppFooter = () => {
                 </Grid>
             </Container>
 
-            {/* Нижня панель (Copyright) */}
             <Box sx={{ backgroundColor: "primary.main", color: "white", py: 2 }}>
                 <Container maxWidth="lg">
                     <Box sx={{ display: "flex", flexDirection: { xs: "column", sm: "row" }, justifyContent: "space-between", alignItems: "center", gap: 1 }}>
