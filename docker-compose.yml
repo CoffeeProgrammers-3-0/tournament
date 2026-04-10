@@ -70,6 +70,8 @@ services:
       REALM: ${REALM}
       CLIENT_ID: ${CLIENT_ID}
       CLIENT_SECRET: ${KC_CLIENT_SECRET}
+      EMAIL_ADDRESS: ${EMAIL_ADDRESS}
+      EMAIL_PASSWORD: ${EMAIL_PASSWORD}
     depends_on:
       postgres-backend:
         condition: service_healthy
