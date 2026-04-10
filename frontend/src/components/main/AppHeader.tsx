@@ -6,25 +6,29 @@ import {
     Button,
     Container,
     Divider,
+    Drawer,
     IconButton,
+    List,
+    ListItem,
+    ListItemButton,
     ListItemIcon,
+    ListItemText,
     Menu,
     MenuItem,
     Toolbar,
     Typography,
 } from "@mui/material";
 import {useTranslation} from "react-i18next";
+import MenuIcon from "@mui/icons-material/Menu";
 import Logout from "@mui/icons-material/Logout";
 import PersonIcon from "@mui/icons-material/Person";
 import LoginIcon from "@mui/icons-material/Login";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
-import PlayCircleOutlineIcon from "@mui/icons-material/PlayCircleOutline";
-import HistoryIcon from "@mui/icons-material/History";
-import LanguageIcon from "@mui/icons-material/Language";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import GroupsIcon from "@mui/icons-material/Groups";
 import AssignmentIcon from "@mui/icons-material/Assignment";
+import FavoriteIcon from "@mui/icons-material/Favorite";
 
 import logo from "../../assets/logo.png";
 import {Link as RouterLink} from "react-router-dom";
@@ -32,21 +36,21 @@ import {useLanguage} from "../../i18n/useLanguage.ts";
 import Cookies from "js-cookie";
 import AuthService from "../../services/auth/AuthService.ts";
 
-// Визначення ролей для зручності
 type role = 'ADMIN' | 'JURY' | 'USER' | null;
 
 export const AppHeader = () => {
     const { t } = useTranslation();
     const { language, changeLanguage } = useLanguage();
 
-    // Отримання статусу авторизації та ролі
     const isLoggedIn = Cookies.get("userId") !== undefined;
-    const role = Cookies.get("role") as role || 'USER'; // Замініть на вашу логіку
+    const role = (Cookies.get("role") as role) || 'USER';
 
+    const [mobileOpen, setMobileOpen] = useState(false);
     const [profileAnchorEl, setProfileAnchorEl] = useState<null | HTMLElement>(null);
     const [tournamentsAnchorEl, setTournamentsAnchorEl] = useState<null | HTMLElement>(null);
     const [langAnchorEl, setLangAnchorEl] = useState<null | HTMLElement>(null);
 
+    const handleDrawerToggle = () => setMobileOpen(!mobileOpen);
     const handleProfileClick = (e: MouseEvent<HTMLElement>) => setProfileAnchorEl(e.currentTarget);
     const handleTournamentsClick = (e: MouseEvent<HTMLElement>) => setTournamentsAnchorEl(e.currentTarget);
     const handleLangClick = (e: MouseEvent<HTMLElement>) => setLangAnchorEl(e.currentTarget);
@@ -62,185 +66,172 @@ export const AppHeader = () => {
         handleClose();
     };
 
-    return (
-        <AppBar position="static" elevation={0} sx={{ backgroundColor: "background.paper", color: "text.primary", borderBottom: "1px solid #e0e0e0" }}>
-            <Container maxWidth="lg">
-                <Toolbar disableGutters sx={{ display: "flex", alignItems: "center" }}>
+    // Контент бокового меню (для мобілок)
+    const drawer = (
+        <Box onClick={handleDrawerToggle} sx={{ textAlign: 'center', p: 2 }}>
+            <Box component="img" src={logo} alt="Star for Life" sx={{ height: 40, mb: 2 }} />
+            <Divider />
+            <List>
+                {(role === 'ADMIN' || role === 'USER') && (
+                    <ListItem disablePadding>
+                        <ListItemButton component={RouterLink} to={role === 'ADMIN' ? "/tournaments?tab=1&filter=ALL" : "/tournaments?filter=AVAILABLE"}>
+                            <ListItemIcon><EmojiEventsIcon color="primary" /></ListItemIcon>
+                            <ListItemText primary={t("header.tournaments")} />
+                        </ListItemButton>
+                    </ListItem>
+                )}
+                {isLoggedIn && (role === 'ADMIN' || role === 'USER') && (
+                    <ListItem disablePadding>
+                        <ListItemButton component={RouterLink} to={role === 'ADMIN' ? "/admin/teams" : "/teams"}>
+                            <ListItemIcon><GroupsIcon /></ListItemIcon>
+                            <ListItemText primary={role === 'ADMIN' ? t("header.allTeams") : t("header.myTeam")} />
+                        </ListItemButton>
+                    </ListItem>
+                )}
+                {isLoggedIn && role === 'JURY' && (
+                    <ListItem disablePadding>
+                        <ListItemButton component={RouterLink} to="/jury/submissions">
+                            <ListItemIcon><AssignmentIcon color="primary" /></ListItemIcon>
+                            <ListItemText primary={t("header.mySubmissions")} />
+                        </ListItemButton>
+                    </ListItem>
+                )}
+                {isLoggedIn && role === 'ADMIN' && (
+                    <ListItem disablePadding>
+                        <ListItemButton component={RouterLink} to="/admin/jury/managment">
+                            <ListItemIcon><AdminPanelSettingsIcon color="primary" /></ListItemIcon>
+                            <ListItemText primary={t("header.adminPanel")} />
+                        </ListItemButton>
+                    </ListItem>
+                )}
+                <Divider sx={{ my: 1 }} />
+                <ListItem disablePadding>
+                    <ListItemButton href="https://www.sflua.org/donate-1" target="_blank">
+                        <ListItemIcon><FavoriteIcon color="error" /></ListItemIcon>
+                        <ListItemText primary={t("header.support")} />
+                    </ListItemButton>
+                </ListItem>
+            </List>
+        </Box>
+    );
 
-                    {/* LEFT: Logo */}
-                    <Box sx={{ flex: 1, display: "flex", justifyContent: "flex-start" }}>
-                        <Box component={RouterLink} to="/" sx={{ display: "flex", alignItems: "center" }}>
-                            <Box component="img" src={logo} alt="Star for Life" sx={{ height: 50 }} />
-                        </Box>
+    return (
+        <AppBar position="sticky" elevation={0} sx={{ backgroundColor: "background.paper", color: "text.primary", borderBottom: "1px solid #e0e0e0" }}>
+            <Container maxWidth="lg">
+                <Toolbar disableGutters sx={{ display: "flex", justifyContent: "space-between" }}>
+
+                    {/* MOBILE: Burger Button */}
+                    <IconButton
+                        color="inherit"
+                        aria-label="open drawer"
+                        edge="start"
+                        onClick={handleDrawerToggle}
+                        sx={{ display: { md: 'none' } }}
+                    >
+                        <MenuIcon />
+                    </IconButton>
+
+                    {/* LOGO (Centered on mobile, Left on desktop) */}
+                    <Box component={RouterLink} to="/" sx={{ display: "flex", alignItems: "center", position: { xs: 'absolute', md: 'static' }, left: { xs: '50%' }, transform: { xs: 'translateX(-50%)', md: 'none' } }}>
+                        <Box component="img" src={logo} alt="Star for Life" sx={{ height: { xs: 35, md: 45 } }} />
                     </Box>
 
-                    {/* CENTER: Navigation (Dynamic based on Role) */}
-                    <Box sx={{ display: "flex", gap: 1, justifyContent: "center", alignItems: "center" }}>
-
-                        {/* 1. TOURNAMENTS (Visible for Admin & User) */}
+                    {/* DESKTOP NAVIGATION */}
+                    <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 1, alignItems: "center" }}>
                         {(role === 'ADMIN' || role === 'USER') && (
-                            <Button
-                                color="inherit"
-                                onClick={handleTournamentsClick}
-                                endIcon={<KeyboardArrowDownIcon />}
-                                sx={{ fontWeight: tournamentsAnchorEl ? 700 : 500, textTransform: "none" }}
-                            >
+                            <Button color="inherit" onClick={handleTournamentsClick} endIcon={<KeyboardArrowDownIcon />} sx={{ textTransform: "none" }}>
                                 {t("header.tournaments")}
                             </Button>
                         )}
-
-                        {/* 2. TEAMS (Admin: All teams, User: My Team) */}
                         {isLoggedIn && (role === 'ADMIN' || role === 'USER') && (
-                            <Button
-                                color="inherit"
-                                component={RouterLink}
-                                to={role === 'ADMIN' ? "/admin/teams" : "/teams"}
-                                sx={{ textTransform: "none" }}
-                                startIcon={<GroupsIcon sx={{ opacity: 0.7 }} />}
-                            >
+                            <Button color="inherit" component={RouterLink} to={role === 'ADMIN' ? "/admin/teams" : "/teams"} sx={{ textTransform: "none" }} startIcon={<GroupsIcon sx={{ opacity: 0.7 }} />}>
                                 {role === 'ADMIN' ? t("header.allTeams") : t("header.myTeam")}
                             </Button>
                         )}
-
-                        {/* 3. JURY SPECIFIC: My Submissions */}
                         {isLoggedIn && role === 'JURY' && (
-                            <Button
-                                color="primary"
-                                variant="text"
-                                component={RouterLink}
-                                to="/jury/submissions"
-                                sx={{ textTransform: "none", fontWeight: 700 }}
-                                startIcon={<AssignmentIcon />}
-                            >
+                            <Button color="primary" variant="text" component={RouterLink} to="/jury/submissions" sx={{ textTransform: "none", fontWeight: 700 }} startIcon={<AssignmentIcon />}>
                                 {t("header.mySubmissions")}
                             </Button>
                         )}
-
-                        {/* 4. ADMIN SPECIFIC: Management */}
                         {isLoggedIn && role === 'ADMIN' && (
-                            <Button
-                                color="primary"
-                                component={RouterLink}
-                                to="/admin/jury/managment"
-                                sx={{ textTransform: "none", fontWeight: 600 }}
-                                startIcon={<AdminPanelSettingsIcon />}
-                            >
+                            <Button color="primary" component={RouterLink} to="/admin/jury/managment" sx={{ textTransform: "none", fontWeight: 600 }} startIcon={<AdminPanelSettingsIcon />}>
                                 {t("header.adminPanel")}
                             </Button>
                         )}
                     </Box>
 
-                    {/* RIGHT: Actions */}
-                    <Box sx={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 1.5 }}>
+                    {/* RIGHT ACTIONS (Language, Donate, Profile) */}
+                    <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.5, md: 1.5 } }}>
                         <Button
                             href="https://www.sflua.org/donate-1"
                             target="_blank"
                             variant="contained"
-                            sx={{ backgroundColor: "secondary.main", color: "#000", px: 3, fontWeight: 600, borderRadius: "8px", display: { xs: 'none', md: 'inline-flex' } }}
+                            size="small"
+                            sx={{ backgroundColor: "secondary.main", color: "#000", fontWeight: 600, borderRadius: "8px", display: { xs: 'none', lg: 'inline-flex' } }}
                         >
                             {t("header.support")}
                         </Button>
 
-                        <Divider orientation="vertical" flexItem sx={{ mx: 0.5, height: 24, alignSelf: "center" }} />
-
-                        <Button
-                            onClick={handleLangClick}
-                            startIcon={<LanguageIcon sx={{ fontSize: 20 }} />}
-                            sx={{ color: "text.secondary", fontWeight: 700, textTransform: "uppercase", minWidth: 60 }}
-                        >
-                            {language}
+                        <Button onClick={handleLangClick} sx={{ color: "text.secondary", fontWeight: 700, minWidth: { xs: 40, md: 60 } }}>
+                            {language.toUpperCase()}
                         </Button>
 
                         {isLoggedIn ? (
                             <IconButton onClick={handleProfileClick} size="small">
-                                <Avatar sx={{
-                                    width: 40, height: 40,
-                                    bgcolor: role === 'ADMIN' ? "error.main" : "primary.main"
-                                }}>
-                                    {role === 'ADMIN' ? <AdminPanelSettingsIcon /> : <PersonIcon />}
+                                <Avatar sx={{ width: 35, height: 35, bgcolor: role === 'ADMIN' ? "error.main" : "primary.main" }}>
+                                    {role === 'ADMIN' ? <AdminPanelSettingsIcon sx={{ fontSize: 20 }} /> : <PersonIcon sx={{ fontSize: 20 }} />}
                                 </Avatar>
                             </IconButton>
                         ) : (
-                            <Button
-                                component={RouterLink}
-                                to="/login"
-                                variant="outlined"
-                                color="primary"
-                                startIcon={<LoginIcon />}
-                                sx={{ borderRadius: "8px", textTransform: "none", fontWeight: 600 }}
-                            >
-                                {t("header.login")}
-                            </Button>
+                            <IconButton component={RouterLink} to="/login" color="primary">
+                                <LoginIcon />
+                            </IconButton>
                         )}
                     </Box>
                 </Toolbar>
             </Container>
 
-            {/* Menu: Languages */}
-            <Menu
-                anchorEl={langAnchorEl}
-                open={Boolean(langAnchorEl)}
-                onClose={handleClose}
-                PaperProps={{ elevation: 0, sx: { filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.12))', mt: 1, minWidth: 150, borderRadius: "12px" } }}
+            {/* MOBILE DRAWER */}
+            <Drawer
+                variant="temporary"
+                open={mobileOpen}
+                onClose={handleDrawerToggle}
+                ModalProps={{ keepMounted: true }}
+                sx={{ display: { xs: 'block', md: 'none' }, '& .MuiDrawer-paper': { boxSizing: 'border-box', width: 260 } }}
             >
-                <MenuItem onClick={() => handleLangSelect("uk")}>🇺🇦 {t("languages.uk")}</MenuItem>
-                <MenuItem onClick={() => handleLangSelect("en")}>🇺🇸 {t("languages.en")}</MenuItem>
+                {drawer}
+            </Drawer>
+
+            {/* DROPDOWN MENUS (Tournaments, Lang, Profile) - Same as before but with slightly better mobile spacing */}
+            <Menu anchorEl={langAnchorEl} open={Boolean(langAnchorEl)} onClose={handleClose}>
+                <MenuItem onClick={() => handleLangSelect("uk")}>🇺🇦 УКР</MenuItem>
+                <MenuItem onClick={() => handleLangSelect("en")}>🇺🇸 ENG</MenuItem>
             </Menu>
 
-            {/* Menu: Tournaments */}
-            <Menu
-                anchorEl={tournamentsAnchorEl}
-                open={Boolean(tournamentsAnchorEl)}
-                onClose={handleClose}
-                PaperProps={{ elevation: 0, sx: { filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.12))', mt: 1.5, minWidth: 220, borderRadius: "12px" } }}
-                transformOrigin={{ horizontal: 'center', vertical: 'top' }}
-                anchorOrigin={{ horizontal: 'center', vertical: 'bottom' }}
-            >
-                <MenuItem component={RouterLink} to={role === 'ADMIN' ? "/tournaments?tab=4" : "/tournaments"} onClick={handleClose}>
-                    <ListItemIcon><EmojiEventsIcon fontSize="small" color="primary" /></ListItemIcon>
+            <Menu anchorEl={tournamentsAnchorEl} open={Boolean(tournamentsAnchorEl)} onClose={handleClose}>
+                <MenuItem component={RouterLink} to={role === 'ADMIN' ? "/tournaments?tab=1&filter=ALL" : "/tournaments?filter=AVAILABLE"} onClick={handleClose}>
+                    <ListItemIcon><EmojiEventsIcon fontSize="small" /></ListItemIcon>
                     {role === 'ADMIN' ? t("header.manageTournaments") : t("header.availableTournaments")}
                 </MenuItem>
-
                 {isLoggedIn && role === 'USER' && [
-                    <MenuItem key="current" component={RouterLink} to="/tournaments?tab=2" onClick={handleClose}>
-                        <ListItemIcon><PlayCircleOutlineIcon fontSize="small" color="warning" /></ListItemIcon>
-                        {t("header.myCurrentTournaments")}
+                    <MenuItem key="active" component={RouterLink} to="/tournaments?filter=ACTIVE" onClick={handleClose}>
+                        <ListItemText primary={t("header.myCurrentTournaments")} />
                     </MenuItem>,
-                    <Divider key="divider" />,
-                    <MenuItem key="history" component={RouterLink} to="/tournaments?tab=3" onClick={handleClose}>
-                        <ListItemIcon><HistoryIcon fontSize="small" /></ListItemIcon>
-                        {t("header.history")}
+                    <MenuItem key="hist" component={RouterLink} to="/tournaments?filter=HISTORY" onClick={handleClose}>
+                        <ListItemText primary={t("header.history")} />
                     </MenuItem>
                 ]}
             </Menu>
 
-            {/* Menu: Profile */}
             {isLoggedIn && (
-                <Menu
-                    anchorEl={profileAnchorEl}
-                    open={Boolean(profileAnchorEl)}
-                    onClose={handleClose}
-                    PaperProps={{
-                        elevation: 0,
-                        sx: {
-                            overflow: 'visible', filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.12))', mt: 1.5, minWidth: 200, borderRadius: "12px",
-                            '&::before': { content: '""', display: 'block', position: 'absolute', top: 0, right: 18, width: 10, height: 10, bgcolor: 'background.paper', transform: 'translateY(-50%) rotate(45deg)', zIndex: 0 }
-                        }
-                    }}
-                    transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-                    anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-                >
-                    <Box sx={{ px: 2, py: 1.5 }}>
-                        <Typography variant="subtitle2" fontWeight={700}>{t("header.role")} {role}</Typography>
-                    </Box>
-                    <Divider />
+                <Menu anchorEl={profileAnchorEl} open={Boolean(profileAnchorEl)} onClose={handleClose}>
                     <MenuItem component={RouterLink} to="/profile" onClick={handleClose}>
-                        <ListItemIcon><PersonIcon fontSize="small" color="primary" /></ListItemIcon>
+                        <ListItemIcon><PersonIcon fontSize="small" /></ListItemIcon>
                         {t("header.profile")}
                     </MenuItem>
-                    <MenuItem onClick={() => { handleClose(); AuthService.logout()}}>
+                    <MenuItem onClick={() => { handleClose(); AuthService.logout(); }}>
                         <ListItemIcon><Logout fontSize="small" color="error" /></ListItemIcon>
-                        {t("header.logout")}
+                        <Typography color="error">{t("header.logout")}</Typography>
                     </MenuItem>
                 </Menu>
             )}

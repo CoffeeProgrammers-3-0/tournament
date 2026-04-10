@@ -25,8 +25,8 @@ export const TournamentsPage = () => {
     const {
         tournaments, totalPages, loading, page, setPage,
         tabValue, handleTabChange, searchQuery, setSearchQuery,
-        statusFilter, setStatusFilter, isCreating, setIsCreating,
-        isAdmin, isJury, isLoggedIn
+        filter, setFilter, isCreating, setIsCreating,
+        isAdmin, isLoggedIn
     } = useTournaments();
 
     if (isCreating && isAdmin) {
@@ -36,11 +36,25 @@ export const TournamentsPage = () => {
                 onSuccess={() => {
                     setIsCreating(false);
                     handleTabChange(TABS.ADMIN);
-                    setStatusFilter("DRAFT");
+                    setFilter("DRAFT");
                 }}
             />
         );
     }
+
+    // Доступні фільтри для користувача (використовуємо старі ключі перекладу з табів)
+    const userFilters = isLoggedIn
+        ? [
+            { value: "AVAILABLE", label: t("tournaments.tabs.available") },
+            { value: "REGISTERED", label: t("tournaments.tabs.my_registed") },
+            { value: "ACTIVE", label: t("tournaments.tabs.my") },
+            { value: "HISTORY", label: t("tournaments.tabs.history") }
+        ]
+        : [
+            { value: "AVAILABLE", label: t("tournaments.tabs.available") }
+        ];
+
+    const adminFilters = ["ALL", "DRAFT", "REGISTRATION", "RUNNING", "FINISHED"];
 
     return (
         <Container maxWidth="lg" sx={{ pb: 6, pt: 1 }}>
@@ -70,26 +84,36 @@ export const TournamentsPage = () => {
                 alignItems: "center", justifyContent: "space-between", gap: 2,
                 bgcolor: "background.paper", p: 1, borderRadius: "20px", border: "1px solid #eee"
             }}>
-                <Tabs value={tabValue} onChange={(_, v) => handleTabChange(v)} sx={{ minHeight: 48 }}>
-                    {!isJury && !isAdmin && <Tab value={TABS.AVAILABLE} label={t("tournaments.tabs.available")} />}
-                    {isLoggedIn && !isAdmin && <Tab value={TABS.MY_REGISTED} label={t("tournaments.tabs.my_registed")} />}
-                    {(isLoggedIn || isJury) && !isAdmin && <Tab value={TABS.MY} label={t("tournaments.tabs.my")} />}
-                    {isLoggedIn && !isAdmin && !isJury && <Tab value={TABS.HISTORY} label={t("tournaments.tabs.history")} />}
-                    {isAdmin && <Tab value={TABS.ADMIN} label={t("tournaments.tabs.admin")} sx={{ color: "error.main", fontWeight: 700 }} />}
-                </Tabs>
+
+                {/* Показуємо вкладки ТІЛЬКИ для адміна */}
+                {isAdmin ? (
+                    <Tabs value={tabValue} onChange={(_, v) => handleTabChange(v)} sx={{ minHeight: 48 }}>
+                        <Tab value={TABS.MAIN} label={t("tournaments.tabs.available")} />
+                        <Tab value={TABS.ADMIN} label={t("tournaments.tabs.admin")} sx={{ color: "error.main", fontWeight: 700 }} />
+                    </Tabs>
+                ) : (
+                    // Заглушка для звичайного користувача, щоб зберегти Flex-вирівнювання
+                    <Typography variant="subtitle1" fontWeight={700} sx={{ px: 2 }}>
+                        {t("tournaments.title")}
+                    </Typography>
+                )}
 
                 <Box sx={{ display: "flex", gap: 1, width: { xs: "100%", md: "auto" }, px: 1 }}>
-                    {isAdmin && tabValue === TABS.ADMIN && (
-                        <TextField
-                            select size="small" value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value)}
-                            sx={{ minWidth: 150 }}
-                        >
-                            {["ALL", "DRAFT", "REGISTRATION", "RUNNING", "FINISHED"].map(status => (
-                                <MenuItem key={status} value={status}>{t(`tournaments.statuses.${status}`)}</MenuItem>
-                            ))}
-                        </TextField>
-                    )}
+                    <TextField
+                        select size="small" value={filter}
+                        onChange={(e) => setFilter(e.target.value)}
+                        sx={{ minWidth: 160 }}
+                    >
+                        {tabValue === TABS.ADMIN
+                            ? adminFilters.map(f => (
+                                <MenuItem key={f} value={f}>{t(`tournaments.statuses.${f}`)}</MenuItem>
+                            ))
+                            : userFilters.map(f => (
+                                <MenuItem key={f.value} value={f.value}>{f.label}</MenuItem>
+                            ))
+                        }
+                    </TextField>
+
                     <TextField
                         size="small" placeholder={t("tournaments.search_placeholder")}
                         value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
