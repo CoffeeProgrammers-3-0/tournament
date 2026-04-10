@@ -6,14 +6,14 @@ import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 export const MemberCard = ({ user, canControl, onPromote, onDelete }: any) => (
     <Card sx={{
         borderRadius: "16px", border: "1px solid",
-        borderColor: user.isLeader ? "secondary.main" : "divider"
+        borderColor: user.isLeader ? "secondary.main" : "divider",
+        height: "100%" // Робить картки однакової висоти у Grid
     }} elevation={0}>
-        <CardContent sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-            <Avatar sx={{ bgcolor: user.isLeader ? "secondary.main" : "grey.200", flexShrink: 0 }}>
+        <CardContent sx={{ display: "flex", alignItems: "center", gap: 2, p: { xs: 1.5, sm: 2 }, "&:last-child": { pb: { xs: 1.5, sm: 2 } } }}>
+            <Avatar sx={{ bgcolor: user.isLeader ? "secondary.main" : "grey.200", flexShrink: 0, width: 40, height: 40 }}>
                 {user.fullName.charAt(0)}
             </Avatar>
 
-            {/* Ключова зміна: minWidth: 0 дозволяє тексту стискатися всередині flex-контейнера */}
             <Box sx={{ flexGrow: 1, minWidth: 0 }}>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
                     <Typography
@@ -22,7 +22,8 @@ export const MemberCard = ({ user, canControl, onPromote, onDelete }: any) => (
                         sx={{
                             whiteSpace: "nowrap",
                             overflow: "hidden",
-                            textOverflow: "ellipsis"
+                            textOverflow: "ellipsis",
+                            fontSize: { xs: "0.9rem", sm: "1rem" }
                         }}
                     >
                         {user.fullName}

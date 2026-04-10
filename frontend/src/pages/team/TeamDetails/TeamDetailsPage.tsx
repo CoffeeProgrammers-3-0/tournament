@@ -24,8 +24,10 @@ import LockIcon from "@mui/icons-material/Lock";
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 
 import {useTeamDetails} from "./useTeamDetails";
-import {TeamHeader} from "./components/TeamHeader";
-import {MemberCard} from "./components/MemberCard";
+import {TeamHeader} from "./components/TeamHeader.tsx";
+import {MemberCard} from "./components/MemberCard.tsx";
+// import { TeamHeader } from "./components/TeamHeader"; // Переконайтеся, що імпорти вірні
+// import { MemberCard } from "./components/MemberCard";
 
 export const TeamDetailsPage = () => {
     const { t } = useTranslation();
@@ -38,8 +40,8 @@ export const TeamDetailsPage = () => {
     } = useTeamDetails();
 
     const [memberModal, setMemberModal] = useState<{ open: boolean, tournamentId: number | null }>({ open: false, tournamentId: null });
-    const [newMember, setNewMember] = useState({ fullName: "", email: "", isLeader: false });
     const [confirm, setConfirm] = useState<{ open: boolean, title: string, text: string, onConfirm: () => void } | null>(null);
+    const [newMember, setNewMember] = useState({ fullName: "", email: "", isLeader: false });
 
     if (loading) return <Box sx={{ display: "flex", justifyContent: "center", py: 10 }}><CircularProgress /></Box>;
     if (!teamData) return <Typography align="center" sx={{ mt: 5 }}>{t("common.not_found")}</Typography>;
@@ -51,7 +53,7 @@ export const TeamDetailsPage = () => {
     };
 
     return (
-        <Container maxWidth="lg" sx={{ pb: 6, pt: 1 }}>
+        <Container maxWidth="lg" sx={{ pb: 6, pt: { xs: 2, md: 4 } }}>
             {errors.length > 0 && !memberModal.open && (
                 <Box sx={{ mb: 3, p: 2, bgcolor: "#fee2e2", border: "1px solid #ef4444", borderRadius: "12px" }}>
                     {errors.map((err, i) => <Typography key={i} color="error" variant="body2" fontWeight={600}>{err}</Typography>)}
@@ -70,10 +72,19 @@ export const TeamDetailsPage = () => {
                 loading={isActionLoading}
             />
 
-            <Tabs value={tabValue} onChange={(_, v) => setTabValue(v)} textColor="secondary" indicatorColor="secondary" sx={{ mb: 4 }}>
-                <Tab label={t("team_details.tabs.members")} />
-                <Tab label={t("team_details.tabs.info")} />
-            </Tabs>
+            <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 4 }}>
+                <Tabs
+                    value={tabValue}
+                    onChange={(_, v) => setTabValue(v)}
+                    textColor="secondary"
+                    indicatorColor="secondary"
+                    variant="scrollable" // Дозволяє скролити таби на вузьких екранах
+                    scrollButtons="auto"
+                >
+                    <Tab label={t("team_details.tabs.members")} />
+                    <Tab label={t("team_details.tabs.info")} />
+                </Tabs>
+            </Box>
 
             {tabValue === 0 && (
                 <Box>
@@ -82,7 +93,6 @@ export const TeamDetailsPage = () => {
                         const manageStatus = canManageTournament(tournamentIdNum);
                         const isLocked = !manageStatus.can && manageStatus.reason === "TOURNAMENT_STARTED";
 
-                        // Додаємо логіку лімітів
                         const currentCount = data.members.length;
                         const maxMembers = data.maxMembers;
                         const isMaxReached = currentCount >= maxMembers;
@@ -90,24 +100,30 @@ export const TeamDetailsPage = () => {
 
                         return (
                             <Box key={tId} sx={{ mb: 6 }}>
-                                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", mb: 2 }}>
-                                    <Box>
-                                        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                                            <Typography variant="h5" fontWeight={800} color="primary">
+                                {/* Оптимізований заголовок турніру для мобільних */}
+                                <Box sx={{
+                                    display: "flex",
+                                    flexDirection: { xs: "column", sm: "row" },
+                                    justifyContent: "space-between",
+                                    alignItems: { xs: "flex-start", sm: "flex-end" },
+                                    gap: 2,
+                                    mb: 3
+                                }}>
+                                    <Box sx={{ width: "100%" }}>
+                                        <Box sx={{ display: "flex", alignItems: "center", gap: 2, flexWrap: "wrap" }}>
+                                            <Typography variant="h5" fontWeight={800} color="primary" sx={{ wordBreak: "break-word" }}>
                                                 {data.name}
                                             </Typography>
-                                            {/* Лічильник учасників */}
                                             <Box sx={{
                                                 px: 1.5, py: 0.5, borderRadius: "8px",
                                                 bgcolor: isMaxReached ? "success.light" : (!isMinMet ? "error.light" : "grey.200"),
                                                 color: isMaxReached ? "success.dark" : (!isMinMet ? "error.dark" : "text.secondary"),
-                                                fontWeight: 800, fontSize: "0.85rem"
+                                                fontWeight: 800, fontSize: "0.85rem", whiteSpace: "nowrap"
                                             }}>
                                                 {currentCount} / {maxMembers}
                                             </Box>
                                         </Box>
 
-                                        {/* Попередження про мінімум учасників */}
                                         {!isMinMet && (
                                             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, color: "error.main", mt: 1 }}>
                                                 <WarningAmberIcon sx={{ fontSize: 18 }} />
@@ -125,39 +141,42 @@ export const TeamDetailsPage = () => {
                                         )}
                                     </Box>
 
-                                    {/* Логіка відображення кнопки додавання */}
-                                    {manageStatus.can ? (
-                                        isMaxReached ? (
-                                            <Tooltip title={t("team_details.warnings.max_reached", { defaultValue: "Maximum members limit reached" })}>
-                                                <span>
-                                                    <Button variant="contained" disabled startIcon={<PersonAddIcon />} sx={{ borderRadius: "12px" }}>
-                                                        {t("team_details.admin.add_member")}
-                                                    </Button>
-                                                </span>
-                                            </Tooltip>
-                                        ) : (
-                                            <Button
-                                                variant="contained" color="secondary" startIcon={<PersonAddIcon />}
-                                                onClick={() => setMemberModal({ open: true, tournamentId: tournamentIdNum })}
-                                                sx={{ borderRadius: "12px", color: "black" }}
-                                            >
-                                                {t("team_details.admin.add_member")}
-                                            </Button>
-                                        )
-                                    ) : !isAdmin && (
-                                        <Tooltip title={t(`team_details.reasons.${manageStatus.reason}`)}>
-                                            <Box sx={{ opacity: 0.5 }}>
-                                                <Button variant="outlined" disabled startIcon={<PersonAddIcon />}>
+                                    {/* Кнопка розтягується на всю ширину на телефонах */}
+                                    <Box sx={{ width: { xs: "100%", sm: "auto" }, flexShrink: 0 }}>
+                                        {manageStatus.can ? (
+                                            isMaxReached ? (
+                                                <Tooltip title={t("team_details.warnings.max_reached", { defaultValue: "Maximum members limit reached" })}>
+                                                    <span>
+                                                        <Button fullWidth variant="contained" disabled startIcon={<PersonAddIcon />} sx={{ borderRadius: "12px" }}>
+                                                            {t("team_details.admin.add_member")}
+                                                        </Button>
+                                                    </span>
+                                                </Tooltip>
+                                            ) : (
+                                                <Button
+                                                    fullWidth
+                                                    variant="contained" color="secondary" startIcon={<PersonAddIcon />}
+                                                    onClick={() => setMemberModal({ open: true, tournamentId: tournamentIdNum })}
+                                                    sx={{ borderRadius: "12px", color: "black", py: { xs: 1.2, sm: 1 } }}
+                                                >
                                                     {t("team_details.admin.add_member")}
                                                 </Button>
-                                            </Box>
-                                        </Tooltip>
-                                    )}
+                                            )
+                                        ) : !isAdmin && (
+                                            <Tooltip title={t(`team_details.reasons.${manageStatus.reason}`)}>
+                                                <Box sx={{ opacity: 0.5 }}>
+                                                    <Button fullWidth variant="outlined" disabled startIcon={<PersonAddIcon />}>
+                                                        {t("team_details.admin.add_member")}
+                                                    </Button>
+                                                </Box>
+                                            </Tooltip>
+                                        )}
+                                    </Box>
                                 </Box>
 
                                 <Grid container spacing={2}>
                                     {data.members.map((user: any) => (
-                                        <Grid size={{xs:12, sm:4, md:3}} key={user.id}>
+                                        <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={user.id}>
                                             <MemberCard
                                                 user={user}
                                                 canControl={manageStatus.can && (isAdmin || user.id !== currentUserId)}
@@ -183,7 +202,8 @@ export const TeamDetailsPage = () => {
                 </Box>
             )}
 
-            <Dialog open={memberModal.open} onClose={closeMemberModal} fullWidth maxWidth="xs" PaperProps={{ sx: { borderRadius: "24px" } }}>
+            {/* Модалки з адаптивними відступами */}
+            <Dialog open={memberModal.open} onClose={closeMemberModal} fullWidth maxWidth="xs" PaperProps={{ sx: { borderRadius: "24px", m: { xs: 2, sm: 3 } } }}>
                 <DialogTitle sx={{ fontWeight: 800 }}>{t("team_details.admin.member_modal.title")}</DialogTitle>
                 <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1 }}>
                     {errors.length > 0 && (
@@ -202,13 +222,14 @@ export const TeamDetailsPage = () => {
                     <FormControlLabel control={<Checkbox checked={newMember.isLeader} onChange={e => setNewMember({...newMember, isLeader: e.target.checked})} color="secondary" />} label="Set as Leader" />
                 </DialogContent>
 
-                <DialogActions sx={{ p: 3, gap: 1 }}>
-                    <Button onClick={closeMemberModal} sx={{ fontWeight: 600 }}>{t("common.cancel")}</Button>
+                <DialogActions sx={{ p: { xs: 2, sm: 3 }, flexDirection: { xs: 'column', sm: 'row' }, gap: 1 }}>
+                    <Button fullWidth onClick={closeMemberModal} sx={{ fontWeight: 600, mb: { xs: 1, sm: 0 } }}>{t("common.cancel")}</Button>
                     <Button
+                        fullWidth
                         variant="contained"
                         color="secondary"
                         disabled={isActionLoading}
-                        sx={{ borderRadius: "10px", px: 3, fontWeight: 700, color: "black" }}
+                        sx={{ borderRadius: "10px", px: 3, fontWeight: 700, color: "black", m: "0 !important" }}
                         onClick={async () => {
                             if (memberModal.tournamentId) {
                                 const success = await handleAddMember(newMember as any, memberModal.tournamentId);
@@ -224,21 +245,22 @@ export const TeamDetailsPage = () => {
             <Dialog
                 open={!!confirm?.open}
                 onClose={() => setConfirm(null)}
-                PaperProps={{ sx: { borderRadius: "20px" } }}
+                PaperProps={{ sx: { borderRadius: "20px", m: { xs: 2, sm: 3 } } }}
             >
                 <DialogTitle sx={{ fontWeight: 800 }}>{confirm?.title}</DialogTitle>
                 <DialogContent>
                     <DialogContentText sx={{ color: "text.primary" }}>{confirm?.text}</DialogContentText>
                 </DialogContent>
-                <DialogActions sx={{ p: 3, gap: 1 }}>
-                    <Button onClick={() => setConfirm(null)} variant="outlined" sx={{ borderRadius: "10px" }}>
+                <DialogActions sx={{ p: { xs: 2, sm: 3 }, flexDirection: { xs: 'column', sm: 'row' }, gap: 1 }}>
+                    <Button fullWidth onClick={() => setConfirm(null)} variant="outlined" sx={{ borderRadius: "10px", mb: { xs: 1, sm: 0 } }}>
                         {t("common.no")}
                     </Button>
                     <Button
+                        fullWidth
                         onClick={() => { confirm?.onConfirm(); setConfirm(null); }}
                         variant="contained"
                         color="error"
-                        sx={{ borderRadius: "10px", px: 3, fontWeight: 700 }}
+                        sx={{ borderRadius: "10px", px: 3, fontWeight: 700, m: "0 !important" }}
                     >
                         {t("common.yes_confirm")}
                     </Button>
