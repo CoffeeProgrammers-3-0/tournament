@@ -65,6 +65,15 @@ public class TeamServiceImpl implements TeamService {
             throw new IllegalArgumentException("Team must contain at least one participant");
         }
 
+        long uniqueCount = users.stream()
+                .map(UserCreateRequestForTeam::getEmail)
+                .distinct()
+                .count();
+
+        if (uniqueCount < users.size()) {
+            throw new IllegalArgumentException("Team contains duplicate participants");
+        }
+
         Tournament tournament = tournamentRepository.findById(tournamentId)
                 .orElseThrow(() -> new EntityNotFoundException("Tournament with id " + tournamentId + " not found"));
 

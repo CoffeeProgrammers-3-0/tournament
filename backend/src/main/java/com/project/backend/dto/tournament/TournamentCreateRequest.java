@@ -41,7 +41,7 @@ public class TournamentCreateRequest {
     private String endRegistration;
 
     @NotNull(message = "Maximum number of members in team is required")
-    @Min(value = 1, message = "There must be at least 1 member in team")
+    @Min(value = 3, message = "There must be at least 3 member in team")
     @Schema(description = "Maximum number of members in team allowed", example = "5")
     private Long maxCountOfTeam;
 
