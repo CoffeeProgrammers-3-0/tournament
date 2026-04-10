@@ -18,7 +18,7 @@ public class TournamentCreateRequest {
 
     @NotBlank(message = "Start date is required")
     @Pattern(
-            regexp = "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            regexp = "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(:\\d{2})?$",
             message = "Start date must be in ISO format (yyyy-MM-dd'T'HH:mm:ss)"
     )
     @Schema(description = "Start date of the tournament in ISO format", example = "2026-05-01T10:00:00")
@@ -26,7 +26,7 @@ public class TournamentCreateRequest {
 
     @NotBlank(message = "Start date of registration is required")
     @Pattern(
-            regexp = "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            regexp = "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(:\\d{2})?$",
             message = "Start date of registration must be in ISO format (yyyy-MM-dd'T'HH:mm:ss)"
     )
     @Schema(description = "Start date of the registration in ISO format", example = "2026-04-01T10:00:00")
@@ -34,7 +34,7 @@ public class TournamentCreateRequest {
 
     @NotBlank(message = "End date of registration is required")
     @Pattern(
-            regexp = "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            regexp = "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(:\\d{2})?$",
             message = "End date of registration must be in ISO format (yyyy-MM-dd'T'HH:mm:ss)"
     )
     @Schema(description = "End date of the registration in ISO format", example = "2026-04-20T18:00:00")

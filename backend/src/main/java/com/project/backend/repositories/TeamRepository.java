@@ -41,30 +41,38 @@ public interface TeamRepository extends JpaRepository<Team, Long>, JpaSpecificat
                     JOIN tournament.teams t ON t.id = tr.team_id
                     WHERE tr.round_id = :roundId
                 ),
-                ScoredSubmissions AS (
+                ScoredByJury AS (
                     SELECT
+                        s.id AS submission_id,
                         s.team_id,
-                        COALESCE(
-                            SUM(
-                                COALESCE(
-                                    (jsc.points::numeric / NULLIF(sub.count_criteria, 0)) * cat.weight,\s
-                                    0
-                                )
-                            ) / NULLIF(COUNT(DISTINCT js.jury_id), 0),
-                            0
-                        ) AS total_points
+                        js.jury_id,
+                        SUM(
+                            (
+                                COALESCE(jsc.points, 0)::numeric
+                                / NULLIF(cnt.count_criteria, 0)
+                            ) * cat.weight
+                        ) AS jury_score
                     FROM tournament.submissions s
                     JOIN tournament.jury_submission js ON js.submission_id = s.id
-                    JOIN tournament.jury_submission_criteria jsc ON jsc.jury_submission_id = js.id
-                    JOIN tournament.criteria c ON jsc.criteria_id = c.id
+                    JOIN tournament.criteria c ON TRUE
                     JOIN tournament.categories cat ON c.category_id = cat.id
-                    LEFT JOIN (
+                    LEFT JOIN tournament.jury_submission_criteria jsc
+                        ON jsc.jury_submission_id = js.id
+                        AND jsc.criteria_id = c.id
+                    JOIN (
                         SELECT category_id, COUNT(*) AS count_criteria
                         FROM tournament.criteria
                         GROUP BY category_id
-                    ) AS sub ON sub.category_id = cat.id
+                    ) cnt ON cnt.category_id = cat.id
                     WHERE s.round_id = :roundId
-                    GROUP BY s.team_id
+                    GROUP BY s.id, s.team_id, js.jury_id
+                ),
+                ScoredSubmissions AS (
+                    SELECT
+                        team_id,
+                        AVG(jury_score) AS total_points
+                    FROM ScoredByJury
+                    GROUP BY team_id
                 ),
                 FinalLeaderboard AS (
                     SELECT
@@ -110,30 +118,38 @@ public interface TeamRepository extends JpaRepository<Team, Long>, JpaSpecificat
                 JOIN tournament.teams t ON t.id = tr.team_id
                 WHERE tr.round_id = :roundId
             ),
-            ScoredSubmissions AS (
+            ScoredByJury AS (
                 SELECT
+                    s.id AS submission_id,
                     s.team_id,
-                    COALESCE(
-                        SUM(
-                            COALESCE(
-                                (jsc.points::numeric / NULLIF(sub.count_criteria, 0)) * cat.weight, 
-                                0
-                            )
-                        ) / NULLIF(COUNT(DISTINCT js.jury_id), 0),
-                        0
-                    ) AS total_points
+                    js.jury_id,
+                    SUM(
+                        (
+                            COALESCE(jsc.points, 0)::numeric
+                            / NULLIF(cnt.count_criteria, 0)
+                        ) * cat.weight
+                    ) AS jury_score
                 FROM tournament.submissions s
                 JOIN tournament.jury_submission js ON js.submission_id = s.id
-                JOIN tournament.jury_submission_criteria jsc ON jsc.jury_submission_id = js.id
-                JOIN tournament.criteria c ON jsc.criteria_id = c.id
+                JOIN tournament.criteria c ON TRUE
                 JOIN tournament.categories cat ON c.category_id = cat.id
-                LEFT JOIN (
+                LEFT JOIN tournament.jury_submission_criteria jsc
+                    ON jsc.jury_submission_id = js.id
+                    AND jsc.criteria_id = c.id
+                JOIN (
                     SELECT category_id, COUNT(*) AS count_criteria
                     FROM tournament.criteria
                     GROUP BY category_id
-                ) AS sub ON sub.category_id = cat.id
+                ) cnt ON cnt.category_id = cat.id
                 WHERE s.round_id = :roundId
-                GROUP BY s.team_id
+                GROUP BY s.id, s.team_id, js.jury_id
+            ),
+            ScoredSubmissions AS (
+                SELECT
+                    team_id,
+                    AVG(jury_score) AS total_points
+                FROM ScoredByJury
+                GROUP BY team_id
             )
             SELECT
                 tt.team_id,
@@ -167,31 +183,38 @@ public interface TeamRepository extends JpaRepository<Team, Long>, JpaSpecificat
             WHERE tr.round_id = :roundId
               AND tr.team_id IN (:teamIds)
         ),
-        ScoredSubmissions AS (
+        ScoredByJury AS (
             SELECT
+                s.id AS submission_id,
                 s.team_id,
-                COALESCE(
-                    SUM(
-                        COALESCE(
-                            (jsc.points::numeric / NULLIF(sub.count_criteria, 0)) * cat.weight, 
-                            0
-                        )
-                    ) / NULLIF(COUNT(DISTINCT js.jury_id), 0),
-                    0
-                ) AS total_points
+                js.jury_id,
+                SUM(
+                    (
+                        COALESCE(jsc.points, 0)::numeric
+                        / NULLIF(cnt.count_criteria, 0)
+                    ) * cat.weight
+                ) AS jury_score
             FROM tournament.submissions s
             JOIN tournament.jury_submission js ON js.submission_id = s.id
-            JOIN tournament.jury_submission_criteria jsc ON jsc.jury_submission_id = js.id
-            JOIN tournament.criteria c ON jsc.criteria_id = c.id
+            JOIN tournament.criteria c ON TRUE
             JOIN tournament.categories cat ON c.category_id = cat.id
-            LEFT JOIN (
+            LEFT JOIN tournament.jury_submission_criteria jsc
+                ON jsc.jury_submission_id = js.id
+                AND jsc.criteria_id = c.id
+            JOIN (
                 SELECT category_id, COUNT(*) AS count_criteria
                 FROM tournament.criteria
                 GROUP BY category_id
-            ) AS sub ON sub.category_id = cat.id
+            ) cnt ON cnt.category_id = cat.id
             WHERE s.round_id = :roundId
-              AND s.team_id IN (:teamIds)
-            GROUP BY s.team_id
+            GROUP BY s.id, s.team_id, js.jury_id
+        ),
+        ScoredSubmissions AS (
+            SELECT
+                team_id,
+                AVG(jury_score) AS total_points
+            FROM ScoredByJury
+            GROUP BY team_id
         )
         SELECT
             tt.team_id,
