@@ -6,8 +6,11 @@ import {
     Container,
     Divider,
     Grid,
+    MenuItem,
     Paper,
     TextField,
+    ToggleButton,
+    ToggleButtonGroup,
     Typography
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -18,24 +21,56 @@ import {ErrorMessages} from "../../../components/main/ErrorMessages.tsx";
 
 export const CreateTeamPage = () => {
     const {
-        formData, loading, fetchingTournament, errors, success, limits,
+        formData, loading, fetchingData, errors, success, limits,
+        isLoggedIn, myTeams, selectedTeamId, setSelectedTeamId, isExistingTeam, setIsExistingTeam,
         handleTeamChange, handleUserChange, addUser, removeUser, handleSubmit,
         navigate, t
     } = useCreateTeam();
 
-    if (fetchingTournament) {
-        return <CircularProgress sx={{ display: "block", mx: "auto", mt: 10 }} />;
-    }
+    if (fetchingData) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 10 }}><CircularProgress /></Box>;
 
     return (
-        <Container maxWidth="md" sx={{ pb:6, pt: 1 }}>
+        <Container maxWidth="md" sx={{ pb: 6, pt: 2 }}>
             <Button startIcon={<ArrowBackIcon />} onClick={() => navigate(-1)} sx={{ mb: 3, fontWeight: 700 }}>
                 {t("common.back")}
             </Button>
 
             <Paper component="form" onSubmit={handleSubmit} sx={{ p: { xs: 3, md: 5 }, borderRadius: "24px" }}>
-                <Typography variant="h4" fontWeight={800} color="primary.main" gutterBottom>{t("team_create.title")}</Typography>
-                <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>{t("team_create.subtitle")}</Typography>
+                <Typography variant="h4" fontWeight={800} color="primary.main" gutterBottom>
+                    {t("team_create.title")}
+                </Typography>
+
+                {isLoggedIn && myTeams.length > 0 && (
+                    <Box sx={{ mb: 4, mt: 2 }}>
+                        <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 700 }}>
+                            {t("team_create.choose_method")}
+                        </Typography>
+                        <ToggleButtonGroup
+                            color="primary"
+                            value={isExistingTeam}
+                            exclusive
+                            onChange={(_, val) => val !== null && setIsExistingTeam(val)}
+                            fullWidth
+                            sx={{ mb: 2 }}
+                        >
+                            <ToggleButton value={false}>{t("team_create.method_new")}</ToggleButton>
+                            <ToggleButton value={true}>{t("team_create.method_existing")}</ToggleButton>
+                        </ToggleButtonGroup>
+
+                        {isExistingTeam && (
+                            <TextField
+                                select fullWidth
+                                label={t("team_create.fields.select_team")}
+                                value={selectedTeamId}
+                                onChange={(e) => setSelectedTeamId(e.target.value)}
+                            >
+                                {myTeams.map((team) => (
+                                    <MenuItem key={team.id} value={team.id}>{team.name}</MenuItem>
+                                ))}
+                            </TextField>
+                        )}
+                    </Box>
+                )}
 
                 <Divider sx={{ mb: 4 }} />
 
@@ -43,32 +78,35 @@ export const CreateTeamPage = () => {
                 {success && <Alert severity="success" sx={{ mb: 3 }}>{t("team_create.success")}</Alert>}
 
                 <Grid container spacing={3}>
-                    <Grid size={{xs: 12, sm: 6}}>
+                    <Grid size={{ xs: 12, sm: 6 }}>
                         <TextField fullWidth required label={t("team_create.fields.name")} name="name" value={formData.name} onChange={handleTeamChange} />
                     </Grid>
-                    <Grid size={{xs: 12, sm: 6}}>
+                    <Grid size={{ xs: 12, sm: 6 }}>
                         <TextField fullWidth required label={t("team_create.fields.contact_email")} name="email" type="email" value={formData.email} onChange={handleTeamChange} />
                     </Grid>
-                    <Grid size={{xs: 12, sm: 6}}>
+                    <Grid size={{ xs: 12, sm: 6 }}>
                         <TextField fullWidth label={t("team_create.fields.org_name")} name="organization" value={formData.organization} onChange={handleTeamChange} />
                     </Grid>
-                    <Grid size={{xs: 12, sm: 6}}>
+                    <Grid size={{ xs: 12, sm: 6 }}>
                         <TextField fullWidth label={t("team_create.fields.contact_some")} name="contact" value={formData.contact} onChange={handleTeamChange} />
                     </Grid>
 
-                    <Grid size={{xs: 12}}>
+                    <Grid size={{ xs: 12 }}>
                         <TeamMembersForm
                             users={formData.users}
                             onChange={handleUserChange}
                             onAdd={addUser}
                             onRemove={removeUser}
                             limits={limits}
+                            isReadOnlyFirst={isLoggedIn}
                         />
                     </Grid>
                 </Grid>
 
                 <Box sx={{ mt: 5, display: "flex", justifyContent: "flex-end", gap: 2 }}>
-                    <Button variant="outlined" onClick={() => navigate(-1)} disabled={loading || success}>{t("common.cancel")}</Button>
+                    <Button variant="outlined" onClick={() => navigate(-1)} disabled={loading || success}>
+                        {t("common.cancel")}
+                    </Button>
                     <Button
                         type="submit" variant="contained"
                         startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}

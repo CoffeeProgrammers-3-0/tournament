@@ -231,7 +231,8 @@ export const en = {
             "leaders_name": "Leader's Full Name",
             "leaders_email": "Leader's Email",
             "members_name": "Member",
-            "members_email": "Member`s email"
+            "members_email": "Member`s email",
+            "select_team": "Select Team",
         },
         "errors": {
             "choose_tournament": "Tournament ID is missing. Please return and try again.",
@@ -240,7 +241,9 @@ export const en = {
             "users_incomplete": "Please fill in all member details.",
             "min_members": "A team must have at least one member.",
             "error": "Failed to create team. Please try again."
-        }
+        },
+        "method_new": "New Team",
+        "method_existing": "Existing Team",
     },
     team_details: {
         "status": {

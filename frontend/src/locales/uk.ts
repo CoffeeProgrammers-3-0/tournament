@@ -231,7 +231,8 @@ export const uk = {
             "leaders_name": "ПІБ капітана",
             "leaders_email": "Email капітана",
             "members_name": "Учасник",
-            "members_email": "Email"
+            "members_email": "Email",
+            "select_team": "Оберіть команду",
         },
         "errors": {
             "choose_tournament": "ID турніру відсутній. Будь ласка, поверніться назад.",
@@ -240,7 +241,9 @@ export const uk = {
             "users_incomplete": "Будь ласка, заповніть дані всіх учасників.",
             "min_members": "У команді має бути хоча б один учасник.",
             "error": "Не вдалося створити команду. Спробуйте ще раз."
-        }
+        },
+        "method_new": "Нова команда",
+        "method_existing": "Обрати існуючу",
     },
     team_details: {
         "status": {
