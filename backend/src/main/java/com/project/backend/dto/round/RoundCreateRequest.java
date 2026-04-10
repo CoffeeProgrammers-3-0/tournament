@@ -15,7 +15,7 @@ public class RoundCreateRequest {
 
     @NotBlank(message = "Start date is required")
     @Pattern(
-            regexp = "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            regexp = "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(:\\d{2})?$",
             message = "Start date must be in ISO format (yyyy-MM-dd'T'HH:mm:ss)"
     )
     @Schema(description = "Start date of the round in ISO format", example = "2026-04-01T10:00:00")
@@ -23,7 +23,7 @@ public class RoundCreateRequest {
 
     @NotBlank(message = "End date is required")
     @Pattern(
-            regexp = "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$",
+            regexp = "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(:\\d{2})?$",
             message = "End date must be in ISO format (yyyy-MM-dd'T'HH:mm:ss)"
     )
     @Schema(description = "End date of the round in ISO format", example = "2026-04-10T18:00:00")

@@ -39,6 +39,7 @@ public class SecurityConfig {
                 "/api/auth/logout",
                 "/api/auth/callback",
                 "/api/auth/refresh",
+                "/api/ws/**"
         };
         RegexRequestMatcher[] getPermitAll = new RegexRequestMatcher[]{
                 regexMatcher(HttpMethod.GET, "^/api/rounds/\\d+/categories(\\?.*)?$"),

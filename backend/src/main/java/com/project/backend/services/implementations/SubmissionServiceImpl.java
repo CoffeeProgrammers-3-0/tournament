@@ -150,8 +150,8 @@ public class SubmissionServiceImpl implements SubmissionService {
         Submission submission = findById(submissionId);
         Round round = submission.getRound();
 
-        if (round.getStatus() != RoundStatus.SUBMISSION_CLOSED) {
-            throw new IllegalStateException("Jury can be assigned only after submission closed");
+        if (round.getStatus() == RoundStatus.EVALUATED) {
+            throw new IllegalStateException("Jury can be assigned only during evaluation phase");
         }
 
         if (jurySubmissionRepository.exists(
@@ -193,7 +193,7 @@ public class SubmissionServiceImpl implements SubmissionService {
         Submission submission = findById(submissionId);
         Round round = submission.getRound();
 
-        if (round.getStatus() != RoundStatus.SUBMISSION_CLOSED) {
+        if (round.getStatus() == RoundStatus.EVALUATED) {
             throw new IllegalStateException("Jury can be removed only during evaluation phase");
         }
 

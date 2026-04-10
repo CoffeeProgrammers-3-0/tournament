@@ -51,7 +51,7 @@ public class TournamentServiceImpl implements TournamentService {
             throw new IllegalArgumentException("Count of rounds must be positive");
         }
 
-        Tournament tournamentToUpdate = findById(tournamentId);
+        Tournament tournamentToUpdate = findByIdAdmin(tournamentId);
 
         if (tournamentToUpdate.getStatus() != TournamentStatus.DRAFT) {
             throw new IllegalStateException("Only tournaments in DRAFT status can be updated");
