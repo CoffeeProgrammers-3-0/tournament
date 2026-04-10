@@ -315,4 +315,13 @@ public class UserServiceImpl implements UserService {
     public List<User> findAllUsersOfUsersTeam(User user, Long roundId) {
         return userRepository.findAll(UserSpecification.teammatesInRound(user.getId(), roundId), Sort.by(Sort.Direction.ASC, "fullName"));
     }
+
+    @Override
+    public List<User> findByEmail(String email, int count) {
+        if (count <= 0) return List.of();
+
+        PageRequest limit = PageRequest.of(0, count);
+
+        return userRepository.findAll(UserSpecification.byEmail(email), limit).getContent();
+    }
 }

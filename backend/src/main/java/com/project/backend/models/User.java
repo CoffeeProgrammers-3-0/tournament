@@ -52,4 +52,7 @@ public class User {
 
     @OneToMany(mappedBy = "assignee")
     private Set<TeamTask> tasksAsAssignee = new HashSet<>();
+
+    @OneToMany(mappedBy = "creator", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<RoundEvent> roundEvents = new HashSet<>();
 }

@@ -45,6 +45,7 @@ public class RoundServiceImpl implements RoundService {
     private final JurySubmissionRepository jurySubmissionRepository;
     private final TeamRoundRepository teamRoundRepository;
     private final TeamRepository teamRepository;
+    private final SubmissionRepository submissionRepository;
 
     private final ApplicationEventPublisher eventPublisher;
 
@@ -139,12 +140,6 @@ public class RoundServiceImpl implements RoundService {
         }
 
         Round round = findById(roundId);
-        Tournament tournament = round.getTournament();
-
-        if (tournament.getStatus() == TournamentStatus.RUNNING ||
-                tournament.getStatus() == TournamentStatus.FINISHED) {
-            throw new IllegalStateException("Cannot delete round after tournament start");
-        }
 
         if (round.getStatus() != RoundStatus.DRAFT) {
             throw new IllegalStateException("Only DRAFT rounds can be deleted");
@@ -307,6 +302,8 @@ public class RoundServiceImpl implements RoundService {
         }
 
         teamRoundRepository.deleteAllById(ids);
+        submissionRepository.delete(Specification.allOf(SubmissionSpecification.byRoundId(roundId), SubmissionSpecification.byTeamIds(teamIds)));
+
         for(TeamUnassignedFromRoundEvent event : events) {
             eventPublisher.publishEvent(event);
         }

@@ -35,7 +35,6 @@ public class SecurityConfig {
                 "/api-docs",
                 "/swagger-ui/**",
                 "/v3/api-docs/**",
-                "/ws/**",
                 "/api/auth/logout",
                 "/api/auth/callback",
                 "/api/auth/refresh",
@@ -55,7 +54,12 @@ public class SecurityConfig {
                 regexMatcher(HttpMethod.GET, "^/api/teams/tournament/\\d+(\\?.*)?$"),
                 regexMatcher(HttpMethod.GET, "^/api/tournaments/\\d+(\\?.*)?$"),
                 regexMatcher(HttpMethod.GET, "^/api/tournaments(\\?.*)?$"),
-                regexMatcher(HttpMethod.GET, "^/api/users/\\d+(\\?.*)?$")
+                regexMatcher(HttpMethod.GET, "^/api/users/\\d+(\\?.*)?$"),
+                regexMatcher(HttpMethod.GET, "^/api/users/by_email(\\?.*)?$"),
+                regexMatcher(HttpMethod.GET, "^/api/admin-messages/global(\\?.*)?$"),
+                regexMatcher(HttpMethod.GET, "^/api/admin-messages/round/\\d+(\\?.*)?$"),
+                regexMatcher(HttpMethod.GET, "^/api/round-events/round/\\d+(\\?.*)?$"),
+                regexMatcher(HttpMethod.GET, "^/api/round-events/\\d+(\\?.*)?$")
         };
 
         RegexRequestMatcher[] postPermitAll = new RegexRequestMatcher[]{

@@ -52,11 +52,6 @@ public class TournamentServiceImpl implements TournamentService {
         }
 
         Tournament tournamentToUpdate = findByIdAdmin(tournamentId);
-
-        if (tournamentToUpdate.getStatus() != TournamentStatus.DRAFT) {
-            throw new IllegalStateException("Only tournaments in DRAFT status can be updated");
-        }
-
         tournamentToUpdate.setName(tournament.getName());
         tournamentToUpdate.setDescription(tournament.getDescription());
         tournamentToUpdate.setStartTournament(tournament.getStartTournament());
@@ -72,10 +67,6 @@ public class TournamentServiceImpl implements TournamentService {
     @Transactional
     public void delete(Long tournamentId) {
         Tournament tournament = findById(tournamentId);
-
-        if (tournament.getStatus() != TournamentStatus.DRAFT) {
-            throw new IllegalStateException("Only tournaments in DRAFT or CANCELLED status can be deleted");
-        }
 
         if (!tournament.getTeamParticipants().isEmpty()) {
             throw new IllegalStateException("Cannot delete tournament because there are already registered teams");

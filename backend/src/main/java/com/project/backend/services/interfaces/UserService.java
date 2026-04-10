@@ -44,4 +44,6 @@ public interface UserService {
     Page<User> findAllAvailableJuriesUsersForSubmission(Integer page, Integer size, String query, Long submissionId);
 
     List<User> findAllUsersOfUsersTeam(User user, Long roundId);
+
+    List<User> findByEmail(String email, int count);
 }
