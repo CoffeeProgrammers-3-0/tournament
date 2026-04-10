@@ -5,7 +5,7 @@ import type {
     TaskType,
     TeamTaskRequestDto,
     TeamTaskResponseDto
-} from "../../entities/teamTask/teamtask.dto.ts";
+} from "../../entities/teamTask/teamTask.dto.ts";
 import type {PaginationListResponseDto} from "../../entities/wrappers/wrapper.dto.ts";
 
 // Базові параметри для фільтрації та пошуку

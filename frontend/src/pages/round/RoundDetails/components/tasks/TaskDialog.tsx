@@ -11,8 +11,8 @@ import {
     Typography
 } from "@mui/material";
 import {ErrorMessages} from "../../../../../components/main/ErrorMessages";
-import type {TeamTaskRequestDto} from "../../../../../entities/teamTask/teamtask.dto";
-import {TASK_PRIORITIES, TASK_STATUSES, TASK_TYPES} from "../../../../../entities/teamTask/teamtask.dto";
+import type {TeamTaskRequestDto} from "../../../../../entities/teamTask/teamTask.dto.ts";
+import {TASK_PRIORITIES, TASK_STATUSES, TASK_TYPES} from "../../../../../entities/teamTask/teamTask.dto.ts";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
 

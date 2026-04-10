@@ -27,7 +27,7 @@ import type {
     TaskType,
     TeamTaskRequestDto,
     TeamTaskResponseDto
-} from "../../../../entities/teamTask/teamtask.dto";
+} from "../../../../entities/teamTask/teamTask.dto.ts";
 import {teamTaskService} from "../../../../services/impl/TeamTaskService.ts";
 
 const formatToLocalDateTime = (dateTimeStr: string) => {

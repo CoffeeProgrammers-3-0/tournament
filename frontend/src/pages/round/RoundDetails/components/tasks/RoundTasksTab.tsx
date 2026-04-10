@@ -31,8 +31,8 @@ import type {
     TaskStatus,
     TaskType,
     TeamTaskResponseDto
-} from "../../../../../entities/teamTask/teamtask.dto";
-import {TASK_PRIORITIES, TASK_STATUSES, TASK_TYPES} from "../../../../../entities/teamTask/teamtask.dto";
+} from "../../../../../entities/teamTask/teamTask.dto.ts";
+import {TASK_PRIORITIES, TASK_STATUSES, TASK_TYPES} from "../../../../../entities/teamTask/teamTask.dto.ts";
 import type {UserResponseDto} from "../../../../../entities/user/user.dto.ts";
 
 interface Props {

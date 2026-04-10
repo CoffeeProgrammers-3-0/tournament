@@ -10,7 +10,7 @@ import type {UserResponseDto} from "../../../../entities/user/user.dto";
 import type {TeamLeaderboardResponseDto} from "../../../../entities/team/team.dto";
 import type {SubmissionListResponseDto} from "../../../../entities/submission/submission.dto";
 import {teamTaskService} from "../../../../services/impl/TeamTaskService.ts";
-import type {TeamTaskResponseDto} from "../../../../entities/teamTask/teamtask.dto.ts";
+import type {TeamTaskResponseDto} from "../../../../entities/teamTask/teamTask.dto.ts";
 import {teamService} from "../../../../services/impl/TeamService.ts";
 import Cookies from "js-cookie";
 
