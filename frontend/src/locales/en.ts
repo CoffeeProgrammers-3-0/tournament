@@ -60,6 +60,7 @@ export const en = {
         "goHome": "Go to Homepage",
         "close": "Close",
         "post": "Post",
+        "confirm_delete": "Are you sure you want to delete this message?"
     },
     announcements: {
         "messages": {
@@ -84,6 +85,16 @@ export const en = {
             "desc": "Description",
             "link": "Meeting Link",
             "location": "Location (Address)"
+        }
+    },
+    global: {
+        "page_title": "Notifications center",
+        "tabs": {
+            "announcements": "Global News",
+            "notifications": "My Notifications"
+        },
+        "notifications": {
+            "empty": "You don't have any personal notifications yet"
         }
     },
     errors: {

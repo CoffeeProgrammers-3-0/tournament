@@ -7,6 +7,7 @@ import {
     DialogContent,
     DialogTitle,
     Divider,
+    Fade,
     Grid,
     MenuItem,
     TextField,
@@ -18,10 +19,7 @@ import type {
     RoundEventRequestDto,
     RoundEventType
 } from '../../../../../entities/roundEvent/roundEvent.dto';
-import type {
-    AdminMessageRequestDto,
-    RoundAdminMessageResponseDto
-} from '../../../../../entities/adminMessage/adminMessage.dto';
+import type {AdminMessageRequestDto,} from '../../../../../entities/adminMessage/adminMessage.dto';
 
 const defaultEventData: RoundEventRequestDto = {
     title: '',
@@ -33,31 +31,96 @@ const defaultEventData: RoundEventRequestDto = {
     platformUrl: ''
 };
 
+interface MessageInitialData {
+    id?: number;
+    content?: string;
+}
+
 export const CreateMessageDialog: React.FC<{
-    open: boolean; onClose: () => void; t: any; isLoading?: boolean;
-    initialData?: RoundAdminMessageResponseDto | null;
+    open: boolean;
+    onClose: () => void;
+    t: any;
+    isLoading?: boolean;
+    initialData?: MessageInitialData | null; // Гнучка типізація (працює з Global та Round DTO)
     onSubmit: (data: AdminMessageRequestDto) => Promise<void>;
 }> = ({ open, onClose, onSubmit, initialData, isLoading, t }) => {
     const [content, setContent] = useState('');
-    useEffect(() => { if (open) setContent(initialData?.content || ''); }, [open, initialData]);
+
+    // Скидаємо або встановлюємо контент при відкритті
+    useEffect(() => {
+        if (open) {
+            setContent(initialData?.content || '');
+        }
+    }, [open, initialData]);
+
+    const handleFormSubmit = () => {
+        if (content.trim()) {
+            onSubmit({ content: content.trim() });
+        }
+    };
 
     return (
-        <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-            <DialogTitle sx={{ fontWeight: 'bold' }}>
-                {initialData ? `✏️ ${t('announcements.messages.edit_title')}` : `📢 ${t('announcements.messages.create_title')}`}
+        <Dialog
+            open={open}
+            onClose={onClose}
+            fullWidth
+            maxWidth="sm"
+            TransitionComponent={Fade} // Використовуємо MUI Fade замість сторонніх бібліотек
+            transitionDuration={300}
+            PaperProps={{
+                sx: { borderRadius: 3 }
+            }}
+        >
+            <DialogTitle sx={{ fontWeight: 800, py: 2.5 }}>
+                {initialData?.id
+                    ? `✏️ ${t('announcements.messages.edit_title')}`
+                    : `📢 ${t('announcements.messages.create_title')}`
+                }
             </DialogTitle>
-            <DialogContent dividers>
+
+            <DialogContent dividers sx={{ py: 2 }}>
                 <TextField
-                    autoFocus margin="dense" fullWidth multiline rows={5}
+                    autoFocus
+                    margin="dense"
+                    fullWidth
+                    multiline
+                    rows={6}
                     placeholder={t('announcements.messages.placeholder')}
-                    value={content} onChange={(e) => setContent(e.target.value)}
-                    disabled={isLoading} sx={{ mt: 1 }}
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                    disabled={isLoading}
+                    variant="outlined"
+                    sx={{
+                        '& .MuiOutlinedInput-root': {
+                            borderRadius: 2,
+                            bgcolor: 'action.hover'
+                        }
+                    }}
                 />
             </DialogContent>
-            <DialogActions sx={{ p: 3 }}>
-                <Button onClick={onClose} disabled={isLoading}>{t('common.cancel')}</Button>
-                <Button variant="contained" onClick={() => onSubmit({ content })} disabled={isLoading || !content.trim()}>
-                    {initialData ? t('common.save') : t('common.post')}
+
+            <DialogActions sx={{ p: 2.5, gap: 1 }}>
+                <Button
+                    onClick={onClose}
+                    disabled={isLoading}
+                    sx={{ fontWeight: 700, textTransform: 'none' }}
+                >
+                    {t('common.cancel')}
+                </Button>
+                <Button
+                    variant="contained"
+                    onClick={handleFormSubmit}
+                    disabled={isLoading || !content.trim()}
+                    sx={{
+                        fontWeight: 700,
+                        textTransform: 'none',
+                        px: 4,
+                        borderRadius: 2,
+                        boxShadow: 'none',
+                        '&:hover': { boxShadow: 'none' }
+                    }}
+                >
+                    {initialData?.id ? t('common.save') : t('common.post')}
                 </Button>
             </DialogActions>
         </Dialog>

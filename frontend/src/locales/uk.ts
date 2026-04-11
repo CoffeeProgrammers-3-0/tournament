@@ -60,6 +60,7 @@ export const uk = {
         "goHome": "На головну",
         "close": "Закрити",
         "post": "Опублікувати",
+        "confirm_delete": "Ви впевнені, що хочете видалити це повідомлення?"
     },
     announcements: {
         "messages": {
@@ -84,6 +85,16 @@ export const uk = {
             "desc": "Опис",
             "link": "Посилання на зустріч",
             "location": "Локація (адреса)"
+        }
+    },
+    global: {
+        "page_title": "Центр сповіщень",
+        "tabs": {
+            "announcements": "Глобальні новини",
+            "notifications": "Мої сповіщення"
+        },
+        "notifications": {
+            "empty": "У вас поки немає особистих сповіщень"
         }
     },
     errors: {

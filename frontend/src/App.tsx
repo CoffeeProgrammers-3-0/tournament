@@ -22,6 +22,7 @@ import AuthInit from "./security/AuthInit.tsx";
 // Нові сторінки помилок
 import {Error403Page} from "./pages/errors/Error403Page.tsx";
 import {Error404Page} from "./pages/errors/Error404Page.tsx";
+import {GlobalAnnouncementsPage} from "./pages/notification/GlobalAnnouncementsPage.tsx";
 
 const App: React.FC = () => {
 
@@ -43,6 +44,8 @@ const App: React.FC = () => {
                     <Route path="/tournaments" element={<PageContainer><TournamentsPage/></PageContainer>}/>
                     <Route path="/tournaments/:id" element={<PageContainer><TournamentDetailsPage/></PageContainer>}/>
                     <Route path="/rounds/:id" element={<PageContainer><RoundDetailsPage/></PageContainer>}/>
+
+                    <Route path="/notifications" element={<PageContainer><GlobalAnnouncementsPage/></PageContainer>}/>
 
                     {/* --- ПРИВАТНІ: Для БУДЬ-ЯКОГО авторизованого користувача --- */}
                     <Route element={<PrivateRoute/>}>

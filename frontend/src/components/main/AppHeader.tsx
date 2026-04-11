@@ -1,7 +1,8 @@
-import {type MouseEvent, useState} from "react";
+import {type MouseEvent, useCallback, useEffect, useState} from "react";
 import {
     AppBar,
     Avatar,
+    Badge,
     Box,
     Button,
     Container,
@@ -37,6 +38,7 @@ import Cookies from "js-cookie";
 import AuthService from "../../services/auth/AuthService.ts";
 
 import NotificationsIcon from "@mui/icons-material/Notifications";
+import {notificationService} from "../../services/impl/NotificationService.ts";
 
 type role = 'ADMIN' | 'JURY' | 'USER' | null;
 
@@ -57,6 +59,8 @@ export const AppHeader = () => {
     const handleTournamentsClick = (e: MouseEvent<HTMLElement>) => setTournamentsAnchorEl(e.currentTarget);
     const handleLangClick = (e: MouseEvent<HTMLElement>) => setLangAnchorEl(e.currentTarget);
 
+    const [unseenCount, setUnseenCount] = useState<number>(0);
+
     const handleClose = () => {
         setProfileAnchorEl(null);
         setTournamentsAnchorEl(null);
@@ -67,6 +71,23 @@ export const AppHeader = () => {
         changeLanguage(lang);
         handleClose();
     };
+
+    const fetchUnseenCount = useCallback(async () => {
+        if (!isLoggedIn) return;
+        try {
+            const response = await notificationService.getUnseenCount();
+            // response зазвичай приходить як { value: number } або просто число залежно від вашого LongDto
+            setUnseenCount(typeof response === 'object' ? (response as any).value : response);
+        } catch (error) {
+            console.error("Failed to fetch unseen count", error);
+        }
+    }, [isLoggedIn]);
+
+    useEffect(() => {
+        fetchUnseenCount();
+        const interval = setInterval(fetchUnseenCount, 30000);
+        return () => clearInterval(interval);
+    }, [fetchUnseenCount]);
 
     // Контент бокового меню (для мобілок)
     const drawer = (
@@ -109,7 +130,9 @@ export const AppHeader = () => {
                 {isLoggedIn && (
                     <ListItem disablePadding>
                         <ListItemButton component={RouterLink} to="/notifications">
-                            <ListItemIcon><NotificationsIcon color="primary" /></ListItemIcon>
+                            <Badge badgeContent={unseenCount} color="error">
+                                <NotificationsIcon color="primary" />
+                            </Badge>
                             <ListItemText primary={t("header.notifications") || "Notifications"} />
                         </ListItemButton>
                     </ListItem>
@@ -193,7 +216,21 @@ export const AppHeader = () => {
                                 to="/notifications"
                                 sx={{ color: "text.secondary" }}
                             >
-                                <NotificationsIcon />
+                                <Badge
+                                    badgeContent={unseenCount}
+                                    color="error"
+                                    max={99}
+                                    sx={{
+                                        '& .MuiBadge-badge': {
+                                            fontSize: '0.65rem',
+                                            height: 16,
+                                            minWidth: 16,
+                                            fontWeight: 700
+                                        }
+                                    }}
+                                >
+                                    <NotificationsIcon />
+                                </Badge>
                             </IconButton>
                         )}
 
