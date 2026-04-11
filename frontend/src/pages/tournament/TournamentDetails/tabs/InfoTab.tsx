@@ -52,7 +52,7 @@ export const InfoTab = ({ state, formatDate, t }: any) => {
                                     <TextField fullWidth type="datetime-local" label={t("tournaments.admin.fields.endReg")} InputLabelProps={{ shrink: true }} value={state.editFormData.endRegistration} onChange={(e) => state.setEditFormData({ ...state.editFormData, endRegistration: e.target.value })} inputProps={{ min: state.editFormData.startRegistration || undefined }} />
                                 </Grid>
                                 <Grid size={{xs: 6, sm: 6}}>
-                                    <TextField fullWidth type="number" label={t("tournaments.admin.fields.maxTeams")} value={state.editFormData.maxCountOfTeam} onChange={(e) => state.setEditFormData({ ...state.editFormData, maxCountOfTeam: Number(e.target.value) })} inputProps={{ min: 1 }} />
+                                    <TextField fullWidth type="number" label={t("tournaments.admin.fields.maxTeams")} value={state.editFormData.maxCountOfTeam} onChange={(e) => state.setEditFormData({ ...state.editFormData, maxCountOfTeam: Number(e.target.value) })} inputProps={{ min: 3 }} />
                                 </Grid>
                                 <Grid size={{xs: 6, sm: 6}}>
                                     <TextField fullWidth type="number" label={t("tournaments.admin.fields.rounds")} value={state.editFormData.countOfRounds} onChange={(e) => state.setEditFormData({ ...state.editFormData, countOfRounds: Number(e.target.value) })} inputProps={{ min: 1 }} />

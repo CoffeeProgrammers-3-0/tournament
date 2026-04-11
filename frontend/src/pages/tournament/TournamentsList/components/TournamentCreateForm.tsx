@@ -151,7 +151,7 @@ export const TournamentCreateForm = ({ onCancel, onSuccess }: { onCancel: () => 
                             defaultValue={16}
                             onChange={handleChange}
                             required
-                            inputProps={{ min: 1 }}
+                            inputProps={{ min: 3 }}
                         />
                     </Grid>
                     <Grid size={{xs:12, sm: 6}}>
