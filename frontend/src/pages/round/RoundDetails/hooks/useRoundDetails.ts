@@ -13,6 +13,11 @@ import {teamTaskService} from "../../../../services/impl/TeamTaskService.ts";
 import type {TeamTaskResponseDto} from "../../../../entities/teamTask/teamTask.dto.ts";
 import {teamService} from "../../../../services/impl/TeamService.ts";
 import Cookies from "js-cookie";
+import type {PaginationListResponseDto} from "../../../../entities/wrappers/wrapper.dto.ts";
+import type {RoundEventListResponseDto} from "../../../../entities/roundEvent/roundEvent.dto.ts";
+import {roundEventService} from "../../../../services/impl/RoundEventService.ts";
+import type {RoundAdminMessageResponseDto} from "../../../../entities/adminMessage/adminMessage.dto.ts";
+import {roundAdminMessageService} from "../../../../services/impl/RoundAdminMessageService.ts";
 
 export const useRoundDetails = (id: string) => {
     const navigate = useNavigate();
@@ -169,6 +174,36 @@ export const useRoundDetails = (id: string) => {
         }
     }, [id]);
 
+    const [eventsData, setEventsData] = useState<PaginationListResponseDto<RoundEventListResponseDto> | null>(null);
+    const [messagesData, setMessagesData] = useState<PaginationListResponseDto<RoundAdminMessageResponseDto> | null>(null);
+    const [commsLoading, setCommsLoading] = useState(false);
+
+    const fetchEvents = useCallback(async (page: number = 0, size: number = 10) => {
+        if (!id) return;
+        try {
+            setCommsLoading(true);
+            const data = await roundEventService.getEventsByRound(Number(id), page, size);
+            setEventsData(data);
+        } catch (error) {
+            console.error("Failed to fetch round events", error);
+        } finally {
+            setCommsLoading(false);
+        }
+    }, [id]);
+
+    const fetchMessages = useCallback(async (page: number = 0, size: number = 10) => {
+        if (!id) return;
+        try {
+            setCommsLoading(true);
+            const data = await roundAdminMessageService.getByRound(Number(id), page, size);
+            setMessagesData(data);
+        } catch (error) {
+            console.error("Failed to fetch admin messages", error);
+        } finally {
+            setCommsLoading(false);
+        }
+    }, [id]);
+
     return {
         navigate,
         loading,
@@ -190,6 +225,12 @@ export const useRoundDetails = (id: string) => {
         fetchSubmissions,
         submissionId,
         fetchCheckSubmission,
-        tasks, tasksPage, tasksTotalPages, fetchTasks, fetchAllMyTeammates, myTeamUsers, hasMore, isNextPageLoading
+        tasks, tasksPage, tasksTotalPages, fetchTasks, fetchAllMyTeammates, myTeamUsers, hasMore,
+        isNextPageLoading,
+        eventsData,
+        messagesData,
+        commsLoading,
+        fetchEvents,
+        fetchMessages
     };
 };

@@ -84,7 +84,7 @@ export const AppHeader = () => {
                 )}
                 {isLoggedIn && (role === 'ADMIN' || role === 'USER') && (
                     <ListItem disablePadding>
-                        <ListItemButton component={RouterLink} to={role === 'ADMIN' ? "/admin/teams" : "/teams"}>
+                        <ListItemButton component={RouterLink} to={"/teams"}>
                             <ListItemIcon><GroupsIcon /></ListItemIcon>
                             <ListItemText primary={role === 'ADMIN' ? t("header.allTeams") : t("header.myTeam")} />
                         </ListItemButton>
@@ -154,7 +154,7 @@ export const AppHeader = () => {
                             </Button>
                         )}
                         {isLoggedIn && (role === 'ADMIN' || role === 'USER') && (
-                            <Button color="inherit" component={RouterLink} to={role === 'ADMIN' ? "/admin/teams" : "/teams"} sx={{ textTransform: "none" }} startIcon={<GroupsIcon sx={{ opacity: 0.7 }} />}>
+                            <Button color="inherit" component={RouterLink} to={"/teams"} sx={{ textTransform: "none" }} startIcon={<GroupsIcon sx={{ opacity: 0.7 }} />}>
                                 {role === 'ADMIN' ? t("header.allTeams") : t("header.myTeam")}
                             </Button>
                         )}

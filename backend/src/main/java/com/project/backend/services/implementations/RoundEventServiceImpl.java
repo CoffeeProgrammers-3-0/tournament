@@ -25,7 +25,7 @@ public class RoundEventServiceImpl implements RoundEventService {
     @Override
     public Page<RoundEvent> findAll(Integer page, Integer size, Long roundId) {
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(
-                Sort.Order.desc("date"),
+                Sort.Order.desc("startDate"),
                 Sort.Order.desc("id")
         ));
         return roundEventRepository.findAll(RoundEventSpecification.byRoundId(roundId), pageRequest);

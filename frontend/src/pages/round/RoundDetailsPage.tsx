@@ -14,6 +14,7 @@ import {
 import {useTranslation} from "react-i18next";
 import Cookies from "js-cookie";
 import {useNavigate, useParams} from "react-router-dom";
+import {useEffect} from "react";
 
 import {useRoundDetails} from "./RoundDetails/hooks/useRoundDetails";
 import {useRoundEditors} from "./RoundDetails/hooks/useRoundEditors";
@@ -32,23 +33,25 @@ import {UniversalConfirmDialog} from "./RoundDetails/components/UniversalConfirm
 import {ErrorMessages} from "../../components/main/ErrorMessages.tsx";
 import {TaskDialog} from "./RoundDetails/components/tasks/TaskDialog.tsx";
 import {RoundTasksTab} from "./RoundDetails/components/tasks/RoundTasksTab.tsx";
-import {useEffect} from "react";
 
-export const RoundDetailsPage = () => {
-    const { t } = useTranslation();
+import {RoundAnnouncementsTab} from "./RoundDetails/components/events/RoundAnnouncementsTab.tsx";
+import {CreateEventDialog, CreateMessageDialog} from "./RoundDetails/components/events/AnnouncementDialogs.tsx";
+
+const RoundDetailsPage = () => {
+    const {t} = useTranslation();
     const isAdmin = Cookies.get("role") === "ADMIN";
     const isUser = Cookies.get("role") === "USER";
-    const { id } = useParams<{ id: string }>();
+    const {id} = useParams<{ id: string }>();
     const navigate = useNavigate();
 
     if (!id || isNaN(Number(id)) || Number(id) < 1) {
         window.location.replace('/404');
-        return;
+        return null; // Повертаємо null, щоб React не сварився під час редіректу
     }
 
     const details = useRoundDetails(id);
     const editors = useRoundEditors({
-        id,
+        id: id,
         roundData: details.roundData,
         setRoundData: details.setRoundData,
         fetchCategories: details.fetchCategories,
@@ -57,28 +60,35 @@ export const RoundDetailsPage = () => {
         fetchTasks: details.fetchTasks,
         tasksPage: details.tasksPage,
         leaderboard: details.leaderboard,
+        fetchEvents: details.fetchEvents,
+        fetchMessages: details.fetchMessages,
     });
 
     const TABS = [
-        { id: "info", label: t("round_details.tabs.info"), show: true },
-        { id: "categories", label: t("round_details.tabs.categories"), show: true },
-        { id: "jury", label: t("round_details.tabs.jury"), show: true },
+        {id: "info", label: t("round_details.tabs.info"), show: true},
+        // НОВА ВКЛАДКА ДОСТУПНА ВСІМ
+        {id: "announcements", label: t("round_details.tabs.announcements", "Оголошення"), show: true},
+        {id: "categories", label: t("round_details.tabs.categories"), show: true},
+        {id: "jury", label: t("round_details.tabs.jury"), show: true},
         {
             id: "leaderboard",
             label: t("round_details.tabs.leaderboard"),
             show: isAdmin || details.roundData?.status === "EVALUATED" || details.roundData?.status === "SUBMISSION_CLOSED"
         },
-        { id: "submissions", label: t("round_details.tabs.submissions"), show: isAdmin },
-        { id: "tasks", label: t("round_details.tabs.tasks"), show: isUser },
+        {id: "submissions", label: t("round_details.tabs.submissions"), show: isAdmin},
+        {id: "tasks", label: t("round_details.tabs.tasks"), show: isUser},
     ].filter(tab => tab.show);
 
-    // Знаходимо реальний індекс активного таба в масиві TABS
     const activeTabId = TABS[details.tabValue]?.id;
 
     useEffect(() => {
         if (!activeTabId) return;
 
         switch (activeTabId) {
+            case "announcements": // Завантажуємо оголошення при відкритті вкладки
+                details.fetchEvents();
+                details.fetchMessages();
+                break;
             case "categories":
                 details.fetchCategories();
                 break;
@@ -89,26 +99,27 @@ export const RoundDetailsPage = () => {
                 details.loadLeaderboard(true);
                 break;
             case "submissions":
-                details.fetchSubmissions(0); // Скидаємо на 0 сторінку при переході
+                details.fetchSubmissions(0);
                 break;
             case "tasks":
-                details.fetchTasks(0); // Скидаємо на 0 сторінку при переході
-                details.fetchAllMyTeammates()
+                details.fetchTasks(0);
+                details.fetchAllMyTeammates();
                 break;
             default:
                 break;
         }
-    }, [activeTabId]); // Реагує на зміну активного табу
+    }, [activeTabId]);
 
-    if (details.loading) return <Box sx={{ display: "flex", justifyContent: "center", mt: 10 }}><CircularProgress /></Box>;
-    if (!details.roundData) return <Typography sx={{ textAlign: "center", mt: 5 }}>{t("round_details.not_found")}</Typography>;
+    if (details.loading) return <Box sx={{display: "flex", justifyContent: "center", mt: 10}}><CircularProgress/></Box>;
+    if (!details.roundData) return <Typography
+        sx={{textAlign: "center", mt: 5}}>{t("round_details.not_found")}</Typography>;
 
     return (
-        <Box sx={{ pb: 8, pt: 1 }}>
+        <Box sx={{pb: 8, pt: 1}}>
             <RoundHeader
                 roundData={details.roundData}
                 isAdmin={isAdmin}
-                isUser={Cookies.get("role") === "USER"}
+                isUser={isUser}
                 isEditingInfo={editors.isEditingInfo}
                 onEdit={() => {
                     editors.setEditFormData({
@@ -136,178 +147,164 @@ export const RoundDetailsPage = () => {
                     if (editors.isEditingInfo) editors.setIsEditingInfo(false);
                     details.setTabValue(v);
                 }}
-                sx={{ mb: 4 }}
+                sx={{mb: 4}}
                 textColor="inherit"
                 indicatorColor="primary"
                 variant="scrollable"
             >
-                {TABS.map((tab) => <Tab key={tab.id} label={tab.label} />)}
+                {TABS.map((tab) => <Tab key={tab.id} label={tab.label}/>)}
             </Tabs>
 
-            {/* Рендеринг контенту залежно від ID активного таба */}
+            {/* Рендеринг контенту */}
             {activeTabId === "info" && (
-                <RoundInfoTab roundData={details.roundData} isAdmin={isAdmin} isEditingInfo={editors.isEditingInfo} editFormData={editors.editFormData} setEditFormData={editors.setEditFormData} handleStatusChange={editors.handleStatusChange} handleSaveUpdate={editors.handleSaveUpdate} cancelEditing={() => editors.setIsEditingInfo(false)} t={t} errors={editors.errors}/>
+                <RoundInfoTab roundData={details.roundData} isAdmin={isAdmin} isEditingInfo={editors.isEditingInfo}
+                              editFormData={editors.editFormData} setEditFormData={editors.setEditFormData}
+                              handleStatusChange={editors.handleStatusChange}
+                              handleSaveUpdate={editors.handleSaveUpdate}
+                              cancelEditing={() => editors.setIsEditingInfo(false)} t={t} errors={editors.errors}/>
             )}
-            {activeTabId === "categories" && (
-                <RoundCategoriesTab
-                    categories={details.categories}
-                    loadingTab={details.loadingTab}
-                    isAdmin={isAdmin}
-                    isReadOnly={details.roundData?.status === "EVALUATED"}
 
-                    onOpenCategoryModal={() => editors.setCategoryModalOpen(true)}
-                    onDeleteCategory={editors.handleDeleteCategory}
-                    onOpenCriteriaModal={(cid) => { editors.setSelectedCategoryId(cid); editors.setCriteriaModalOpen(true); }}
-                    onDeleteCriteria={editors.handleDeleteCriteria}
+            {activeTabId === "announcements" && (
+                <RoundAnnouncementsTab
+                    eventsData={details.eventsData}
+                    messagesData={details.messagesData}
+                    loadingTab={details.commsLoading}
+                    isAdmin={isAdmin}
+                    eventsPage={editors.announcements.eventsPage}
+                    messagesPage={editors.announcements.messagesPage}
+                    onEventsPageChange={editors.announcements.setEventsPage}
+                    onMessagesPageChange={editors.announcements.setMessagesPage}
+                    // CRUD Actions
+                    onOpenCreateEvent={() => editors.announcements.handleOpenEventModal()}
+                    onOpenCreateMessage={() => editors.announcements.handleOpenMessageModal()}
+                    onEditEvent={editors.announcements.handleOpenEventModal}
+                    onEditMessage={editors.announcements.handleOpenMessageModal}
+                    onDeleteEvent={editors.announcements.handleDeleteEvent}
+                    onDeleteMessage={editors.announcements.handleDeleteMessage}
                     t={t}
-                    errors={editors.errors}
                 />
+            )}
+
+            {activeTabId === "categories" && (
+                <RoundCategoriesTab categories={details.categories} loadingTab={details.loadingTab} isAdmin={isAdmin}
+                                    isReadOnly={details.roundData?.status === "EVALUATED"}
+                                    onOpenCategoryModal={() => editors.setCategoryModalOpen(true)}
+                                    onDeleteCategory={editors.handleDeleteCategory} onOpenCriteriaModal={(cid) => {
+                    editors.setSelectedCategoryId(cid);
+                    editors.setCriteriaModalOpen(true);
+                }} onDeleteCriteria={editors.handleDeleteCriteria} t={t} errors={editors.errors}/>
             )}
             {activeTabId === "jury" && (
-                <RoundJuryTab jury={details.jury} loadingTab={details.loadingTab} isAdmin={isAdmin} onOpenJuryModal={editors.handleOpenJuryModal} onRemoveJury={editors.handleRemoveJury} t={t} errors={editors.errors}/>
+                <RoundJuryTab jury={details.jury} loadingTab={details.loadingTab} isAdmin={isAdmin}
+                              onOpenJuryModal={editors.handleOpenJuryModal} onRemoveJury={editors.handleRemoveJury}
+                              t={t} errors={editors.errors}/>
             )}
             {activeTabId === "leaderboard" && (
-                <RoundTeamsTab
-                    leaderboard={details.leaderboard}
-                    setLeaderboard={details.setLeaderboard}
-                    loadingTab={details.loadingTab}
-                    hasMore={details.hasMore}
-                    isNextPageLoading={details.isNextPageLoading}
-                    onLoadMore={() => details.loadLeaderboard(false)} // false means it's a pagination load
-                    roundData={details.roundData!}
-                    onOpenStats={editors.handleOpenStats}
-                    navigate={details.navigate}
-                    t={t}
-                    isAdmin={isAdmin}
-                    onOpenAddMissingTeamsModal={editors.handleOpenAddMissingModal}
-                    onOpenAdvanceTeamsModal={() => editors.handleOpenAdvanceModal()}
-                    onUnassignTeam={editors.handleUnassignTeam}
-                    onExportLeaderboard={editors.handleExportLeaderboard}
-                    isExporting={editors.isExporting}
-                    errors={editors.errors}
-                />
+                <RoundTeamsTab leaderboard={details.leaderboard} setLeaderboard={details.setLeaderboard}
+                               loadingTab={details.loadingTab} hasMore={details.hasMore}
+                               isNextPageLoading={details.isNextPageLoading}
+                               onLoadMore={() => details.loadLeaderboard(false)} roundData={details.roundData!}
+                               onOpenStats={editors.handleOpenStats} navigate={details.navigate} t={t} isAdmin={isAdmin}
+                               onOpenAddMissingTeamsModal={editors.handleOpenAddMissingModal}
+                               onOpenAdvanceTeamsModal={() => editors.handleOpenAdvanceModal()}
+                               onUnassignTeam={editors.handleUnassignTeam}
+                               onExportLeaderboard={editors.handleExportLeaderboard} isExporting={editors.isExporting}
+                               errors={editors.errors}/>
             )}
             {activeTabId === "submissions" && (
-                <RoundSubmissionsTab submissions={details.submissions} loadingTab={details.loadingTab} page={details.submissionsPage} totalPages={details.submissionsTotalPages} onPageChange={details.fetchSubmissions} onAutoAssign={() => editors.setAutoAssignModalOpen(true)} onAssignManual={editors.handleOpenSubmissionJuryModal} onRemoveJury={editors.handleRemoveJuryFromSubmission} t={t} errors={editors.errors}/>
+                <RoundSubmissionsTab submissions={details.submissions} loadingTab={details.loadingTab}
+                                     page={details.submissionsPage} totalPages={details.submissionsTotalPages}
+                                     onPageChange={details.fetchSubmissions}
+                                     onAutoAssign={() => editors.setAutoAssignModalOpen(true)}
+                                     onAssignManual={editors.handleOpenSubmissionJuryModal}
+                                     onRemoveJury={editors.handleRemoveJuryFromSubmission} t={t}
+                                     errors={editors.errors}/>
             )}
             {activeTabId === "tasks" && (
-                <RoundTasksTab
-                    tasks={details.tasks}
-                    loadingTab={details.loadingTab}
-                    onOpenTaskModal={() => editors.setTaskModalOpen(true)} // Тепер просто відкриваємо
-                    onDeleteTask={editors.handleDeleteTask}
-                    onUpdateMeta={editors.handleUpdateTaskMeta}
-                    onUpdateTaskText={editors.handleUpdateTaskText} // <--- НОВЕ
-                    t={t}
-                    onAssignTeammate={editors.handleAssignTeammate}
-                    myTeamUsers={details.myTeamUsers || []}
-                />
+                <RoundTasksTab tasks={details.tasks} loadingTab={details.loadingTab}
+                               onOpenTaskModal={() => editors.setTaskModalOpen(true)}
+                               onDeleteTask={editors.handleDeleteTask} onUpdateMeta={editors.handleUpdateTaskMeta}
+                               onUpdateTaskText={editors.handleUpdateTaskText} t={t}
+                               onAssignTeammate={editors.handleAssignTeammate} myTeamUsers={details.myTeamUsers || []}/>
             )}
 
-            {/* Dialogs */}
-            <RoundStatsDialog open={editors.statsModalOpen} onClose={() => editors.setStatsModalOpen(false)} selectedStats={editors.selectedStats} statsViewMode={editors.statsViewMode} setStatsViewMode={editors.setStatsViewMode} aggregatedCriteria={editors.aggregatedCriteria} juryList={editors.juryList} criteriaList={editors.criteriaList} t={t} errors={editors.errors}/>
-            <CategoryDialog open={editors.categoryModalOpen} onClose={() => editors.setCategoryModalOpen(false)} newCategoryData={editors.newCategoryData} setNewCategoryData={editors.setNewCategoryData} onSubmit={editors.handleAddCategory} t={t} errors={editors.errors}/>
-            <CriteriaDialog open={editors.criteriaModalOpen} onClose={() => editors.setCriteriaModalOpen(false)} newCriteriaText={editors.newCriteriaText} setNewCriteriaText={editors.setNewCriteriaText} onSubmit={editors.handleAddCriteria} t={t} errors={editors.errors}/>
-
-            {/* Модалка для Глобального журі раунду */}
-            <JuryDialog
-                open={editors.juryModalOpen}
-                onClose={() => editors.setJuryModalOpen(false)}
-                availableJuries={editors.availableJuries}
-                selectedJury={editors.selectedJuryToAssign}
-                setSelectedJury={editors.setSelectedJuryToAssign}
-                onSubmit={editors.handleAssignJury}
-                t={t}
-                inputValue={editors.inputValue}
-                onInputChange={editors.handleSearchChange}
-                loading={editors.isSearching}
-                // Пагінація
-                page={editors.juryPage}
-                totalPages={editors.juryTotalPages}
-                onPageChange={(_, newPage) => editors.setJuryPage(newPage)}
-                // Блокуємо тих, хто вже призначений в раунд
-                disabledIds={details.jury.map(j => j.id)}
-                errors={editors.errors}
-            />
-
-            {/* Модалка для Сабмішну */}
-            <JuryDialog
-                open={editors.submissionJuryModalOpen}
-                onClose={() => editors.setSubmissionJuryModalOpen(false)}
-                availableJuries={editors.availableSubmissionJuries}
-                selectedJury={editors.selectedJuryToAssign}
-                setSelectedJury={editors.setSelectedJuryToAssign}
-                onSubmit={editors.handleAssignJuryToSubmission}
-                t={t}
-                inputValue={editors.inputValue}
-                onInputChange={editors.handleSearchChange}
-                loading={editors.isSubJurySearching}
-                // Пагінація
-                page={editors.subJuryPage}
-                totalPages={editors.subJuryTotalPages}
-                onPageChange={(_, newPage) => editors.setSubJuryPage(newPage)}
-                // Тут disabledIds не потрібен, бо ендпоінт getAvailableJuries
-                // і так повертає лише тих, кого можна додати.
-                errors={editors.errors}
-            />
-
-            <TaskDialog
-                open={editors.taskModalOpen}
-                onClose={() => editors.setTaskModalOpen(false)}
-                formData={editors.taskFormData}
-                setFormData={editors.setTaskFormData}
-                onSubmit={editors.handleSaveTask}
-                isLoading={editors.isTaskLoading}
-                t={t}
-                errors={editors.errors}
-            />
-
-            {/* Teams Management Modals */}
-            <AddMissingTeamsModal
-                open={editors.addMissingModalOpen}
-                onClose={() => editors.setAddMissingModalOpen(false)}
-                teams={editors.missingTeams}
-                selectedIds={editors.selectedMissingIds}
-                onSelect={(tid: number) => editors.setSelectedMissingIds(prev => prev.includes(tid) ? prev.filter(x => x !== tid) : [...prev, tid])}
-                onSelectAll={(ids: number[]) => editors.setSelectedMissingIds(ids)} // Added this
-                onConfirm={editors.handleConfirmAddMissing}
-                isLoading={editors.isTeamsLoading}
-                errors={editors.errors}
-                t={t}
-            />
-
-            <AdvanceTeamsModal
-                open={editors.advanceModalOpen}
-                onClose={() => editors.setAdvanceModalOpen(false)}
-                leaderboard={details.leaderboard}
-                selectedIds={editors.selectedAdvanceIds}
-                onSelect={(tid: number) => editors.setSelectedAdvanceIds(prev => prev.includes(tid) ? prev.filter(x => x !== tid) : [...prev, tid])}
-                rounds={editors.tournamentRounds}
-                targetRound={editors.targetAdvanceRoundId}
-                setTargetRound={editors.setTargetAdvanceRoundId}
-                onConfirm={editors.handleConfirmAdvance}
-                isLoading={editors.isTeamsLoading}
-                errors={editors.errors}
-                t={t}
-            />
-
+            {/* ІСНУЮЧІ МОДАЛКИ (згорнуто для компактності огляду, залишайте як було) */}
+            <RoundStatsDialog open={editors.statsModalOpen} onClose={() => editors.setStatsModalOpen(false)}
+                              selectedStats={editors.selectedStats} statsViewMode={editors.statsViewMode}
+                              setStatsViewMode={editors.setStatsViewMode}
+                              aggregatedCriteria={editors.aggregatedCriteria} juryList={editors.juryList}
+                              criteriaList={editors.criteriaList} t={t} errors={editors.errors}/>
+            <CategoryDialog open={editors.categoryModalOpen} onClose={() => editors.setCategoryModalOpen(false)}
+                            newCategoryData={editors.newCategoryData} setNewCategoryData={editors.setNewCategoryData}
+                            onSubmit={editors.handleAddCategory} t={t} errors={editors.errors}/>
+            <CriteriaDialog open={editors.criteriaModalOpen} onClose={() => editors.setCriteriaModalOpen(false)}
+                            newCriteriaText={editors.newCriteriaText} setNewCriteriaText={editors.setNewCriteriaText}
+                            onSubmit={editors.handleAddCriteria} t={t} errors={editors.errors}/>
+            <JuryDialog open={editors.juryModalOpen} onClose={() => editors.setJuryModalOpen(false)}
+                        availableJuries={editors.availableJuries} selectedJury={editors.selectedJuryToAssign}
+                        setSelectedJury={editors.setSelectedJuryToAssign} onSubmit={editors.handleAssignJury} t={t}
+                        inputValue={editors.inputValue} onInputChange={editors.handleSearchChange}
+                        loading={editors.isSearching} page={editors.juryPage} totalPages={editors.juryTotalPages}
+                        onPageChange={(_, newPage) => editors.setJuryPage(newPage)}
+                        disabledIds={details.jury.map(j => j.id)} errors={editors.errors}/>
+            <JuryDialog open={editors.submissionJuryModalOpen} onClose={() => editors.setSubmissionJuryModalOpen(false)}
+                        availableJuries={editors.availableSubmissionJuries} selectedJury={editors.selectedJuryToAssign}
+                        setSelectedJury={editors.setSelectedJuryToAssign}
+                        onSubmit={editors.handleAssignJuryToSubmission} t={t} inputValue={editors.inputValue}
+                        onInputChange={editors.handleSearchChange} loading={editors.isSubJurySearching}
+                        page={editors.subJuryPage} totalPages={editors.subJuryTotalPages}
+                        onPageChange={(_, newPage) => editors.setSubJuryPage(newPage)} errors={editors.errors}/>
+            <TaskDialog open={editors.taskModalOpen} onClose={() => editors.setTaskModalOpen(false)}
+                        formData={editors.taskFormData} setFormData={editors.setTaskFormData}
+                        onSubmit={editors.handleSaveTask} isLoading={editors.isTaskLoading} t={t}
+                        errors={editors.errors}/>
+            <AddMissingTeamsModal open={editors.addMissingModalOpen}
+                                  onClose={() => editors.setAddMissingModalOpen(false)} teams={editors.missingTeams}
+                                  selectedIds={editors.selectedMissingIds}
+                                  onSelect={(tid: number) => editors.setSelectedMissingIds(prev => prev.includes(tid) ? prev.filter(x => x !== tid) : [...prev, tid])}
+                                  onSelectAll={(ids: number[]) => editors.setSelectedMissingIds(ids)}
+                                  onConfirm={editors.handleConfirmAddMissing} isLoading={editors.isTeamsLoading}
+                                  errors={editors.errors} t={t}/>
+            <AdvanceTeamsModal open={editors.advanceModalOpen} onClose={() => editors.setAdvanceModalOpen(false)}
+                               leaderboard={details.leaderboard} selectedIds={editors.selectedAdvanceIds}
+                               onSelect={(tid: number) => editors.setSelectedAdvanceIds(prev => prev.includes(tid) ? prev.filter(x => x !== tid) : [...prev, tid])}
+                               rounds={editors.tournamentRounds} targetRound={editors.targetAdvanceRoundId}
+                               setTargetRound={editors.setTargetAdvanceRoundId} onConfirm={editors.handleConfirmAdvance}
+                               isLoading={editors.isTeamsLoading} errors={editors.errors} t={t}/>
 
             <Dialog open={editors.autoAssignModalOpen} onClose={() => editors.setAutoAssignModalOpen(false)}>
                 <DialogTitle>{t("round_details.submissions.auto_assign_title")}</DialogTitle>
                 <DialogContent>
                     <ErrorMessages errors={editors.errors}/>
-                    <TextField type="number" fullWidth value={editors.kValue} onChange={(e) => editors.setKValue(Number(e.target.value))} inputProps={{ min: 1 }} />
+                    <TextField type="number" fullWidth value={editors.kValue}
+                               onChange={(e) => editors.setKValue(Number(e.target.value))} inputProps={{min: 1}}/>
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => editors.setAutoAssignModalOpen(false)}>{t("common.cancel")}</Button>
-                    <Button variant="contained" onClick={editors.handleAutoAssignJuries}>{t("common.yes_confirm")}</Button>
+                    <Button variant="contained"
+                            onClick={editors.handleAutoAssignJuries}>{t("common.yes_confirm")}</Button>
                 </DialogActions>
             </Dialog>
 
-            <UniversalConfirmDialog
-                config={editors.confirmDialog}
-                onClose={editors.closeConfirm}
+            <CreateMessageDialog
+                open={editors.announcements.messageModalOpen}
+                onClose={() => editors.announcements.setMessageModalOpen(false)}
+                onSubmit={editors.announcements.handleSaveMessage}
+                initialData={editors.announcements.selectedMessage}
+                isLoading={editors.announcements.actionLoading}
+                t={t}
             />
+
+            <CreateEventDialog
+                open={editors.announcements.eventModalOpen}
+                onClose={() => editors.announcements.setEventModalOpen(false)}
+                onSubmit={editors.announcements.handleSaveEvent}
+                initialData={editors.announcements.selectedEvent}
+                isLoading={editors.announcements.actionLoading}
+                t={t} isAdmin={isAdmin}            />
+
+            <UniversalConfirmDialog config={editors.confirmDialog} onClose={editors.closeConfirm}/>
         </Box>
     );
 };
+export default RoundDetailsPage

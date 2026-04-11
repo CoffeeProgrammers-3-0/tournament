@@ -10,7 +10,7 @@ export interface AdminMessageRequestDto {
 export interface GlobalAdminMessageResponseDto {
     id: number;
     creator: UserResponseDto;
-    date: string; // ISO format
+    date: string;
     targetType: AdminMessageTargetType;
     content: string;
 }
@@ -18,7 +18,7 @@ export interface GlobalAdminMessageResponseDto {
 export interface RoundAdminMessageResponseDto {
     id: number;
     creator: UserResponseDto;
-    date: string; // ISO format
+    date: string;
     targetType: AdminMessageTargetType;
     content: string;
     round: RoundListResponseDto;

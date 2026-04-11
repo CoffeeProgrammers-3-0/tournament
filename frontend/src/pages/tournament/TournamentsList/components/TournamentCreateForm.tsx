@@ -126,6 +126,7 @@ export const TournamentCreateForm = ({ onCancel, onSuccess }: { onCancel: () => 
                             type="datetime-local"
                             fullWidth
                             InputLabelProps={{ shrink: true }}
+                            inputProps={{max: formData.endRegistration || undefined}}
                             onChange={handleChange}
                             required
                         />

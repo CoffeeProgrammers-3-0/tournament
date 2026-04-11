@@ -29,6 +29,7 @@ import type {
     TeamTaskResponseDto
 } from "../../../../entities/teamTask/teamTask.dto.ts";
 import {teamTaskService} from "../../../../services/impl/TeamTaskService.ts";
+import {useRoundAnnouncements} from "./useRoundAnnouncements.ts";
 
 const formatToLocalDateTime = (dateTimeStr: string) => {
     if (!dateTimeStr) return "";
@@ -49,7 +50,9 @@ type Params = {
     fetchSubmissions: () => Promise<void>;
     fetchTasks: (page?: number, showLoader?: boolean) => Promise<void>;
     tasksPage: number;
-    leaderboard: TeamLeaderboardResponseDto[]
+    leaderboard: TeamLeaderboardResponseDto[];
+    fetchEvents: (page: number) => Promise<void>; // Оновлено
+    fetchMessages: (page: number) => Promise<void>; // Оновлено
 };
 
 type ConfirmDialogConfig = {
@@ -61,15 +64,14 @@ type ConfirmDialogConfig = {
     isLoading?: boolean;
 };
 
-export const useRoundEditors = ({id, roundData, setRoundData, fetchCategories, fetchJury, fetchSubmissions, fetchTasks, tasksPage, leaderboard }: Params) => {
+export const useRoundEditors = ({id, roundData, setRoundData, fetchCategories, fetchJury, fetchSubmissions, fetchTasks, tasksPage, leaderboard, fetchEvents, fetchMessages }: Params) => {
     const roundId = Number(id);
     const [errors, setErrors] = useState<string[]>([]);
     const clearErrors = useCallback(() => setErrors([]), []);
 
-    // --- Обгортка для автоматичного очищення помилок при закритті модалок ---
     const withErrorClear = useCallback((setter: React.Dispatch<React.SetStateAction<boolean>>) => {
         return (value: boolean | ((prev: boolean) => boolean)) => {
-            if (value === false) clearErrors(); // Очищаємо помилки, якщо вікно закривається
+            if (value === false) clearErrors();
             setter(value);
         };
     }, [clearErrors]);
@@ -90,6 +92,10 @@ export const useRoundEditors = ({id, roundData, setRoundData, fetchCategories, f
     const [submissionJuryModalOpen, setSubmissionJuryModalOpen] = useState(false);
     const [addMissingModalOpen, setAddMissingModalOpen] = useState(false);
     const [advanceModalOpen, setAdvanceModalOpen] = useState(false);
+
+    // ДОДАНО: Стани для нових модалок
+    const [messageModalOpen, setMessageModalOpen] = useState(false);
+    const [eventModalOpen, setEventModalOpen] = useState(false);
 
     // --- Search & Selection States ---
     const [availableJuries, setAvailableJuries] = useState<UserResponseDto[]>([]);
@@ -121,34 +127,23 @@ export const useRoundEditors = ({id, roundData, setRoundData, fetchCategories, f
     const [selectedTask, setSelectedTask] = useState<TeamTaskResponseDto | null>(null);
     const [isTaskLoading, setIsTaskLoading] = useState(false);
     const [taskFormData, setTaskFormData] = useState<TeamTaskRequestDto>({
-        title: "",
-        description: "",
-        status: "TODO",
-        type: "FEATURE",
-        priority: "MEDIUM"
+        title: "", description: "", status: "TODO", type: "FEATURE", priority: "MEDIUM"
     });
 
-
     const [confirmDialog, setConfirmDialog] = useState<ConfirmDialogConfig>({
-        open: false,
-        title: "",
-        description: "",
-        onConfirm: () => {},
-        confirmColor: "primary",
-        isLoading: false
+        open: false, title: "", description: "", onConfirm: () => {}, confirmColor: "primary", isLoading: false
     });
 
     // --- Confirm Dialog Helpers ---
     const closeConfirm = useCallback(() => {
         setConfirmDialog(prev => ({ ...prev, open: false }));
-        clearErrors(); // Очищаємо помилки при закритті діалогу підтвердження
+        clearErrors();
     }, [clearErrors]);
 
     const triggerConfirm = useCallback((config: Omit<ConfirmDialogConfig, 'open'>) => {
         setConfirmDialog({ ...config, open: true });
     }, []);
 
-    // --- Helper to handle errors ---
     const handleError = useCallback((error: any, defaultMessage: string) => {
         const messages = error.response?.data?.messages;
         setErrors(Array.isArray(messages) ? messages : [defaultMessage]);
@@ -657,14 +652,19 @@ export const useRoundEditors = ({id, roundData, setRoundData, fetchCategories, f
         }
     }, [fetchTasks, tasksPage, handleError]);
 
-
+    const announcements = useRoundAnnouncements(
+        roundId,
+        fetchEvents,
+        fetchMessages,
+        { clearErrors, handleError, triggerConfirm, closeConfirm }
+    );
 
 
     return {
         // Errors
         errors, clearErrors,
 
-        // Wrapped Modals (автоматично очищають помилки при закритті)
+        // Wrapped Modals
         isEditingInfo, setIsEditingInfo: withErrorClear(setIsEditingInfo),
         categoryModalOpen, setCategoryModalOpen: withErrorClear(setCategoryModalOpen),
         juryModalOpen, setJuryModalOpen: withErrorClear(setJuryModalOpen),
@@ -707,6 +707,11 @@ export const useRoundEditors = ({id, roundData, setRoundData, fetchCategories, f
         taskFormData, setTaskFormData,
         isTaskLoading, selectedTask,
         handleOpenTaskModal, handleSaveTask, handleDeleteTask,
-        handleUpdateTaskMeta, handleAssignMe, handleAssignTeammate, handleUpdateTaskText
+        handleUpdateTaskMeta, handleAssignMe, handleAssignTeammate, handleUpdateTaskText,
+
+        messageModalOpen, setMessageModalOpen: withErrorClear(setMessageModalOpen),
+        eventModalOpen, setEventModalOpen: withErrorClear(setEventModalOpen),
+
+        announcements,
     };
 };

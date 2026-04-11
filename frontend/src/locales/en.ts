@@ -57,7 +57,34 @@ export const en = {
         "warning": "Be carefully with changing status. System will change data auto to correct",
         "ok": "Ok",
         "points_short": "pts",
-        "goHome": "Go to Homepage"
+        "goHome": "Go to Homepage",
+        "close": "Close",
+        "post": "Post",
+    },
+    announcements: {
+        "messages": {
+            "title": "Announcements",
+            "add": "Create",
+            "empty": "No announcements yet",
+            "create_title": "New Announcement",
+            "edit_title": "Edit Announcement",
+            "placeholder": "Write something important for teams..."
+        },
+        "events": {
+            "title": "Schedule",
+            "add": "Event",
+            "empty": "The schedule is empty",
+            "view_title": "Event Details",
+            "create_title": "Create Event",
+            "edit_title": "Edit Event",
+            "label_title": "Event Title",
+            "type": "Event Type",
+            "start": "Start Time",
+            "end": "End Time",
+            "desc": "Description",
+            "link": "Meeting Link",
+            "location": "Location (Address)"
+        }
     },
     errors: {
         "403": {
