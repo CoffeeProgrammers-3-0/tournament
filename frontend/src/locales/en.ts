@@ -56,7 +56,18 @@ export const en = {
         "errors": "Solve this errors",
         "warning": "Be carefully with changing status. System will change data auto to correct",
         "ok": "Ok",
-        "points_short": "pts"
+        "points_short": "pts",
+        "goHome": "Go to Homepage"
+    },
+    errors: {
+        "403": {
+            "title": "Access Denied",
+            "description": "You do not have permission to view this page. Please contact an administrator if you believe this is an error."
+        },
+        "404": {
+            "title": "Oops! Page not found",
+            "description": "The page you are looking for might have been removed, had its name changed, or is temporarily unavailable."
+        }
     },
 
     home: {
