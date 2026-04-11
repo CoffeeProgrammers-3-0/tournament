@@ -1,18 +1,28 @@
-import React from 'react';
-import {Navigate, Outlet, useLocation} from 'react-router-dom';
-import {useAuth} from './useAuth.tsx';
+import {Navigate, Outlet} from "react-router-dom";
+import Cookies from "js-cookie";
 
-const PrivateRoute: React.FC = () => {
-    const { isAuthenticated } = useAuth();
-    const location = useLocation();
+type Role = 'ADMIN' | 'JURY' | 'USER';
 
-    // If they have a token, let them in.
-    if (isAuthenticated()) {
-        return <Outlet />;
+interface PrivateRouteProps {
+    allowedRoles?: Role[];
+}
+
+const PrivateRoute = ({ allowedRoles }: PrivateRouteProps) => {
+    const isLoggedIn = !!Cookies.get("token") || !!Cookies.get("userId");
+    const userRole = (Cookies.get("role") as Role) || 'USER';
+
+    // 1. Якщо не авторизований - на сторінку логіну
+    if (!isLoggedIn) {
+        return <Navigate to="/login" replace />;
     }
 
-    // Otherwise, redirect to login and save the attempted URL
-    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
+    // 2. Якщо маршрут вимагає певних ролей, перевіряємо їх
+    if (allowedRoles && !allowedRoles.includes(userRole)) {
+        return <Navigate to="/403" replace />;
+    }
+
+    // 3. Все добре - пропускаємо
+    return <Outlet />;
 };
 
 export default PrivateRoute;

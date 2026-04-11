@@ -27,6 +27,14 @@ export const useTeamSubmission = (roundId?: string, submissionId?: string) => {
 
     const fetchData = useCallback(async () => {
         setLoading(true);
+
+        const id = Number(roundId);
+
+        if (!roundId || isNaN(id) || id < 1) {
+            window.location.replace('/404');
+            return;
+        }
+
         try {
             if (roundId) {
                 const round = await roundService.getRoundById(Number(roundId));

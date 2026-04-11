@@ -14,7 +14,7 @@ import type {TeamTaskResponseDto} from "../../../../entities/teamTask/teamTask.d
 import {teamService} from "../../../../services/impl/TeamService.ts";
 import Cookies from "js-cookie";
 
-export const useRoundDetails = (id?: string) => {
+export const useRoundDetails = (id: string) => {
     const navigate = useNavigate();
 
     const [loading, setLoading] = useState(true);

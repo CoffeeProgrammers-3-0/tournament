@@ -21,7 +21,11 @@ export const useTeamDetails = () => {
     const [isActionLoading, setIsActionLoading] = useState(false);
 
     const fetchTeam = useCallback(async () => {
-        if (!id) return;
+        if (!id || isNaN(Number(id)) || Number(id) < 1) {
+            window.location.replace('/404');
+            return;
+        }
+
         setLoading(true);
         try {
             const team = await teamService.getTeamById(Number(id));

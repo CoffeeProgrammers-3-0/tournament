@@ -24,13 +24,19 @@ export const useJuryEvaluate = () => {
 
     useEffect(() => {
         const fetchData = async () => {
-            if (!submissionId) return;
+            const id = Number(submissionId);
+
+            if (!submissionId || isNaN(id) || id < 1) {
+                window.location.replace('/404');
+                return;
+            }
+
             setLoading(true);
             setErrors([]);
             try {
                 const [subData, scoresData] = await Promise.all([
-                    submissionService.getSubmissionById(Number(submissionId)),
-                    juryCriteriaService.getMyScoresForSubmission(Number(submissionId))
+                    submissionService.getSubmissionById(id),
+                    juryCriteriaService.getMyScoresForSubmission(id)
                 ]);
 
                 const catData = await categoryService.getCategories(subData.round.id);

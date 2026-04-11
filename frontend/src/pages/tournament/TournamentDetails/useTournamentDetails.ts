@@ -53,8 +53,13 @@ export const useTournamentDetails = () => {
 
     // 1. Завантаження основних даних турніру
     const fetchTournament = useCallback(async () => {
-        if (!tournamentId) return;
         setLoading(true);
+        const id = Number(tournamentId);
+
+        if (!tournamentId || isNaN(id) || id < 1) {
+            window.location.replace('/404');
+            return;
+        }
         try {
             const response = await tournamentService.getTournamentById(tournamentId);
             setTournamentData(response);

@@ -37,10 +37,14 @@ export const useCreateTeam = () => {
     });
 
     const initData = useCallback(async () => {
-        if (!tournamentId) return;
         setFetchingData(true);
+        const id= Number(tournamentId)
+        if (!tournamentId || isNaN(Number(id)) || Number(id) < 1) {
+            window.location.replace('/404');
+            return;
+        }
         try {
-            const tournament = await tournamentService.getTournamentById(Number(tournamentId));
+            const tournament = await tournamentService.getTournamentById(id);
             const min = 3;
             const max = tournament.maxCountOfTeam || 10;
             setLimits({ min, max });

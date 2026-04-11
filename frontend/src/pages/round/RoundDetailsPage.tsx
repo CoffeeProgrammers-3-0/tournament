@@ -41,6 +41,11 @@ export const RoundDetailsPage = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
 
+    if (!id || isNaN(Number(id)) || Number(id) < 1) {
+        window.location.replace('/404');
+        return;
+    }
+
     const details = useRoundDetails(id);
     const editors = useRoundEditors({
         id,

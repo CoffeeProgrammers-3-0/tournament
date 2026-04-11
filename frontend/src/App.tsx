@@ -17,9 +17,11 @@ import {TeamSubmissionPage} from "./pages/submission/TeamSubmissionPage.tsx";
 import {JurySubmissionsPage} from "./pages/jury/JurySubmissions/JurySubmissionsPage.tsx";
 import {JuryEvaluatePage} from "./pages/jury/JuryEvaluated/JuryEvaluatePage.tsx";
 import {JuryManagementPage} from "./pages/jury/JuryManagment/JuryManagementPage.tsx";
-
 import AuthInit from "./security/AuthInit.tsx";
 
+// Нові сторінки помилок
+import {Error403Page} from "./pages/errors/Error403Page.tsx";
+import {Error404Page} from "./pages/errors/Error404Page.tsx";
 
 const App: React.FC = () => {
 
@@ -31,29 +33,41 @@ const App: React.FC = () => {
                     <Route path="/" element={<PageContainer><HomePage/></PageContainer>}/>
                     <Route path="/home" element={<PageContainer><HomePage/></PageContainer>}/>
                     <Route path="/callback" element={<Callback/>}/>
-
-                    {/* LoginPage має бути ТУТ, а не в PrivateRoute! */}
                     <Route path="/login" element={<PageContainer><LoginPage/></PageContainer>}/>
 
-                    <Route path="/tournaments/:tournamentId/team/create" element={<PageContainer><CreateTeamPage/></PageContainer>}/>
+                    {/* Сторінка заборони доступу */}
+                    <Route path="/403" element={<PageContainer><Error403Page/></PageContainer>}/>
 
+                    {/* Доступно всім, хто має лінку */}
+                    <Route path="/tournaments/:tournamentId/team/create" element={<PageContainer><CreateTeamPage/></PageContainer>}/>
                     <Route path="/tournaments" element={<PageContainer><TournamentsPage/></PageContainer>}/>
                     <Route path="/tournaments/:id" element={<PageContainer><TournamentDetailsPage/></PageContainer>}/>
                     <Route path="/rounds/:id" element={<PageContainer><RoundDetailsPage/></PageContainer>}/>
 
-                    {/* --- ПРИВАТНІ (Тільки після авторизації) --- */}
+                    {/* --- ПРИВАТНІ: Для БУДЬ-ЯКОГО авторизованого користувача --- */}
                     <Route element={<PrivateRoute/>}>
                         <Route path="/profile" element={<PageContainer><ProfilePage/></PageContainer>}/>
+                    </Route>
+
+                    <Route element={<PrivateRoute allowedRoles={['ADMIN', 'USER']}/>}>
                         <Route path="/teams" element={<PageContainer><TeamsPage/></PageContainer>}/>
                         <Route path="/teams/:id" element={<PageContainer><TeamDetailsPage/></PageContainer>}/>
-
                         <Route path="/rounds/:roundId/submission/:submissionId?" element={<PageContainer><TeamSubmissionPage/></PageContainer>}/>
+                    </Route>
+
+                    {/* --- ПРИВАТНІ: Тільки для ЖУРІ та АДМІНІСТРАТОРІВ --- */}
+                    <Route element={<PrivateRoute allowedRoles={['JURY']}/>}>
                         <Route path="/jury/submissions" element={<PageContainer><JurySubmissionsPage/></PageContainer>}/>
                         <Route path="/jury/evaluate/:submissionId" element={<PageContainer><JuryEvaluatePage/></PageContainer>}/>
-                        <Route path="/admin/jury/managment" element={<PageContainer><JuryManagementPage/></PageContainer>}/>
-                        <Route path="/admin/teams" element={<PageContainer><TeamsPage/></PageContainer>}/>
-                        <Route path="/admin/teams/create" element={<PageContainer><CreateTeamPage/></PageContainer>}/>
                     </Route>
+
+                    {/* --- ПРИВАТНІ: Тільки для АДМІНІСТРАТОРІВ --- */}
+                    <Route element={<PrivateRoute allowedRoles={['ADMIN']}/>}>
+                        <Route path="/admin/jury/managment" element={<PageContainer><JuryManagementPage/></PageContainer>}/>
+                    </Route>
+
+                    {/* --- CATCH-ALL (404 Not Found) - Має бути в самому кінці! --- */}
+                    <Route path="*" element={<PageContainer><Error404Page/></PageContainer>}/>
                 </Routes>
             </AuthInit>
         </Router>
