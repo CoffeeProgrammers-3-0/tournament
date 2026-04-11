@@ -54,4 +54,7 @@ public class Round {
 
     @OneToMany(mappedBy = "round", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Jury> juries = new HashSet<>();
+
+    @OneToMany(mappedBy = "round", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<RoundEvent> roundEvents = new HashSet<>();
 }

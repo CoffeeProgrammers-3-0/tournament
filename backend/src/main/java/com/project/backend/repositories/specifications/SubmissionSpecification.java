@@ -10,6 +10,8 @@ import jakarta.persistence.criteria.Join;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.util.Collection;
+
 @Slf4j
 public class SubmissionSpecification {
 
@@ -103,6 +105,19 @@ public class SubmissionSpecification {
             Join<JurySubmission, User> userJoin = jurySubmissionJoin.join("jury");
 
             return cb.equal(userJoin.get("id"), juryId);
+        };
+    }
+
+
+    public static Specification<Submission> byTeamIds(Collection<Long> teamIds) {
+        log.debug("SubmissionSpecification.byTeamIds called with teamIds={}", teamIds);
+
+        return (root, query, criteriaBuilder) -> {
+            if (teamIds == null || teamIds.isEmpty()) {
+                return criteriaBuilder.disjunction();
+            }
+
+            return root.get("team").get("id").in(teamIds);
         };
     }
 }

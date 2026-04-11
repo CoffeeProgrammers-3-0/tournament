@@ -19,6 +19,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @Slf4j
@@ -83,6 +85,14 @@ public class UserController {
             @PathVariable(value = "user_id") Long userId) {
         User user = userService.findById(userId);
         return userMapper.fromUserToResponse(user);
+    }
+
+    @GetMapping("/by_email")
+    @Operation(summary = "Get users by email", description = "Returns users by email")
+    public List<UserResponse> getByEmail(
+            @Parameter(description = "Email", example = "john.doe@test-user.com")
+            @RequestParam(value = "email", required = false) String email) {
+        return userService.findByEmail(email, 10).stream().map(userMapper::fromUserToResponse).toList();
     }
 
     @PreAuthorize("hasRole('ADMIN')")

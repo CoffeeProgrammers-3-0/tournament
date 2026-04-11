@@ -1,0 +1,327 @@
+databaseChangeLog:
+  - changeSet:
+      id: create_admin_messages
+      author: vladobrod
+      changes:
+        - createTable:
+            tableName: admin_messages
+            schemaName: tournament
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: creator_id
+                  type: BIGINT
+
+              - column:
+                  name: date
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: target_type
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: content
+                  type: TEXT
+
+        - addForeignKeyConstraint:
+            constraintName: fk_am_creator
+            baseTableSchemaName: tournament
+            baseTableName: admin_messages
+            baseColumnNames: creator_id
+            referencedTableSchemaName: tournament
+            referencedTableName: users
+            referencedColumnNames: id
+            onDelete: SET NULL
+
+        - createIndex:
+            schemaName: tournament
+            tableName: admin_messages
+            indexName: idx_admin_messages_target_type
+            columns:
+              - column:
+                  name: target_type
+
+  - changeSet:
+      id: create_round_admin_messages
+      author: vladobrod
+      changes:
+        - createTable:
+            tableName: round_admin_messages
+            schemaName: tournament
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: round_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+        - addForeignKeyConstraint:
+            constraintName: fk_ram_admin_message
+            baseTableSchemaName: tournament
+            baseTableName: round_admin_messages
+            baseColumnNames: id
+            referencedTableSchemaName: tournament
+            referencedTableName: admin_messages
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+        - addForeignKeyConstraint:
+            constraintName: fk_ram_round
+            baseTableSchemaName: tournament
+            baseTableName: round_admin_messages
+            baseColumnNames: round_id
+            referencedTableSchemaName: tournament
+            referencedTableName: rounds
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+        - createIndex:
+            schemaName: tournament
+            tableName: round_admin_messages
+            indexName: idx_round_admin_messages_round_id
+            columns:
+              - column:
+                  name: round_id
+
+  - changeSet:
+      id: create_global_admin_messages
+      author: vladobrod
+      changes:
+        - createTable:
+            tableName: global_admin_messages
+            schemaName: tournament
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+        - addForeignKeyConstraint:
+            constraintName: fk_gam_admin_message
+            baseTableSchemaName: tournament
+            baseTableName: global_admin_messages
+            baseColumnNames: id
+            referencedTableSchemaName: tournament
+            referencedTableName: admin_messages
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+  - changeSet:
+      id: create_round_events
+      author: vladobrod
+      changes:
+        - createTable:
+            tableName: round_events
+            schemaName: tournament
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: round_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: creator_id
+                  type: BIGINT
+
+              - column:
+                  name: start_date
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: end_date
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: type
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: description
+                  type: TEXT
+
+              - column:
+                  name: title
+                  type: VARCHAR(255)
+
+              - column:
+                  name: location
+                  type: VARCHAR(255)
+
+              - column:
+                  name: platform_url
+                  type: VARCHAR(512)
+
+        - addForeignKeyConstraint:
+            constraintName: fk_round_events_round
+            baseTableSchemaName: tournament
+            baseTableName: round_events
+            baseColumnNames: round_id
+            referencedTableSchemaName: tournament
+            referencedTableName: rounds
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+        - addForeignKeyConstraint:
+            constraintName: fk_round_events_creator
+            baseTableSchemaName: tournament
+            baseTableName: round_events
+            baseColumnNames: creator_id
+            referencedTableSchemaName: tournament
+            referencedTableName: users
+            referencedColumnNames: id
+            onDelete: SET NULL
+
+        - createIndex:
+            schemaName: tournament
+            tableName: round_events
+            indexName: idx_round_events_round_id
+            columns:
+              - column:
+                  name: round_id
+
+        - createIndex:
+            schemaName: tournament
+            tableName: round_events
+            indexName: idx_round_events_creator_id
+            columns:
+              - column:
+                  name: creator_id
+
+        - createIndex:
+            schemaName: tournament
+            tableName: round_events
+            indexName: idx_round_events_start_date
+            columns:
+              - column:
+                  name: start_date
+
+        - createIndex:
+            schemaName: tournament
+            tableName: round_events
+            indexName: idx_round_events_type
+            columns:
+              - column:
+                  name: type
+
+  - changeSet:
+      id: create_notifications
+      author: vladobrod
+      changes:
+        - createTable:
+            tableName: notifications
+            schemaName: tournament
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: receiver_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: key
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: payload
+                  type: jsonb
+
+              - column:
+                  name: seen
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: date
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+
+        - addForeignKeyConstraint:
+            constraintName: fk_notification_receiver
+            baseTableSchemaName: tournament
+            baseTableName: notifications
+            baseColumnNames: receiver_id
+            referencedTableSchemaName: tournament
+            referencedTableName: users
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+        - createIndex:
+            schemaName: tournament
+            tableName: notifications
+            indexName: idx_notifications_receiver_id
+            columns:
+              - column:
+                  name: receiver_id
+
+        - createIndex:
+            schemaName: tournament
+            tableName: notifications
+            indexName: idx_notifications_seen
+            columns:
+              - column:
+                  name: seen
+
+        - createIndex:
+            schemaName: tournament
+            tableName: notifications
+            indexName: idx_notifications_date
+            columns:
+              - column:
+                  name: date
+
+        - createIndex:
+            schemaName: tournament
+            tableName: notifications
+            indexName: idx_notifications_key
+            columns:
+              - column:
+                  name: key

@@ -36,6 +36,14 @@ public class TournamentServiceImpl implements TournamentService {
             throw new IllegalArgumentException("Tournament cannot start before registration ends");
         }
 
+        if (tournament.getMaxCountOfTeam() <= 3) {
+            throw new IllegalArgumentException("Max size of team can not be less than 3");
+        }
+
+        if (tournament.getCountOfRounds() <= 1) {
+            throw new IllegalArgumentException("Count of rounds can not be less than 1");
+        }
+
         tournament.setStatus(TournamentStatus.DRAFT);
         return tournamentRepository.save(tournament);
     }
@@ -43,20 +51,15 @@ public class TournamentServiceImpl implements TournamentService {
     @Override
     @Transactional
     public Tournament update(Long tournamentId, Tournament tournament) {
-        if (tournament.getMaxCountOfTeam() <= 0) {
-            throw new IllegalArgumentException("Max count of teams must be positive");
+        if (tournament.getMaxCountOfTeam() <= 3) {
+            throw new IllegalArgumentException("Max size of team can not be less than 3");
         }
 
-        if (tournament.getCountOfRounds() <= 0) {
-            throw new IllegalArgumentException("Count of rounds must be positive");
+        if (tournament.getCountOfRounds() <= 1) {
+            throw new IllegalArgumentException("Count of rounds can not be less than 1");
         }
 
         Tournament tournamentToUpdate = findByIdAdmin(tournamentId);
-
-        if (tournamentToUpdate.getStatus() != TournamentStatus.DRAFT) {
-            throw new IllegalStateException("Only tournaments in DRAFT status can be updated");
-        }
-
         tournamentToUpdate.setName(tournament.getName());
         tournamentToUpdate.setDescription(tournament.getDescription());
         tournamentToUpdate.setStartTournament(tournament.getStartTournament());
@@ -72,10 +75,6 @@ public class TournamentServiceImpl implements TournamentService {
     @Transactional
     public void delete(Long tournamentId) {
         Tournament tournament = findById(tournamentId);
-
-        if (tournament.getStatus() != TournamentStatus.DRAFT) {
-            throw new IllegalStateException("Only tournaments in DRAFT or CANCELLED status can be deleted");
-        }
 
         if (!tournament.getTeamParticipants().isEmpty()) {
             throw new IllegalStateException("Cannot delete tournament because there are already registered teams");
