@@ -18,14 +18,14 @@ import {useEffect} from "react";
 
 import {useRoundDetails} from "./RoundDetails/hooks/useRoundDetails";
 import {useRoundEditors} from "./RoundDetails/hooks/useRoundEditors";
-import {RoundHeader} from "./RoundDetails/components/RoundHeader";
-import {RoundInfoTab} from "./RoundDetails/components/RoundInfoTab";
+import {RoundHeader} from "./RoundDetails/components/info/RoundHeader";
+import {RoundInfoTab} from "./RoundDetails/components/info/RoundInfoTab";
 import {RoundCategoriesTab} from './RoundDetails/components/criterias/RoundCategoriesTab';
 import {RoundJuryTab} from "./RoundDetails/components/juries/RoundJuryTab";
 import {RoundTeamsTab} from "./RoundDetails/components/teams/RoundTeamsTab";
 import {RoundStatsDialog} from "./RoundDetails/components/teams/RoundStatsDialog";
 import {CategoryDialog} from "./RoundDetails/components/criterias/CategoryDialog";
-import {JuryDialog} from "./RoundDetails/components/JuryDialog";
+import {JuryDialog} from "./RoundDetails/components/juries/JuryDialog";
 import {CriteriaDialog} from "./RoundDetails/components/criterias/CriteriaDialog";
 import {RoundSubmissionsTab} from "./RoundDetails/components/submissions/RoundSubmissionsTab";
 import {AddMissingTeamsModal, AdvanceTeamsModal} from "./RoundDetails/components/teams/TeamsModal";
@@ -261,13 +261,13 @@ const RoundDetailsPage = () => {
             <AddMissingTeamsModal open={editors.addMissingModalOpen}
                                   onClose={() => editors.setAddMissingModalOpen(false)} teams={editors.missingTeams}
                                   selectedIds={editors.selectedMissingIds}
-                                  onSelect={(tid: number) => editors.setSelectedMissingIds(prev => prev.includes(tid) ? prev.filter(x => x !== tid) : [...prev, tid])}
+                                  onSelect={(tid: number) => editors.setSelectedMissingIds((prev: number[]) => prev.includes(tid) ? prev.filter(x => x !== tid) : [...prev, tid])}
                                   onSelectAll={(ids: number[]) => editors.setSelectedMissingIds(ids)}
                                   onConfirm={editors.handleConfirmAddMissing} isLoading={editors.isTeamsLoading}
                                   errors={editors.errors} t={t}/>
             <AdvanceTeamsModal open={editors.advanceModalOpen} onClose={() => editors.setAdvanceModalOpen(false)}
                                leaderboard={details.leaderboard} selectedIds={editors.selectedAdvanceIds}
-                               onSelect={(tid: number) => editors.setSelectedAdvanceIds(prev => prev.includes(tid) ? prev.filter(x => x !== tid) : [...prev, tid])}
+                               onSelect={(tid: number) => editors.setSelectedAdvanceIds((prev: number[]) => prev.includes(tid) ? prev.filter(x => x !== tid) : [...prev, tid])}
                                rounds={editors.tournamentRounds} targetRound={editors.targetAdvanceRoundId}
                                setTargetRound={editors.setTargetAdvanceRoundId} onConfirm={editors.handleConfirmAdvance}
                                isLoading={editors.isTeamsLoading} errors={editors.errors} t={t}/>
