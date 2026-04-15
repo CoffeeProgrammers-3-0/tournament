@@ -62,6 +62,7 @@ const RoundDetailsPage = () => {
         leaderboard: details.leaderboard,
         fetchEvents: details.fetchEvents,
         fetchMessages: details.fetchMessages,
+        t: t
     });
 
     const TABS = [

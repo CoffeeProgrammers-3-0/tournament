@@ -1,7 +1,7 @@
 import {useCallback, useMemo, useState} from "react";
-import {roundService} from "../../../../services/impl/RoundService";
-import {teamService} from "../../../../services/impl/TeamService.ts";
-import type {StatisticResponseDto} from "../../../../entities/team/team.dto.ts";
+import {roundService} from "../../../../../services/impl/RoundService";
+import {teamService} from "../../../../../services/impl/TeamService.ts";
+import type {StatisticResponseDto} from "../../../../../entities/team/team.dto.ts";
 
 export const useRoundTeamsManager = ({
                                          roundId,
@@ -11,6 +11,7 @@ export const useRoundTeamsManager = ({
                                          handleError,
                                          triggerConfirm,
                                          closeConfirm,
+    t
                                      }: any) => {
 
     const [addMissingModalOpen, setAddMissingModalOpen] = useState(false);
@@ -71,7 +72,7 @@ export const useRoundTeamsManager = ({
             const topIds = leaderboard.slice(0, 3).map((t: any) => t.id);
             setSelectedAdvanceIds(topIds);
         } catch (e) {
-            handleError(e, "Помилка завантаження раундів");
+            handleError(e, t('round_details.errors.loadStats'));
         }
     }, [leaderboard]);
 
@@ -91,8 +92,8 @@ export const useRoundTeamsManager = ({
 
     const handleUnassignTeam = useCallback((teamId: number) => {
         triggerConfirm({
-            title: "Remove team?",
-            description: "",
+            title: t('round_details.confirm.removeTeam.title'),
+            description: t('round_details.confirm.removeTeam.description'),
             confirmColor: "error",
             onConfirm: async () => {
                 try {
@@ -115,7 +116,7 @@ export const useRoundTeamsManager = ({
             setSelectedStats(stats);
             setStatsModalOpen(true);
         } catch (error: any) {
-            handleError(error, "Помилка завантаження статистики");
+            handleError(error, t('round_details.errors.loadStats'));
         }
     }, [roundId, clearErrors, handleError]);
 

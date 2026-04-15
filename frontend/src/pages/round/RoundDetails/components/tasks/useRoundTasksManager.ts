@@ -1,11 +1,11 @@
 import {useCallback, useState} from "react";
-import {teamTaskService} from "../../../../services/impl/TeamTaskService";
+import {teamTaskService} from "../../../../../services/impl/TeamTaskService";
 import type {
     TaskPriority,
     TaskStatus,
     TaskType,
     TeamTaskRequestDto
-} from "../../../../entities/teamTask/teamTask.dto.ts";
+} from "../../../../../entities/teamTask/teamTask.dto.ts";
 
 export const useRoundTasksManager = ({
                                          roundId,
@@ -15,6 +15,7 @@ export const useRoundTasksManager = ({
                                          handleError,
                                          triggerConfirm,
                                          closeConfirm,
+    t
                                      }: any) => {
 
     const [taskModalOpen, setTaskModalOpen] = useState(false);
@@ -51,8 +52,8 @@ export const useRoundTasksManager = ({
 
     const handleDeleteTask = useCallback((taskId: number) => {
         triggerConfirm({
-            title: "Видалити завдання?",
-            description: "Цю дію неможливо скасувати.",
+            title: t("round_details.deleteTask.title"),
+            description: t("round_details.deleteTask.description"),
             confirmColor: "error",
             onConfirm: async () => {
                 try {

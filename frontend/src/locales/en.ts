@@ -508,7 +508,16 @@ export const en = {
             "team_name": "Team name",
             "email": "Email",
             "points": "Points",
-            "no_data": "No data"
+            "no_data": "No data",
+            "calculation_logic": "Score Calculation Logic",
+            "formula": {
+                "total_score_title": "Total Team Score",
+                "jury_scores_sum": "Σ Jury Scores",
+                "juries_count": "Number of Juries",
+                "jury_score_title": "Jury Score Calculation",
+                "category_avg": "Category Avg",
+                "weight": "Weight"
+            }
         },
         "stats_modal": {
             "title": "Team stats: {{teamName}}",
@@ -528,6 +537,75 @@ export const en = {
             "auto_assign": "Auto assign juries for all submissions",
             "auto_assign_title": "Auto assign juries",
             "auto_assign_desc": "Enter number of juries per submission. Note: this will erase all existing jury assignments and points.",
+        },
+        "confirm": {
+            "deleteRound": {
+                "title": "Delete round?",
+                "description": "This action cannot be undone. Continue?"
+            },
+            "removeJury": {
+                "title": "Remove jury member?",
+                "description": "This user will no longer grade the round. Continue?"
+            },
+            "autoAssignJuries": {
+                "title": "Auto-assign juries?",
+                "description": "This action will overwrite all current assignments."
+            },
+            "deleteCategory": {
+                "title": "Delete category?",
+                "description": "This will also delete all criteria in this category."
+            },
+            "deleteCriteria": {
+                "title": "Delete criterion?",
+                "description": "This action cannot be undone."
+            },
+            "removeTeam": {
+                "title": "Remove team?",
+                "description": "The team will be unassigned from the round. Continue?"
+            },
+            "exportFailed": {
+                "title": "Export failed",
+                "description": "Failed to download the leaderboard file."
+            },
+            "deleteTask": {
+                "title": "Delete task?",
+                "description": "This action cannot be undone."
+            },
+            "deleteEvent": {
+                "title": "Delete event?",
+                "description": "This action cannot be undone."
+            },
+            "deleteMessage": {
+                "title": "Delete announcement?",
+                "description": "This action cannot be undone."
+            }
+        },
+        "errors": {
+            "updateRound": "Failed to update round",
+            "deleteRound": "Failed to delete round",
+            "assignJury": "Failed to assign jury member",
+            "removeJury": "Failed to remove jury member",
+            "autoAssignJuries": "Failed to auto-assign juries",
+            "loadJuries": "Failed to load juries",
+            "loadSubmissionsJuries": "Failed to load available juries",
+            "addCategory": "Failed to create category",
+            "deleteCategory": "Failed to delete category",
+            "addCriteria": "Failed to create criterion",
+            "deleteCriteria": "Failed to delete criterion",
+            "loadTeams": "Failed to load teams",
+            "addMissingTeams": "Failed to add teams",
+            "advanceTeams": "Failed to advance teams",
+            "unassignTeam": "Failed to remove team",
+            "loadStats": "Failed to load statistics",
+            "exportLeaderboard": "Failed to export leaderboard",
+            "saveEvent": "Failed to save event",
+            "deleteEvent": "Failed to delete event",
+            "saveMessage": "Failed to save message",
+            "deleteMessage": "Failed to delete announcement",
+            "saveTask": "Failed to save task",
+            "deleteTask": "Failed to delete task",
+            "loadEventDetails": "Failed to load event details",
+            "removeJuryFromSubmission": "Failed to remove jury from submission"
         }
     },
 

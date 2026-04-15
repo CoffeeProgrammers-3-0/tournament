@@ -1,6 +1,6 @@
 import {useCallback, useState} from "react";
-import {categoryService} from "../../../../services/impl/CategoryService";
-import {criteriaService} from "../../../../services/impl/CriteriaService";
+import {categoryService} from "../../../../../services/impl/CategoryService";
+import {criteriaService} from "../../../../../services/impl/CriteriaService";
 
 export const useRoundCategoriesManager = ({
                                               roundId,
@@ -9,6 +9,7 @@ export const useRoundCategoriesManager = ({
                                               handleError,
                                               triggerConfirm,
                                               closeConfirm,
+    t
                                           }: any) => {
 
     const [categoryModalOpen, setCategoryModalOpen] = useState(false);
@@ -32,8 +33,8 @@ export const useRoundCategoriesManager = ({
 
     const handleDeleteCategory = useCallback((id: number) => {
         triggerConfirm({
-            title: "Delete category?",
-            description: "This will delete all criteria",
+            title: t('round_details.confirm.deleteCategory.title'),
+            description: t('round_details.confirm.deleteCategory.description'),
             confirmColor: "error",
             onConfirm: async () => {
                 try {
@@ -63,8 +64,8 @@ export const useRoundCategoriesManager = ({
 
     const handleDeleteCriteria = useCallback((categoryId: number, criteriaId: number) => {
         triggerConfirm({
-            title: "Delete criteria?",
-            description: "",
+            title: t('round_details.confirm.deleteCriteria.title'),
+            description: t('round_details.confirm.deleteCriteria.description'),
             confirmColor: "error",
             onConfirm: async () => {
                 try {

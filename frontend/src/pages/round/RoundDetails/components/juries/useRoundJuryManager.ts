@@ -1,7 +1,7 @@
 import {useCallback, useEffect, useState} from "react";
-import {userService} from "../../../../services/impl/UserService";
-import {roundService} from "../../../../services/impl/RoundService";
-import {submissionService} from "../../../../services/impl/SubmissionService";
+import {userService} from "../../../../../services/impl/UserService";
+import {roundService} from "../../../../../services/impl/RoundService";
+import {submissionService} from "../../../../../services/impl/SubmissionService";
 
 export const useRoundJuryManager = ({
                                         roundId,
@@ -11,6 +11,7 @@ export const useRoundJuryManager = ({
                                         handleError,
                                         triggerConfirm,
                                         closeConfirm,
+                                        t
                                     }: any) => {
 
     const [juryModalOpen, setJuryModalOpen] = useState(false);
@@ -109,8 +110,8 @@ export const useRoundJuryManager = ({
 
     const handleRemoveJury = useCallback((juryId: number) => {
         triggerConfirm({
-            title: "Remove Jury",
-            description: "Remove this jury?",
+            title: t('round_details.confirm.removeJury.title'),
+            description: t('round_details.confirm.removeJury.description'),
             confirmColor: "error",
             onConfirm: async () => {
                 try {
@@ -126,8 +127,8 @@ export const useRoundJuryManager = ({
 
     const handleAutoAssignJuries = useCallback(() => {
         triggerConfirm({
-            title: "Auto assign?",
-            description: "This will overwrite all assignments",
+            title: t('round_details.confirm.autoAssignJuries.title'),
+            description: t('round_details.confirm.autoAssignJuries.description'),
             confirmColor: "error",
             onConfirm: async () => {
                 try {

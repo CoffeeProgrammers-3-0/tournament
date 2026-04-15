@@ -13,8 +13,8 @@ import {
     TextField,
     Typography
 } from "@mui/material";
-import type {UserResponseDto} from "../../../../entities/user/user.dto";
-import {ErrorMessages} from "../../../../components/main/ErrorMessages.tsx";
+import type {UserResponseDto} from "../../../../../entities/user/user.dto";
+import {ErrorMessages} from "../../../../../components/main/ErrorMessages.tsx";
 
 type Props = {
     open: boolean;

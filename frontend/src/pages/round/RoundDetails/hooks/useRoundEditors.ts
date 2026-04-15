@@ -20,6 +20,7 @@ type Params = {
     leaderboard: TeamLeaderboardResponseDto[];
     fetchEvents: (page: number) => Promise<void>; // Оновлено
     fetchMessages: (page: number) => Promise<void>; // Оновлено
+    t: any
 };
 
 export type ConfirmDialogConfig = {
@@ -38,6 +39,7 @@ export const useRoundEditors = (params: Params) => {
         roundData: params.roundData,
         roundId: Number(params.id),
         setRoundData: params.setRoundData,
+        t: params.t,
         ...base,
     });
 
@@ -45,12 +47,14 @@ export const useRoundEditors = (params: Params) => {
         roundId: Number(params.id),
         fetchJury: params.fetchJury,
         fetchSubmissions: params.fetchSubmissions,
+        t: params.t,
         ...base,
     });
 
     const categories = useRoundCategoriesManager({
         roundId: Number(params.id),
         fetchCategories: params.fetchCategories,
+        t: params.t,
         ...base,
     });
 
@@ -58,6 +62,7 @@ export const useRoundEditors = (params: Params) => {
         roundId: Number(params.id),
         leaderboard: params.leaderboard,
         fetchSubmissions: params.fetchSubmissions,
+        t: params.t,
         ...base,
     });
 
@@ -65,6 +70,7 @@ export const useRoundEditors = (params: Params) => {
         roundId: Number(params.id),
         tasksPage: params.tasksPage,
         fetchTasks: params.fetchTasks,
+        t: params.t,
         ...base,
     });
 
@@ -72,6 +78,7 @@ export const useRoundEditors = (params: Params) => {
         Number(params.id),
         params.fetchEvents,
         params.fetchMessages,
+        params.t,
         base
     );
 

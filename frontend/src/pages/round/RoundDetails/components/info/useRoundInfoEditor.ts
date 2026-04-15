@@ -1,7 +1,7 @@
 import {useCallback, useState} from "react";
-import type {RoundFullResponseDto, RoundStatus, RoundUpdateRequestDto} from "../../../../entities/round/round.dto";
-import {roundService} from "../../../../services/impl/RoundService";
-import type {ConfirmDialogConfig} from "./useRoundEditors.ts";
+import type {RoundFullResponseDto, RoundStatus, RoundUpdateRequestDto} from "../../../../../entities/round/round.dto";
+import {roundService} from "../../../../../services/impl/RoundService";
+import type {ConfirmDialogConfig} from "../../hooks/useRoundEditors.ts";
 
 const formatToLocalDateTime = (dateTimeStr: string) => {
     if (!dateTimeStr) return "";
@@ -19,14 +19,16 @@ export const useRoundInfoEditor = ({
                                        setRoundData,
                                        clearErrors,
                                        handleError,
-                                       triggerConfirm
+                                       triggerConfirm,
+    t
                                    }: {
     roundId: number;
     roundData: RoundFullResponseDto | null;
     setRoundData: any;
     clearErrors: () => void;
     handleError: (e: any, msg: string) => void;
-    triggerConfirm: (dialog: ConfirmDialogConfig) => void
+    triggerConfirm: (dialog: ConfirmDialogConfig) => void,
+    t: any
 }) => {
 
     const [isEditingInfo, setIsEditingInfo] = useState(false);
@@ -47,7 +49,7 @@ export const useRoundInfoEditor = ({
             setRoundData(updated);
             setIsEditingInfo(false);
         } catch (e) {
-            handleError(e, "Помилка оновлення раунду");
+            handleError(e, t('round_details.errors.updateRound'));
         }
     }, [editFormData, roundId, roundData]);
 
@@ -80,8 +82,8 @@ export const useRoundInfoEditor = ({
     const handleDeleteRound = useCallback(() => {
         triggerConfirm({
             open: true,
-            title: "Delete Round",
-            description: "This action cannot be undone. Continue?",
+            title: t('round_details.confirm.deleteRound.title'),
+            description: t('round_details.confirm.deleteRound.description'),
             confirmColor: "error",
             onConfirm: async () => {
                 clearErrors();
@@ -89,7 +91,7 @@ export const useRoundInfoEditor = ({
                     await roundService.deleteRound(roundId);
                     window.location.href = `/home`;
                 } catch (error: any) {
-                    handleError(error, "Помилка видалення раунду");
+                    handleError(error, t('round_details.errors.deleteRound'));
                 }
             }
         });

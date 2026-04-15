@@ -1,15 +1,15 @@
 import {useCallback, useEffect, useState} from 'react';
-import {roundEventService} from '../../../../services/impl/RoundEventService';
-import {roundAdminMessageService} from '../../../../services/impl/RoundAdminMessageService';
+import {roundEventService} from '../../../../../services/impl/RoundEventService';
+import {roundAdminMessageService} from '../../../../../services/impl/RoundAdminMessageService';
 import type {
     RoundEventFullResponseDto,
     RoundEventListResponseDto,
     RoundEventRequestDto
-} from '../../../../entities/roundEvent/roundEvent.dto';
+} from '../../../../../entities/roundEvent/roundEvent.dto';
 import type {
     AdminMessageRequestDto,
     RoundAdminMessageResponseDto
-} from '../../../../entities/adminMessage/adminMessage.dto';
+} from '../../../../../entities/adminMessage/adminMessage.dto';
 
 interface SharedActions {
     clearErrors: () => void;
@@ -22,7 +22,8 @@ export const useRoundAnnouncements = (
     roundId: number,
     fetchEvents: (page: number) => Promise<void>,
     fetchMessages: (page: number) => Promise<void>,
-    shared: SharedActions
+    t: any,
+    shared: SharedActions,
 ) => {
     const [actionLoading, setActionLoading] = useState(false);
 
@@ -73,8 +74,8 @@ export const useRoundAnnouncements = (
 
     const handleDeleteEvent = useCallback((id: number) => {
         shared.triggerConfirm({
-            title: "Видалити подію?",
-            description: "Цю дію неможливо скасувати.",
+            title: t("round_details.deleteEvent.title"),
+            description: t("round_details.deleteEvent.description"),
             confirmColor: "error",
             onConfirm: async () => {
                 try {
@@ -110,8 +111,8 @@ export const useRoundAnnouncements = (
 
     const handleDeleteMessage = useCallback((id: number) => {
         shared.triggerConfirm({
-            title: "Видалити оголошення?",
-            description: "Цю дію неможливо скасувати.",
+            title: t("round_details.deleteMessage.title"),
+            description: t("round_details.deleteMessage.description"),
             confirmColor: "error",
             onConfirm: async () => {
                 try {

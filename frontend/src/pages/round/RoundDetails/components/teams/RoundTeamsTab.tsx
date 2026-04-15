@@ -27,6 +27,7 @@ import SockJS from "sockjs-client";
 import type {TeamLeaderboardResponseDto} from "../../../../../entities/team/team.dto";
 import type {RoundFullResponseDto} from "../../../../../entities/round/round.dto";
 import {ErrorMessages} from "../../../../../components/main/ErrorMessages.tsx";
+import {RoundFormula} from "./RoundFormula.tsx";
 
 type Props = {
     leaderboard: TeamLeaderboardResponseDto[];
@@ -181,6 +182,7 @@ export const RoundTeamsTab = ({
                 </Box>
             </Box>
 
+            <RoundFormula t={t} />
             {loadingTab ? (
                 <CircularProgress sx={{ display: "block", mx: "auto", my: 4 }} />
             ) : (

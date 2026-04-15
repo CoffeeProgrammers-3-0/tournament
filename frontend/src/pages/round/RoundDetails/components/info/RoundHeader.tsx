@@ -6,8 +6,8 @@ import AccessTimeIcon from "@mui/icons-material/AccessTime"; // New Icon
 import HowToRegIcon from "@mui/icons-material/HowToReg";
 import DeleteIcon from "@mui/icons-material/Delete";
 import {useTranslation} from "react-i18next";
-import type {RoundFullResponseDto} from "../../../../entities/round/round.dto";
-import {ErrorMessages} from "../../../../components/main/ErrorMessages.tsx";
+import type {RoundFullResponseDto} from "../../../../../entities/round/round.dto";
+import {ErrorMessages} from "../../../../../components/main/ErrorMessages.tsx";
 
 type Props = {
     roundData: RoundFullResponseDto;

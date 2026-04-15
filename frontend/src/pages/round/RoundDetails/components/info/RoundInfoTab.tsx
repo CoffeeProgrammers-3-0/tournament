@@ -3,8 +3,8 @@ import SaveIcon from "@mui/icons-material/Save";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
 import DOMPurify from "dompurify";
-import type {RoundFullResponseDto, RoundStatus, RoundUpdateRequestDto} from "../../../../entities/round/round.dto";
-import {ErrorMessages} from "../../../../components/main/ErrorMessages.tsx";
+import type {RoundFullResponseDto, RoundStatus, RoundUpdateRequestDto} from "../../../../../entities/round/round.dto";
+import {ErrorMessages} from "../../../../../components/main/ErrorMessages.tsx";
 
 // Налаштування панелі інструментів для редактора
 const quillModules = {
@@ -73,9 +73,7 @@ export const RoundInfoTab = ({
                     <Box sx={{display: "flex", flexDirection: "column", gap: 3}}>
                         {roundData.status !== editFormData.status &&
                             <Alert severity="warning" sx={{mb: 3, borderRadius: "16px"}}>
-                                <Alert severity="warning" sx={{mb: 3, borderRadius: "16px"}}>
-                                    <AlertTitle sx={{fontWeight: 700}}>{t("common.warning")}</AlertTitle>
-                                </Alert>
+                                <AlertTitle sx={{fontWeight: 700}}>{t("common.warning")}</AlertTitle>
                             </Alert>
                         }
                         <Box sx={{display: "flex", gap: 2, flexDirection: {xs: "column", sm: "row"}}}>
