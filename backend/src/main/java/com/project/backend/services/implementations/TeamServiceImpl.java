@@ -38,6 +38,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -110,6 +111,13 @@ public class TeamServiceImpl implements TeamService {
                 user.setFullName(request.getFullName());
                 user.setEmail(request.getEmail());
                 user = userService.createUser(user, Role.USER);
+            } else {
+                if(user.getRole() == Role.JURY) {
+                    throw new IllegalStateException("Jury " + user.getEmail() + " can not be member of a team");
+                }
+                if(user.getRole() == Role.ADMIN) {
+                    throw new IllegalStateException("Admin " + user.getEmail() + " can not be member of a team");
+                }
             }
 
             TeamParticipant participant = new TeamParticipant();
@@ -194,7 +202,7 @@ public class TeamServiceImpl implements TeamService {
             }
         }
 
-        if (team.getTeamParticipants().size() >= tournament.getMaxCountOfTeam()) {
+        if (team.getTeamParticipants().stream().filter(tp -> Objects.equals(tp.getTournament().getId(), tournamentId)).count() >= tournament.getMaxCountOfTeam()) {
             throw new IllegalStateException("Cannot add member: team has reached max number of participants");
         }
 
@@ -206,6 +214,14 @@ public class TeamServiceImpl implements TeamService {
             user.setEmail(userCreateRequestForTeam.getEmail());
             user = userService.createUser(user, Role.USER);
         } else {
+            if(user.getRole() == Role.JURY) {
+                throw new IllegalStateException("Jury " + user.getEmail() + " can not be member of a team");
+            }
+
+            if(user.getRole() == Role.ADMIN) {
+                throw new IllegalStateException("Admin " + user.getEmail() + " can not be member of a team");
+            }
+
             boolean exists = teamParticipantRepository.exists(Specification.allOf(
                     TeamParticipantSpecification.byUserEmail(user.getEmail()),
                     TeamParticipantSpecification.byTournamentId(tournament.getId()))
@@ -225,10 +241,6 @@ public class TeamServiceImpl implements TeamService {
         participant.setTeam(team);
         participant.setUser(user);
         participant.setTournament(tournament);
-
-        team.getTeamParticipants().add(participant);
-
-        team = teamRepository.save(team);
 
         team.getTeamParticipants().add(participant);
 
