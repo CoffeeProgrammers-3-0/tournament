@@ -6,7 +6,7 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum NotificationKey {
-    TEST("test");
+    ROUND_CREATED("notifications.round.created");
 
     private final String i18nKey;
 }

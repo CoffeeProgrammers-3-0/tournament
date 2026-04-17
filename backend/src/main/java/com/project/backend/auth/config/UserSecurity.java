@@ -12,6 +12,7 @@ import com.project.backend.repositories.specifications.RoundEventSpecification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
 import java.util.Objects;
@@ -55,6 +56,11 @@ public class UserSecurity {
 
     public boolean checkUser(Long userId) {
         User me = currentUserContainer.getUser();
+        return me != null && Objects.equals(me.getId(), userId);
+    }
+
+    public boolean checkUser(Long userId, Authentication authentication) {
+        User me = currentUserContainer.getUser(authentication);
         return me != null && Objects.equals(me.getId(), userId);
     }
 

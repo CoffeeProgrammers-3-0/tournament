@@ -49,37 +49,33 @@ public class TopicInterceptor implements ChannelInterceptor {
             }
         }
 
-//        if (StompCommand.SUBSCRIBE.equals(accessor.getCommand())) {
-//            String topic = accessor.getDestination();
-//
-//            if(topic == null) {
-//                throw new IllegalArgumentException("Topic can not be null");
-//            }
-//
-//            if(topic.startsWith("/topic/chatsAsSeller/") || topic.startsWith("/topic/chatsAsCustomer/") || topic.startsWith("/topic/notifications/") || topic.startsWith("/topic/chat/")) {
-//                Authentication auth = (Authentication) accessor.getUser();
-//                if (auth == null) {
-//                    throw new AccessDeniedException("User is not authenticated");
-//                }
-//
-//                try {
-//                    String idPart = topic.substring(topic.lastIndexOf('/') + 1);
-//                    Long resourceId = Long.parseLong(idPart);
-//
-//                    if (topic.startsWith("/topic/chatsAsSeller/") || topic.startsWith("/topic/chatsAsCustomer/") || topic.startsWith("/topic/notifications/")) {
-//                        if (!userSecurity.checkUser(resourceId, auth)) {
-//                            throw new AccessDeniedException("You cannot subscribe to someone else's topic!");
-//                        }
-//                    } else if (topic.startsWith("/topic/chat/")) {
-//                        if (!userSecurity.isParticipantOfChat(resourceId, auth)) {
-//                            throw new AccessDeniedException("You are not a participant of this chat!");
-//                        }
-//                    }
-//                } catch (NumberFormatException | IndexOutOfBoundsException e) {
-//                    throw new AccessDeniedException("Invalid topic format");
-//                }
-//            }
-//        }
+        if (StompCommand.SUBSCRIBE.equals(accessor.getCommand())) {
+            String topic = accessor.getDestination();
+
+            if(topic == null) {
+                throw new IllegalArgumentException("Topic can not be null");
+            }
+
+            if(topic.startsWith("/topic/notifications/")) {
+                Authentication auth = (Authentication) accessor.getUser();
+                if (auth == null) {
+                    throw new AccessDeniedException("User is not authenticated");
+                }
+
+                try {
+                    String idPart = topic.substring(topic.lastIndexOf('/') + 1);
+                    Long resourceId = Long.parseLong(idPart);
+
+                    if (topic.startsWith("/topic/notifications/")) {
+                        if (!userSecurity.checkUser(resourceId, auth)) {
+                            throw new AccessDeniedException("You cannot subscribe to someone else's topic!");
+                        }
+                    }
+                } catch (NumberFormatException | IndexOutOfBoundsException e) {
+                    throw new AccessDeniedException("Invalid topic format");
+                }
+            }
+        }
 
         return message;
     }

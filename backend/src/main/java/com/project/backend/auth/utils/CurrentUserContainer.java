@@ -49,8 +49,11 @@ public class CurrentUserContainer {
     private Long savedTeamTaskId;
 
     public User getUser() {
+        return getUser(SecurityContextHolder.getContext().getAuthentication());
+    }
+
+    public User getUser(Authentication auth) {
         if (user == null) {
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             if (auth != null && auth.isAuthenticated() && !(auth instanceof AnonymousAuthenticationToken)) {
                 log.debug("CurrentUserContainer: Loading user from database for email: {}", auth.getName());
                 this.user = userRepository.findOne(UserSpecification.byKeycloakUserId(auth.getName())).orElse(null);

@@ -128,4 +128,17 @@ public class UserSpecification {
             return cb.and(roundCondition, sameTeam);
         };
     }
+
+    public static Specification<User> byTournamentId(Long tournamentId) {
+        log.debug("UserSpecification.byTournamentId called with tournamentId={}", tournamentId);
+        if (tournamentId == null) return null;
+
+        return (root, query, cb) -> {
+            query.distinct(true);
+
+            Join<User, TeamParticipant> tp = root.join("teamParticipants");
+
+            return cb.equal(tp.get("tournament").get("id"), tournamentId);
+        };
+    }
 }

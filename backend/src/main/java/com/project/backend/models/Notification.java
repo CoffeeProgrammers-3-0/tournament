@@ -2,9 +2,10 @@ package com.project.backend.models;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.project.backend.models.constants.NotificationKey;
-import com.project.backend.models.converters.JsonNodeConverter;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 
@@ -28,7 +29,7 @@ public class Notification {
     private NotificationKey key;
 
     @Column(columnDefinition = "jsonb", nullable = false)
-    @Convert(converter = JsonNodeConverter.class)
+    @JdbcTypeCode(SqlTypes.JSON)
     private JsonNode payload;
 
     @Column(nullable = false)
