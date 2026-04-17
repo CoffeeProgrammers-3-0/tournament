@@ -27,6 +27,9 @@ export const CreateTeamPage = () => {
         navigate, t
     } = useCreateTeam();
 
+    const emails = formData.users.map(u => u.email?.toLowerCase().trim()).filter(Boolean);
+    const hasDuplicateEmails = new Set(emails).size !== emails.length;
+
     if (fetchingData) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 10 }}><CircularProgress /></Box>;
 
     return (
@@ -39,6 +42,12 @@ export const CreateTeamPage = () => {
                 <Typography variant="h4" fontWeight={800} color="primary.main" gutterBottom>
                     {t("team_create.title")}
                 </Typography>
+
+                {hasDuplicateEmails && (
+                    <Alert severity="warning" sx={{ mb: 3 }}>
+                        {t("team_create.errors.duplicate_warning", "Each team member must have a unique email address.")}
+                    </Alert>
+                )}
 
                 {isLoggedIn && myTeams.length > 0 && (
                     <Box sx={{ mb: 4, mt: 2 }}>
@@ -110,7 +119,7 @@ export const CreateTeamPage = () => {
                     <Button
                         type="submit" variant="contained"
                         startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
-                        disabled={loading || success}
+                        disabled={loading || success || hasDuplicateEmails}
                     >
                         {loading ? t("team_create.registration") : t("team_create.regis")}
                     </Button>

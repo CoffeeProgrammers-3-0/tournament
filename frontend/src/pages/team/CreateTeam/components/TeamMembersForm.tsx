@@ -16,22 +16,33 @@ interface Props {
 
 export const TeamMembersForm = ({ users, onChange, onAdd, onRemove, limits, isReadOnlyFirst }: Props) => {
     const { t } = useTranslation();
-
-    // Стан для пошуку
     const [options, setOptions] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
-    //const [open, setOpen] = useState<{ [key: number]: boolean }>({});
     const debounceTimer = useRef<any>(null);
+
+    // --- NEW: Find indices of duplicate emails ---
+    const getDuplicateIndices = () => {
+        const indices = new Set<number>();
+        users.forEach((user, i) => {
+            if (!user.email) return;
+            users.forEach((otherUser, j) => {
+                if (i !== j && user.email.toLowerCase().trim() === otherUser.email.toLowerCase().trim()) {
+                    indices.add(i);
+                }
+            });
+        });
+        return indices;
+    };
+
+    const duplicateIndices = getDuplicateIndices();
 
     const handleSearch = (email: string) => {
         if (email.length < 3) {
             setOptions([]);
             return;
         }
-
         setLoading(true);
         if (debounceTimer.current) clearTimeout(debounceTimer.current);
-
         debounceTimer.current = setTimeout(async () => {
             try {
                 const results = await userService.getUserByEmail(email);
@@ -41,7 +52,7 @@ export const TeamMembersForm = ({ users, onChange, onAdd, onRemove, limits, isRe
             } finally {
                 setLoading(false);
             }
-        }, 500); // Затримка 500мс
+        }, 500);
     };
 
     return (
@@ -53,91 +64,97 @@ export const TeamMembersForm = ({ users, onChange, onAdd, onRemove, limits, isRe
                 <Divider />
             </Grid>
 
-            {users.map((user, idx) => (
-                <Grid size={{ xs: 12 }} key={idx}>
-                    <Box sx={{
-                        display: "flex", gap: 2,
-                        flexDirection: { xs: "column", sm: "row" },
-                        p: 2, borderRadius: "16px",
-                        bgcolor: idx === 0 ? "rgba(0,0,0,0.03)" : "transparent"
-                    }}>
-                        <TextField
-                            label={idx === 0 ? t("team_create.fields.leaders_name") : t("team_create.fields.members_name")}
-                            fullWidth required
-                            disabled={idx === 0 && isReadOnlyFirst}
-                            value={user.fullName}
-                            onChange={e => onChange(idx, "fullName", e.target.value)}
-                        />
+            {users.map((user, idx) => {
+                const isDuplicate = duplicateIndices.has(idx);
 
-                        {/* Пошук по Email через Autocomplete */}
-                        <Autocomplete
-                            fullWidth
-                            freeSolo // Дозволяє вводити довільний текст, якщо юзера не знайдено
-                            options={options}
-                            getOptionLabel={(option) => typeof option === 'string' ? option : option.email}
-                            loading={loading}
-                            disabled={idx === 0 && isReadOnlyFirst}
-                            onInputChange={(_, value) => {
-                                onChange(idx, "email", value);
-                                handleSearch(value);
-                            }}
-                            onChange={(_, newValue: any) => {
-                                if (newValue && typeof newValue !== 'string') {
-                                    // Якщо обрали юзера зі списку - заповнюємо обидва поля
-                                    onChange(idx, "email", newValue.email);
-                                    onChange(idx, "fullName", newValue.fullName);
-                                }
-                            }}
-                            renderInput={(params) => (
-                                <TextField
-                                    {...params}
-                                    label={idx === 0 ? t("team_create.fields.leaders_email") : t("team_create.fields.members_email")}
-                                    required
-                                    type="email"
-                                    slotProps={{
-                                        input: {
-                                            ...params.InputProps,
-                                            endAdornment: (
-                                                <>
-                                                    {loading ? <CircularProgress color="inherit" size={20} /> : null}
-                                                    {params.InputProps.endAdornment}
-                                                </>
-                                            ),
-                                        },
-                                    }}
-                                />
-                            )}
-                            renderOption={(props, option) => (
-                                <li {...props}>
-                                    <Box>
-                                        <Typography variant="body1">{option.fullName}</Typography>
-                                        <Typography variant="caption" color="text.secondary">{option.email}</Typography>
-                                    </Box>
-                                </li>
-                            )}
-                        />
+                return (
+                    <Grid size={{ xs: 12 }} key={idx}>
+                        <Box sx={{
+                            display: "flex", gap: 2,
+                            flexDirection: { xs: "column", sm: "row" },
+                            p: 2, borderRadius: "16px",
+                            bgcolor: idx === 0 ? "rgba(0,0,0,0.03)" : "transparent",
+                            border: isDuplicate ? "1px solid" : "none",
+                            borderColor: "error.main"
+                        }}>
+                            <TextField
+                                label={idx === 0 ? t("team_create.fields.leaders_name") : t("team_create.fields.members_name")}
+                                fullWidth required
+                                disabled={idx === 0 && isReadOnlyFirst}
+                                value={user.fullName}
+                                onChange={e => onChange(idx, "fullName", e.target.value)}
+                            />
 
-                        <Box sx={{ display: "flex", alignSelf: "center" }}>
-                            <IconButton
-                                color="error"
-                                onClick={() => onRemove(idx)}
-                                disabled={users.length <= limits.min || idx === 0}
-                            >
-                                <RemoveIcon />
-                            </IconButton>
-                            {idx === users.length - 1 && (
+                            <Autocomplete
+                                fullWidth
+                                freeSolo
+                                options={options}
+                                getOptionLabel={(option) => typeof option === 'string' ? option : option.email}
+                                loading={loading}
+                                disabled={idx === 0 && isReadOnlyFirst}
+                                onInputChange={(_, value) => {
+                                    onChange(idx, "email", value);
+                                    handleSearch(value);
+                                }}
+                                onChange={(_, newValue: any) => {
+                                    if (newValue && typeof newValue !== 'string') {
+                                        onChange(idx, "email", newValue.email);
+                                        onChange(idx, "fullName", newValue.fullName);
+                                    }
+                                }}
+                                renderInput={(params) => (
+                                    <TextField
+                                        {...params}
+                                        label={idx === 0 ? t("team_create.fields.leaders_email") : t("team_create.fields.members_email")}
+                                        required
+                                        type="email"
+                                        error={isDuplicate}
+                                        helperText={isDuplicate ? t("team_create.errors.duplicate_email", "Emails must be unique") : ""}
+                                        slotProps={{
+                                            input: {
+                                                ...params.InputProps,
+                                                endAdornment: (
+                                                    <>
+                                                        {loading ? <CircularProgress color="inherit" size={20} /> : null}
+                                                        {params.InputProps.endAdornment}
+                                                    </>
+                                                ),
+                                            },
+                                        }}
+                                    />
+                                )}
+                                renderOption={(props, option) => (
+                                    <li {...props}>
+                                        <Box>
+                                            <Typography variant="body1">{option.fullName}</Typography>
+                                            <Typography variant="caption" color="text.secondary">{option.email}</Typography>
+                                        </Box>
+                                    </li>
+                                )}
+                            />
+
+                            <Box sx={{ display: "flex", alignSelf: "flex-start", pt: 1 }}>
                                 <IconButton
-                                    color="primary"
-                                    onClick={onAdd}
-                                    disabled={users.length >= limits.max}
+                                    color="error"
+                                    onClick={() => onRemove(idx)}
+                                    disabled={users.length <= limits.min || idx === 0}
                                 >
-                                    <AddIcon />
+                                    <RemoveIcon />
                                 </IconButton>
-                            )}
+                                {idx === users.length - 1 && (
+                                    <IconButton
+                                        color="primary"
+                                        onClick={onAdd}
+                                        disabled={users.length >= limits.max}
+                                    >
+                                        <AddIcon />
+                                    </IconButton>
+                                )}
+                            </Box>
                         </Box>
-                    </Box>
-                </Grid>
-            ))}
+                    </Grid>
+                );
+            })}
         </Grid>
     );
 };

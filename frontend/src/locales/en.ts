@@ -15,6 +15,7 @@ export const en = {
         "mySubmissions": "Review Submissions",
         "myTeam": "My Team",
         "role": "Role: ",
+        "notification": "Notifications",
     },
     footer: {
         "description": "Digital platform for hackathons and competitions by Star for Life Ukraine charity foundation.",
@@ -262,7 +263,9 @@ export const en = {
         },
         "card": {
             "more_info": "View Profile"
-        }
+        },
+        "confirm_delete_title": "Delete Team?",
+        "confirm_delete_text": "Are you sure that you want delete team?(it can be undo)",
     },
     team_create: {
         "title": "Team Registration",
@@ -345,6 +348,10 @@ export const en = {
             "add_member_failed": "Failed to add member",
             "remove_member_failed": "Error removing member",
             "promote_failed": "Failed to change leader"
+        },
+        "confirm": {
+            "remove_title": "Видалити цього учасника?",
+            "remove_text": "Точно?"
         },
         "confirm.promote_text": "Promote to leader member",
     },
