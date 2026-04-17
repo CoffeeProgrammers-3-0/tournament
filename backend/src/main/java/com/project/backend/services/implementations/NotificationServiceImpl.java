@@ -24,6 +24,7 @@ public class NotificationServiceImpl implements NotificationService {
     private final NotificationRepository notificationRepository;
 
     @Override
+    @Transactional
     public Page<Notification> findAllByUser(Integer page, Integer size, User user) {
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(
                 Sort.Order.desc("date"),
