@@ -182,7 +182,7 @@ export const TeamDetailsPage = () => {
                                                 canControl={manageStatus.can && (isAdmin || user.id !== currentUserId)}
                                                 onDelete={() => setConfirm({
                                                     open: true,
-                                                    title: t("common.confirm_delete"),
+                                                    title: t("team_details.confirm.remove_title"),
                                                     text: `${t("team_details.confirm.remove_text")} ${user.fullName}?`,
                                                     onConfirm: () => handleDeleteMember(user.id, tournamentIdNum)
                                                 })}

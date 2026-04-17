@@ -4,6 +4,7 @@ import {useProfile} from "./useProfile";
 import {ProfileInfoCard} from "./components/ProfileInfoCard";
 import {ProfileTeamsList} from "./components/ProfileTeamsList";
 import {ProfileTournamentsList} from "./components/ProfileTournamentsList";
+import {ProfileJurySubmissionsList} from "./components/ProfileJurySubmissionsList.tsx";
 
 export const ProfilePage = () => {
     const { t } = useTranslation();
@@ -12,6 +13,7 @@ export const ProfilePage = () => {
         isEditing, setIsEditing, editName, setEditName,
         isSaving, handleSaveProfile, cancelEditing
     } = useProfile();
+    const role = user?.role;
 
     if (loading) return (
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
@@ -32,7 +34,7 @@ export const ProfilePage = () => {
             </Typography>
 
             <Grid container spacing={4}>
-                <Grid size={{xs:12, md: 4}}>
+                <Grid size={{xs:12, md: (role === "USER" ? 4 : role === "JURY" ? 6 : 12)}}>
                     <ProfileInfoCard
                         user={user}
                         isEditing={isEditing}
@@ -45,13 +47,23 @@ export const ProfilePage = () => {
                     />
                 </Grid>
 
+                {role === "USER" &&
                 <Grid size={{xs:12, md: 4}}>
                     <ProfileTeamsList teams={teams} />
                 </Grid>
+                }
 
+                {role === "USER" &&
                 <Grid size={{xs:12, md: 4}}>
                     <ProfileTournamentsList tournaments={tournaments} />
                 </Grid>
+                }
+
+                {role === "JURY" &&
+                    <Grid size={{xs:12, md: 6}}>
+                        <ProfileJurySubmissionsList/>
+                    </Grid>
+                }
             </Grid>
         </Box>
     );

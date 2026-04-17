@@ -9,6 +9,7 @@ import {
     Divider,
     Grid,
     IconButton,
+    Stack,
     Typography
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
@@ -20,7 +21,7 @@ type Props = {
     categories: CategoryResponseDto[];
     loadingTab: boolean;
     isAdmin: boolean;
-    isReadOnly?: boolean; // ДОДАНО: проп для перевірки статусу EVALUATED
+    isReadOnly?: boolean;
     onOpenCategoryModal: () => void;
     onDeleteCategory: (categoryId: number) => void;
     onOpenCriteriaModal: (categoryId: number) => void;
@@ -34,7 +35,6 @@ export const RoundCategoriesTab = ({
                                        onOpenCategoryModal, onDeleteCategory, onOpenCriteriaModal, onDeleteCriteria, t, errors
                                    }: Props) => {
 
-    // Створюємо загальну змінну для перевірки прав на редагування
     const canEdit = isAdmin && !isReadOnly;
 
     return (
@@ -49,7 +49,6 @@ export const RoundCategoriesTab = ({
                 )}
             </Box>
 
-            {/* ДОДАНО: Інформаційний банер, якщо раунд завершено */}
             {isReadOnly && (
                 <Alert severity="info" sx={{ mb: 3, borderRadius: '16px', '& .MuiAlert-message': { fontWeight: 600 } }}>
                     {t('round_details.categories.evaluated_info', 'Цей раунд завершено. Категорії та критерії доступні лише для перегляду і не можуть бути змінені.')}
@@ -62,7 +61,7 @@ export const RoundCategoriesTab = ({
                 <Grid container spacing={3}>
                     {categories.map((cat) => (
                         <Grid size={{ xs: 12, md: 6 }} key={cat.id}>
-                            <Card variant="outlined" sx={{ borderRadius: "16px", borderColor: "#e0e0e0" }}>
+                            <Card variant="outlined" sx={{ borderRadius: "16px", borderColor: "#e0e0e0", height: '100%' }}>
                                 <CardContent>
                                     <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 2 }}>
                                         <Box>
@@ -80,30 +79,49 @@ export const RoundCategoriesTab = ({
 
                                     <Divider sx={{ mb: 2 }} />
 
-                                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+                                    {/* CRITERIA LIST SECTION */}
+                                    <Stack spacing={1}>
                                         {cat.criteria?.map((crit) => (
                                             <Chip
                                                 key={crit.id}
                                                 label={crit.text}
                                                 variant="filled"
-                                                size="small"
-                                                // Дозволяємо видаляти тільки якщо canEdit === true
                                                 onDelete={canEdit ? () => onDeleteCriteria(cat.id, crit.id) : undefined}
-                                                sx={{ bgcolor: "grey.200", fontWeight: 500 }}
+                                                sx={{
+                                                    bgcolor: "grey.100",
+                                                    fontWeight: 500,
+                                                    width: '100%',
+                                                    justifyContent: 'space-between', // Pushes delete icon to the right
+                                                    height: 'auto',
+                                                    py: 1,
+                                                    '& .MuiChip-label': {
+                                                        display: 'block',
+                                                        whiteSpace: 'normal', // Allows text to wrap if it's long
+                                                        textAlign: 'left',
+                                                        width: '100%',
+                                                        px: 1
+                                                    }
+                                                }}
                                             />
                                         ))}
+
                                         {canEdit && (
                                             <Chip
                                                 icon={<AddIcon fontSize="small" />}
                                                 label={t("round_details.categories.add_criteria")}
                                                 variant="outlined"
                                                 color="primary"
-                                                size="small"
                                                 onClick={() => onOpenCriteriaModal(cat.id)}
-                                                sx={{ cursor: "pointer", borderStyle: "dashed" }}
+                                                sx={{
+                                                    cursor: "pointer",
+                                                    borderStyle: "dashed",
+                                                    width: '100%',
+                                                    justifyContent: 'center',
+                                                    py: 1
+                                                }}
                                             />
                                         )}
-                                    </Box>
+                                    </Stack>
                                 </CardContent>
                             </Card>
                         </Grid>

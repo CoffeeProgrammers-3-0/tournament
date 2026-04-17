@@ -74,8 +74,8 @@ export const useRoundAnnouncements = (
 
     const handleDeleteEvent = useCallback((id: number) => {
         shared.triggerConfirm({
-            title: t("round_details.deleteEvent.title"),
-            description: t("round_details.deleteEvent.description"),
+            title: t("round_details.confirm.deleteEvent.title"),
+            description: t("round_details.confirm.deleteEvent.description"),
             confirmColor: "error",
             onConfirm: async () => {
                 try {
@@ -111,8 +111,8 @@ export const useRoundAnnouncements = (
 
     const handleDeleteMessage = useCallback((id: number) => {
         shared.triggerConfirm({
-            title: t("round_details.deleteMessage.title"),
-            description: t("round_details.deleteMessage.description"),
+            title: t("round_details.confirm.deleteMessage.title"),
+            description: t("round_details.confirm.deleteMessage.description"),
             confirmColor: "error",
             onConfirm: async () => {
                 try {

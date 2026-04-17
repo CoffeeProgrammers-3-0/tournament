@@ -15,6 +15,7 @@ export const uk = {
         "mySubmissions": "Роботи на перевірку",
         "myTeam": "Моя команда",
         "role": "Роль: ",
+        "notification": "Повідомлення",
     },
     footer: {
         "description": "Цифрова платформа для проведення хакатонів та конкурсів від благодійного фонду Star for Life Ukraine.",
@@ -262,7 +263,9 @@ export const uk = {
         },
         "card": {
             "more_info": "Профіль команди"
-        }
+        },
+        "confirm_delete_title": "Видалити команду?",
+        "confirm_delete_text": "Ви впевнені що хочете видалити команду?(Неможливо відмінити цю дію)",
     },
     team_create: {
         "title": "Реєстрація команди",
@@ -345,6 +348,10 @@ export const uk = {
             "add_member_failed": "Не вдалося додати учасника",
             "remove_member_failed": "Помилка при видаленні",
             "promote_failed": "Не вдалося змінити капітана"
+        },
+        "confirm": {
+            "remove_title": "Видалити цього учасника?",
+            "remove_text": "Точно?"
         },
         "confirm.promote_text": "Підвищити до лідера корпистувача",
     },
