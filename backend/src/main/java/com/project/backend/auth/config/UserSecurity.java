@@ -3,12 +3,10 @@ package com.project.backend.auth.config;
 import com.project.backend.auth.utils.CurrentUserContainer;
 import com.project.backend.models.User;
 import com.project.backend.models.constants.Role;
-import com.project.backend.repositories.AdminMessageRepository;
-import com.project.backend.repositories.JurySubmissionRepository;
-import com.project.backend.repositories.RoundEventRepository;
-import com.project.backend.repositories.TeamParticipantRepository;
+import com.project.backend.repositories.*;
 import com.project.backend.repositories.specifications.AdminMessageSpecification;
 import com.project.backend.repositories.specifications.RoundEventSpecification;
+import com.project.backend.repositories.specifications.UserSpecification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.domain.Specification;
@@ -25,6 +23,7 @@ public class UserSecurity {
     private final TeamParticipantRepository teamParticipantRepository;
     private final JurySubmissionRepository jurySubmissionRepository;
     private final AdminMessageRepository adminMessageRepository;
+    private final UserRepository userRepository;
     private final RoundEventRepository roundEventRepository;
 
     public boolean isMemberOfTheTeamInRound(Long roundId) {
@@ -59,8 +58,8 @@ public class UserSecurity {
         return me != null && Objects.equals(me.getId(), userId);
     }
 
-    public boolean checkUser(Long userId, Authentication authentication) {
-        User me = currentUserContainer.getUser(authentication);
+    public boolean checkUser(Long userId, Authentication auth) {
+        User me = userRepository.findOne(UserSpecification.byKeycloakUserId(auth.getName())).orElse(null);
         return me != null && Objects.equals(me.getId(), userId);
     }
 
