@@ -96,7 +96,7 @@ public class WebSocketListener {
             Long userId = notification.getReceiver().getId();
 
             convertAndSendNotification(
-                    "/topic/users/" + userId + "/notifications",
+                    "/topic/notifications/" + userId,
                     EventType.NEW_NOTIFICATION,
                     unseenCounts.getOrDefault(userId, 0L),
                     notificationMapper.fromNotificationToResponse(notification)
