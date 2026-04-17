@@ -1,4 +1,4 @@
-import {type MouseEvent, useCallback, useEffect, useState} from "react";
+import {type MouseEvent, useState} from "react";
 import {
     AppBar,
     Avatar,
@@ -38,7 +38,7 @@ import Cookies from "js-cookie";
 import AuthService from "../../services/auth/AuthService.ts";
 
 import NotificationsIcon from "@mui/icons-material/Notifications";
-import {notificationService} from "../../services/impl/NotificationService.ts";
+import {useNotification} from "../../context/NotificationContext.tsx";
 
 type role = 'ADMIN' | 'JURY' | 'USER' | null;
 
@@ -59,7 +59,7 @@ export const AppHeader = () => {
     const handleTournamentsClick = (e: MouseEvent<HTMLElement>) => setTournamentsAnchorEl(e.currentTarget);
     const handleLangClick = (e: MouseEvent<HTMLElement>) => setLangAnchorEl(e.currentTarget);
 
-    const [unseenCount, setUnseenCount] = useState<number>(0);
+    const { unseenCount } = useNotification();
 
     const handleClose = () => {
         setProfileAnchorEl(null);
@@ -71,23 +71,6 @@ export const AppHeader = () => {
         changeLanguage(lang);
         handleClose();
     };
-
-    const fetchUnseenCount = useCallback(async () => {
-        if (!isLoggedIn) return;
-        try {
-            const response = await notificationService.getUnseenCount();
-            // response зазвичай приходить як { value: number } або просто число залежно від вашого LongDto
-            setUnseenCount(typeof response === 'object' ? (response as any).value : response);
-        } catch (error) {
-            console.error("Failed to fetch unseen count", error);
-        }
-    }, [isLoggedIn]);
-
-    useEffect(() => {
-        fetchUnseenCount();
-        const interval = setInterval(fetchUnseenCount, 30000);
-        return () => clearInterval(interval);
-    }, [fetchUnseenCount]);
 
     // Контент бокового меню (для мобілок)
     const drawer = (

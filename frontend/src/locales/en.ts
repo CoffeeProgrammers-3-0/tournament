@@ -635,4 +635,10 @@ export const en = {
         "submit_btn": "Submit for Review",
         "success": "Project saved successfully!"
     },
+
+    notifications: {
+        "round": {
+            "created": "Round was created successfully!",
+        },
+    },
 };

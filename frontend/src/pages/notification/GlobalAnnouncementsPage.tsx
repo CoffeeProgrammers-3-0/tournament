@@ -194,7 +194,7 @@ export const GlobalAnnouncementsPage: React.FC = () => {
                                                         </Badge>
                                                         <Box>
                                                             <Typography variant="body2" sx={{ fontWeight: notif.seen ? 400 : 700 }}>
-                                                                {t("notifications" + notif.key)} //TODO
+                                                                {t(notif.key)}
                                                             </Typography>
                                                             <Typography variant="caption" color="text.disabled">
                                                                 {new Date(notif.date).toLocaleString()}

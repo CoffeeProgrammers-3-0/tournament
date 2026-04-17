@@ -636,4 +636,9 @@ export const uk = {
         "success": "Роботу успішно збережено!"
     },
 
+    notifications: {
+        "round": {
+            "created": "Раунд було успішно створено",
+        },
+    },
 };
