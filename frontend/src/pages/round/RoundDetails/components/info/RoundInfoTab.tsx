@@ -103,7 +103,8 @@ export const RoundInfoTab = ({
                                 type="datetime-local"
                                 label={t("round_details.info.start_date")}
                                 InputLabelProps={{shrink: true}}
-                                value={editFormData.startDate}
+                                inputProps={{ max: editFormData.endDate || undefined }}
+                                value={(editFormData.startDate)}
                                 onChange={(e) => setEditFormData({...editFormData, startDate: e.target.value})}
                             />
                             <TextField
@@ -111,7 +112,8 @@ export const RoundInfoTab = ({
                                 type="datetime-local"
                                 label={t("round_details.info.end_date")}
                                 InputLabelProps={{shrink: true}}
-                                value={editFormData.endDate}
+                                inputProps={{ min: editFormData.startDate || undefined }}
+                                value={(editFormData.endDate)}
                                 onChange={(e) => setEditFormData({...editFormData, endDate: e.target.value})}
                             />
                         </Box>

@@ -36,6 +36,7 @@ import {RoundTasksTab} from "./RoundDetails/components/tasks/RoundTasksTab.tsx";
 
 import {RoundAnnouncementsTab} from "./RoundDetails/components/events/RoundAnnouncementsTab.tsx";
 import {CreateEventDialog, CreateMessageDialog} from "./RoundDetails/components/events/AnnouncementDialogs.tsx";
+import {toLocalInput} from "../../utils/data.ts";
 
 const RoundDetailsPage = () => {
     const {t} = useTranslation();
@@ -125,8 +126,8 @@ const RoundDetailsPage = () => {
                 onEdit={() => {
                     editors.setEditFormData({
                         name: details.roundData!.name,
-                        startDate: details.roundData!.startDate?.substring(0, 16) || "",
-                        endDate: details.roundData!.endDate?.substring(0, 16) || "",
+                        startDate: toLocalInput(details.roundData!.startDate),
+                        endDate: toLocalInput(details.roundData!.endDate),
                         countOfWinners: details.roundData!.countOfWinners,
                         requirements: details.roundData!.requirements,
                         task: details.roundData!.task,
