@@ -82,7 +82,7 @@ export const ProfileJurySubmissionsList = () => {
                                             secondary={submission.round?.name}
                                         />
                                         <Chip
-                                            label={submission.round?.status === 'EVALUATED' ? t("status.evaluated") : t("status.pending")}
+                                            label={submission.round?.status === 'EVALUATED' ? t("jury.status.evaluated") : t("jury.status.pending")}
                                             size="small"
                                             icon={submission.round?.status === 'EVALUATED' ? <CheckCircleOutlineIcon /> : <PendingActionsIcon />}
                                             color={submission.round?.status === 'EVALUATED' ? "success" : "warning"}

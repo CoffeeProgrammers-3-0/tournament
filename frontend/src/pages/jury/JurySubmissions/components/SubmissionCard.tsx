@@ -1,6 +1,8 @@
 import {Box, Button, Card, CardContent, Chip, Typography} from "@mui/material";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import {useNavigate} from "react-router-dom";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import PendingActionsIcon from "@mui/icons-material/PendingActions";
 
 interface SubmissionCardProps {
     submission: any;
@@ -35,6 +37,18 @@ export const SubmissionCard = ({ submission, t }: SubmissionCardProps) => {
                         size="small"
                         variant="outlined"
                         sx={{ fontWeight: 700, borderRadius: "8px" }}
+                    />
+                    <Chip
+                        label={submission.round?.status === 'EVALUATED' ? t("jury.status.evaluated") : t("jury.status.pending")}
+                        size="small"
+                        icon={submission.round?.status === 'EVALUATED' ? <CheckCircleOutlineIcon /> : <PendingActionsIcon />}
+                        color={submission.round?.status === 'EVALUATED' ? "success" : "warning"}
+                        sx={{
+                            fontWeight: 700,
+                            fontSize: '0.65rem',
+                            mr: 1,
+                            cursor: 'pointer'
+                        }}
                     />
                 </Box>
 

@@ -385,6 +385,13 @@ export const uk = {
         "no_categories": "Немає доступних категорій",
         "info.round_evaluated": "Цей раунд завершено. Оцінки доступні лише для перегляду і не можуть бути змінені.",
         "success.scores_saved": "Оцінки були збережені",
+        "errors": {
+            "load_list_failed": "Помилка завантаження списку",
+        },
+        "status": {
+            "pending": "Надіслано на перевірку",
+            "evaluated": "Перевірка закінчена",
+        },
     },
     juries: {
         "management_title": "Менеджемнт журі",

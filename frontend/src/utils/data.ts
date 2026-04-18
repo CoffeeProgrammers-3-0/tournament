@@ -19,7 +19,7 @@ export const toUtcIso = (localString?: string): string => {
 
     const date = new Date(localString);
 
-    return date.toISOString().slice(0, 19);
+    return date.toISOString();
 };
 
 export const formatDisplay = (dateInput: string | Date, lang: string) => {

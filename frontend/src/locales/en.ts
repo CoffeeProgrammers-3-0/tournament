@@ -385,6 +385,13 @@ export const en = {
         "no_categories": "No categories available",
         "info.round_evaluated": "This round is ended so you can`t evaluate it anymore.",
         "success.scores_saved": "Scores saved successfully!",
+        "errors": {
+            "load_list_failed": "Failed to load list",
+        },
+        "status": {
+            "pending": "Pending to check",
+            "evaluated": "Evaluation ended",
+        },
     },
     juries: {
         "management_title": "Management of Jury",
