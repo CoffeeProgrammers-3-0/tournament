@@ -15,18 +15,9 @@ import {
 import EditIcon from '@mui/icons-material/Edit';
 import type {RoundEventRequestDto,} from '../../../../../entities/roundEvent/roundEvent.dto';
 import ReactQuill from "react-quill-new";
-import {formatDateByLocale, HtmlContent, quillModules, toDateTimeLocalValue} from "./constants";
+import {HtmlContent, quillModules} from "./constants";
+import {formatDisplay, toLocalInput, toUtcIso} from "../../../../../utils/data.ts";
 import {useTranslation} from "react-i18next";
-
-const defaultEventData: RoundEventRequestDto = {
-    title: '',
-    description: '',
-    type: 'ONLINE',
-    startDate: new Date().toISOString().slice(0, 16),
-    endDate: new Date(Date.now() + 3600000).toISOString().slice(0, 16),
-    location: '',
-    platformUrl: ''
-};
 
 export const CreateMessageDialog: React.FC<{
     open: boolean; onClose: () => void; t: any; isLoading?: boolean;
@@ -73,7 +64,7 @@ export const CreateEventDialog: React.FC<{
     initialData?: any; onSubmit: (data: any) => Promise<void>;
 }> = ({ open, onClose, onSubmit, initialData, isLoading, isAdmin, t }) => {
     const { i18n } = useTranslation();
-    const [formData, setFormData] = useState<any>(defaultEventData);
+    const [formData, setFormData] = useState<Partial<RoundEventRequestDto>>({});
     const [isEditing, setIsEditing] = useState(false);
 
     useEffect(() => {
@@ -82,14 +73,22 @@ export const CreateEventDialog: React.FC<{
             if (initialData) {
                 setFormData({
                     ...initialData,
-                    startDate: toDateTimeLocalValue(initialData.startDate),
-                    endDate: toDateTimeLocalValue(initialData.endDate)
+                    startDate: toLocalInput(initialData.startDate),
+                    endDate: toLocalInput(initialData.endDate)
                 });
             } else {
+                // Встановлюємо свіжі дати при кожному відкритті модалки створення
+                const now = new Date();
+                const inOneHour = new Date(now.getTime() + 3600000);
+
                 setFormData({
-                    ...defaultEventData,
-                    startDate: toDateTimeLocalValue(new Date()),
-                    endDate: toDateTimeLocalValue(new Date(Date.now() + 3600000))
+                    title: '',
+                    description: '',
+                    type: 'ONLINE',
+                    location: '',
+                    platformUrl: '',
+                    startDate: toLocalInput(now.toISOString()),
+                    endDate: toLocalInput(inOneHour.toISOString())
                 });
             }
         }
@@ -119,7 +118,7 @@ export const CreateEventDialog: React.FC<{
                         <HtmlContent dangerouslySetInnerHTML={{ __html: value || '—' }} sx={{ bgcolor: 'action.hover', p: 2, borderRadius: 2 }} />
                     ) : (
                         <Typography variant="body1" sx={{ fontWeight: 600, color: 'text.primary' }}>
-                            {type === 'datetime' && value ? formatDateByLocale(value, i18n.language) : (value || '—')}
+                            {type === 'datetime' && value ? formatDisplay(value, i18n.language) : (value || '—')}
                         </Typography>
                     )}
                 </Box>
@@ -128,12 +127,14 @@ export const CreateEventDialog: React.FC<{
     );
 
     const handleSave = () => {
-        const data = { ...formData };
+        const data = { ...formData } as RoundEventRequestDto;
         if (data.type === 'ONLINE') data.location = '';
         else data.platformUrl = '';
-        // Ensure we send full ISO strings back to the server
-        data.startDate = new Date(data.startDate).toISOString();
-        data.endDate = new Date(data.endDate).toISOString();
+
+        // ЄДИНЕ МІСЦЕ ДЛЯ КОНВЕРТАЦІЇ В БЕКЕНД ФОРМАТ
+        data.startDate = toUtcIso(data.startDate);
+        data.endDate = toUtcIso(data.endDate);
+
         onSubmit(data);
     };
 
@@ -154,7 +155,7 @@ export const CreateEventDialog: React.FC<{
                     <Grid size={{ xs: 12, md: 6 }}>
                         <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800, mb: 0.5, display: 'block' }}>{t('announcements.events.type')}</Typography>
                         {isEditing ? (
-                            <TextField select fullWidth size="small" value={formData.type} onChange={(e) => setFormData({ ...formData, type: e.target.value })}>
+                            <TextField select fullWidth size="small" value={formData.type || 'ONLINE'} onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}>
                                 <MenuItem value="ONLINE">🌐 Online</MenuItem>
                                 <MenuItem value="OFFLINE">📍 Offline</MenuItem>
                             </TextField>
@@ -171,7 +172,7 @@ export const CreateEventDialog: React.FC<{
             <DialogActions sx={{ p: 2.5 }}>
                 <Button onClick={onClose} color="inherit" sx={{ fontWeight: 700 }}>{t('common.close')}</Button>
                 {isEditing && (
-                    <Button variant="contained" onClick={handleSave} disabled={isLoading || !formData.title.trim()} sx={{ fontWeight: 700, px: 4, borderRadius: 2 }}>
+                    <Button variant="contained" onClick={handleSave} disabled={isLoading || !formData.title?.trim()} sx={{ fontWeight: 700, px: 4, borderRadius: 2 }}>
                         {t('common.save')}
                     </Button>
                 )}

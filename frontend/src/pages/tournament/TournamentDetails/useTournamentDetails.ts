@@ -12,6 +12,7 @@ import type {
 } from "../../../entities/tournament/tournament.dto";
 import type {TeamListResponseDto} from "../../../entities/team/team.dto";
 import Cookies from "js-cookie";
+import {toLocalInput, toUtcIso} from "../../../utils/data.ts";
 
 export const useTournamentDetails = () => {
     const { id } = useParams<{ id: string }>();
@@ -63,7 +64,12 @@ export const useTournamentDetails = () => {
         try {
             const response = await tournamentService.getTournamentById(tournamentId);
             setTournamentData(response);
-            setEditFormData(response);
+            setEditFormData({
+                ...response,
+                startRegistration: toLocalInput(response.startRegistration),
+                endRegistration: toLocalInput(response.endRegistration),
+                startTournament: toLocalInput(response.startTournament),
+            });
 
             // Перевірка чи поточний юзер зареєстрований
             if (isLoggedIn) {
@@ -111,65 +117,67 @@ export const useTournamentDetails = () => {
         fetchTabData();
     }, [tabValue, tournamentId, selectedRoundStatus]);
 
-    // --- ХЕНДЛЕРИ ТУРНІРУ ---
     const handleStatusChange = (newStatus: TournamentStatus) => {
-        // Функція-хелпер для отримання локальної дати у форматі YYYY-MM-DDTHH:mm
-        const getLocalDateTime = (date: Date) => {
-            const offset = date.getTimezoneOffset() * 60000; // зміщення в мілісекундах
-            const localISOTime = new Date(date.getTime() - offset).toISOString().slice(0, 16);
-            return localISOTime;
-        };
-
-        const nowDate = new Date();
-        const nowStr = getLocalDateTime(nowDate);
-
-        // Додаємо 24 години (86400000 мс)
-        const tomorrowDate = new Date(nowDate.getTime() + 86400000);
-        const tomorrowStr = getLocalDateTime(tomorrowDate);
-
         setEditFormData(prev => {
-            const updated = { ...prev, status: newStatus };
+
+            let sReg = prev.startRegistration ? new Date(toUtcIso(prev.startRegistration)) : new Date();
+            let eReg = prev.endRegistration ? new Date(toUtcIso(prev.endRegistration)) : new Date(sReg.getTime() + 86400000);
+            let sTour = prev.startTournament ? new Date(toUtcIso(prev.startTournament)) : new Date(eReg.getTime() + 86400000);
+            const now = new Date();
 
             switch (newStatus) {
                 case 'REGISTRATION':
-                    updated.startRegistration = nowStr;
-                    updated.endRegistration = tomorrowStr;
-                    updated.startTournament = tomorrowStr;
+                    // Registration must be actively running
+                    if (sReg > now) sReg = new Date(now.getTime() - 60000); // Adjust to just started
+                    if (eReg <= now) eReg = new Date(now.getTime() + 86400000); // Adjust to end tomorrow
+                    if (sTour <= eReg) sTour = new Date(eReg.getTime() + 3600000); // Ensure tour starts AFTER reg ends
                     break;
 
                 case 'RUNNING':
-                    updated.startTournament = nowStr;
-                    updated.endRegistration = nowStr;
+                    // Tournament must be active, registration must be closed
+                    if (eReg > now) eReg = new Date(now.getTime() - 3600000); // Close reg 1 hr ago
+                    if (sReg >= eReg) sReg = new Date(eReg.getTime() - 86400000); // Ensure sReg makes sense
+                    if (sTour > now) sTour = new Date(now.getTime() - 60000); // Start tour 1 min ago
                     break;
 
                 case 'FINISHED':
-                    // Можна зафіксувати дату завершення, якщо є таке поле
+                    // Everything must be in the past
+                    if (sTour > now) sTour = new Date(now.getTime() - 86400000); // Set tour start to yesterday
+                    if (eReg >= sTour) eReg = new Date(sTour.getTime() - 3600000);
+                    if (sReg >= eReg) sReg = new Date(eReg.getTime() - 86400000);
                     break;
             }
-            return updated;
-        });
-    };
 
-    const formatToFullISO = (dateStr: string) => {
-        if (!dateStr) return dateStr;
-        return dateStr.length === 16 ? `${dateStr}:00` : dateStr;
+            return {
+                ...prev,
+                status: newStatus,
+                startRegistration: toLocalInput(sReg.toISOString()),
+                endRegistration: toLocalInput(eReg.toISOString()),
+                startTournament: toLocalInput(sTour.toISOString())
+            };
+        });
     };
 
     const handleSaveUpdate = async () => {
         if (!tournamentId) return;
         clearErrors();
         try {
-            // Формуємо payload, додаючи секунди до всіх дат
             const payload: TournamentUpdateRequestDto = {
                 ...(editFormData as TournamentUpdateRequestDto),
-                startRegistration: formatToFullISO(editFormData.startRegistration as string),
-                endRegistration: formatToFullISO(editFormData.endRegistration as string),
-                startTournament: formatToFullISO((editFormData.endRegistration ?? editFormData.startTournament) as string) as string,
+                startRegistration: toUtcIso(editFormData.startRegistration as string),
+                endRegistration: toUtcIso(editFormData.endRegistration as string),
+                startTournament: toUtcIso(editFormData.startTournament as string),
             };
 
             const updated = await tournamentService.updateTournament(tournamentId, payload);
             setTournamentData(updated);
             setIsEditingInfo(false);
+            setEditFormData({
+                ...updated,
+                startRegistration: toLocalInput(updated.startRegistration),
+                endRegistration: toLocalInput(updated.endRegistration),
+                startTournament: toLocalInput(updated.startTournament),
+            });
         } catch (error: any) {
             const messages = error.response?.data?.messages;
             setErrors(Array.isArray(messages) ? messages : ["Помилка оновлення турніру"]);
@@ -187,12 +195,16 @@ export const useTournamentDetails = () => {
         clearErrors();
         setIsCreatingRound(true);
         try {
-            roundFormData.startDate = roundFormData.startDate + ":00";
-            roundFormData.endDate = roundFormData.endDate + ":00";
-            await roundService.createRound(tournamentId, roundFormData as any);
+            // Convert to UTC before API call
+            const payload = {
+                ...roundFormData,
+                startDate: toUtcIso(roundFormData.startDate),
+                endDate: toUtcIso(roundFormData.endDate)
+            };
+
+            await roundService.createRound(tournamentId, payload as any);
             setRoundModalOpen(false);
             setRoundFormData({ name: '', startDate: '', endDate: '', countOfWinners: 1, requirements: '', task: '' });
-            // ... оновлення списку ...
         } catch (error: any) {
             const messages = error.response?.data?.messages;
             setErrors(Array.isArray(messages) ? messages : ["Помилка створення раунду"]);

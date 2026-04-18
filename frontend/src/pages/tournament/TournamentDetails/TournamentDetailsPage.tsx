@@ -10,16 +10,9 @@ import {RoundsTab} from "./tabs/RoundsTab";
 import {TeamsTab} from "./tabs/TeamsTab";
 
 export const TournamentDetailsPage = () => {
-    const { t, i18n } = useTranslation();
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const state = useTournamentDetails();
-
-    const formatDate = (dateString?: string) => {
-        if (!dateString) return "";
-        return new Date(dateString).toLocaleString(i18n.language === "uk" ? "uk-UA" : "en-US", {
-            day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
-        });
-    };
 
     if (state.loading) {
         return <Box sx={{ display: "flex", justifyContent: "center", mt: 10 }}><CircularProgress /></Box>;
@@ -31,7 +24,7 @@ export const TournamentDetailsPage = () => {
 
     return (
         <Container maxWidth="lg" sx={{ pb: 6, pt: 1 }}>
-            <TournamentHero state={state} formatDate={formatDate} t={t} navigate={navigate} />
+            <TournamentHero state={state} t={t} navigate={navigate} />
 
             <Tabs
                 value={state.tabValue}
@@ -44,8 +37,8 @@ export const TournamentDetailsPage = () => {
             </Tabs>
 
             <Box sx={{ mt: 2 }}>
-                {state.tabValue === 0 && <InfoTab state={state} formatDate={formatDate} t={t} />}
-                {state.tabValue === 1 && <RoundsTab state={state} formatDate={formatDate} t={t} navigate={navigate} />}
+                {state.tabValue === 0 && <InfoTab state={state} t={t} />}
+                {state.tabValue === 1 && <RoundsTab state={state} t={t} navigate={navigate} />}
                 {state.tabValue === 2
                     && ((state.tournamentData.status === "RUNNING" || state.tournamentData.status === "FINISHED" || state.isAdmin)
                     && <TeamsTab state={state} t={t} navigate={navigate} />)}

@@ -26,34 +26,3 @@ export const HtmlContent = styled(Box)(({ theme }) => ({
     },
     '& :last-child': { marginBottom: 0 }
 }));
-
-/**
- * Formats a date string/Date object based on the current i18n language.
- */
-export const formatDateByLocale = (dateInput: string | Date, lang: string) => {
-    const locale = lang === 'uk' ? 'uk-UA' : 'en-GB';
-    return new Date(dateInput).toLocaleString(locale, {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
-};
-
-/**
- * Converts a date to a format compatible with <input type="datetime-local"> (YYYY-MM-DDTHH:mm)
- * strictly using the local system time.
- */
-export const toDateTimeLocalValue = (dateInput: string | Date | number) => {
-    const d = new Date(dateInput);
-    if (isNaN(d.getTime())) return '';
-
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    const hours = String(d.getHours()).padStart(2, '0');
-    const minutes = String(d.getMinutes()).padStart(2, '0');
-
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
-};

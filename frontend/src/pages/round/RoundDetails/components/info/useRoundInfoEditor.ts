@@ -2,16 +2,7 @@ import {useCallback, useState} from "react";
 import type {RoundFullResponseDto, RoundStatus, RoundUpdateRequestDto} from "../../../../../entities/round/round.dto";
 import {roundService} from "../../../../../services/impl/RoundService";
 import type {ConfirmDialogConfig} from "../../hooks/useRoundEditors.ts";
-
-const formatToLocalDateTime = (dateTimeStr: string) => {
-    if (!dateTimeStr) return "";
-    return dateTimeStr.length === 16 ? `${dateTimeStr}:00` : dateTimeStr;
-};
-
-const toDateTimeLocal = (date: Date) => {
-    const offset = date.getTimezoneOffset() * 60000;
-    return new Date(date.getTime() - offset).toISOString().slice(0, 16);
-};
+import {toLocalInput, toUtcIso} from "../../../../../utils/data.ts";
 
 export const useRoundInfoEditor = ({
                                        roundId,
@@ -41,8 +32,8 @@ export const useRoundInfoEditor = ({
         try {
             const payload = {
                 ...editFormData,
-                startDate: formatToLocalDateTime(editFormData.startDate),
-                endDate: formatToLocalDateTime(editFormData.endDate),
+                startDate: toUtcIso(editFormData.startDate),
+                endDate: toUtcIso(editFormData.endDate),
             };
 
             const updated = await roundService.updateRound(roundId, payload);
@@ -55,13 +46,14 @@ export const useRoundInfoEditor = ({
 
     const handleStatusChange = useCallback((newStatus: RoundStatus) => {
         setEditFormData(prev => {
-            const now = new Date();
-            let sDate = prev.startDate ? new Date(prev.startDate) : new Date();
-            let eDate = prev.endDate ? new Date(prev.endDate) : new Date(now.getTime() + 86400000);
 
-            if (newStatus === "DRAFT" && sDate <= now) {
-                sDate = new Date(now.getTime() + 86400000);
-                eDate = new Date(sDate.getTime() + 86400000);
+            let sDate = prev.startDate ? new Date(toUtcIso(prev.startDate)) : new Date();
+            let eDate = prev.endDate ? new Date(toUtcIso(prev.endDate)) : new Date(sDate.getTime() + 86400000);
+            const now = new Date();
+
+            if (newStatus === "DRAFT") {
+                if (sDate <= now) sDate = new Date(now.getTime() + 3600000);
+                if (eDate <= sDate) eDate = new Date(sDate.getTime() + 86400000);
             } else if (newStatus === "ACTIVE") {
                 if (sDate > now) sDate = new Date(now.getTime() - 60000);
                 if (eDate <= now) eDate = new Date(now.getTime() + 86400000);
@@ -69,12 +61,11 @@ export const useRoundInfoEditor = ({
                 if (eDate > now) eDate = new Date(now.getTime() - 60000);
                 if (sDate >= eDate) sDate = new Date(eDate.getTime() - 86400000);
             }
-
             return {
                 ...prev,
                 status: newStatus,
-                startDate: toDateTimeLocal(sDate),
-                endDate: toDateTimeLocal(eDate)
+                startDate: toLocalInput(sDate.toISOString()),
+                endDate: toLocalInput(eDate.toISOString())
             };
         });
     }, []);
@@ -89,7 +80,7 @@ export const useRoundInfoEditor = ({
                 clearErrors();
                 try {
                     await roundService.deleteRound(roundId);
-                    window.location.href = `/home`;
+                    window.location.href = `/tournament`;
                 } catch (error: any) {
                     handleError(error, t('round_details.errors.deleteRound'));
                 }

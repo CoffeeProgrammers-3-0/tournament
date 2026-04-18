@@ -3,9 +3,10 @@ import EditIcon from "@mui/icons-material/Edit";
 import HowToRegIcon from "@mui/icons-material/HowToReg";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
-import DeleteIcon from "@mui/icons-material/Delete"; // Додано
+import DeleteIcon from "@mui/icons-material/Delete";
+import {toLocalInput} from "../../../../utils/data.ts"; // Додано
 
-export const TournamentHero = ({ state, formatDate, t, navigate }: any) => {
+export const TournamentHero = ({ state, t, navigate }: any) => {
     const {
         tournamentData,
         isAdmin,
@@ -45,7 +46,7 @@ export const TournamentHero = ({ state, formatDate, t, navigate }: any) => {
                         />
                         <Chip
                             icon={<CalendarMonthIcon style={{ color: "white", fontSize: "16px" }} />}
-                            label={formatDate(tournamentData.startTournament)}
+                            label={toLocalInput(tournamentData.startTournament)}
                             variant="outlined"
                             sx={{ color: "white", borderColor: "rgba(255,255,255,0.3)" }}
                         />

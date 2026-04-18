@@ -8,6 +8,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import {useTranslation} from "react-i18next";
 import type {RoundFullResponseDto} from "../../../../../entities/round/round.dto";
 import {ErrorMessages} from "../../../../../components/main/ErrorMessages.tsx";
+import {toLocalInput} from "../../../../../utils/data.ts";
 
 type Props = {
     roundData: RoundFullResponseDto;
@@ -41,7 +42,7 @@ export const RoundHeader = ({
         if (roundData.status !== "ACTIVE") return;
 
         const updateTimer = () => {
-            const end = new Date(roundData.endDate).getTime();
+            const end = new Date(toLocalInput(roundData.endDate)).getTime();
             const now = new Date().getTime();
             const diff = end - now;
 
@@ -113,7 +114,7 @@ export const RoundHeader = ({
                         />
 
                         <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                            {roundData.startDate.substring(0, 16).replace("T", " ")} — {roundData.endDate.substring(0, 16).replace("T", " ")}
+                            {toLocalInput(roundData.startDate)} — {toLocalInput(roundData.endDate)}
                         </Typography>
 
                         <Typography variant="body2" sx={{ opacity: 0.9, display: "flex", alignItems: "center", gap: 0.5 }}>

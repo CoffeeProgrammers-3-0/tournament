@@ -14,11 +14,12 @@ import {
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import AssignmentIcon from "@mui/icons-material/Assignment";
-import type {RoundStatus} from "../../../../entities/round/round.dto.ts"; // Перевір правильність шляху імпорту
+import type {RoundStatus} from "../../../../entities/round/round.dto.ts";
+import {toLocalInput} from "../../../../utils/data.ts"; // Перевір правильність шляху імпорту
 
 const ROUND_STATUSES: RoundStatus[] = ['DRAFT', 'ACTIVE', 'SUBMISSION_CLOSED', 'EVALUATED'];
 
-export const RoundsTab = ({ state, formatDate, t, navigate }: any) => {
+export const RoundsTab = ({ state, t, navigate }: any) => {
     return (
         <Box>
             <Box sx={{ display: "flex", justifyContent: "space-between", mb: 4, alignItems: "center", flexWrap: 'wrap', gap: 2 }}>
@@ -57,7 +58,7 @@ export const RoundsTab = ({ state, formatDate, t, navigate }: any) => {
                                         <Avatar sx={{ bgcolor: round.status === "ACTIVE" ? "primary.main" : "grey.100", color: round.status === "ACTIVE" ? "white" : "grey.400", width: 56, height: 56 }}><AssignmentIcon /></Avatar>
                                         <Box>
                                             <Typography variant="h6" fontWeight={800}>{round.name}</Typography>
-                                            <Typography variant="body2" color="text.secondary" fontWeight={500}>{formatDate(round.startDate)} — {formatDate(round.endDate)}</Typography>
+                                            <Typography variant="body2" color="text.secondary" fontWeight={500}>{toLocalInput(round.startDate)} — {toLocalInput(round.endDate)}</Typography>
                                         </Box>
                                     </Box>
                                     <Chip label={t(`rounds.statuses.${round.status}`)} color={round.status === "ACTIVE" ? "success" : "default"} sx={{ fontWeight: 700, borderRadius: "8px" }} />

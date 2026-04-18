@@ -15,7 +15,7 @@ export const en = {
         "mySubmissions": "Review Submissions",
         "myTeam": "My Team",
         "role": "Role: ",
-        "notification": "Notifications",
+        "notifications": "Notifications",
     },
     footer: {
         "description": "Digital platform for hackathons and competitions by Star for Life Ukraine charity foundation.",
@@ -55,7 +55,7 @@ export const en = {
         "no": "Cancel",
         "search": "Search",
         "errors": "Solve this errors",
-        "warning": "Be carefully with changing status. System will change data auto to correct",
+        "warning": "Be carefully with changing status. System will change data auto to correct if user doesn`t set them proper himself",
         "ok": "Ok",
         "points_short": "pts",
         "goHome": "Go to Homepage",

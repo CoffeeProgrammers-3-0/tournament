@@ -31,11 +31,12 @@ import {CreateMessageDialog} from '../round/RoundDetails/components/events/Annou
 import type {AdminMessageRequestDto, GlobalAdminMessageResponseDto} from '../../entities/adminMessage/adminMessage.dto';
 import type {NotificationResponseDto} from '../../entities/notification/notification.dto';
 import type {PaginationListResponseDto} from '../../entities/wrappers/wrapper.dto';
+import {formatDisplay} from "../../utils/data";
 
 const PAGE_SIZE = 10;
 
 export const GlobalAnnouncementsPage: React.FC = () => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const [tabValue, setTabValue] = useState(0);
     const [loading, setLoading] = useState(false);
 
@@ -154,13 +155,21 @@ export const GlobalAnnouncementsPage: React.FC = () => {
                                                                     {msg.creator?.fullName}
                                                                 </Typography>
                                                                 <Typography variant="caption" color="text.disabled">
-                                                                    {new Date(msg.date).toLocaleString()}
+                                                                    {/* Використовуємо єдиний форматер дат */}
+                                                                    {formatDisplay(msg.date, i18n.language)}
                                                                 </Typography>
                                                             </Box>
                                                         </Stack>
-                                                        <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>
-                                                            {msg.content}
-                                                        </Typography>
+                                                        {/* Рендеримо HTML коректно через dangerouslySetInnerHTML */}
+                                                        <Box
+                                                            sx={{
+                                                                typography: 'body1',
+                                                                lineHeight: 1.6,
+                                                                '& p': { margin: 0, marginBottom: 1 },
+                                                                '& a': { color: 'primary.main', textDecoration: 'underline' }
+                                                            }}
+                                                            dangerouslySetInnerHTML={{ __html: msg.content }}
+                                                        />
                                                         {isAdmin && (
                                                             <Stack direction="row" sx={{ position: 'absolute', top: 8, right: 8 }}>
                                                                 <IconButton size="small" onClick={() => { setSelectedMsg(msg); setMsgModalOpen(true); }}>
@@ -197,7 +206,8 @@ export const GlobalAnnouncementsPage: React.FC = () => {
                                                                 {t(notif.key)}
                                                             </Typography>
                                                             <Typography variant="caption" color="text.disabled">
-                                                                {new Date(notif.date).toLocaleString()}
+                                                                {/* Використовуємо єдиний форматер дат */}
+                                                                {formatDisplay(notif.date, i18n.language)}
                                                             </Typography>
                                                         </Box>
                                                     </CardContent>

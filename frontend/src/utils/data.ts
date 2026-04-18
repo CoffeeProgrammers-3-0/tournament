@@ -1,13 +1,41 @@
-export function convertData(dateString: string): string {
-    const date = new Date(dateString);
+const ensureUtc = (dateStr: string): string => {
+    if (!dateStr) return "";
+    return (dateStr.includes('Z') || dateStr.includes('+'))
+        ? dateStr
+        : `${dateStr}Z`;
+};
 
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
+export const toLocalInput = (isoString?: string): string => {
+    if (!isoString) return "";
 
-    return `${hours}:${minutes} ${day}.${month}.${year}`;
-}
+    const date = new Date(ensureUtc(isoString));
+    const pad = (n: number) => n.toString().padStart(2, '0');
 
-export default { convertData };
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+};
+
+export const toUtcIso = (localString?: string): string => {
+    if (!localString) return "";
+
+    const date = new Date(localString);
+
+    return date.toISOString().slice(0, 19);
+};
+
+export const formatDisplay = (dateInput: string | Date, lang: string) => {
+    if (!dateInput) return "";
+
+    const date = typeof dateInput === 'string'
+        ? new Date(ensureUtc(dateInput))
+        : dateInput;
+
+    const locale = lang === 'uk' ? 'uk-UA' : 'en-GB';
+
+    return date.toLocaleString(locale, {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+};

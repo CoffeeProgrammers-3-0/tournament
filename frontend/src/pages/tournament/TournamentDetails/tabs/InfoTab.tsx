@@ -14,8 +14,9 @@ import {
 } from "@mui/material";
 import SaveIcon from "@mui/icons-material/Save";
 import {ErrorMessages} from "../../../../components/main/ErrorMessages.tsx";
+import {toLocalInput} from "../../../../utils/data.ts";
 
-export const InfoTab = ({ state, formatDate, t }: any) => {
+export const InfoTab = ({ state, t }: any) => {
     return (
         <Grid container spacing={4}>
             <Grid size={{ xs: 12, md: 8 }}>
@@ -80,7 +81,7 @@ export const InfoTab = ({ state, formatDate, t }: any) => {
                     <CardContent sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
                         <Box>
                             <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ textTransform: "uppercase" }}>{t("tournament_details.info.reg_period")}</Typography>
-                            <Typography variant="body1" fontWeight={600} sx={{ mt: 0.5 }}>{formatDate(state.tournamentData.startRegistration)} — {formatDate(state.tournamentData.endRegistration)}</Typography>
+                            <Typography variant="body1" fontWeight={600} sx={{ mt: 0.5 }}>{toLocalInput(state.tournamentData.startRegistration)} — {toLocalInput(state.tournamentData.endRegistration)}</Typography>
                         </Box>
                         <Divider />
                         <Box sx={{ display: "flex", justifyContent: "space-between" }}>

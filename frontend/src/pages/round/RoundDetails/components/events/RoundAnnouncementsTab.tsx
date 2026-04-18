@@ -23,7 +23,8 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import type {RoundEventListResponseDto} from '../../../../../entities/roundEvent/roundEvent.dto';
 import type {RoundAdminMessageResponseDto} from '../../../../../entities/adminMessage/adminMessage.dto';
 import type {PaginationListResponseDto} from '../../../../../entities/wrappers/wrapper.dto';
-import {formatDateByLocale, HtmlContent} from "./constants.ts";
+import {HtmlContent} from "./constants.ts";
+import {formatDisplay} from "../../../../../utils/data.ts";
 import {useTranslation} from 'react-i18next';
 
 interface Props {
@@ -86,7 +87,7 @@ export const RoundAnnouncementsTab: React.FC<Props> = ({
                                         <Box>
                                             <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>{msg.creator?.fullName}</Typography>
                                             <Typography variant="caption" color="text.disabled">
-                                                {formatDateByLocale(msg.date, i18n.language)}
+                                                {formatDisplay(msg.date, i18n.language)}
                                             </Typography>
                                         </Box>
                                     </Stack>
@@ -145,8 +146,8 @@ export const RoundAnnouncementsTab: React.FC<Props> = ({
                                             <Stack direction="row" spacing={1} alignItems="center" color="text.secondary">
                                                 <AccessTimeIcon sx={{ fontSize: 16 }} />
                                                 <Typography variant="caption" fontWeight={600}>
-                                                    {formatDateByLocale(event.startDate, i18n.language)}
-                                                    {event.endDate && ` — ${formatDateByLocale(event.endDate, i18n.language)}`}
+                                                    {formatDisplay(event.startDate, i18n.language)}
+                                                    {event.endDate && ` — ${formatDisplay(event.endDate, i18n.language)}`}
                                                 </Typography>
                                             </Stack>
                                         </CardContent>

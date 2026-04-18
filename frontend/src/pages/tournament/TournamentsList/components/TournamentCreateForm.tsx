@@ -15,11 +15,7 @@ import {
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import {useTranslation} from "react-i18next";
 import {tournamentService} from "../../../../services/impl/TournamentService";
-
-const formatToLocalDateTime = (dateTimeStr: string) => {
-    if (!dateTimeStr) return "";
-    return dateTimeStr.length === 16 ? `${dateTimeStr}:00` : dateTimeStr;
-};
+import {toUtcIso} from "../../../../utils/data.ts";
 
 export const TournamentCreateForm = ({ onCancel, onSuccess }: { onCancel: () => void, onSuccess: () => void }) => {
     const { t } = useTranslation();
@@ -52,9 +48,9 @@ export const TournamentCreateForm = ({ onCancel, onSuccess }: { onCancel: () => 
         try {
             const payload = {
                 ...formData,
-                startTournament: formatToLocalDateTime(formData.endRegistration),
-                startRegistration: formatToLocalDateTime(formData.startRegistration),
-                endRegistration: formatToLocalDateTime(formData.endRegistration),
+                startRegistration: toUtcIso(formData.startRegistration as string),
+                endRegistration: toUtcIso(formData.endRegistration as string),
+                startTournament: toUtcIso(formData.endRegistration as string),
             };
             await tournamentService.createTournament(payload);
             onSuccess();
