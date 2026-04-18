@@ -69,7 +69,8 @@ export const useNotificationSocket = (isLoggedIn: boolean) => {
                 const errorMessage = frame.headers['message']?.toLowerCase() || '';
                 const isAuthError = errorMessage.includes('access denied') ||
                     errorMessage.includes('expired') ||
-                    errorMessage.includes('unauthorized');
+                    errorMessage.includes('unauthorized') ||
+                    errorMessage.includes('jwt');
 
                 if (isAuthError) {
                     console.warn("WebSocket Auth failed. Attempting to refresh token...");

@@ -1,14 +1,19 @@
 package com.project.backend.services.implementations;
 
+import com.project.backend.dto.event.*;
+import com.project.backend.repositories.RoundEventRepository;
 import com.project.backend.repositories.RoundRepository;
 import com.project.backend.repositories.TournamentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -18,31 +23,95 @@ public class StatusSchedulerServiceImpl {
 
     private final TournamentRepository tournamentRepository;
     private final RoundRepository roundRepository;
+    private final RoundEventRepository roundEventRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Scheduled(cron = "0 * * * * *")
     @Transactional
     public void updateStatusesBasedOnTime() {
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
+        System.out.println("STARTING UPDATE STATUSES: " + now);
+        List<Long> regsStarted = tournamentRepository.startRegistrationsAndReturnIds(now);
+        if (!regsStarted.isEmpty()) {
+            log.info("Opened registration for {} tournaments: {}", regsStarted.size(), regsStarted);
 
-        // 1. Початок реєстрації
-        int regsStarted = tournamentRepository.startRegistrations(now);
-        if (regsStarted > 0) log.info("Opened registration for {} tournaments", regsStarted);
+            regsStarted.forEach(id ->
+                    eventPublisher.publishEvent(new TournamentRegistrationStartedEvent(id))
+            );
+        }
 
-        // 2. Початок турнірів
-        int toursStarted = tournamentRepository.startTournaments(now);
-        if (toursStarted > 0) log.info("Started {} tournaments", toursStarted);
+        List<Long> toursStarted = tournamentRepository.startTournamentsAndReturnIds(now);
+        if (!toursStarted.isEmpty()) {
+            log.info("Started {} tournaments: {}", toursStarted.size(), toursStarted);
 
-        // 3. Початок раундів
-        int roundsStarted = roundRepository.startRounds(now);
-        if (roundsStarted > 0) log.info("Started {} rounds", roundsStarted);
+            toursStarted.forEach(id ->
+                    eventPublisher.publishEvent(new TournamentStartedEvent(id))
+            );
+        }
 
-        // 4. Закриття прийому робіт у раундах
-        int roundsClosed = roundRepository.closeRoundSubmissions(now);
-        if (roundsClosed > 0) log.info("Closed submissions for {} rounds", roundsClosed);
+        List<Long> roundsStarted = roundRepository.startRoundsAndReturnIds(now);
+        if (!roundsStarted.isEmpty()) {
+            log.info("Started {} rounds: {}", roundsStarted.size(), roundsStarted);
 
-        // 5. НОВА ЛОГІКА: Завершення турнірів
-        // Це спрацює, коли останній раунд перейде в EVALUATED (це зазвичай робить адмін вручну)
-        int toursFinished = tournamentRepository.finishTournaments();
-        if (toursFinished > 0) log.info("Successfully finished {} tournaments", toursFinished);
+            roundsStarted.forEach(id ->
+                    eventPublisher.publishEvent(new RoundStartedEvent(id))
+            );
+        }
+
+        List<Long> roundsClosed = roundRepository.closeRoundSubmissionsAndReturnIds(now);
+        if (!roundsClosed.isEmpty()) {
+            log.info("Closed submissions for {} rounds: {}", roundsClosed.size(), roundsClosed);
+
+            roundsClosed.forEach(id ->
+                    eventPublisher.publishEvent(new RoundSubmissionClosedEvent(id))
+            );
+        }
+
+        List<Long> toursFinished = tournamentRepository.finishTournamentsAndReturnIds();
+        if (!toursFinished.isEmpty()) {
+            log.info("Successfully finished {} tournaments: {}", toursFinished.size(), toursFinished);
+
+            toursFinished.forEach(id ->
+                    eventPublisher.publishEvent(new TournamentFinishedEvent(id))
+            );
+        }
+    }
+
+    @Scheduled(cron = "0 0/5 * * * *")
+    public void notifyDeadline24h() {
+        Instant now = Instant.now().plus(30, ChronoUnit.SECONDS).truncatedTo(ChronoUnit.MINUTES);
+        log.info("notifyDeadline24h: Scheduled task started at {}", now);
+
+        Instant from = now.plus(24, ChronoUnit.HOURS);
+        Instant to = from.plus(5, ChronoUnit.MINUTES);
+
+        List<Long> rounds = roundRepository.findRoundsWithDeadlineBetween(from, to);
+
+        if (!rounds.isEmpty()) {
+            log.info("Sending 24h deadline notifications for rounds: {}", rounds);
+
+            rounds.forEach(id ->
+                    eventPublisher.publishEvent(new RoundDeadline24hEvent(id))
+            );
+        }
+    }
+
+    @Scheduled(cron = "0 0/5 * * * *")
+    public void notifyEvent1h() {
+        Instant now = Instant.now().plus(30, ChronoUnit.SECONDS).truncatedTo(ChronoUnit.MINUTES);
+        log.info("notifyEvent1h: Scheduled task started at {}", now);
+
+        Instant from = now.plus(1, ChronoUnit.HOURS);
+        Instant to = from.plus(5, ChronoUnit.MINUTES);
+
+        List<Long> events = roundEventRepository.findEventsWithStartDateBetween(from, to);
+
+        if (!events.isEmpty()) {
+            log.info("Sending 1h before event for events: {}", events);
+
+            events.forEach(id ->
+                    eventPublisher.publishEvent(new RoundEventBefore1hEvent(id))
+            );
+        }
     }
 }

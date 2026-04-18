@@ -6,7 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Entity
 @Table(name = "round_events", schema = "tournament")
@@ -28,9 +28,9 @@ public class RoundEvent {
     private User creator;
 
     @Column(nullable = false)
-    private LocalDateTime startDate;
+    private Instant startDate;
     @Column(nullable = false)
-    private LocalDateTime endDate;
+    private Instant endDate;
     @Column(nullable = false)
     private RoundEventType type;
 

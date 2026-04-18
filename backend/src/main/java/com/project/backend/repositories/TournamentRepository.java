@@ -7,30 +7,47 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.util.List;
 
 public interface TournamentRepository extends JpaRepository<Tournament, Long>, JpaSpecificationExecutor<Tournament> {
-    // Переводимо з DRAFT у REGISTRATION, якщо настав час реєстрації
     @Modifying
-    @Query("UPDATE Tournament t SET t.status = com.project.backend.models.constants.TournamentStatus.REGISTRATION " +
-            "WHERE t.status = com.project.backend.models.constants.TournamentStatus.DRAFT " +
-            "AND t.startRegistration <= :now")
-    int startRegistrations(@Param("now") LocalDateTime now);
-
-    // Переводимо з REGISTRATION у RUNNING, якщо настав час початку турніру
-    @Modifying
-    @Query("UPDATE Tournament t SET t.status = com.project.backend.models.constants.TournamentStatus.RUNNING " +
-            "WHERE t.status = com.project.backend.models.constants.TournamentStatus.REGISTRATION " +
-            "AND t.startTournament <= :now")
-    int startTournaments(@Param("now") LocalDateTime now);
+    @Query(value = """
+        UPDATE tournament.tournaments t
+        SET status = 1
+        WHERE t.status = 0
+          AND t.start_registration <= :now
+        RETURNING t.id
+        """, nativeQuery = true)
+    List<Long> startRegistrationsAndReturnIds(@Param("now") Instant now);
 
     @Modifying
-    @Query("UPDATE Tournament t SET t.status = com.project.backend.models.constants.TournamentStatus.FINISHED " +
-            "WHERE t.status = com.project.backend.models.constants.TournamentStatus.RUNNING " +
-            // Умова 1: Кількість раундів досягла максимуму
-            "AND t.countOfRounds = (SELECT COUNT(r) FROM Round r WHERE r.tournament = t) " +
-            // Умова 2: Усі раунди цього турніру мають статус EVALUATED (немає жодного НЕ оціненого)
-            "AND NOT EXISTS (SELECT r2 FROM Round r2 WHERE r2.tournament = t " +
-            "AND r2.status != com.project.backend.models.constants.RoundStatus.EVALUATED)")
-    int finishTournaments();
+    @Query(value = """
+        UPDATE tournament.tournaments t
+        SET status = 2
+        WHERE t.status = 1
+          AND t.start_tournament <= :now
+        RETURNING t.id
+        """, nativeQuery = true)
+    List<Long> startTournamentsAndReturnIds(@Param("now") Instant now);
+
+    @Modifying
+    @Query(value = """
+        UPDATE tournament.tournaments t
+        SET status = 3
+        WHERE t.status = 2
+          AND t.count_of_rounds = (
+                SELECT COUNT(r.id)
+                FROM tournament.rounds r
+                WHERE r.tournament_id = t.id
+          )
+          AND NOT EXISTS (
+                SELECT 1
+                FROM tournament.rounds r2
+                WHERE r2.tournament_id = t.id
+                  AND r2.status != 3
+          )
+        RETURNING t.id
+        """, nativeQuery = true)
+    List<Long> finishTournamentsAndReturnIds();
 }

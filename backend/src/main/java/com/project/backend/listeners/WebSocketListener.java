@@ -2,8 +2,10 @@ package com.project.backend.listeners;
 
 import com.project.backend.dto.event.*;
 import com.project.backend.dto.team.TeamLeaderboardResponse;
+import com.project.backend.mappers.AdminMessageMapper;
 import com.project.backend.mappers.NotificationMapper;
 import com.project.backend.models.Notification;
+import com.project.backend.models.adminMessages.GlobalAdminMessage;
 import com.project.backend.repositories.NotificationRepository;
 import com.project.backend.repositories.TeamRepository;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +33,7 @@ public class WebSocketListener {
     private final TeamRepository teamRepository;
     private final NotificationMapper notificationMapper;
     private final NotificationRepository notificationRepository;
+    private final AdminMessageMapper adminMessageMapper;
 
     @Async
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -102,6 +105,18 @@ public class WebSocketListener {
                     notificationMapper.fromNotificationToResponse(notification)
             );
         }
+    }
+
+    @Async
+    @Transactional(propagation = Propagation.REQUIRES_NEW, isolation = Isolation.READ_COMMITTED)
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void handleGlobalAdminMessageCreatedEvent(GlobalAdminMessageCreatedEvent event) {
+        GlobalAdminMessage message = event.getGlobalAdminMessage();
+        convertAndSend(
+            "/topic/global_messages",
+            EventType.NEW_GLOBAL_MESSAGE,
+            adminMessageMapper.fromGlobalAdminMessageToGlobalResponse(message)
+        );
     }
 
     private void convertAndSend(String topic, EventType eventType, Object content) {

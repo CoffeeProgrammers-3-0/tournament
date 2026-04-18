@@ -1,8 +1,7 @@
 package com.project.backend.services.implementations;
 
 import com.project.backend.auth.utils.SecurityUtil;
-import com.project.backend.dto.event.TeamCreatedEvent;
-import com.project.backend.dto.event.TeamDeletedEvent;
+import com.project.backend.dto.event.*;
 import com.project.backend.dto.team.StatisticResponse;
 import com.project.backend.dto.team.StatisticRowDTO;
 import com.project.backend.dto.team.TeamLeaderboardResponse;
@@ -253,7 +252,12 @@ public class TeamServiceImpl implements TeamService {
             participant.setIsLeader(true);
         }
 
-        return teamRepository.save(team);
+        team = teamRepository.save(team);
+
+        UserAddedToTeamEvent event = new UserAddedToTeamEvent(participant);
+        eventPublisher.publishEvent(event);
+
+        return team;
     }
 
     @Override
@@ -280,7 +284,12 @@ public class TeamServiceImpl implements TeamService {
         }
 
         team.getTeamParticipants().remove(participantToRemove);
-        return teamRepository.save(team);
+        UserRemovedFromTeamEvent event = new UserRemovedFromTeamEvent(participantToRemove.getTeam(), participantToRemove.getUser(), participantToRemove.getTournament());
+        team = teamRepository.save(team);
+
+        eventPublisher.publishEvent(event);
+
+        return team;
     }
 
     @Transactional
@@ -296,10 +305,13 @@ public class TeamServiceImpl implements TeamService {
 
         Team team = findById(teamId);
 
-        team.getTeamParticipants()
+        List<TeamParticipant> leaders = team.getTeamParticipants()
                 .stream()
-                .filter(tp -> tp.getTournament().getId().equals(tournamentId) && tp.getIsLeader())
-                .forEach(tp -> tp.setIsLeader(false));
+                .filter(tp -> tp.getTournament().getId().equals(tournamentId) && tp.getIsLeader()).toList();
+
+
+        leaders.forEach(tp -> tp.setIsLeader(false));
+
         teamRepository.flush();
 
         TeamParticipant participantToSetLeader = team.getTeamParticipants()
@@ -310,7 +322,14 @@ public class TeamServiceImpl implements TeamService {
 
         participantToSetLeader.setIsLeader(true);
 
-        return teamRepository.save(team);
+        team = teamRepository.save(team);
+
+        UserSetToLeaderEvent event = new UserSetToLeaderEvent(participantToSetLeader);
+        eventPublisher.publishEvent(event);
+
+        leaders.stream().map(UserIsNoLongerLeaderEvent::new).forEach(eventPublisher::publishEvent);
+
+        return team;
     }
 
     @Override

@@ -1,5 +1,6 @@
 package com.project.backend.services.implementations;
 
+import com.project.backend.dto.event.JurySubmissionCreatedEvent;
 import com.project.backend.dto.event.PointsChangedForTeamEvent;
 import com.project.backend.models.Submission;
 import com.project.backend.models.User;
@@ -89,10 +90,14 @@ public class EvaluationServiceImpl implements EvaluationService {
         }
         List<Long> teamIds = submissions.stream().map(s -> s.getTeam().getId()).distinct().toList();
         List<PointsChangedForTeamEvent> events = teamIds.stream().map(id -> new PointsChangedForTeamEvent(id, roundId)).toList();
+        List<JurySubmissionCreatedEvent> events2 = assignmentsToSave.stream().map(JurySubmissionCreatedEvent::new).toList();
 
         jurySubmissionRepository.saveAll(assignmentsToSave);
 
         for(PointsChangedForTeamEvent event : events) {
+            eventPublisher.publishEvent(event);
+        }
+        for(JurySubmissionCreatedEvent event : events2) {
             eventPublisher.publishEvent(event);
         }
     }

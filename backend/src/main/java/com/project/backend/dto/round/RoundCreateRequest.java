@@ -1,8 +1,13 @@
 package com.project.backend.dto.round;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
+
+import java.time.Instant;
 
 @Data
 @Schema(name = "RoundCreateRequest", description = "DTO for creating a new round")
@@ -13,21 +18,19 @@ public class RoundCreateRequest {
     @Schema(description = "Name of the round", example = "Offline Round")
     private String name;
 
-    @NotBlank(message = "Start date is required")
-    @Pattern(
-            regexp = "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(:\\d{2})?$",
-            message = "Start date must be in ISO format (yyyy-MM-dd'T'HH:mm:ss)"
+    @NotNull(message = "Start date is required")
+    @Schema(
+            description = "Start date of the round in full ISO UTC format",
+            example = "2026-04-18T21:00:00.000Z"
     )
-    @Schema(description = "Start date of the round in ISO format", example = "2026-04-01T10:00:00")
-    private String startDate;
+    private Instant startDate;
 
-    @NotBlank(message = "End date is required")
-    @Pattern(
-            regexp = "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(:\\d{2})?$",
-            message = "End date must be in ISO format (yyyy-MM-dd'T'HH:mm:ss)"
+    @NotNull(message = "End date is required")
+    @Schema(
+            description = "End date of the round in full ISO UTC format",
+            example = "2026-04-19T20:59:00.000Z"
     )
-    @Schema(description = "End date of the round in ISO format", example = "2026-04-10T18:00:00")
-    private String endDate;
+    private Instant endDate;
 
     @NotNull(message = "Count of winners is required")
     @Min(value = 1, message = "There must be at least 1 winner")

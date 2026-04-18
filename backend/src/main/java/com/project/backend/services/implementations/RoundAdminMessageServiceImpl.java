@@ -1,5 +1,6 @@
 package com.project.backend.services.implementations;
 
+import com.project.backend.dto.event.RoundAdminMessageCreatedEvent;
 import com.project.backend.models.User;
 import com.project.backend.models.adminMessages.AdminMessage;
 import com.project.backend.models.adminMessages.RoundAdminMessage;
@@ -10,13 +11,14 @@ import com.project.backend.services.interfaces.RoundAdminMessageService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +27,8 @@ import java.time.LocalDateTime;
 public class RoundAdminMessageServiceImpl implements RoundAdminMessageService {
     private final RoundAdminMessageRepository roundAdminMessageRepository;
     private final RoundRepository roundRepository;
+
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public Page<RoundAdminMessage> findAll(Integer page, Integer size, Long roundId) {
@@ -45,8 +49,11 @@ public class RoundAdminMessageServiceImpl implements RoundAdminMessageService {
 
         roundAdminMessage.setContent(adminMessage.getContent());
         roundAdminMessage.setCreator(creator);
-        roundAdminMessage.setDate(LocalDateTime.now());
+        roundAdminMessage.setDate(Instant.now());
         roundAdminMessage.setRound(roundRepository.getReferenceById(roundId));
+
+        RoundAdminMessageCreatedEvent event = new RoundAdminMessageCreatedEvent(roundAdminMessage);
+        eventPublisher.publishEvent(event);
 
         return roundAdminMessageRepository.save(roundAdminMessage);
     }

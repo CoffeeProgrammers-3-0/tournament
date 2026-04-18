@@ -1,5 +1,6 @@
 package com.project.backend.services.implementations;
 
+import com.project.backend.dto.event.GlobalAdminMessageCreatedEvent;
 import com.project.backend.models.User;
 import com.project.backend.models.adminMessages.AdminMessage;
 import com.project.backend.models.adminMessages.GlobalAdminMessage;
@@ -8,13 +9,14 @@ import com.project.backend.services.interfaces.GlobalAdminMessageService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +24,7 @@ import java.time.LocalDateTime;
 @Transactional(readOnly = true)
 public class GlobalAdminMessageServiceImpl implements GlobalAdminMessageService {
     private final GlobalAdminMessageRepository globalAdminMessageRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public Page<GlobalAdminMessage> findAll(Integer page, Integer size) {
@@ -36,9 +39,15 @@ public class GlobalAdminMessageServiceImpl implements GlobalAdminMessageService 
 
         globalAdminMessage.setContent(adminMessage.getContent());
         globalAdminMessage.setCreator(creator);
-        globalAdminMessage.setDate(LocalDateTime.now());
+        globalAdminMessage.setDate(Instant.now());
+        globalAdminMessage.setSystem(adminMessage.isSystem());
 
-        return globalAdminMessageRepository.save(globalAdminMessage);
+        globalAdminMessage = globalAdminMessageRepository.save(globalAdminMessage);
+
+        GlobalAdminMessageCreatedEvent event = new GlobalAdminMessageCreatedEvent(globalAdminMessage);
+        eventPublisher.publishEvent(event);
+
+        return globalAdminMessage;
     }
 
     @Override

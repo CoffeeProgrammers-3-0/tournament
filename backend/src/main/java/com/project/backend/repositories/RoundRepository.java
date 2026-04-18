@@ -7,23 +7,42 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 public interface RoundRepository extends JpaRepository<Round, Long>, JpaSpecificationExecutor<Round> {
-    // Переводимо з DRAFT в ACTIVE, якщо настав час початку раунду
     @Modifying
-    @Query("UPDATE Round r SET r.status = com.project.backend.models.constants.RoundStatus.ACTIVE " +
-            "WHERE r.status = com.project.backend.models.constants.RoundStatus.DRAFT " +
-            "AND r.startDate <= :now")
-    int startRounds(@Param("now") LocalDateTime now);
+    @Query(value = """
+            UPDATE tournament.rounds r
+            SET status = 1
+            WHERE r.status = 0
+              AND r.start_date <= :now
+            RETURNING r.id
+            """, nativeQuery = true)
+    List<Long> startRoundsAndReturnIds(@Param("now") Instant now);
 
-    // Переводимо з ACTIVE в SUBMISSION_CLOSED, якщо час вийшов
     @Modifying
-    @Query("UPDATE Round r SET r.status = com.project.backend.models.constants.RoundStatus.SUBMISSION_CLOSED " +
-            "WHERE r.status = com.project.backend.models.constants.RoundStatus.ACTIVE " +
-            "AND r.endDate <= :now")
-    int closeRoundSubmissions(@Param("now") LocalDateTime now);
+    @Query(value = """
+            UPDATE tournament.rounds r
+            SET status = 2
+            WHERE r.status = 1
+              AND r.end_date <= :now
+            RETURNING r.id
+            """, nativeQuery = true)
+    List<Long> closeRoundSubmissionsAndReturnIds(@Param("now") Instant now);
+
+    @Query("""
+            SELECT r.id
+            FROM Round r
+            WHERE r.status = com.project.backend.models.constants.RoundStatus.ACTIVE
+              AND r.endDate >= :from
+              AND r.endDate < :to
+        """)
+    List<Long> findRoundsWithDeadlineBetween(
+            @Param("from") Instant from,
+            @Param("to") Instant to
+    );
 
     Optional<Round> findFirstByTournamentIdOrderByStartDateAsc(Long tournamentId);
 }

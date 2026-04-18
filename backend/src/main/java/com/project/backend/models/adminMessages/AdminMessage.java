@@ -7,7 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Entity
 @Table(name = "admin_messages", schema = "tournament")
@@ -26,11 +26,13 @@ public class AdminMessage {
     private User creator;
 
     @Column(nullable = false)
-    private LocalDateTime date;
+    private Instant date;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "target_type", nullable = false, insertable = false, updatable = false)
     private AdminMessageTargetType targetType;
 
     private String content;
+
+    private boolean isSystem;
 }
