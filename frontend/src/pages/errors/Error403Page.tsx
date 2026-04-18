@@ -1,7 +1,7 @@
-import {Button, Container, Typography} from "@mui/material";
+import {Box, Button, Container, Typography} from "@mui/material";
 import {useNavigate} from "react-router-dom";
 import {useTranslation} from "react-i18next";
-import SecurityIcon from '@mui/icons-material/Security';
+import errorImage from "../../assets/403.svg";
 
 export const Error403Page = () => {
     const navigate = useNavigate();
@@ -9,10 +9,12 @@ export const Error403Page = () => {
 
     return (
         <Container maxWidth="sm" sx={{ textAlign: "center", py: 10 }}>
-            <SecurityIcon sx={{ fontSize: 80, color: "error.main", mb: 2 }} />
-            <Typography variant="h1" fontWeight={800} color="error" gutterBottom>
-                403
-            </Typography>
+            <Box
+                component="img"
+                src={errorImage}
+                alt="403 Forbiden"
+                sx={{ width: "100%", maxWidth: 400, mb: 4 }}
+            />
             <Typography variant="h5" fontWeight={600} gutterBottom>
                 {t("errors.403.title") || "Access Denied"}
             </Typography>
