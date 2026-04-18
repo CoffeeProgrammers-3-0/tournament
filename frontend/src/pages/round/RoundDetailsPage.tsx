@@ -210,7 +210,9 @@ const RoundDetailsPage = () => {
                                onOpenAdvanceTeamsModal={() => editors.handleOpenAdvanceModal()}
                                onUnassignTeam={editors.handleUnassignTeam}
                                onExportLeaderboard={editors.handleExportLeaderboard} isExporting={editors.isExporting}
-                               errors={editors.errors}/>
+                               errors={editors.errors}
+                               onAssignAllTeams={editors.handleAssignAllTeams}
+                    onUnassignAllTeams={editors.handleUnassignAllTeams}/>
             )}
             {activeTabId === "submissions" && (
                 <RoundSubmissionsTab submissions={details.submissions} loadingTab={details.loadingTab}

@@ -28,6 +28,7 @@ import type {TeamLeaderboardResponseDto} from "../../../../../entities/team/team
 import type {RoundFullResponseDto} from "../../../../../entities/round/round.dto";
 import {ErrorMessages} from "../../../../../components/main/ErrorMessages.tsx";
 import {RoundFormula} from "./RoundFormula.tsx";
+import GroupRemoveIcon from "@mui/icons-material/GroupRemove";
 
 type Props = {
     leaderboard: TeamLeaderboardResponseDto[];
@@ -47,6 +48,8 @@ type Props = {
     onExportLeaderboard: () => void;
     isExporting: boolean;
     errors: string[];
+    onAssignAllTeams: () => void;
+    onUnassignAllTeams: () => void;
 };
 
 type WebSocketPayload = {
@@ -57,7 +60,8 @@ type WebSocketPayload = {
 export const RoundTeamsTab = ({
                                   setLeaderboard, leaderboard, loadingTab, hasMore, isNextPageLoading, onLoadMore,
                                   roundData, onOpenStats, navigate, t, isAdmin, onOpenAddMissingTeamsModal,
-                                  onOpenAdvanceTeamsModal, onUnassignTeam, onExportLeaderboard, isExporting, errors
+                                  onOpenAdvanceTeamsModal, onUnassignTeam, onExportLeaderboard, isExporting, errors,
+                                  onAssignAllTeams, onUnassignAllTeams
                               }: Props) => {
 
     useEffect(() => {
@@ -149,7 +153,7 @@ export const RoundTeamsTab = ({
                 </Typography>
                 <ErrorMessages errors={errors} />
 
-                <Box sx={{ display: 'flex', gap: 2 }}>
+                <Box sx={{ display: 'flex', gap: 2, flexWrap: "wrap", justifyContent: "flex-end" }}>
                     <Button
                         variant="outlined"
                         startIcon={isExporting ? <CircularProgress size={20} /> : <FileDownloadIcon />}
@@ -163,11 +167,31 @@ export const RoundTeamsTab = ({
                         <>
                             <Button
                                 variant="outlined"
+                                color="success"
+                                startIcon={<GroupAddIcon />}
+                                onClick={onAssignAllTeams}
+                            >
+                                {t("round_details.teams.assign_all")}
+                            </Button>
+
+                            <Button
+                                variant="outlined"
+                                color="error"
+                                startIcon={<GroupRemoveIcon />}
+                                onClick={onUnassignAllTeams}
+                                disabled={leaderboard.length === 0}
+                            >
+                                {t("round_details.teams.unassign_all")}
+                            </Button>
+
+                            <Button
+                                variant="outlined"
                                 startIcon={<GroupAddIcon />}
                                 onClick={onOpenAddMissingTeamsModal}
                             >
                                 {t("modals.add_teams.title")}
                             </Button>
+
                             <Button
                                 variant="contained"
                                 color="primary"

@@ -156,6 +156,46 @@ export const useRoundTeamsManager = ({
         return result;
     }, [selectedStats]);
 
+    const handleAssignAllTeams = useCallback(() => {
+        triggerConfirm({
+            title: t('round_details.confirm.assignAllTeams.title'),
+            description: t('round_details.confirm.assignAllTeams.description'),
+            confirmColor: "primary",
+            onConfirm: async () => {
+                setIsTeamsLoading(true);
+                try {
+                    await roundService.assignAllTeams(roundId);
+                    await fetchSubmissions(); // Оновлюємо дані після додавання
+                    closeConfirm();
+                } catch (e) {
+                    handleError(e, "Помилка додавання всіх команд");
+                } finally {
+                    setIsTeamsLoading(false);
+                }
+            }
+        });
+    }, [roundId, t, triggerConfirm, closeConfirm, fetchSubmissions, handleError]);
+
+    const handleUnassignAllTeams = useCallback(() => {
+        triggerConfirm({
+            title: t('round_details.confirm.unassignAllTeams.title'),
+            description: t('round_details.confirm.unassignAllTeams.description'),
+            confirmColor: "error",
+            onConfirm: async () => {
+                setIsTeamsLoading(true);
+                try {
+                    await roundService.unassignAllTeams(roundId);
+                    await fetchSubmissions(); // Оновлюємо дані після видалення
+                    closeConfirm();
+                } catch (e) {
+                    handleError(e, "Помилка видалення всіх команд");
+                } finally {
+                    setIsTeamsLoading(false);
+                }
+            }
+        });
+    }, [roundId, t, triggerConfirm, closeConfirm, fetchSubmissions, handleError]);
+
     return {
         addMissingModalOpen, setAddMissingModalOpen,
         advanceModalOpen, setAdvanceModalOpen,
@@ -188,5 +228,8 @@ export const useRoundTeamsManager = ({
         aggregatedCriteria,
         juryList: selectedStats?.pointsPerJury ? Object.keys(selectedStats.pointsPerJury) : [],
         criteriaList: Object.keys(aggregatedCriteria),
+
+        handleAssignAllTeams,
+        handleUnassignAllTeams,
     };
 };

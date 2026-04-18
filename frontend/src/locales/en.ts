@@ -524,6 +524,8 @@ export const en = {
             "points": "Points",
             "no_data": "No data",
             "calculation_logic": "Score Calculation Logic",
+            "assign_all": "Assign All Teams",
+            "unassign_all": "Remove All Teams",
             "formula": {
                 "total_score_title": "Total Team Score",
                 "jury_scores_sum": "Σ Jury Scores",
@@ -553,6 +555,14 @@ export const en = {
             "auto_assign_desc": "Enter number of juries per submission. Note: this will erase all existing jury assignments and points.",
         },
         "confirm": {
+            "assignAllTeams": {
+                "title": "Assign All Teams",
+                "description": "Are you sure you want to assign ALL available teams from the tournament to this round?"
+            },
+            "unassignAllTeams": {
+                "title": "Remove All Teams",
+                "description": "Are you sure you want to completely clear the leaderboard and remove ALL teams from this round? This action will not delete the teams from the tournament."
+            },
             "deleteRound": {
                 "title": "Delete round?",
                 "description": "This action cannot be undone. Continue?"
