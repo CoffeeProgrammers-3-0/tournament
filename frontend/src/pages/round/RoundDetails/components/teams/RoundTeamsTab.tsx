@@ -22,7 +22,7 @@ import PersonRemoveIcon from "@mui/icons-material/PersonRemove";
 import FastForwardIcon from "@mui/icons-material/FastForward";
 import GroupIcon from "@mui/icons-material/Group";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
-import {Client} from "@stomp/stompjs";
+import {Client, type IMessage} from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 import type {TeamLeaderboardResponseDto} from "../../../../../entities/team/team.dto";
 import type {RoundFullResponseDto} from "../../../../../entities/round/round.dto";
@@ -64,8 +64,66 @@ export const RoundTeamsTab = ({
                                   onAssignAllTeams, onUnassignAllTeams
                               }: Props) => {
 
+
     useEffect(() => {
         if (!roundData?.id) return;
+
+        const updateWithWS = (message: IMessage) => {
+            const payload: WebSocketPayload = JSON.parse(message.body);
+            const { type, content } = payload;
+
+            setLeaderboard((prevLeaderboard) => {
+                let updated = [...prevLeaderboard];
+
+                switch (type) {
+                    case 'TEAM_ASSIGNED_TO_ROUND': {
+                        const newTeams = content.filter(
+                            (newTeam: TeamLeaderboardResponseDto) => !prevLeaderboard.some(t => t.id === newTeam.id)
+                        );
+                        updated = [...prevLeaderboard, ...newTeams];
+                        break;
+                    }
+
+                    case 'TEAM_UNASSIGNED_FROM_ROUND':
+                    case 'TEAM_DELETED': {
+                        const idsToRemove = new Set(content.map((item: { id: number }) => item.id));
+                        updated = prevLeaderboard.filter(t => !idsToRemove.has(t.id));
+                        break;
+                    }
+
+                    case 'POINTS_CHANGED': {
+                        let newLeaderboard = [...prevLeaderboard];
+
+                        content.forEach((updatedTeam: TeamLeaderboardResponseDto) => {
+                            const index = newLeaderboard.findIndex(t => t.id === updatedTeam.id);
+
+                            if (index !== -1) {
+                                newLeaderboard[index] = { ...newLeaderboard[index], ...updatedTeam };
+                            } else {
+                                const lowestVisiblePoints = newLeaderboard.length > 0
+                                    ? newLeaderboard[newLeaderboard.length - 1].points
+                                    : 0;
+
+                                if (updatedTeam.points > lowestVisiblePoints) {
+                                    newLeaderboard.push(updatedTeam);
+                                }
+                            }
+                        });
+
+                        return newLeaderboard
+                            .sort((a, b) => b.points - a.points || a.name.localeCompare(b.name))
+                            .slice(0, prevLeaderboard.length > 20 ? prevLeaderboard.length : 20);
+                    }
+
+                    default:
+                        break;
+                }
+
+                return updated
+                    .sort((a, b) => b.points - a.points || b.id - a.id)
+                    .slice(0, Math.max(prevLeaderboard.length, 10));
+            });
+        };
 
         const client = new Client({
             webSocketFactory: () => new SockJS(`${import.meta.env.VITE_API_BASE_URL || ''}/ws`),
@@ -76,60 +134,7 @@ export const RoundTeamsTab = ({
                 console.log(`Connected to WebSocket for Round ${roundData.id}`);
 
                 client.subscribe(`/topic/rounds/${roundData.id}/leaderboard`, (message) => {
-                    const payload: WebSocketPayload = JSON.parse(message.body);
-                    const { type, content } = payload;
-
-                    setLeaderboard((prevLeaderboard) => {
-                        let updated = [...prevLeaderboard];
-
-                        switch (type) {
-                            case 'TEAM_ASSIGNED_TO_ROUND': {
-                                const newTeams = content.filter(
-                                    (newTeam: TeamLeaderboardResponseDto) => !prevLeaderboard.some(t => t.id === newTeam.id)
-                                );
-                                updated = [...prevLeaderboard, ...newTeams];
-                                break;
-                            }
-
-                            case 'TEAM_UNASSIGNED_FROM_ROUND':
-                            case 'TEAM_DELETED': {
-                                const idsToRemove = new Set(content.map((item: { id: number }) => item.id));
-                                updated = prevLeaderboard.filter(t => !idsToRemove.has(t.id));
-                                break;
-                            }
-
-                            case 'POINTS_CHANGED': {
-                                let newLeaderboard = [...prevLeaderboard];
-
-                                content.forEach((updatedTeam: TeamLeaderboardResponseDto) => {
-                                    const index = newLeaderboard.findIndex(t => t.id === updatedTeam.id);
-
-                                    if (index !== -1) {
-                                        newLeaderboard[index] = { ...newLeaderboard[index], ...updatedTeam };
-                                    } else {
-                                        const lowestVisiblePoints = newLeaderboard.length > 0
-                                            ? newLeaderboard[newLeaderboard.length - 1].points
-                                            : 0;
-
-                                        if (updatedTeam.points > lowestVisiblePoints) {
-                                            newLeaderboard.push(updatedTeam);
-                                        }
-                                    }
-                                });
-
-                                return newLeaderboard
-                                    .sort((a, b) => b.points - a.points || a.name.localeCompare(b.name))
-                                    .slice(0, prevLeaderboard.length > 20 ? prevLeaderboard.length : 20);
-                            }
-
-                            default:
-                                break;
-                        }
-
-                        return updated
-                            .sort((a, b) => b.points - a.points || b.id - a.id)
-                            .slice(0, Math.max(prevLeaderboard.length, 10)); // Keep the list from shrinking
-                        });
+                    updateWithWS(message);
                 });
             },
             onStompError: (frame) => {

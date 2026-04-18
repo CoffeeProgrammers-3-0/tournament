@@ -16,8 +16,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import type {RoundEventRequestDto,} from '../../../../../entities/roundEvent/roundEvent.dto';
 import ReactQuill from "react-quill-new";
 import {HtmlContent, quillModules} from "./constants";
-import {formatDisplay, toLocalInput, toUtcIso} from "../../../../../utils/data.ts";
-import {useTranslation} from "react-i18next";
+import {toLocalInput, toUtcIso} from "../../../../../utils/data.ts";
 
 export const CreateMessageDialog: React.FC<{
     open: boolean; onClose: () => void; t: any; isLoading?: boolean;
@@ -63,7 +62,6 @@ export const CreateEventDialog: React.FC<{
     open: boolean; onClose: () => void; t: any; isAdmin: boolean; isLoading?: boolean;
     initialData?: any; onSubmit: (data: any) => Promise<void>;
 }> = ({ open, onClose, onSubmit, initialData, isLoading, isAdmin, t }) => {
-    const { i18n } = useTranslation();
     const [formData, setFormData] = useState<Partial<RoundEventRequestDto>>({});
     const [isEditing, setIsEditing] = useState(false);
 
@@ -77,7 +75,6 @@ export const CreateEventDialog: React.FC<{
                     endDate: toLocalInput(initialData.endDate)
                 });
             } else {
-                // Встановлюємо свіжі дати при кожному відкритті модалки створення
                 const now = new Date();
                 const inOneHour = new Date(now.getTime() + 3600000);
 
@@ -118,7 +115,7 @@ export const CreateEventDialog: React.FC<{
                         <HtmlContent dangerouslySetInnerHTML={{ __html: value || '—' }} sx={{ bgcolor: 'action.hover', p: 2, borderRadius: 2 }} />
                     ) : (
                         <Typography variant="body1" sx={{ fontWeight: 600, color: 'text.primary' }}>
-                            {type === 'datetime' && value ? formatDisplay(value, i18n.language) : (value || '—')}
+                            {type === 'datetime' && (value  || '—')}
                         </Typography>
                     )}
                 </Box>

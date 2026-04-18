@@ -4,6 +4,7 @@ import SockJS from "sockjs-client";
 import Cookies from "js-cookie";
 import {notificationService} from "../services/impl/NotificationService.ts";
 import type {NotificationResponseDto} from "../entities/notification/notification.dto.ts";
+import authService from "../services/auth/AuthService.ts";
 
 interface NotificationWsPayload {
     type: string;
@@ -16,7 +17,6 @@ export const useNotificationSocket = (isLoggedIn: boolean) => {
     const [latestNotification, setLatestNotification] = useState<NotificationResponseDto | null>(null);
     const userId = Cookies.get("userId");
 
-    // Initial fetch
     const fetchUnseenCount = useCallback(async () => {
         if (!isLoggedIn) return;
         try {
@@ -34,19 +34,24 @@ export const useNotificationSocket = (isLoggedIn: boolean) => {
 
         const client = new Client({
             webSocketFactory: () => new SockJS(`${import.meta.env.VITE_API_BASE_URL || ''}/ws`),
-            connectHeaders: {
-                Authorization: `Bearer ${Cookies.get("accessToken")}`,
-            },
             reconnectDelay: 5000,
             heartbeatIncoming: 10000,
             heartbeatOutgoing: 10000,
+
+            // 1. Use beforeConnect to dynamically fetch the token on EVERY attempt
+            beforeConnect: () => {
+                const token = Cookies.get("accessToken");
+                client.connectHeaders = {
+                    Authorization: `Bearer ${token}`,
+                };
+            },
+
             onConnect: () => {
                 console.log(`Connected to /topic/notifications/${userId}`);
 
                 client.subscribe(`/topic/notifications/${userId}`, (message) => {
                     const payload: NotificationWsPayload = JSON.parse(message.body);
-                    console.log(message)
-                    // Update the count from the WS payload immediately
+
                     if (payload.countUnseen !== undefined) {
                         setUnseenCount(payload.countUnseen);
                     }
@@ -54,13 +59,31 @@ export const useNotificationSocket = (isLoggedIn: boolean) => {
                     if (payload.content) {
                         setLatestNotification(payload.content);
                     }
-
-                    // Optional: You could trigger a toast/snackbar here using payload.content.key
-                    console.log("New Notification Received:", payload.content);
                 });
             },
-            onStompError: (frame) => {
+
+            // 2. Intercept the Auth Error and trigger a refresh
+            onStompError: async (frame) => {
                 console.error('WS Error:', frame.headers['message']);
+
+                const errorMessage = frame.headers['message']?.toLowerCase() || '';
+                const isAuthError = errorMessage.includes('access denied') ||
+                    errorMessage.includes('expired') ||
+                    errorMessage.includes('unauthorized');
+
+                if (isAuthError) {
+                    console.warn("WebSocket Auth failed. Attempting to refresh token...");
+
+                    client.deactivate();
+
+                    try {
+                        await authService.refresh();
+
+                        client.activate();
+                    } catch (refreshError) {
+                        console.error("Token refresh failed. User needs to log in again.", refreshError);
+                    }
+                }
             },
         });
 
