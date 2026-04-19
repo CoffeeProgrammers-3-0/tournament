@@ -21,4 +21,16 @@ public interface TournamentService {
     Tournament findById(Long tournamentId);
 
     Tournament findByIdAdmin(Long tournamentId);
+
+    void startRegistration(Long tournamentId);
+
+    void startTournament(Long tournamentId);
+
+    void finish(Long tournamentId);
+
+    void rollbackFinishTournament(Long tournamentId);
+
+    void rollbackStartTournament(Long tournamentId);
+
+    void draft(Long tournamentId);
 }

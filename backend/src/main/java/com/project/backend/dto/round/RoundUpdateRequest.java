@@ -1,6 +1,5 @@
 package com.project.backend.dto.round;
 
-import com.project.backend.models.constants.RoundStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -45,8 +44,4 @@ public class RoundUpdateRequest {
     @NotBlank(message = "Task description is required")
     @Schema(description = "Task description for the round", example = "Implement a REST API for a mini application")
     private String task;
-
-    @NotNull(message = "Status cannot be null if provided")
-    @Schema(description = "Status of the round", example = "ACTIVE")
-    private RoundStatus status;
 }

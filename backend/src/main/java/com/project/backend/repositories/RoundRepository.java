@@ -1,6 +1,7 @@
 package com.project.backend.repositories;
 
 import com.project.backend.models.Round;
+import com.project.backend.models.constants.RoundStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
@@ -42,6 +43,17 @@ public interface RoundRepository extends JpaRepository<Round, Long>, JpaSpecific
     List<Long> findRoundsWithDeadlineBetween(
             @Param("from") Instant from,
             @Param("to") Instant to
+    );
+
+    @Query("""
+        SELECT CASE WHEN COUNT(r) > 0 THEN TRUE ELSE FALSE END
+        FROM Round r
+        WHERE r.tournament.id = :tournamentId
+        AND r.status IN :statuses
+    """)
+    boolean existsByTournamentIdAndStatuses(
+            @Param("tournamentId") Long tournamentId,
+            @Param("statuses") List<RoundStatus> statuses
     );
 
     Optional<Round> findFirstByTournamentIdOrderByStartDateAsc(Long tournamentId);

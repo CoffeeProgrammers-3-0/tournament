@@ -1,14 +1,20 @@
 package com.project.backend.services.implementations;
 
+import com.project.backend.dto.event.TournamentFinishedEvent;
+import com.project.backend.dto.event.TournamentRegistrationStartedEvent;
+import com.project.backend.dto.event.TournamentStartedEvent;
 import com.project.backend.models.Tournament;
 import com.project.backend.models.User;
+import com.project.backend.models.constants.RoundStatus;
 import com.project.backend.models.constants.TournamentStatus;
+import com.project.backend.repositories.RoundRepository;
 import com.project.backend.repositories.TournamentRepository;
 import com.project.backend.repositories.specifications.TournamentSpecification;
 import com.project.backend.services.interfaces.TournamentService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -16,12 +22,18 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
 @Transactional(readOnly = true)
 public class TournamentServiceImpl implements TournamentService {
     private final TournamentRepository tournamentRepository;
+    private final RoundRepository roundRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -67,7 +79,6 @@ public class TournamentServiceImpl implements TournamentService {
         tournamentToUpdate.setEndRegistration(tournament.getEndRegistration());
         tournamentToUpdate.setMaxCountOfTeam(tournament.getMaxCountOfTeam());
         tournamentToUpdate.setCountOfRounds(tournament.getCountOfRounds());
-        tournamentToUpdate.setStatus(tournament.getStatus());
         return tournamentRepository.save(tournamentToUpdate);
     }
 
@@ -120,5 +131,105 @@ public class TournamentServiceImpl implements TournamentService {
     @Override
     public Tournament findByIdAdmin(Long tournamentId) {
         return tournamentRepository.findById(tournamentId).orElseThrow(() -> new EntityNotFoundException("Tournament with id " + tournamentId + " not found"));
+    }
+
+    @Override
+    public void startRegistration(Long tournamentId) {
+        Tournament tournament = findById(tournamentId);
+
+        if(tournament.getStatus() != TournamentStatus.DRAFT) {
+            throw new IllegalStateException("Only tournament with DRAFT status can be set to REGISTRATION");
+        }
+
+        tournament.setStatus(TournamentStatus.REGISTRATION);
+        tournament.setStartRegistration(Instant.now());
+
+        tournamentRepository.save(tournament);
+
+        TournamentRegistrationStartedEvent event = new TournamentRegistrationStartedEvent(tournamentId);
+        eventPublisher.publishEvent(event);
+    }
+
+    @Override
+    public void startTournament(Long tournamentId) {
+        Tournament tournament = findById(tournamentId);
+
+        if(tournament.getStatus() != TournamentStatus.REGISTRATION) {
+            throw new IllegalStateException("Only tournament with REGISTRATION status can be set to RUNNING");
+        }
+
+        tournament.setStatus(TournamentStatus.RUNNING);
+        tournament.setEndRegistration(Instant.now());
+        tournament.setStartTournament(tournament.getEndRegistration());
+
+        tournamentRepository.save(tournament);
+
+        TournamentStartedEvent event = new TournamentStartedEvent(tournamentId);
+        eventPublisher.publishEvent(event);
+    }
+
+    @Override
+    public void finish(Long tournamentId) {
+        Tournament tournament = findById(tournamentId);
+
+        if(tournament.getStatus() != TournamentStatus.RUNNING) {
+            throw new IllegalStateException("Only tournament with RUNNING status can be set to FINISHED");
+        }
+        if(roundRepository.existsByTournamentIdAndStatuses(tournamentId, List.of(RoundStatus.ACTIVE, RoundStatus.SUBMISSION_CLOSED))) {
+            throw new IllegalStateException("Can not finish round that has ACTIVE or SUBMISSION_CLOSED rounds");
+        }
+
+        tournament.setStatus(TournamentStatus.FINISHED);
+        tournamentRepository.save(tournament);
+
+        TournamentFinishedEvent event = new TournamentFinishedEvent(tournamentId);
+        eventPublisher.publishEvent(event);
+    }
+
+    @Override
+    public void rollbackFinishTournament(Long tournamentId) {
+        Tournament tournament = findById(tournamentId);
+
+        if(tournament.getStatus() != TournamentStatus.FINISHED) {
+            throw new IllegalStateException("Only tournament with FINISHED status can be rolled back to RUNNING");
+        }
+
+        tournament.setStatus(TournamentStatus.RUNNING);
+        tournamentRepository.save(tournament);
+    }
+
+    @Override
+    public void rollbackStartTournament(Long tournamentId) {
+        Tournament tournament = findById(tournamentId);
+
+        if(tournament.getStatus() != TournamentStatus.RUNNING) {
+            throw new IllegalStateException("Only tournament with RUNNING status can be rolled back to REGISTRATION");
+        }
+
+        tournament.setStatus(TournamentStatus.REGISTRATION);
+        tournament.setEndRegistration(Instant.now().plus(1, ChronoUnit.DAYS));
+        tournament.setStartTournament(tournament.getEndRegistration());
+        tournamentRepository.save(tournament);
+    }
+
+    @Override
+    public void draft(Long tournamentId) {
+        Tournament tournament = findById(tournamentId);
+
+        if(tournament.getStatus() != TournamentStatus.REGISTRATION) {
+            throw new IllegalStateException("Only tournament with REGISTRATION status can be rolled back to DRAFT");
+        }
+
+        if(roundRepository.existsByTournamentIdAndStatuses(tournamentId, List.of(RoundStatus.ACTIVE, RoundStatus.SUBMISSION_CLOSED, RoundStatus.EVALUATED))) {
+            throw new IllegalStateException("Tournaments that have any other round rather then draft round can not be drafted");
+        }
+
+        tournament.setStatus(TournamentStatus.DRAFT);
+        tournament.setStartRegistration(Instant.now().plus(1, ChronoUnit.DAYS));
+        if(tournament.getEndRegistration().isBefore(tournament.getStartRegistration())) {
+            tournament.setEndRegistration(tournament.getStartRegistration().plus(1, ChronoUnit.DAYS));
+            tournament.setStartTournament(tournament.getEndRegistration());
+        }
+        tournamentRepository.save(tournament);
     }
 }

@@ -246,7 +246,7 @@ public class RoundController {
         ByteArrayResource resource = new ByteArrayResource(excelBytes);
 
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=round_"+roundId+".xlsx")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=round_" + roundId + ".xlsx")
                 .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                 .body(resource);
     }
@@ -381,5 +381,65 @@ public class RoundController {
                 .toList());
 
         return response;
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/rounds/{round_id}/start-round")
+    @Operation(summary = "Starts round", description = "Changes status of round from DRAFT to ACTIVE and changes startDate")
+    private void startRound(
+            @Parameter(description = "ID of the round", example = "1")
+            @PathVariable(value = "round_id") Long roundId
+    ) {
+        roundService.startRound(roundId);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/rounds/{round_id}/close-submissions")
+    @Operation(summary = "Closes submissions", description = "Changes status of round from ACTIVE to SUBMISSION_CLOSED and changes endDate")
+    private void closeSubmissions(
+            @Parameter(description = "ID of the round", example = "1")
+            @PathVariable(value = "round_id") Long roundId
+    ) {
+        roundService.closeSubmissions(roundId);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/rounds/{round_id}/evaluate")
+    @Operation(summary = "Sets round status to evaluated", description = "Changes status of round from SUBMISSION_CLOSED to EVALUATED")
+    private void evaluate(
+            @Parameter(description = "ID of the round", example = "1")
+            @PathVariable(value = "round_id") Long roundId
+    ) {
+        roundService.evaluate(roundId);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/rounds/{round_id}/rollback-close-submissions")
+    @Operation(summary = "Rollback close submissions", description = "Rollbacks status of round from EVALUATED to SUBMISSION_CLOSED")
+    private void rollbackCloseSubmissions(
+            @Parameter(description = "ID of the round", example = "1")
+            @PathVariable(value = "round_id") Long roundId
+    ) {
+        roundService.rollbackCloseSubmissions(roundId);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/rounds/{round_id}/rollback-start-round")
+    @Operation(summary = "Rollbacks start of the round", description = "Rollbacks status of round from SUBMISSION_CLOSED to ACTIVE and changes endDate")
+    private void rollbackStartRound(
+            @Parameter(description = "ID of the round", example = "1")
+            @PathVariable(value = "round_id") Long roundId
+    ) {
+        roundService.rollbackStartRound(roundId);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/rounds/{round_id}/draft")
+    @Operation(summary = "Sets round status to draft", description = "Rollbacks status of round from ACTIVE to DRAFT")
+    private void draft(
+            @Parameter(description = "ID of the round", example = "1")
+            @PathVariable(value = "round_id") Long roundId
+    ) {
+        roundService.draft(roundId);
     }
 }

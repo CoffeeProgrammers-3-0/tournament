@@ -27,6 +27,8 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -57,6 +59,10 @@ public class RoundServiceImpl implements RoundService {
         Tournament tournament = tournamentRepository.findOne(
                 TournamentSpecification.byId(tournamentId)
         ).orElseThrow(() -> new EntityNotFoundException("Tournament not found"));
+
+        if(tournament.getStatus() == TournamentStatus.FINISHED) {
+            throw new IllegalStateException("Can not create round on FINISHED tournament");
+        }
 
         long actualCountOfRounds = roundRepository.count(
                 RoundSpecification.byTournamentId(tournamentId)
@@ -120,7 +126,6 @@ public class RoundServiceImpl implements RoundService {
 
         existing.setName(round.getName());
         existing.setRequirements(round.getRequirements());
-        existing.setStatus(round.getStatus());
         existing.setEndDate(round.getEndDate());
         existing.setTask(round.getTask());
         existing.setCountOfWinners(round.getCountOfWinners());
@@ -328,5 +333,132 @@ public class RoundServiceImpl implements RoundService {
     public void unassignAllTeams(Long roundId) {
         Tournament tournament = tournamentRepository.findOne(TournamentSpecification.byRoundId(roundId)).orElseThrow(() -> new EntityNotFoundException("Tournament for round with id " + roundId + " not found"));
         unassignTeams(roundId, teamRepository.findAll(TeamSpecification.byTournamentId(tournament.getId())).stream().map(Team::getId).toList());
+    }
+
+    @Override
+    @Transactional
+    public void startRound(Long roundId) {
+        Round round = findById(roundId);
+
+        if(round.getStatus() != RoundStatus.DRAFT) {
+            throw new IllegalStateException("Only rounds with DRAFT status can be started");
+        }
+
+        if(round.getTournament().getStatus() != TournamentStatus.RUNNING) {
+            throw new IllegalStateException("Can not start round on tournament that is not RUNNING(currently: "+round.getTournament().getStatus()+")");
+        }
+
+        round.setStatus(RoundStatus.ACTIVE);
+        round.setStartDate(Instant.now());
+        if(round.getEndDate().isBefore(round.getStartDate())) {
+            round.setEndDate(round.getStartDate().plus(1, ChronoUnit.DAYS));
+        }
+
+        roundRepository.save(round);
+
+        RoundStartedEvent event = new RoundStartedEvent(roundId);
+        eventPublisher.publishEvent(event);
+    }
+
+    @Override
+    @Transactional
+    public void closeSubmissions(Long roundId) {
+        Round round = findById(roundId);
+
+        if(round.getStatus() != RoundStatus.ACTIVE) {
+            throw new IllegalStateException("Can not close submissions on round with status " + round.getStatus());
+        }
+
+        if(round.getTournament().getStatus() != TournamentStatus.RUNNING) {
+            throw new IllegalStateException("Can not set round to SUBMISSION_CLOSED on tournament that is not RUNNING(currently: "+round.getTournament().getStatus()+")");
+        }
+
+        round.setStatus(RoundStatus.SUBMISSION_CLOSED);
+        round.setEndDate(Instant.now());
+        roundRepository.save(round);
+
+        RoundSubmissionClosedEvent event = new RoundSubmissionClosedEvent(roundId);
+        eventPublisher.publishEvent(event);
+    }
+
+    @Override
+    @Transactional
+    public void evaluate(Long roundId) {
+        Round round = findById(roundId);
+
+        if(round.getStatus() != RoundStatus.SUBMISSION_CLOSED) {
+            throw new IllegalStateException("Can not evaluate round with status " + round.getStatus());
+        }
+
+        if(round.getTournament().getStatus() != TournamentStatus.RUNNING) {
+            throw new IllegalStateException("Can not set round to EVALUATED on tournament that is not RUNNING(currently: "+round.getTournament().getStatus()+")");
+        }
+
+        round.setStatus(RoundStatus.EVALUATED);
+        roundRepository.save(round);
+
+        RoundEvaluatedEvent event = new RoundEvaluatedEvent(roundId);
+        eventPublisher.publishEvent(event);
+    }
+
+    @Override
+    @Transactional
+    public void rollbackCloseSubmissions(Long roundId) {
+        Round round = findById(roundId);
+
+        if(round.getStatus() != RoundStatus.EVALUATED) {
+            throw new IllegalStateException("Can not rollback round status from " + round.getStatus() + " to SUBMISSION_CLOSED");
+        }
+
+        if(round.getTournament().getStatus() == TournamentStatus.FINISHED) {
+            throw new IllegalStateException("Can not rollback round to SUBMISSION_CLOSED on tournament that is FINISHED");
+        }
+
+        round.setStatus(RoundStatus.SUBMISSION_CLOSED);
+        roundRepository.save(round);
+    }
+
+    @Override
+    @Transactional
+    public void rollbackStartRound(Long roundId) {
+        Round round = findById(roundId);
+
+        if(round.getStatus() != RoundStatus.SUBMISSION_CLOSED) {
+            throw new IllegalStateException("Can not rollback round status from " + round.getStatus() + " to ACTIVE");
+        }
+
+        if(round.getTournament().getStatus() == TournamentStatus.FINISHED) {
+            throw new IllegalStateException("Can not rollback round to ACTIVE on tournament that is FINISHED");
+        }
+
+        round.setStatus(RoundStatus.ACTIVE);
+        round.setEndDate(Instant.now().plus(1, ChronoUnit.DAYS));
+        roundRepository.save(round);
+    }
+
+    @Override
+    @Transactional
+    public void draft(Long roundId) {
+        Round round = findById(roundId);
+
+        if(round.getStatus() != RoundStatus.ACTIVE) {
+            throw new IllegalStateException("Can not rollback round status from " + round.getStatus() + " to DRAFT");
+        }
+
+        if(round.getTournament().getStatus() == TournamentStatus.FINISHED) {
+            throw new IllegalStateException("Can not rollback round to DRAFT on tournament that is FINISHED");
+        }
+
+        if(teamRoundRepository.exists(TeamRoundSpecification.byRoundId(roundId))) {
+            throw new IllegalStateException("Can not rollback round that has teams to DRAFT");
+        }
+
+        round.setStatus(RoundStatus.DRAFT);
+        round.setStartDate(Instant.now().plus(1, ChronoUnit.DAYS));
+        if(round.getEndDate().isBefore(round.getStartDate())) {
+            round.setEndDate(round.getStartDate().plus(1, ChronoUnit.DAYS));
+        }
+
+        roundRepository.save(round);
     }
 }

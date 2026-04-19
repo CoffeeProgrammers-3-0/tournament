@@ -29,7 +29,8 @@ public enum NotificationKey {
     JURY_ASSIGNED_TO_ROUND("notifications.jury.assigned_to_round"),
     ROUND_ADMIN_MESSAGE_CREATED("notifications.round_admin_message.created"),
     ROUND_EVENT_CREATED("notifications.round_event.created"),
-    ROUND_EVENT_BEFORE_1H("notifications.round_event.before_1h");
+    ROUND_EVENT_BEFORE_1H("notifications.round_event.before_1h"),
+    ROUND_EVALUATED("notifications.round.evaluated");
 
     private final String i18nKey;
 }

@@ -413,6 +413,23 @@ public class NotificationListener {
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void handleRoundEvaluatedEvent(RoundEvaluatedEvent event) {
+        Round round = roundRepository.findById(event.getId()).orElseThrow(() -> new EntityNotFoundException("Round with id " + event.getId() + " not found"));
+        List<User> users = userRepository.findAll(UserSpecification.byRoundId(round.getId()));
+
+        ObjectNode payload = objectMapper.createObjectNode();
+        payload.put("roundId", round.getId());
+        payload.put("roundName", round.getName());
+
+        List<Notification> notifications = createNotifications(users, NotificationKey.ROUND_EVALUATED, payload);
+        notifications = notificationRepository.saveAll(notifications);
+
+        NewNotificationsEvent event1 = new NewNotificationsEvent(notifications);
+        eventPublisher.publishEvent(event1);
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleTournamentFinishedEvent(TournamentFinishedEvent event) {
         Tournament tournament = tournamentRepository.findById(event.getId()).orElseThrow(() -> new EntityNotFoundException("Tournament with id " + event.getId() + " not found"));
         List<User> users = userRepository.findAll(UserSpecification.byTournamentId(tournament.getId()));

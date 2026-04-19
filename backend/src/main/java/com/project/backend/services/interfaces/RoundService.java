@@ -30,4 +30,16 @@ public interface RoundService {
     void assignAllTeams(Long roundId);
 
     void unassignAllTeams(Long roundId);
+
+    void startRound(Long roundId);
+
+    void closeSubmissions(Long roundId);
+
+    void evaluate(Long roundId);
+
+    void rollbackCloseSubmissions(Long roundId);
+
+    void rollbackStartRound(Long roundId);
+
+    void draft(Long roundId);
 }

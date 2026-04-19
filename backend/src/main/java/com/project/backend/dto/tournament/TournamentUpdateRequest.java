@@ -1,6 +1,5 @@
 package com.project.backend.dto.tournament;
 
-import com.project.backend.models.constants.TournamentStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -43,8 +42,4 @@ public class TournamentUpdateRequest {
     @Min(value = 1, message = "There must be at least 1 round")
     @Schema(description = "Number of rounds in the tournament", example = "3")
     private Long countOfRounds;
-
-    @NotNull(message = "Status is required")
-    @Schema(description = "Current status of the tournament", example = "RUNNING")
-    private TournamentStatus status;
 }

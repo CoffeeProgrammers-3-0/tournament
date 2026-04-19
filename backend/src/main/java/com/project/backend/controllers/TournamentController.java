@@ -173,6 +173,66 @@ public class TournamentController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/{tournament_id}/start-registration")
+    @Operation(summary = "Starts registration", description = "Changes status of tournament from DRAFT to REGISTRATION and changes startRegistration")
+    private void startRegistration(
+            @Parameter(description = "ID of the tournament", example = "1")
+            @PathVariable(value = "tournament_id") Long tournamentId
+    ) {
+        tournamentService.startRegistration(tournamentId);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/{tournament_id}/start-tournament")
+    @Operation(summary = "Starts tournament", description = "Changes status of tournament from REGISTRATION to RUNNING and changes endRegistration")
+    private void startTournament(
+            @Parameter(description = "ID of the tournament", example = "1")
+            @PathVariable(value = "tournament_id") Long tournamentId
+    ) {
+        tournamentService.startTournament(tournamentId);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/{tournament_id}/finish-tournament")
+    @Operation(summary = "Sets tournament status to finished", description = "Changes status of tournament from RUNNING to FINISHED")
+    private void finish(
+            @Parameter(description = "ID of the tournament", example = "1")
+            @PathVariable(value = "tournament_id") Long tournamentId
+    ) {
+        tournamentService.finish(tournamentId);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/{tournament_id}/rollback-finish-tournament")
+    @Operation(summary = "Rollback finish tournament", description = "Rollbacks status of tournament from FINISHED to RUNNING")
+    private void rollbackFinishTournament(
+            @Parameter(description = "ID of the tournament", example = "1")
+            @PathVariable(value = "tournament_id") Long tournamentId
+    ) {
+        tournamentService.rollbackFinishTournament(tournamentId);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/{tournament_id}/rollback-start-tournament")
+    @Operation(summary = "Rollbacks start of the tournament", description = "Rollbacks status of tournament from RUNNING to REGISTRATION and changes endRegistration")
+    private void rollbackStartTournament(
+            @Parameter(description = "ID of the tournament", example = "1")
+            @PathVariable(value = "tournament_id") Long tournamentId
+    ) {
+        tournamentService.rollbackStartTournament(tournamentId);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/{tournament_id}/draft")
+    @Operation(summary = "Sets tournament status to draft", description = "Rollbacks status of tournament from REGISTRATION to DRAFT")
+    private void draft(
+            @Parameter(description = "ID of the tournament", example = "1")
+            @PathVariable(value = "tournament_id") Long tournamentId
+    ) {
+        tournamentService.draft(tournamentId);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/admin/{tournament_id}")
     @Operation(summary = "Get tournament by ID", description = "Returns detailed information about a tournament for admin")
     public TournamentFullResponse getByIdAdmin(
