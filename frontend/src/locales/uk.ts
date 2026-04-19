@@ -231,6 +231,31 @@ export const uk = {
                 "requ": "Вимоги",
                 "submit": "Створити раунд"
             }
+        },
+        "control_panel": "Керування турніром",
+        "actions": {
+            "openRegistration": "Відкрити реєстрацію",
+            "startTournament": "Почати турнір",
+            "completeTournament": "Завершити турнір",
+            "backToDraft": "Повернути в чернетку",
+            "cancelStart": "Скасувати старт",
+            "reopenTournament": "Скасувати завершення"
+        },
+        "dialog": {
+            "startRegTitle": "Відкрити реєстрацію?",
+            "startRegDesc": "Турнір стане публічним, і команди зможуть подавати заявки.",
+            "startTourTitle": "Почати змагання?",
+            "startTourDesc": "Реєстрація буде закрита. Почнеться формування сітки раундів.",
+            "finishTitle": "Завершити турнір?",
+            "finishDesc": "Всі результати будуть зафіксовані остаточно.",
+            "toDraftTitle": "Повернути в чернетку?",
+            "toDraftDesc": "Реєстрація буде скасована, турнір зникне з публічного списку.",
+            "rollbackStartTitle": "Скасувати старт?",
+            "rollbackStartDesc": "Турнір повернеться на етап збору заявок (Registration).",
+            "rollbackFinishTitle": "Повернути в роботу?",
+            "rollbackFinishDesc": "Турнір знову отримає статус 'Running'.",
+            "deleteTitle": "Видалити турнір?",
+            "deleteDesc": "Це назавжди видалить турнір, всі команди та раунди. Дія незворотна."
         }
     },
 

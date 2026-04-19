@@ -5,11 +5,7 @@ import {roundService} from "../../../services/impl/RoundService";
 import {teamService} from "../../../services/impl/TeamService";
 
 import type {RoundListResponseDto, RoundStatus} from '../../../entities/round/round.dto';
-import type {
-    TournamentFullResponseDto,
-    TournamentStatus,
-    TournamentUpdateRequestDto
-} from "../../../entities/tournament/tournament.dto";
+import type {TournamentFullResponseDto, TournamentUpdateRequestDto} from "../../../entities/tournament/tournament.dto";
 import type {TeamListResponseDto} from "../../../entities/team/team.dto";
 import Cookies from "js-cookie";
 import {toLocalInput, toUtcIso} from "../../../utils/data.ts";
@@ -51,6 +47,25 @@ export const useTournamentDetails = () => {
         requirements: '',
         task: ''
     });
+
+    type colors = "primary" | "secondary" | "error" | "warning" | "info" | "success";
+
+    const [confirmDialog, setConfirmDialog] = useState<{
+        open: boolean;
+        title: string;
+        description: string;
+        onConfirm: () => void;
+        confirmColor?: colors;
+        isLoading: boolean;
+    }>({
+        open: false,
+        title: '',
+        description: '',
+        onConfirm: () => {},
+        isLoading: false
+    });
+
+    const closeDialog = () => setConfirmDialog(prev => ({ ...prev, open: false, isLoading: false }));
 
     // 1. Завантаження основних даних турніру
     const fetchTournament = useCallback(async () => {
@@ -117,70 +132,45 @@ export const useTournamentDetails = () => {
         fetchTabData();
     }, [tabValue, tournamentId, selectedRoundStatus]);
 
-    const handleStatusChange = (newStatus: TournamentStatus) => {
-        setEditFormData(prev => {
-
-            let sReg = prev.startRegistration ? new Date(toUtcIso(prev.startRegistration)) : new Date();
-            let eReg = prev.endRegistration ? new Date(toUtcIso(prev.endRegistration)) : new Date(sReg.getTime() + 86400000);
-            let sTour = prev.startTournament ? new Date(toUtcIso(prev.startTournament)) : new Date(eReg.getTime() + 86400000);
-            const now = new Date();
-
-            switch (newStatus) {
-                case 'REGISTRATION':
-                    // Registration must be actively running
-                    if (sReg > now) sReg = new Date(now.getTime() - 60000); // Adjust to just started
-                    if (eReg <= now) eReg = new Date(now.getTime() + 86400000); // Adjust to end tomorrow
-                    if (sTour <= eReg) sTour = new Date(eReg.getTime() + 3600000); // Ensure tour starts AFTER reg ends
-                    break;
-
-                case 'RUNNING':
-                    // Tournament must be active, registration must be closed
-                    if (eReg > now) eReg = new Date(now.getTime() - 3600000); // Close reg 1 hr ago
-                    if (sReg >= eReg) sReg = new Date(eReg.getTime() - 86400000); // Ensure sReg makes sense
-                    if (sTour > now) sTour = new Date(now.getTime() - 60000); // Start tour 1 min ago
-                    break;
-
-                case 'FINISHED':
-                    // Everything must be in the past
-                    if (sTour > now) sTour = new Date(now.getTime() - 86400000); // Set tour start to yesterday
-                    if (eReg >= sTour) eReg = new Date(sTour.getTime() - 3600000);
-                    if (sReg >= eReg) sReg = new Date(eReg.getTime() - 86400000);
-                    break;
+    const handleStatusAction = (
+        serviceMethod: (id: number) => Promise<any>,
+        config: { title: string; desc: string; color?: colors; isDelete?: boolean }
+    ) => {
+        setConfirmDialog({
+            open: true,
+            title: config.title,
+            description: config.desc,
+            confirmColor: config.color,
+            isLoading: false,
+            onConfirm: async () => {
+                setConfirmDialog(prev => ({ ...prev, isLoading: true }));
+                try {
+                    await serviceMethod(tournamentId);
+                    if (config.isDelete) return navigate('/tournaments');
+                    await fetchTournament();
+                    setConfirmDialog(prev => ({ ...prev, open: false }));
+                } catch (err: any) {
+                    setErrors(err.response?.data?.messages || ["Помилка виконання операції"]);
+                    setConfirmDialog(prev => ({ ...prev, open: false }));
+                }
             }
-
-            return {
-                ...prev,
-                status: newStatus,
-                startRegistration: toLocalInput(sReg.toISOString()),
-                endRegistration: toLocalInput(eReg.toISOString()),
-                startTournament: toLocalInput(sTour.toISOString())
-            };
         });
     };
 
     const handleSaveUpdate = async () => {
-        if (!tournamentId) return;
-        clearErrors();
+        setErrors([]);
         try {
             const payload: TournamentUpdateRequestDto = {
                 ...(editFormData as TournamentUpdateRequestDto),
-                startRegistration: toUtcIso(editFormData.startRegistration as string),
-                endRegistration: toUtcIso(editFormData.endRegistration as string),
-                startTournament: toUtcIso(editFormData.startTournament as string),
+                startRegistration: toUtcIso(editFormData.startRegistration!),
+                endRegistration: toUtcIso(editFormData.endRegistration!),
+                startTournament: toUtcIso(editFormData.startTournament!),
             };
-
             const updated = await tournamentService.updateTournament(tournamentId, payload);
             setTournamentData(updated);
             setIsEditingInfo(false);
-            setEditFormData({
-                ...updated,
-                startRegistration: toLocalInput(updated.startRegistration),
-                endRegistration: toLocalInput(updated.endRegistration),
-                startTournament: toLocalInput(updated.startTournament),
-            });
-        } catch (error: any) {
-            const messages = error.response?.data?.messages;
-            setErrors(Array.isArray(messages) ? messages : ["Помилка оновлення турніру"]);
+        } catch (err: any) {
+            setErrors(err.response?.data?.messages || ["Помилка оновлення"]);
         }
     };
 
@@ -212,21 +202,6 @@ export const useTournamentDetails = () => {
             setIsCreatingRound(false);
         }
     };
-    const handleDeleteTournament = useCallback(async () => {
-        if (!tournamentId) return;
-
-        // Додаємо підтвердження
-        if (!window.confirm("Ви впевнені, що хочете видалити цей турнір? Цю дію неможливо скасувати.")) {
-            return;
-        }
-
-        try {
-            await tournamentService.deleteTournament(tournamentId);
-            navigate('/tournaments'); // Перенаправляємо на список турнірів
-        } catch (error) {
-            console.error("Помилка видалення турніру", error);
-        }
-    }, [tournamentId, navigate]);
 
     return {
         tournamentId,
@@ -244,8 +219,6 @@ export const useTournamentDetails = () => {
         setIsEditingInfo,
         editFormData,
         setEditFormData,
-        handleStatusChange,
-        handleSaveUpdate,
         selectedRoundStatus,
         setSelectedRoundStatus,
         roundModalOpen,
@@ -254,7 +227,10 @@ export const useTournamentDetails = () => {
         handleRoundFormChange,
         handleCreateRound,
         isCreatingRound,
-        handleDeleteTournament,
+        confirmDialog,
+        closeDialog,
+        handleStatusAction,
+        handleSaveUpdate,
         errors,
         setErrors,
         clearErrors

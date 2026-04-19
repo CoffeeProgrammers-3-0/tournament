@@ -24,7 +24,6 @@ export interface TournamentUpdateRequestDto {
     endRegistration: string;
     maxCountOfTeam: number;
     countOfRounds: number;
-    status: TournamentStatus;
 }
 
 // ==== FULL RESPONSE ====

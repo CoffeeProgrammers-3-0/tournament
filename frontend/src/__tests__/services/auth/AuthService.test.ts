@@ -1,4 +1,4 @@
-import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
+import {afterEach, beforeEach, describe, expect, it, type Mock, type MockInstance, vi} from 'vitest';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import AuthService from '../../../services/auth/AuthService';
@@ -13,38 +13,46 @@ vi.mock('js-cookie', () => ({
 vi.mock('axios');
 
 const mockedAxios = vi.mocked(axios);
-const mockedCookies = vi.mocked(Cookies);
+
+const mockCookiesGet = Cookies.get as unknown as Mock<(key: string) => string | undefined>;
+const mockCookiesRemove = Cookies.remove as Mock<(key: string) => void>;
 
 describe('AuthService', () => {
     const originalLocation = window.location;
-    let consoleErrorSpy: any;
-    let consoleLogSpy: any; // Додали для перевірки log
+
+    let consoleErrorSpy: MockInstance;
+    let consoleLogSpy: MockInstance;
 
     beforeEach(() => {
         vi.clearAllMocks();
         localStorage.clear();
+
+        // Очищаємо кеш промісу
         (AuthService as any).refreshPromise = null;
 
+        // Безпечний мок window.location
         Object.defineProperty(window, 'location', {
             value: { href: '', pathname: '/', origin: 'http://localhost' },
             writable: true,
             configurable: true
         });
 
+        // Мокаємо console.error та console.log
         consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
         consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     });
 
     afterEach(() => {
+        // Відновлюємо оригінальний об'єкт location
         Object.defineProperty(window, 'location', {
             value: originalLocation,
             writable: true,
             configurable: true
         });
+
         consoleErrorSpy.mockRestore();
         consoleLogSpy.mockRestore();
     });
-
 
     describe('redirectToKeycloak', () => {
         it('зберігає поточний шлях та перенаправляє на Keycloak', () => {
@@ -57,7 +65,6 @@ describe('AuthService', () => {
             expect(window.location.href).toContain('client_id=');
         });
 
-        // НОВИЙ ТЕСТ: Перевірка else-гілки
         it('зберігає /home, якщо поточний шлях це /callback або /login', () => {
             window.location.pathname = '/callback';
             AuthService.redirectToKeycloak();
@@ -71,34 +78,33 @@ describe('AuthService', () => {
 
     describe('logout', () => {
         it('викликає API, чистить кукі та перенаправляє', async () => {
-            mockedCookies.get.mockReturnValue('123');
+            mockCookiesGet.mockReturnValue('123');
             mockedAxios.post.mockResolvedValue({});
 
             await AuthService.logout();
 
             expect(mockedAxios.post).toHaveBeenCalled();
-            expect(mockedCookies.remove).toHaveBeenCalledWith('accessToken');
-            expect(mockedCookies.remove).toHaveBeenCalledWith('refreshToken');
-            expect(mockedCookies.remove).toHaveBeenCalledWith('userId');
+            expect(mockCookiesRemove).toHaveBeenCalledWith('accessToken');
+            expect(mockCookiesRemove).toHaveBeenCalledWith('refreshToken');
+            expect(mockCookiesRemove).toHaveBeenCalledWith('userId');
             expect(window.location.href).toBe('/home');
         });
 
-        // НОВИЙ ТЕСТ: Перевірка блоку catch
         it('обробляє помилку API, але все одно чистить кукі та перенаправляє', async () => {
-            mockedCookies.get.mockReturnValue('123');
+            mockCookiesGet.mockReturnValue('123');
             mockedAxios.post.mockRejectedValue(new Error('API Down'));
 
             await AuthService.logout();
 
             expect(consoleErrorSpy).toHaveBeenCalledWith("Logout failed", expect.any(Error));
-            expect(mockedCookies.remove).toHaveBeenCalledWith('accessToken');
+            expect(mockCookiesRemove).toHaveBeenCalledWith('accessToken');
             expect(window.location.href).toBe('/home');
         });
     });
 
     describe('refresh', () => {
         it('повертає false, якщо немає refresh token і користувач не авторизований', async () => {
-            mockedCookies.get.mockReturnValue(undefined);
+            mockCookiesGet.mockReturnValue(undefined);
 
             const result = await AuthService.refresh();
 
@@ -107,7 +113,8 @@ describe('AuthService', () => {
         });
 
         it('перенаправляє, якщо refresh token відсутній, але є userId', async () => {
-            mockedCookies.get.mockImplementation((key) => key === 'userId' ? '123' : undefined);
+            // Явно вказуємо тип 'string' для параметра 'key'
+            mockCookiesGet.mockImplementation((key: string) => key === 'userId' ? '123' : undefined);
 
             const redirectSpy = vi.spyOn(AuthService, 'redirectToKeycloak').mockImplementation(() => {});
 
@@ -118,7 +125,8 @@ describe('AuthService', () => {
         });
 
         it('успішно оновлює токен', async () => {
-            mockedCookies.get.mockImplementation((key) => {
+            // Явно вказуємо тип 'string' для параметра 'key'
+            mockCookiesGet.mockImplementation((key: string) => {
                 if (key === 'refreshToken') return 'valid-refresh';
                 if (key === 'accessToken') return 'valid-access';
                 if (key === 'userId') return '123';
@@ -137,7 +145,8 @@ describe('AuthService', () => {
         });
 
         it('обробляє помилку та перенаправляє на Keycloak (якщо був access токен)', async () => {
-            mockedCookies.get.mockImplementation((key) => {
+            // Явно вказуємо тип 'string' для параметра 'key'
+            mockCookiesGet.mockImplementation((key: string) => {
                 if (key === 'refreshToken') return 'old-refresh';
                 if (key === 'accessToken') return 'old-access'; // hasAccessToken === true
                 if (key === 'userId') return '123';
@@ -154,9 +163,9 @@ describe('AuthService', () => {
             expect(consoleErrorSpy).toHaveBeenCalledWith("Token refresh failed", expect.any(Error));
         });
 
-        // НОВИЙ ТЕСТ: Перевірка блоку catch, коли НЕ було access токена
         it('обробляє помилку, але НЕ перенаправляє, якщо не було access токена', async () => {
-            mockedCookies.get.mockImplementation((key) => {
+            // Явно вказуємо тип 'string' для параметра 'key'
+            mockCookiesGet.mockImplementation((key: string) => {
                 if (key === 'refreshToken') return 'old-refresh';
                 if (key === 'accessToken') return undefined; // hasAccessToken === false
                 if (key === 'userId') return '123';
@@ -174,7 +183,7 @@ describe('AuthService', () => {
         });
 
         it('кешує запит (не робить два запити одночасно)', async () => {
-            mockedCookies.get.mockReturnValue('token');
+            mockCookiesGet.mockReturnValue('token');
 
             mockedAxios.post.mockImplementation(() => new Promise(resolve => setTimeout(() => resolve({}), 50)));
 

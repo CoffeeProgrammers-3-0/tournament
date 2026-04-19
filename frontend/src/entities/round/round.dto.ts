@@ -22,7 +22,6 @@ export interface RoundUpdateRequestDto {
     countOfWinners: number;
     requirements: string;
     task: string;
-    status: RoundStatus;
 }
 
 // ==== FULL RESPONSE ====

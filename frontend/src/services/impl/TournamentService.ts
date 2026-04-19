@@ -7,7 +7,6 @@ import type {
     TournamentUpdateRequestDto
 } from "../../entities/tournament/tournament.dto.ts";
 import type {PaginationListResponseDto} from "../../entities/wrappers/wrapper.dto.ts";
-import Cookies from "js-cookie";
 
 interface TournamentQueryParams {
     page: number;
@@ -21,18 +20,21 @@ class TournamentService extends BaseService {
         super('/tournaments');
     }
 
+    // --- Основні CRUD операції ---
+
     public createTournament(data: TournamentCreateRequestDto): Promise<TournamentFullResponseDto> {
         return this.post<TournamentFullResponseDto>('', data);
     }
 
     public updateTournament(tournamentId: number, data: TournamentUpdateRequestDto): Promise<TournamentFullResponseDto> {
-        console.log(tournamentId, data)
         return this.put<TournamentFullResponseDto>(`/${tournamentId}`, data);
     }
 
     public deleteTournament(tournamentId: number): Promise<void> {
         return this.delete<void>(`/${tournamentId}`);
     }
+
+    // --- Отримання списків ---
 
     public getAllTournaments(params: TournamentQueryParams): Promise<PaginationListResponseDto<TournamentListResponseDto>> {
         return this.get<PaginationListResponseDto<TournamentListResponseDto>>('', { params });
@@ -42,12 +44,44 @@ class TournamentService extends BaseService {
         return this.get<PaginationListResponseDto<TournamentListResponseDto>>('/my', { params });
     }
 
-    public getAvailableTournaments(params: TournamentQueryParams): Promise<PaginationListResponseDto<TournamentListResponseDto>> {
+    public getAvailableTournaments(params: Omit<TournamentQueryParams, 'status'>): Promise<PaginationListResponseDto<TournamentListResponseDto>> {
         return this.get<PaginationListResponseDto<TournamentListResponseDto>>('/available-for-me', { params });
     }
 
+    // --- Детальна інформація ---
+
     public getTournamentById(tournamentId: number): Promise<TournamentFullResponseDto> {
-        return this.get<TournamentFullResponseDto>(Cookies.get("role") === "ADMIN" ? `/admin/${tournamentId}`:`/${tournamentId}`);
+        return this.get<TournamentFullResponseDto>(`/${tournamentId}`);
+    }
+
+    public getTournamentByIdAdmin(tournamentId: number): Promise<TournamentFullResponseDto> {
+        return this.get<TournamentFullResponseDto>(`/admin/${tournamentId}`);
+    }
+
+    // --- Керування статусами турніру (Status Transitions) ---
+
+    public startRegistration(tournamentId: number): Promise<void> {
+        return this.get<void>(`/${tournamentId}/start-registration`);
+    }
+
+    public startTournament(tournamentId: number): Promise<void> {
+        return this.get<void>(`/${tournamentId}/start-tournament`);
+    }
+
+    public finishTournament(tournamentId: number): Promise<void> {
+        return this.get<void>(`/${tournamentId}/finish-tournament`);
+    }
+
+    public rollbackFinishTournament(tournamentId: number): Promise<void> {
+        return this.get<void>(`/${tournamentId}/rollback-finish-tournament`);
+    }
+
+    public rollbackStartTournament(tournamentId: number): Promise<void> {
+        return this.get<void>(`/${tournamentId}/rollback-start-tournament`);
+    }
+
+    public setTournamentToDraft(tournamentId: number): Promise<void> {
+        return this.get<void>(`/${tournamentId}/draft`);
     }
 }
 

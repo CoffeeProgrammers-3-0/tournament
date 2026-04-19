@@ -8,6 +8,7 @@ import {CreateRoundDialog} from "./components/CreateRoundDialog";
 import {InfoTab} from "./tabs/InfoTab";
 import {RoundsTab} from "./tabs/RoundsTab";
 import {TeamsTab} from "./tabs/TeamsTab";
+import {UniversalConfirmDialog} from "../../round/RoundDetails/components/UniversalConfirmDialog.tsx";
 
 export const TournamentDetailsPage = () => {
     const { t } = useTranslation();
@@ -43,6 +44,11 @@ export const TournamentDetailsPage = () => {
                     && ((state.tournamentData.status === "RUNNING" || state.tournamentData.status === "FINISHED" || state.isAdmin)
                     && <TeamsTab state={state} t={t} navigate={navigate} />)}
             </Box>
+
+            <UniversalConfirmDialog
+                config={state.confirmDialog}
+                onClose={state.closeDialog}
+            />
 
             <CreateRoundDialog state={state} t={t} tournament={state.tournamentData}/>
         </Container>

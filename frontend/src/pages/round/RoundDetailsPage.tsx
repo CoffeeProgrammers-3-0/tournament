@@ -117,12 +117,14 @@ const RoundDetailsPage = () => {
         sx={{textAlign: "center", mt: 5}}>{t("round_details.not_found")}</Typography>;
 
     return (
-        <Box sx={{pb: 8, pt: 1}}>
+        <Box sx={{ pb: 8, pt: 1 }}>
+            {/* Connected to the newly optimized RoundHeader */}
             <RoundHeader
                 roundData={details.roundData}
                 isAdmin={isAdmin}
                 isUser={isUser}
-                isEditingInfo={editors.isEditingInfo}
+                submissionId={details.submissionId}
+                navigate={navigate}
                 onEdit={() => {
                     editors.setEditFormData({
                         name: details.roundData!.name,
@@ -131,15 +133,10 @@ const RoundDetailsPage = () => {
                         countOfWinners: details.roundData!.countOfWinners,
                         requirements: details.roundData!.requirements,
                         task: details.roundData!.task,
-                        status: details.roundData!.status,
                     });
                     editors.setIsEditingInfo(true);
                     details.setTabValue(0);
                 }}
-                navigate={navigate}
-                submissionId={details.submissionId}
-                onDelete={editors.handleDeleteRound}
-                errors={editors.errors}
             />
 
             <Tabs
@@ -149,22 +146,32 @@ const RoundDetailsPage = () => {
                     if (editors.isEditingInfo) editors.setIsEditingInfo(false);
                     details.setTabValue(v);
                 }}
-                sx={{mb: 4}}
+                sx={{ mb: 4 }}
                 textColor="inherit"
                 indicatorColor="primary"
                 variant="scrollable"
+                allowScrollButtonsMobile
             >
-                {TABS.map((tab) => <Tab key={tab.id} label={tab.label}/>)}
+                {TABS.map((tab) => <Tab key={tab.id} label={tab.label} />)}
             </Tabs>
 
-            {/* Рендеринг контенту */}
+            {/* TAB CONTENT RENDERING */}
             {activeTabId === "info" && (
-                <RoundInfoTab roundData={details.roundData} isAdmin={isAdmin} isEditingInfo={editors.isEditingInfo}
-                              editFormData={editors.editFormData} setEditFormData={editors.setEditFormData}
-                              handleStatusChange={editors.handleStatusChange}
-                              handleSaveUpdate={editors.handleSaveUpdate}
-                              cancelEditing={() => editors.setIsEditingInfo(false)} t={t} errors={editors.errors}/>
+                <RoundInfoTab
+                    t={t}
+                    state={{
+                        roundData: details.roundData,
+                        isEditing: editors.isEditingInfo,
+                        editFormData: editors.editFormData,
+                        setEditFormData: editors.setEditFormData,
+                        triggerConfirm: editors.triggerConfirm, // Assuming you added this to useRoundEditors!
+                        handleSaveMetadata: () => editors.handleSaveUpdate(editors.editFormData, editors.setIsEditingInfo),
+                        setIsEditing: editors.setIsEditingInfo,
+                        actions: editors.actions // Exported from useRoundInfoEditor
+                    }}
+                />
             )}
+
 
             {activeTabId === "announcements" && (
                 <RoundAnnouncementsTab

@@ -1,206 +1,158 @@
-import {Alert, AlertTitle, Box, Button, Divider, Grid, MenuItem, Paper, TextField, Typography} from "@mui/material";
-import SaveIcon from "@mui/icons-material/Save";
+import {Box, Button, Card, Divider, Grid, Paper, Stack, TextField, Typography} from "@mui/material";
 import ReactQuill from "react-quill-new";
-import "react-quill-new/dist/quill.snow.css";
-import DOMPurify from "dompurify";
-import type {RoundFullResponseDto, RoundStatus, RoundUpdateRequestDto} from "../../../../../entities/round/round.dto";
-import {ErrorMessages} from "../../../../../components/main/ErrorMessages.tsx";
 
-// Налаштування панелі інструментів для редактора
-const quillModules = {
-    toolbar: [
-        [{'header': [1, 2, 3, false]}],
-        ['bold', 'italic', 'underline', 'strike'],
-        [{'list': 'ordered'}, {'list': 'bullet'}],
-        ['link', 'clean']
-    ],
-};
-
-// Стилі для того, щоб Quill виглядав як частина MUI
-const quillStyle = {
-    '.ql-toolbar': {
-        borderColor: 'rgba(0, 0, 0, 0.23)',
-        borderRadius: '4px 4px 0 0',
-        fontFamily: 'inherit',
-    },
-    '.ql-container': {
-        borderColor: 'rgba(0, 0, 0, 0.23)',
-        borderRadius: '0 0 4px 4px',
-        fontSize: '1rem',
-        minHeight: '150px',
-        fontFamily: 'inherit',
-    },
-    '.ql-editor': {
-        minHeight: '150px',
-    }
-};
-
-type Props = {
-    roundData: RoundFullResponseDto;
-    isAdmin: boolean;
-    isEditingInfo: boolean;
-    editFormData: RoundUpdateRequestDto;
-    setEditFormData: React.Dispatch<React.SetStateAction<RoundUpdateRequestDto>>;
-    handleStatusChange: (newStatus: RoundStatus) => void;
-    handleSaveUpdate: () => Promise<void>;
-    cancelEditing: () => void;
-    t: (key: string, options?: any) => string;
-    errors: string[];
-};
-
-export const RoundInfoTab = ({
-                                 roundData,
-                                 isEditingInfo,
-                                 editFormData,
-                                 setEditFormData,
-                                 handleStatusChange,
-                                 handleSaveUpdate,
-                                 cancelEditing,
-                                 t,
-                                 errors
-                             }: Props) => {
-
-    // Функція для безпечного рендерингу HTML
-    const createMarkup = (html: string) => {
-        return {__html: DOMPurify.sanitize(html)};
+interface RoundInfoTabProps {
+    state: {
+        roundData: any;
+        isEditing: boolean;
+        editFormData: any;
+        setEditFormData: (data: any) => void;
+        triggerConfirm: (options: any) => void;
+        handleSaveMetadata: () => void;
+        setIsEditing: (val: boolean) => void;
+        actions: Record<string, () => Promise<void>>;
     };
+    t: any;
+}
+
+export const RoundInfoTab = ({ state, t }: RoundInfoTabProps) => {
+    const { roundData, isEditing, editFormData, setEditFormData, triggerConfirm, actions } = state;
+
+    // Dynamically build buttons based on status to utilize all API methods
+    const getControlButtons = () => [
+        {
+            show: roundData.status === "DRAFT",
+            label: t("round_details.actions.startRound"),
+            color: "success" as const,
+            variant: "contained" as const,
+            action: () => triggerConfirm({ title: t("round_details.confirm.start"), onConfirm: actions.start })
+        },
+        {
+            show: roundData.status === "ACTIVE",
+            label: t("round_details.actions.closeSubmissions"),
+            color: "warning" as const,
+            variant: "contained" as const,
+            action: () => triggerConfirm({ title: t("round_details.confirm.close"), onConfirm: actions.close })
+        },
+        {
+            show: roundData.status === "ACTIVE",
+            label: t("round_details.actions.rollbackStart"),
+            color: "error" as const,
+            variant: "outlined" as const,
+            action: () => triggerConfirm({ title: t("round_details.confirm.rollbackStart"), onConfirm: actions.rollbackStart })
+        },
+        {
+            show: roundData.status === "SUBMISSION_CLOSED",
+            label: t("round_details.actions.evaluate"),
+            color: "primary" as const,
+            variant: "contained" as const,
+            action: () => triggerConfirm({ title: t("round_details.confirm.evaluate"), onConfirm: actions.evaluate })
+        },
+        {
+            show: roundData.status === "SUBMISSION_CLOSED",
+            label: t("round_details.actions.rollbackClose"),
+            color: "warning" as const,
+            variant: "outlined" as const,
+            action: () => triggerConfirm({ title: t("round_details.confirm.rollbackClose"), onConfirm: actions.rollbackClose })
+        },
+        {
+            show: roundData.status !== "DRAFT" && roundData.status !== "EVALUATED",
+            label: t("round_details.actions.toDraft"),
+            color: "secondary" as const,
+            variant: "text" as const,
+            action: () => triggerConfirm({ title: t("round_details.confirm.toDraft"), onConfirm: actions.toDraft })
+        }
+    ];
 
     return (
         <Grid container spacing={4}>
-            <ErrorMessages errors={errors}/>
-            <Grid size={{xs: 12, md: 8}}>
-                {isEditingInfo ? (
-                    <Box sx={{display: "flex", flexDirection: "column", gap: 3}}>
-                        {roundData.status !== editFormData.status &&
-                            <Alert severity="warning" sx={{mb: 3, borderRadius: "16px"}}>
-                                <AlertTitle sx={{fontWeight: 700}}>{t("common.warning")}</AlertTitle>
-                            </Alert>
-                        }
-                        <Box sx={{display: "flex", gap: 2, flexDirection: {xs: "column", sm: "row"}}}>
-                            <TextField
-                                fullWidth
-                                label={t("round_details.info.name")}
-                                value={editFormData.name}
-                                onChange={(e) => setEditFormData({...editFormData, name: e.target.value})}
-                            />
-                            <TextField
-                                select
-                                fullWidth
-                                label={t("round_details.info.status")}
-                                value={editFormData.status}
-                                onChange={(e) => handleStatusChange(e.target.value as RoundStatus)}
-                            >
-                                <MenuItem value="DRAFT">{t("rounds.statuses.DRAFT")}</MenuItem>
-                                <MenuItem value="ACTIVE">{t("rounds.statuses.ACTIVE")}</MenuItem>
-                                <MenuItem value="SUBMISSION_CLOSED">{t("rounds.statuses.SUBMISSION_CLOSED")}</MenuItem>
-                                <MenuItem value="EVALUATED">{t("rounds.statuses.EVALUATED")}</MenuItem>
-                            </TextField>
-                        </Box>
-
-                        <Box sx={{display: "flex", gap: 2, flexDirection: {xs: "column", sm: "row"}}}>
-                            <TextField
-                                fullWidth
-                                type="datetime-local"
-                                label={t("round_details.info.start_date")}
-                                InputLabelProps={{shrink: true}}
-                                inputProps={{ max: editFormData.endDate || undefined }}
-                                value={(editFormData.startDate)}
-                                onChange={(e) => setEditFormData({...editFormData, startDate: e.target.value})}
-                            />
-                            <TextField
-                                fullWidth
-                                type="datetime-local"
-                                label={t("round_details.info.end_date")}
-                                InputLabelProps={{shrink: true}}
-                                inputProps={{ min: editFormData.startDate || undefined }}
-                                value={(editFormData.endDate)}
-                                onChange={(e) => setEditFormData({...editFormData, endDate: e.target.value})}
-                            />
-                        </Box>
-
+            <Grid size={{ xs: 12, md: 8 }}>
+                {isEditing ? (
+                    <Stack spacing={3}>
                         <TextField
                             fullWidth
-                            type="number"
-                            label={t("round_details.info.winners_count")}
-                            value={editFormData.countOfWinners}
-                            onChange={(e) => setEditFormData({...editFormData, countOfWinners: Number(e.target.value)})}
+                            label={t("round_details.labels.name")}
+                            value={editFormData.name}
+                            onChange={e => setEditFormData({...editFormData, name: e.target.value})}
                         />
+                        <Grid container spacing={2}>
+                            <Grid size={{ xs: 6 }}>
+                                <TextField
+                                    fullWidth
+                                    type="datetime-local"
+                                    label={t("round_details.labels.startDate")}
+                                    InputLabelProps={{shrink: true}}
+                                    value={editFormData.startDate}
+                                    onChange={e => setEditFormData({...editFormData, startDate: e.target.value})}
+                                />
+                            </Grid>
+                            <Grid size={{ xs: 6 }}>
+                                <TextField
+                                    fullWidth
+                                    type="datetime-local"
+                                    disabled={roundData.status === "EVALUATED"}
+                                    label={t("round_details.labels.endDate")}
+                                    InputLabelProps={{shrink: true}}
+                                    value={editFormData.endDate}
+                                    onChange={e => setEditFormData({...editFormData, endDate: e.target.value})}
+                                />
+                            </Grid>
+                        </Grid>
 
-                        {/* Редактор для ЗАВДАННЯ */}
-                        <Box sx={quillStyle}>
-                            <Typography variant="caption" sx={{color: 'text.secondary', ml: 1}}>
-                                {t("round_details.info.task")}
-                            </Typography>
-                            <ReactQuill
-                                theme="snow"
-                                value={editFormData.task || ""}
-                                modules={quillModules}
-                                onChange={(val: any) => setEditFormData(prev => ({...prev, task: val}))}
-                            />
-                        </Box>
+                        <Typography variant="subtitle2">{t("round_details.labels.task")}</Typography>
+                        <ReactQuill value={editFormData.task} onChange={val => setEditFormData({...editFormData, task: val})} />
 
-                        {/* Редактор для ВИМОГ */}
-                        <Box sx={quillStyle}>
-                            <Typography variant="caption" sx={{color: 'text.secondary', ml: 1}}>
-                                {t("round_details.info.requirements")}
-                            </Typography>
-                            <ReactQuill
-                                theme="snow"
-                                value={editFormData.requirements || ""}
-                                modules={quillModules}
-                                onChange={(val: any) => setEditFormData(prev => ({...prev, requirements: val}))}
-                            />
-                        </Box>
+                        <Typography variant="subtitle2">{t("round_details.labels.requirements")}</Typography>
+                        <ReactQuill value={editFormData.requirements} onChange={val => setEditFormData({...editFormData, requirements: val})} />
 
-                        <Box sx={{display: "flex", gap: 2, mt: 1}}>
-                            <Button variant="contained" startIcon={<SaveIcon/>} onClick={handleSaveUpdate}
-                                    sx={{fontWeight: 700}}>
-                                {t("round_details.admin.save")}
+                        <Box sx={{ display: 'flex', gap: 2 }}>
+                            <Button variant="contained" onClick={state.handleSaveMetadata}>
+                                {t("round_details.labels.save")}
                             </Button>
-                            <Button variant="outlined" onClick={cancelEditing}>
-                                {t("round_details.admin.cancel")}
+                            <Button variant="outlined" onClick={() => state.setIsEditing(false)}>
+                                {t("round_details.labels.cancel")}
                             </Button>
                         </Box>
-                    </Box>
+                    </Stack>
                 ) : (
-                    <Box sx={{display: "flex", flexDirection: "column", gap: 4}}>
+                    <Stack spacing={4}>
                         <Box>
-                            <Typography variant="h6" fontWeight={700} gutterBottom color="primary.main">
-                                {t("round_details.info.task")}
-                            </Typography>
-                            <Paper variant="outlined" sx={{p: 2, bgcolor: '#fafafa', borderRadius: 2}}>
-                                <Typography
-                                    component="div"
-                                    sx={{
-                                        lineHeight: 1.8,
-                                        '& ul, & ol': {pl: 3}, // Стилізація списків всередині HTML
-                                        fontSize: '1.05rem'
-                                    }}
-                                    dangerouslySetInnerHTML={createMarkup(roundData.task || t("round_details.info.no_info"))}
-                                />
-                            </Paper>
+                            <Typography variant="h6" fontWeight={700} color="primary">{t("round_details.labels.task")}</Typography>
+                            <Paper variant="outlined" sx={{ p: 2, mt: 1, bgcolor: '#fafafa' }} dangerouslySetInnerHTML={{ __html: roundData.task || t("round_details.labels.no_description") }} />
                         </Box>
-
-                        <Divider/>
-
                         <Box>
-                            <Typography variant="h6" fontWeight={700} gutterBottom color="error.main">
-                                {t("round_details.info.requirements")}
-                            </Typography>
-                            <Paper variant="outlined" sx={{p: 2, bgcolor: '#fafafa', borderRadius: 2}}>
-                                <Typography
-                                    component="div"
-                                    sx={{
-                                        lineHeight: 1.8,
-                                        '& ul, & ol': {pl: 3},
-                                        fontSize: '1.05rem'
-                                    }}
-                                    dangerouslySetInnerHTML={createMarkup(roundData.requirements || t("round_details.info.no_info"))}
-                                />
-                            </Paper>
+                            <Typography variant="h6" fontWeight={700} color="error">{t("round_details.labels.requirements")}</Typography>
+                            <Paper variant="outlined" sx={{ p: 2, mt: 1, bgcolor: '#fafafa' }} dangerouslySetInnerHTML={{ __html: roundData.requirements || t("round_details.labels.no_requirements") }} />
                         </Box>
-                    </Box>
+                    </Stack>
                 )}
+            </Grid>
+
+            <Grid size={{ xs: 12, md: 4 }}>
+                <Card sx={{ p: 3, borderRadius: "24px", bgcolor: "#f8fafc" }}>
+                    <Typography variant="subtitle2" fontWeight={800} mb={2}>{t("round_details.labels.management")}</Typography>
+                    <Stack spacing={2}>
+                        {getControlButtons().filter(b => b.show).map((b, i) => (
+                            <Button
+                                key={i}
+                                fullWidth
+                                variant={b.variant}
+                                color={b.color}
+                                onClick={b.action}
+                            >
+                                {b.label}
+                            </Button>
+                        ))}
+                        <Divider />
+                        <Button fullWidth color="error" variant="outlined" onClick={() => triggerConfirm({
+                            title: t("round_details.confirm.delete"),
+                            confirmColor: "error",
+                            onConfirm: actions.delete
+                        })}>
+                            {t("round_details.labels.delete")}
+                        </Button>
+                    </Stack>
+                </Card>
             </Grid>
         </Grid>
     );
