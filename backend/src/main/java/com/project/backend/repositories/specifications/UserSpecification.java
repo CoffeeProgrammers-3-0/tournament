@@ -8,6 +8,7 @@ import com.project.backend.models.constants.Role;
 import com.project.backend.models.join_tables.Jury;
 import com.project.backend.models.join_tables.JurySubmission;
 import com.project.backend.models.join_tables.TeamParticipant;
+import com.project.backend.models.join_tables.TeamRound;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
@@ -139,6 +140,40 @@ public class UserSpecification {
             Join<User, TeamParticipant> tp = root.join("teamParticipants");
 
             return cb.equal(tp.get("tournament").get("id"), tournamentId);
+        };
+    }
+
+    public static Specification<User> byTeamId(Long teamId) {
+        log.debug("UserSpecification.byTeamId called with teamId={}", teamId);
+        if (teamId == null) return null;
+
+        return (root, query, cb) -> {
+            query.distinct(true);
+
+            Join<User, TeamParticipant> tp = root.join("teamParticipants");
+            return cb.equal(tp.get("team").get("id"), teamId);
+        };
+    }
+
+    public static Specification<User> byRoundId(Long roundId) {
+        log.debug("UserSpecification.byRoundId called with roundId={}", roundId);
+        if (roundId == null) return null;
+
+        return (root, query, cb) -> {
+            query.distinct(true);
+
+            Join<User, TeamParticipant> tp = root.join("teamParticipants");
+            Join<TeamParticipant, Tournament> tournament = tp.join("tournament");
+            Join<Tournament, Round> tournamentRound = tournament.join("rounds");
+
+            Join<TeamParticipant, Team> team = tp.join("team");
+            Join<Team, TeamRound> teamRound = team.join("teamRounds");
+            Join<TeamRound, Round> roundFromTeam = teamRound.join("round");
+
+            return cb.and(
+                    cb.equal(tournamentRound.get("id"), roundId),
+                    cb.equal(roundFromTeam.get("id"), roundId)
+            );
         };
     }
 }

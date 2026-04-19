@@ -1,5 +1,6 @@
 package com.project.backend.services.implementations;
 
+import com.project.backend.dto.event.RoundEventCreatedEvent;
 import com.project.backend.models.RoundEvent;
 import com.project.backend.models.User;
 import com.project.backend.repositories.RoundEventRepository;
@@ -9,6 +10,7 @@ import com.project.backend.services.interfaces.RoundEventService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -22,6 +24,9 @@ import org.springframework.transaction.annotation.Transactional;
 public class RoundEventServiceImpl implements RoundEventService {
     private final RoundEventRepository roundEventRepository;
     private final RoundRepository roundRepository;
+
+    private final ApplicationEventPublisher eventPublisher;
+
     @Override
     public Page<RoundEvent> findAll(Integer page, Integer size, Long roundId) {
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(
@@ -45,7 +50,12 @@ public class RoundEventServiceImpl implements RoundEventService {
 
         roundEvent.setCreator(user);
         roundEvent.setRound(roundRepository.getReferenceById(roundId));
-        return roundEventRepository.save(roundEvent);
+        roundEvent = roundEventRepository.save(roundEvent);
+
+        RoundEventCreatedEvent event = new RoundEventCreatedEvent(roundEvent);
+        eventPublisher.publishEvent(event);
+
+        return roundEvent;
     }
 
     @Override

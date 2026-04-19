@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
+import org.springframework.messaging.MessagingException;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
@@ -44,7 +45,11 @@ public class TopicInterceptor implements ChannelInterceptor {
                     log.debug("Successfully called accessor.setUser with auth: {}", auth);
                 } catch (JwtException e) {
                     log.error("Invalid JWT while connecting to WS: {}", e.getMessage());
-                    throw new AccessDeniedException("Invalid JWT");
+
+                    boolean expired = isExpired(e);
+                    String reason = expired ? "JWT expired" : "JWT invalid";
+
+                    throw new MessagingException(reason);
                 }
             }
         }
@@ -78,5 +83,10 @@ public class TopicInterceptor implements ChannelInterceptor {
         }
 
         return message;
+    }
+
+    private boolean isExpired(JwtException e) {
+        return e.getMessage() != null &&
+               e.getMessage().toLowerCase().contains("expired");
     }
 }

@@ -4,6 +4,8 @@ import com.project.backend.models.constants.RoundStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
+import java.time.Instant;
+
 @Data
 @Schema(name = "RoundFullResponse", description = "DTO representing full details of a round")
 public class RoundFullResponse {
@@ -14,11 +16,17 @@ public class RoundFullResponse {
     @Schema(description = "Name of the round", example = "Offline Round")
     private String name;
 
-    @Schema(description = "Start date of the round in ISO format", example = "2026-04-01T10:00:00")
-    private String startDate;
+    @Schema(
+            description = "Start date of the round in ISO UTC format",
+            example = "2026-04-18T21:00:00.000Z"
+    )
+    private Instant startDate;
 
-    @Schema(description = "End date of the round in ISO format", example = "2026-04-10T18:00:00")
-    private String endDate;
+    @Schema(
+            description = "End date of the round in ISO UTC format",
+            example = "2026-04-19T20:59:00.000Z"
+    )
+    private Instant endDate;
 
     @Schema(description = "Number of winners for the round", example = "15")
     private Long countOfWinners;

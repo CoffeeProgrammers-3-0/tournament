@@ -1,5 +1,7 @@
 package com.project.backend.services.implementations;
 
+import com.project.backend.dto.event.JurySubmissionCreatedEvent;
+import com.project.backend.dto.event.JurySubmissionDeletedEvent;
 import com.project.backend.dto.event.PointsChangedForTeamEvent;
 import com.project.backend.models.Round;
 import com.project.backend.models.Submission;
@@ -12,6 +14,7 @@ import com.project.backend.repositories.*;
 import com.project.backend.repositories.specifications.JurySubmissionSpecification;
 import com.project.backend.repositories.specifications.SubmissionSpecification;
 import com.project.backend.repositories.specifications.TeamSpecification;
+import com.project.backend.repositories.specifications.UserSpecification;
 import com.project.backend.services.interfaces.SubmissionService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -179,6 +182,9 @@ public class SubmissionServiceImpl implements SubmissionService {
         PointsChangedForTeamEvent event = new PointsChangedForTeamEvent(submission.getTeam().getId(),round.getId());
         eventPublisher.publishEvent(event);
 
+        JurySubmissionCreatedEvent event1 = new JurySubmissionCreatedEvent(jurySubmission);
+        eventPublisher.publishEvent(event1);
+
         return submission;
     }
 
@@ -212,6 +218,10 @@ public class SubmissionServiceImpl implements SubmissionService {
 
         PointsChangedForTeamEvent event = new PointsChangedForTeamEvent(submission.getTeam().getId(),round.getId());
         eventPublisher.publishEvent(event);
+
+        User jury = userRepository.findOne(Specification.allOf(UserSpecification.byId(juryId), UserSpecification.byRole(Role.JURY))).orElseThrow(() -> new EntityNotFoundException("Jury with id " + juryId + " not found"));
+        JurySubmissionDeletedEvent event1 = new JurySubmissionDeletedEvent(jury, submission);
+        eventPublisher.publishEvent(event1);
 
         return submission;
     }

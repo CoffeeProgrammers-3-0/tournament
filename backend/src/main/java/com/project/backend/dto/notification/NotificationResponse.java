@@ -3,6 +3,8 @@ package com.project.backend.dto.notification;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
+import java.time.Instant;
+
 @Data
 @Schema(name = "NotificationResponse", description = "DTO representing a notification sent to a user")
 public class NotificationResponse {
@@ -21,5 +23,5 @@ public class NotificationResponse {
     private boolean seen;
 
     @Schema(description = "Timestamp when the notification was created", example = "2026-04-10T17:20:00")
-    private String date;
+    private Instant date;
 }

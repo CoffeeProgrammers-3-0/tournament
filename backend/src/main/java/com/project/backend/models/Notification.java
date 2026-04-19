@@ -7,7 +7,7 @@ import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Entity
 @Table(schema = "tournament", name = "notifications")
@@ -36,12 +36,12 @@ public class Notification {
     private boolean seen;
 
     @Column(nullable = false)
-    private LocalDateTime date;
+    private Instant date;
 
     @PrePersist
     void prePersist() {
         if(date == null) {
-            date = LocalDateTime.now();
+            date = Instant.now();
         }
     }
 }

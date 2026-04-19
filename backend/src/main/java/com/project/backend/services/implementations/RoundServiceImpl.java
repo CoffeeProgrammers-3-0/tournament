@@ -1,9 +1,6 @@
 package com.project.backend.services.implementations;
 
-import com.project.backend.dto.event.PointsChangedForTeamEvent;
-import com.project.backend.dto.event.RoundCreatedEvent;
-import com.project.backend.dto.event.TeamAssignedToRoundEvent;
-import com.project.backend.dto.event.TeamUnassignedFromRoundEvent;
+import com.project.backend.dto.event.*;
 import com.project.backend.models.Round;
 import com.project.backend.models.Team;
 import com.project.backend.models.Tournament;
@@ -200,6 +197,9 @@ public class RoundServiceImpl implements RoundService {
         jury.setUser(juryUser);
 
         juryRepository.save(jury);
+
+        JuryAssignedToRoundEvent event = new JuryAssignedToRoundEvent(jury);
+        eventPublisher.publishEvent(event);
     }
 
     @Override
@@ -215,8 +215,13 @@ public class RoundServiceImpl implements RoundService {
         if (!juryRepository.exists(JurySpecification.byUserIdAndRoundId(juryId, roundId))) {
             throw new IllegalStateException("Jury not assigned");
         }
+        Jury jury = juryRepository.findOne(JurySpecification.byUserIdAndRoundId(juryId, roundId)).orElseThrow(() -> new EntityNotFoundException("Jury with id " + juryId + " for round with id " + roundId + " not found"));
 
-        juryRepository.delete(JurySpecification.byUserIdAndRoundId(juryId, roundId));
+        juryRepository.delete(jury);
+
+        JuryUnassignedFromRoundEvent event = new JuryUnassignedFromRoundEvent(jury.getUser(), jury.getRound());
+        eventPublisher.publishEvent(event);
+
         List<JurySubmission> jurySubmissions = jurySubmissionRepository.findAll(Specification.allOf(
                 JurySubmissionSpecification.byJuryId(juryId),
                 JurySubmissionSpecification.byRoundId(roundId)
@@ -229,6 +234,8 @@ public class RoundServiceImpl implements RoundService {
         }
 
         jurySubmissionRepository.deleteAll(jurySubmissions);
+
+        events.forEach(eventPublisher::publishEvent);
     }
 
     @Override

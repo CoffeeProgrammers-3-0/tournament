@@ -7,7 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -30,11 +30,11 @@ public class Tournament {
 
     private TournamentStatus status;
 
-    private LocalDateTime startTournament;
+    private Instant startTournament;
 
-    private LocalDateTime startRegistration;
+    private Instant startRegistration;
 
-    private LocalDateTime endRegistration;
+    private Instant endRegistration;
 
     private Long maxCountOfTeam;
 

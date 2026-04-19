@@ -2,8 +2,13 @@ package com.project.backend.dto.tournament;
 
 import com.project.backend.models.constants.TournamentStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
+
+import java.time.Instant;
 
 @Data
 @Schema(name = "TournamentUpdateRequest", description = "DTO for updating an existing tournament")
@@ -17,29 +22,17 @@ public class TournamentUpdateRequest {
     @Schema(description = "Description of the tournament", example = "A team tournament")
     private String description;
 
-    @NotBlank(message = "Start date is required")
-    @Pattern(
-            regexp = "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(:\\d{2})?$",
-            message = "Start date must be in ISO format (yyyy-MM-dd'T'HH:mm:ss)"
-    )
-    @Schema(description = "Start date of the tournament in ISO format", example = "2026-05-01T10:00:00")
-    private String startTournament;
+    @NotNull(message = "Start date is required")
+    @Schema(description = "Start date of the tournament in ISO format", example = "2026-05-01T10:00:00.000Z")
+    private Instant startTournament;
 
-    @NotBlank(message = "Start date of registration is required")
-    @Pattern(
-            regexp = "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(:\\d{2})?$",
-            message = "Start date of registration must be in ISO format (yyyy-MM-dd'T'HH:mm:ss)"
-    )
-    @Schema(description = "Start date of the registration in ISO format", example = "2026-04-01T10:00:00")
-    private String startRegistration;
+    @NotNull(message = "Start date of registration is required")
+    @Schema(description = "Start date of the registration in ISO format", example = "2026-04-01T10:00:00.000Z")
+    private Instant startRegistration;
 
-    @NotBlank(message = "End date of registration is required")
-    @Pattern(
-            regexp = "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(:\\d{2})?$",
-            message = "End date of registration must be in ISO format (yyyy-MM-dd'T'HH:mm:ss)"
-    )
-    @Schema(description = "End date of the registration in ISO format", example = "2026-04-20T18:00:00")
-    private String endRegistration;
+    @NotNull(message = "End date of registration is required")
+    @Schema(description = "End date of the registration in ISO format", example = "2026-04-20T18:00:00.000Z")
+    private Instant endRegistration;
 
     @NotNull(message = "Maximum number of members in team is required")
     @Min(value = 1, message = "There must be at least 1 member in team")
