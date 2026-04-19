@@ -239,8 +239,9 @@ export const AppHeader = () => {
                         )}
 
                         {isLoggedIn ? (
-                            <IconButton onClick={handleProfileClick} size="small">
-                                <Avatar sx={{
+                            <IconButton aria-label="profile-menu" onClick={handleProfileClick} size="small">
+                                <Avatar
+                                    sx={{
                                     width: 35,
                                     height: 35,
                                     bgcolor: role === 'ADMIN' ? "error.main" : "primary.main"
@@ -250,7 +251,7 @@ export const AppHeader = () => {
                                 </Avatar>
                             </IconButton>
                         ) : (
-                            <IconButton component={RouterLink} to="/login" color="primary">
+                            <IconButton aria-label="login" component={RouterLink} to="/login" color="primary">
                                 <LoginIcon/>
                             </IconButton>
                         )}
