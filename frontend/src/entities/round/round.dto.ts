@@ -1,5 +1,7 @@
 // ==== ENUM ====
 
+import type {TournamentListResponseDto} from "../tournament/tournament.dto.ts";
+
 export type RoundStatus = 'DRAFT' | 'ACTIVE' | 'SUBMISSION_CLOSED' | 'EVALUATED';
 
 // ==== CREATE ====
@@ -35,6 +37,7 @@ export interface RoundFullResponseDto {
     requirements: string;
     task: string;
     status: RoundStatus;
+    tournament: TournamentListResponseDto;
 }
 
 // ==== LIST RESPONSE ====
