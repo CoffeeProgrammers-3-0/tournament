@@ -678,9 +678,52 @@ export const uk = {
         "success": "Роботу успішно збережено!"
     },
 
-    notifications: {
+    "notifications": {
         "round": {
-            "created": "Раунд було успішно створено",
+            "created": "Створено новий раунд «{{roundName}}»",
+            "started": "Раунд «{{roundName}}» розпочався!",
+            "evaluated": "Опубліковано результати раунду «{{roundName}}»",
+            "submission_closed": "Прийом робіт на раунд «{{roundName}}» завершено",
+            "deadline_24h": "До дедлайну раунду «{{roundName}}» залишилося 24 години"
         },
-    },
+        "jury_submission": {
+            "assigned": "Вам призначено нову роботу від команди «{{teamName}}» (Раунд: {{roundName}})",
+            "unassigned": "Перевірку роботи команди «{{teamName}}» було скасовано або перепризначено"
+        },
+        "jury": {
+            "assigned_to_round": "Вас призначено суддею на раунд «{{roundName}}»",
+            "unassigned_from_round": "Вас усунено від суддівства в раунді «{{roundName}}»"
+        },
+        "points_changed": "Бали вашої команди «{{teamName}}» змінилися на {{pointsDiff}}",
+        "team": {
+            "created": "Створено нову команду «{{teamName}}»",
+            "assigned_to_round": "Вашу команду «{{teamName}}» додано до участі в раунді «{{roundName}}»",
+            "unassigned_from_round": "Вашу команду «{{teamName}}» знято з участі в раунді «{{roundName}}»",
+            "user_added": "{{userName}} приєднався до команди «{{teamName}}»",
+            "user_removed": "{{userName}} покинув команду «{{teamName}}»",
+            "user_set_to_leader": "Вас призначено капітаном команди «{{teamName}}»",
+            "user_is_no_longer_leader": "Ви більше не є капітаном команди «{{teamName}}»"
+        },
+        "team_tasks": {
+            "created": "Для вашої команди створено нове завдання «{{taskTitle}}»",
+            "updated": "Завдання «{{taskTitle}}» було оновлено",
+            "deleted": "Завдання «{{taskTitle}}» було видалено"
+        },
+        "round_admin_message": {
+            "created": "Нове повідомлення від адміністратора раунду «{{roundName}}»"
+        },
+        "round_event": {
+            "created": "До розкладу раунду «{{roundName}}» додано нову подію «{{eventName}}»",
+            "before_1h": "Подія «{{eventName}}» розпочнеться за 1 годину"
+        },
+        "tournament": {
+            "started": "Турнір «{{tournamentName}}» розпочався! Успіхів!"
+        },
+        "global": {
+            "tournament": {
+                "registration_started": "Реєстрацію на турнір «{{tournamentName}}» відкрито!"
+            },
+            "admin_message": "Глобальне оголошення від адміністрації"
+        }
+    }
 };

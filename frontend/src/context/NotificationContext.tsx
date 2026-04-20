@@ -1,105 +1,85 @@
-import {createContext, type ReactNode, useContext, useEffect, useState} from "react";
-import {Avatar, Box, IconButton, Paper, Slide, type SlideProps, Snackbar, Typography} from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
+import {createContext, type ReactNode, useContext, useEffect, useMemo, useState} from "react";
+import {Avatar, Box, Paper, Snackbar, Typography} from "@mui/material";
 import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
+import CampaignIcon from '@mui/icons-material/Campaign';
 import Cookies from "js-cookie";
 import {useTranslation} from "react-i18next";
-import {useNotificationSocket} from "../hooks/useNotificationSocket"; // шлях до твого хука
+import {useNotificationSocket} from "../hooks/useNotificationSocket";
+import {useNavigate} from "react-router-dom";
+import {getNotificationLink} from "../utils/notificationRouter.ts";
 
 interface NotificationContextType {
     unseenCount: number;
+    latestNotification: any;
 }
 
-// Створюємо контекст з дефолтним значенням
-const NotificationContext = createContext<NotificationContextType>({ unseenCount: 0 });
+const NotificationContext = createContext<NotificationContextType>({
+    unseenCount: 0,
+    latestNotification: null
+});
 
-export const useNotification = () => useContext(NotificationContext);
-
-// Анімація виїзду збоку
-function SlideTransition(props: SlideProps) {
-    return <Slide {...props} direction="left" />;
-}
+export const useNotification = () => useContext(NotificationContext)
 
 export const NotificationProvider = ({ children }: { children: ReactNode }) => {
     const { t } = useTranslation();
-    const isLoggedIn = Cookies.get("userId") !== undefined;
-
-    // Підключаємо наш хук тут, на глобальному рівні
+    const navigate = useNavigate();
+    const isLoggedIn = !!Cookies.get("userId");
     const { unseenCount, latestNotification } = useNotificationSocket(isLoggedIn);
-
     const [toastOpen, setToastOpen] = useState(false);
 
-    // Слідкуємо за новими сповіщеннями
-    useEffect(() => {
-        if (latestNotification) {
-            setToastOpen(true);
+    const payloadData = useMemo(() => {
+        if (!latestNotification || latestNotification.isGlobal) return {};
+        try {
+            return JSON.parse(latestNotification.payload || '{}');
+        } catch {
+            return {};
         }
     }, [latestNotification]);
 
-    const handleCloseToast = (_event?: React.SyntheticEvent | Event, reason?: string) => {
-        if (reason === 'clickaway') return;
+    useEffect(() => {
+        if (latestNotification) setToastOpen(true);
+    }, [latestNotification]);
+
+    const handleNotificationClick = () => {
         setToastOpen(false);
+        if (latestNotification) {
+            const link = getNotificationLink(latestNotification);
+            navigate(link);
+        }
     };
 
     return (
-        <NotificationContext.Provider value={{ unseenCount }}>
+        <NotificationContext.Provider value={{ unseenCount, latestNotification }}>
             {children}
-
-            {/* ГЛОБАЛЬНИЙ ПОПАП (рендериться поверх усього додатку) */}
             <Snackbar
                 open={toastOpen}
                 autoHideDuration={6000}
-                onClose={handleCloseToast}
-                TransitionComponent={SlideTransition}
+                onClose={() => setToastOpen(false)}
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                sx={{ zIndex: 9999 }} // Залізно поверх усього
             >
                 <Paper
-                    elevation={8}
+                    onClick={handleNotificationClick}
                     sx={{
-                        p: 2,
-                        display: 'flex',
-                        alignItems: 'flex-start',
-                        gap: 2,
-                        borderRadius: 3,
-                        maxWidth: 350,
-                        minWidth: 280,
-                        backgroundColor: 'background.paper',
+                        p: 2, display: 'flex', gap: 2, borderRadius: 3, cursor: 'pointer',
                         borderLeft: '4px solid',
-                        borderColor: 'primary.main',
-                        cursor: 'pointer',
+                        borderColor: latestNotification?.isGlobal ? 'secondary.main' : 'primary.main',
                         transition: 'transform 0.2s',
-                        '&:hover': { transform: 'scale(1.02)' }
+                        '&:hover': { bgcolor: 'action.hover', transform: 'translateY(-2px)' }
                     }}
-                    onClick={handleCloseToast}
                 >
-                    <Avatar sx={{ bgcolor: 'primary.light', width: 40, height: 40 }}>
-                        <NotificationsActiveIcon color="primary" fontSize="small" />
+                    <Avatar sx={{ bgcolor: latestNotification?.isGlobal ? 'secondary.light' : 'primary.light' }}>
+                        {latestNotification?.isGlobal ? <CampaignIcon color="secondary"/> : <NotificationsActiveIcon color="primary"/>}
                     </Avatar>
-
-                    <Box sx={{ flex: 1, overflow: 'hidden' }}>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 0.5 }}>
-                            {t('header.new_notification', 'Нове сповіщення')}
+                    <Box sx={{ flex: 1, minWidth: 200 }}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
+                            {latestNotification?.isGlobal
+                                ? t('notifications.global.admin_message')
+                                : t(latestNotification?.key, payloadData) as string}
                         </Typography>
-                        <Typography
-                            variant="body2"
-                            color="text.secondary"
-                            sx={{
-                                display: '-webkit-box',
-                                WebkitLineClamp: 2,
-                                WebkitBoxOrient: 'vertical',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis'
-                            }}
-                        >
-                            {/* Перекладаємо ключ, який прийшов з бекенду */}
-                            {latestNotification ? t(latestNotification.key) : ''}
+                        <Typography variant="body2" color="text.secondary" sx={{ opacity: 0.8 }}>
+                            {latestNotification?.isGlobal ? latestNotification.content : t('common.click_to_view')}
                         </Typography>
                     </Box>
-
-                    <IconButton size="small" onClick={(e) => { e.stopPropagation(); handleCloseToast(); }} sx={{ mt: -0.5, mr: -1 }}>
-                        <CloseIcon fontSize="small" />
-                    </IconButton>
                 </Paper>
             </Snackbar>
         </NotificationContext.Provider>

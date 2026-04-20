@@ -3,18 +3,12 @@ import {Client} from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 import Cookies from "js-cookie";
 import {notificationService} from "../services/impl/NotificationService.ts";
-import type {NotificationResponseDto} from "../entities/notification/notification.dto.ts";
 import authService from "../services/auth/AuthService.ts";
 
-interface NotificationWsPayload {
-    type: string;
-    countUnseen: number;
-    content: NotificationResponseDto;
-}
 
 export const useNotificationSocket = (isLoggedIn: boolean) => {
     const [unseenCount, setUnseenCount] = useState<number>(0);
-    const [latestNotification, setLatestNotification] = useState<NotificationResponseDto | null>(null);
+    const [latestNotification, setLatestNotification] = useState<any>(null);
     const userId = Cookies.get("userId");
 
     const fetchUnseenCount = useCallback(async () => {
@@ -28,43 +22,39 @@ export const useNotificationSocket = (isLoggedIn: boolean) => {
     }, [isLoggedIn]);
 
     useEffect(() => {
-        if (!isLoggedIn || !userId) return;
-
-        fetchUnseenCount();
+        if (!isLoggedIn) return;
 
         const client = new Client({
-            webSocketFactory: () => new SockJS(`${import.meta.env.VITE_API_BASE_URL || ''}/ws`),
+            webSocketFactory: () => new SockJS(`${import.meta.env.VITE_API_BASE_URL}/ws`),
             reconnectDelay: 5000,
-            heartbeatIncoming: 10000,
-            heartbeatOutgoing: 10000,
-
-            // 1. Use beforeConnect to dynamically fetch the token on EVERY attempt
-            beforeConnect: () => {
-                const token = Cookies.get("accessToken");
-                client.connectHeaders = {
-                    Authorization: `Bearer ${token}`,
-                };
-            },
-
             onConnect: () => {
-                console.log(`Connected to /topic/notifications/${userId}`);
+                // Персональні сповіщення
+                if (userId) {
+                    client.subscribe(`/topic/notifications/${userId}`, (message) => {
+                        const data = JSON.parse(message.body);
+                        if (data.countUnseen !== undefined) setUnseenCount(data.countUnseen);
+                        if (data.content) setLatestNotification({ ...data.content, isGlobal: false });
+                    });
+                }
 
-                client.subscribe(`/topic/notifications/${userId}`, (message) => {
-                    const payload: NotificationWsPayload = JSON.parse(message.body);
-
-                    if (payload.countUnseen !== undefined) {
-                        setUnseenCount(payload.countUnseen);
-                    }
-
-                    if (payload.content) {
-                        setLatestNotification(payload.content);
-                    }
+                // Глобальні повідомлення від адміна
+                client.subscribe(`/topic/global_messages`, (message) => {
+                    const data = JSON.parse(message.body);
+                    setLatestNotification({
+                        id: data.id || Date.now(),
+                        content: data.content || data.message,
+                        isGlobal: true,
+                        date: new Date().toISOString(),
+                        key: 'notifications.global.admin_message'
+                    });
                 });
             },
 
-            // 2. Intercept the Auth Error and trigger a refresh
+
             onStompError: async (frame) => {
                 console.error('WS Error:', frame.headers['message']);
+
+                if (!isLoggedIn) return;
 
                 const errorMessage = frame.headers['message']?.toLowerCase() || '';
                 const isAuthError = errorMessage.includes('access denied') ||
@@ -74,13 +64,11 @@ export const useNotificationSocket = (isLoggedIn: boolean) => {
 
                 if (isAuthError) {
                     console.warn("WebSocket Auth failed. Attempting to refresh token...");
-
                     client.deactivate();
 
                     try {
                         await authService.refresh();
-
-                        client.activate();
+                        client.activate(); // Перепідключаємось з новим токеном
                     } catch (refreshError) {
                         console.error("Token refresh failed. User needs to log in again.", refreshError);
                     }
