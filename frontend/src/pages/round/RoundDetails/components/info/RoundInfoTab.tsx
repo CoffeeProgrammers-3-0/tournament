@@ -18,7 +18,6 @@ interface RoundInfoTabProps {
 export const RoundInfoTab = ({ state, t }: RoundInfoTabProps) => {
     const { roundData, isEditing, editFormData, setEditFormData, triggerConfirm, actions } = state;
 
-    // Dynamically build buttons based on status to utilize all API methods
     const getControlButtons = () => [
         {
             show: roundData.status === "DRAFT",
@@ -36,10 +35,10 @@ export const RoundInfoTab = ({ state, t }: RoundInfoTabProps) => {
         },
         {
             show: roundData.status === "ACTIVE",
-            label: t("round_details.actions.rollbackStart"),
+            label: t("round_details.actions.toDraft"),
             color: "error" as const,
             variant: "outlined" as const,
-            action: () => triggerConfirm({ title: t("round_details.confirm.rollbackStart"), onConfirm: actions.rollbackStart })
+            action: () => triggerConfirm({ title: t("round_details.confirm.toDraft"), onConfirm: actions.toDraft })
         },
         {
             show: roundData.status === "SUBMISSION_CLOSED",
@@ -50,18 +49,18 @@ export const RoundInfoTab = ({ state, t }: RoundInfoTabProps) => {
         },
         {
             show: roundData.status === "SUBMISSION_CLOSED",
+            label: t("round_details.actions.rollbackStartRound"),
+            color: "warning" as const,
+            variant: "outlined" as const,
+            action: () => triggerConfirm({ title: t("round_details.confirm.rollbackStartRound"), onConfirm: actions.rollbackStartRound })
+        },
+        {
+            show: roundData.status === "EVALUATED",
             label: t("round_details.actions.rollbackClose"),
             color: "warning" as const,
             variant: "outlined" as const,
             action: () => triggerConfirm({ title: t("round_details.confirm.rollbackClose"), onConfirm: actions.rollbackClose })
         },
-        {
-            show: roundData.status !== "DRAFT" && roundData.status !== "EVALUATED",
-            label: t("round_details.actions.toDraft"),
-            color: "secondary" as const,
-            variant: "text" as const,
-            action: () => triggerConfirm({ title: t("round_details.confirm.toDraft"), onConfirm: actions.toDraft })
-        }
     ];
 
     return (

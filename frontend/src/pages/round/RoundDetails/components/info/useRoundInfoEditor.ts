@@ -2,10 +2,11 @@ import {useCallback, useState} from "react";
 import {roundService} from "../../../../../services/impl/RoundService";
 import {toUtcIso} from "../../../../../utils/data.ts";
 import type {TFunction} from "i18next";
-import type {RoundUpdateRequestDto} from "../../../../../entities/round/round.dto.ts";
+import type {RoundFullResponseDto, RoundUpdateRequestDto} from "../../../../../entities/round/round.dto.ts";
 
 interface UseRoundInfoEditorProps {
     roundId: number;
+    roundData: RoundFullResponseDto | null;
     setRoundData: (data: any) => void;
     fetchRound?: () => Promise<void>;
     clearErrors: () => void;
@@ -15,6 +16,7 @@ interface UseRoundInfoEditorProps {
 
 export const useRoundInfoEditor = ({
                                        roundId,
+                                       roundData,
                                        setRoundData,
                                        fetchRound,
                                        clearErrors,
@@ -36,6 +38,7 @@ export const useRoundInfoEditor = ({
     }, [clearErrors, handleError, fetchRound, t]);
 
     const handleSaveUpdate = useCallback(async (editFormData: any, setIsEditing: (val: boolean) => void) => {
+        if (!roundId || !roundData) return;
         clearErrors();
         try {
             const payload = {
