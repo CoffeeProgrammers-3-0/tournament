@@ -1,9 +1,10 @@
 import {Box, Button, Card, Divider, Grid, Paper, Stack, TextField, Typography} from "@mui/material";
 import ReactQuill from "react-quill-new";
+import type {RoundFullResponseDto} from "../../../../../entities/round/round.dto.ts";
 
 interface RoundInfoTabProps {
     state: {
-        roundData: any;
+        roundData: RoundFullResponseDto;
         isEditing: boolean;
         editFormData: any;
         setEditFormData: (data: any) => void;
@@ -20,42 +21,42 @@ export const RoundInfoTab = ({ state, t }: RoundInfoTabProps) => {
 
     const getControlButtons = () => [
         {
-            show: roundData.status === "DRAFT",
+            show: roundData.status === "DRAFT" && roundData.tournament.status !== "RUNNING",
             label: t("round_details.actions.startRound"),
             color: "success" as const,
             variant: "contained" as const,
             action: () => triggerConfirm({ title: t("round_details.confirm.start"), onConfirm: actions.start })
         },
         {
-            show: roundData.status === "ACTIVE",
+            show: roundData.status === "ACTIVE" && roundData.tournament.status !== "RUNNING",
             label: t("round_details.actions.closeSubmissions"),
             color: "warning" as const,
             variant: "contained" as const,
             action: () => triggerConfirm({ title: t("round_details.confirm.close"), onConfirm: actions.close })
         },
         {
-            show: roundData.status === "ACTIVE",
+            show: roundData.status === "ACTIVE" && roundData.tournament.status !== "FINISHED",
             label: t("round_details.actions.toDraft"),
             color: "error" as const,
             variant: "outlined" as const,
             action: () => triggerConfirm({ title: t("round_details.confirm.toDraft"), onConfirm: actions.toDraft })
         },
         {
-            show: roundData.status === "SUBMISSION_CLOSED",
+            show: roundData.status === "SUBMISSION_CLOSED" && roundData.tournament.status !== "RUNNING",
             label: t("round_details.actions.evaluate"),
             color: "primary" as const,
             variant: "contained" as const,
             action: () => triggerConfirm({ title: t("round_details.confirm.evaluate"), onConfirm: actions.evaluate })
         },
         {
-            show: roundData.status === "SUBMISSION_CLOSED",
-            label: t("round_details.actions.rollbackStartRound"),
+            show: roundData.status === "SUBMISSION_CLOSED" && roundData.tournament.status !== "FINISHED",
+            label: t("round_details.actions.rollbackStart"),
             color: "warning" as const,
             variant: "outlined" as const,
-            action: () => triggerConfirm({ title: t("round_details.confirm.rollbackStartRound"), onConfirm: actions.rollbackStartRound })
+            action: () => triggerConfirm({ title: t("round_details.confirm.rollbackStart"), onConfirm: actions.rollbackStart })
         },
         {
-            show: roundData.status === "EVALUATED",
+            show: roundData.status === "EVALUATED" && roundData.tournament.status !== "FINISHED",
             label: t("round_details.actions.rollbackClose"),
             color: "warning" as const,
             variant: "outlined" as const,
@@ -82,6 +83,7 @@ export const RoundInfoTab = ({ state, t }: RoundInfoTabProps) => {
                                     label={t("round_details.labels.startDate")}
                                     InputLabelProps={{shrink: true}}
                                     value={editFormData.startDate}
+                                    inputProps={{ min: roundData.tournament.startTournament || undefined, max: editFormData.endDate }}
                                     onChange={e => setEditFormData({...editFormData, startDate: e.target.value})}
                                 />
                             </Grid>
@@ -93,6 +95,7 @@ export const RoundInfoTab = ({ state, t }: RoundInfoTabProps) => {
                                     label={t("round_details.labels.endDate")}
                                     InputLabelProps={{shrink: true}}
                                     value={editFormData.endDate}
+                                    inputProps={{ min: roundData.startDate }}
                                     onChange={e => setEditFormData({...editFormData, endDate: e.target.value})}
                                 />
                             </Grid>

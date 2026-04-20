@@ -77,7 +77,13 @@ export const useTournamentDetails = () => {
             return;
         }
         try {
-            const response = await tournamentService.getTournamentById(tournamentId);
+            let response: TournamentFullResponseDto | null = null;
+            if(isAdmin) {
+                response = await tournamentService.getTournamentByIdAdmin(tournamentId);
+            }
+            else {
+                response = await tournamentService.getTournamentById(tournamentId);
+            }
             setTournamentData(response);
             setEditFormData({
                 ...response,

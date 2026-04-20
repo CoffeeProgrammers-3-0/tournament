@@ -34,6 +34,7 @@ export const useRoundInfoEditor = ({
             if (fetchRound) await fetchRound();
         } catch (e: any) {
             handleError(e, t('round_details.errors.actionFailed'));
+
         }
     }, [clearErrors, handleError, fetchRound, t]);
 
@@ -71,7 +72,7 @@ export const useRoundInfoEditor = ({
             delete: async () => {
                 try {
                     await roundService.deleteRound(roundId);
-                    window.location.href = `/tournament`;
+                    window.location.href = `/tournaments/${roundData?.tournament.id}`;
                 } catch (e: any) {
                     handleError(e, t('round_details.errors.delete'));
                 }
