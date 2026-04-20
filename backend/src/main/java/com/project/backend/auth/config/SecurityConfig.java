@@ -40,6 +40,7 @@ public class SecurityConfig {
                 "/api/auth/refresh",
                 "/api/ws/**"
         };
+
         RegexRequestMatcher[] getPermitAll = new RegexRequestMatcher[]{
                 regexMatcher(HttpMethod.GET, "^/api/rounds/\\d+/categories(\\?.*)?$"),
                 regexMatcher(HttpMethod.GET, "^/api/tournaments/\\d+/rounds(\\?.*)?$"),
@@ -59,7 +60,8 @@ public class SecurityConfig {
                 regexMatcher(HttpMethod.GET, "^/api/admin-messages/global(\\?.*)?$"),
                 regexMatcher(HttpMethod.GET, "^/api/admin-messages/round/\\d+(\\?.*)?$"),
                 regexMatcher(HttpMethod.GET, "^/api/round-events/round/\\d+(\\?.*)?$"),
-                regexMatcher(HttpMethod.GET, "^/api/round-events/\\d+(\\?.*)?$")
+                regexMatcher(HttpMethod.GET, "^/api/round-events/\\d+(\\?.*)?$"),
+                regexMatcher(HttpMethod.GET, "^/api/calendar(\\?.*)?$")
         };
 
         RegexRequestMatcher[] postPermitAll = new RegexRequestMatcher[]{

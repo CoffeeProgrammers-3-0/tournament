@@ -11,7 +11,7 @@ import jakarta.persistence.criteria.Subquery;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.domain.Specification;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Slf4j
 public class TournamentSpecification {
@@ -47,7 +47,7 @@ public class TournamentSpecification {
                 cb.equal(root.get("status"), status);
     }
 
-    public static Specification<Tournament> beforeStartTournament(LocalDateTime date) {
+    public static Specification<Tournament> beforeStartTournament(Instant date) {
         log.debug("TournamentSpecification.beforeStartTournament called with date={}", date);
         if(date == null) return null;
 
@@ -55,7 +55,7 @@ public class TournamentSpecification {
                 cb.lessThanOrEqualTo(root.get("startTournament"), date);
     }
 
-    public static Specification<Tournament> afterStartTournament(LocalDateTime date) {
+    public static Specification<Tournament> afterStartTournament(Instant date) {
         log.debug("TournamentSpecification.afterStartTournament called with date={}", date);
         if(date == null) return null;
 
@@ -63,7 +63,7 @@ public class TournamentSpecification {
                 cb.greaterThanOrEqualTo(root.get("startTournament"), date);
     }
 
-    public static Specification<Tournament> betweenStartTournament(LocalDateTime start, LocalDateTime end) {
+    public static Specification<Tournament> betweenStartTournament(Instant start, Instant end) {
         log.debug("TournamentSpecification.betweenStartTournament called with start={}, end={}", start, end);
         if(start == null && end == null) return null;
         if(start == null) return beforeStartTournament(end);
@@ -73,39 +73,39 @@ public class TournamentSpecification {
                 cb.between(root.get("startTournament"), start, end);
     }
 
-    public static Specification<Tournament> beforeEndTournament(LocalDateTime date) {
+    public static Specification<Tournament> beforeEndTournament(Instant date) {
         log.debug("TournamentSpecification.beforeEndTournament called with date={}", date);
         if (date == null) return null;
 
         return (root, query, cb) -> {
 
-            Subquery<LocalDateTime> subquery = query.subquery(LocalDateTime.class);
+            Subquery<Instant> subquery = query.subquery(Instant.class);
             Root<Round> roundRoot = subquery.from(Round.class);
 
-            subquery.select(cb.greatest(roundRoot.<LocalDateTime>get("endDate")))
+            subquery.select(cb.greatest(roundRoot.<Instant>get("endDate")))
                     .where(cb.equal(roundRoot.get("tournament"), root));
 
             return cb.lessThanOrEqualTo(subquery, date);
         };
     }
 
-    public static Specification<Tournament> afterEndTournament(LocalDateTime date) {
+    public static Specification<Tournament> afterEndTournament(Instant date) {
         log.debug("TournamentSpecification.afterEndTournament called with date={}", date);
         if (date == null) return null;
 
         return (root, query, cb) -> {
 
-            Subquery<LocalDateTime> subquery = query.subquery(LocalDateTime.class);
+            Subquery<Instant> subquery = query.subquery(Instant.class);
             Root<Round> roundRoot = subquery.from(Round.class);
 
-            subquery.select(cb.greatest(roundRoot.<LocalDateTime>get("endDate")))
+            subquery.select(cb.greatest(roundRoot.<Instant>get("endDate")))
                     .where(cb.equal(roundRoot.get("tournament"), root));
 
             return cb.greaterThanOrEqualTo(subquery, date);
         };
     }
 
-    public static Specification<Tournament> betweenEndTournament(LocalDateTime start, LocalDateTime end) {
+    public static Specification<Tournament> betweenEndTournament(Instant start, Instant end) {
         log.debug("TournamentSpecification.betweenEndTournament called with start={}, end={}", start, end);
 
         if (start == null && end == null) return null;
@@ -114,17 +114,17 @@ public class TournamentSpecification {
 
         return (root, query, cb) -> {
 
-            Subquery<LocalDateTime> subquery = query.subquery(LocalDateTime.class);
+            Subquery<Instant> subquery = query.subquery(Instant.class);
             Root<Round> roundRoot = subquery.from(Round.class);
 
-            subquery.select(cb.greatest(roundRoot.<LocalDateTime>get("endDate")))
+            subquery.select(cb.greatest(roundRoot.<Instant>get("endDate")))
                     .where(cb.equal(roundRoot.get("tournament"), root));
 
             return cb.between(subquery, start, end);
         };
     }
 
-    public static Specification<Tournament> beforeStartRegistration(LocalDateTime date) {
+    public static Specification<Tournament> beforeStartRegistration(Instant date) {
         log.debug("TournamentSpecification.beforeStartRegistration called with date={}", date);
         if(date == null) return null;
 
@@ -132,7 +132,7 @@ public class TournamentSpecification {
                 cb.lessThanOrEqualTo(root.get("startRegistration"), date);
     }
 
-    public static Specification<Tournament> afterStartRegistration(LocalDateTime date) {
+    public static Specification<Tournament> afterStartRegistration(Instant date) {
         log.debug("TournamentSpecification.afterStartRegistration called with date={}", date);
         if(date == null) return null;
 
@@ -140,7 +140,7 @@ public class TournamentSpecification {
                 cb.greaterThanOrEqualTo(root.get("startRegistration"), date);
     }
 
-    public static Specification<Tournament> betweenStartRegistration(LocalDateTime start, LocalDateTime end) {
+    public static Specification<Tournament> betweenStartRegistration(Instant start, Instant end) {
         log.debug("TournamentSpecification.betweenStartRegistration called with start={}, end={}", start, end);
         if(start == null && end == null) return null;
         if(start == null) return beforeStartRegistration(end);
@@ -150,7 +150,7 @@ public class TournamentSpecification {
                 cb.between(root.get("startRegistration"), start, end);
     }
 
-    public static Specification<Tournament> beforeEndRegistration(LocalDateTime date) {
+    public static Specification<Tournament> beforeEndRegistration(Instant date) {
         log.debug("TournamentSpecification.beforeEndRegistration called with date={}", date);
         if(date == null) return null;
 
@@ -158,7 +158,7 @@ public class TournamentSpecification {
                 cb.lessThanOrEqualTo(root.get("endRegistration"), date);
     }
 
-    public static Specification<Tournament> afterEndRegistration(LocalDateTime date) {
+    public static Specification<Tournament> afterEndRegistration(Instant date) {
         log.debug("TournamentSpecification.afterEndRegistration called with date={}", date);
         if(date == null) return null;
 
@@ -166,7 +166,7 @@ public class TournamentSpecification {
                 cb.greaterThanOrEqualTo(root.get("endRegistration"), date);
     }
 
-    public static Specification<Tournament> betweenEndRegistration(LocalDateTime start, LocalDateTime end) {
+    public static Specification<Tournament> betweenEndRegistration(Instant start, Instant end) {
         log.debug("TournamentSpecification.betweenEndRegistration called with start={}, end={}", start, end);
         if(start == null && end == null) return null;
         if(start == null) return beforeEndRegistration(end);

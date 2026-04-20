@@ -1,5 +1,6 @@
 package com.project.backend.repositories;
 
+import com.project.backend.dto.calendar.CalendarEventDTO;
 import com.project.backend.models.Tournament;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -50,4 +51,28 @@ public interface TournamentRepository extends JpaRepository<Tournament, Long>, J
         RETURNING t.id
         """, nativeQuery = true)
     List<Long> finishTournamentsAndReturnIds();
+
+    @Query("SELECT new com.project.backend.dto.calendar.CalendarEventDTO(" +
+           "t.id, t.name, t.startRegistration, t.endRegistration, " +
+           "com.project.backend.dto.calendar.CalendarEventType.TOURNAMENT_REGISTRATION) " +
+           "FROM Tournament t " +
+           "WHERE t.startRegistration <= :end AND t.endRegistration >= :start " +
+           "AND t.status = com.project.backend.models.constants.TournamentStatus.REGISTRATION")
+    List<CalendarEventDTO> findRegistrationEvents(@Param("start") Instant start, @Param("end") Instant end);
+
+    @Query("SELECT new com.project.backend.dto.calendar.CalendarEventDTO(" +
+           "t.id, t.name, t.startTournament, " +
+           "(SELECT MAX(r.endDate) FROM Round r WHERE r.tournament = t), " +
+           "com.project.backend.dto.calendar.CalendarEventType.TOURNAMENT_RUNNING) " +
+           "FROM Tournament t " +
+           "WHERE t.startTournament <= :end " +
+           "AND (SELECT MAX(r.endDate) FROM Round r WHERE r.tournament = t) >= :start " +
+           "AND t.status = com.project.backend.models.constants.TournamentStatus.RUNNING " +
+           "AND (:userId IS NULL OR EXISTS (" +
+           "  SELECT 1 FROM TeamParticipant tp " +
+           "  WHERE tp.tournament = t AND tp.user.id = :userId))")
+    List<CalendarEventDTO> findPersonalTournamentEvents(
+            @Param("start") Instant start,
+            @Param("end") Instant end,
+            @Param("userId") Long userId);
 }

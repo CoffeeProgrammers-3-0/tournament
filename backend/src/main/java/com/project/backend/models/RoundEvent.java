@@ -31,6 +31,7 @@ public class RoundEvent {
     private Instant startDate;
     @Column(nullable = false)
     private Instant endDate;
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private RoundEventType type;
 

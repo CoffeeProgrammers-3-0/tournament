@@ -134,6 +134,7 @@ public class TournamentServiceImpl implements TournamentService {
     }
 
     @Override
+    @Transactional
     public void startRegistration(Long tournamentId) {
         Tournament tournament = findById(tournamentId);
 
@@ -151,6 +152,7 @@ public class TournamentServiceImpl implements TournamentService {
     }
 
     @Override
+    @Transactional
     public void startTournament(Long tournamentId) {
         Tournament tournament = findById(tournamentId);
 
@@ -169,6 +171,7 @@ public class TournamentServiceImpl implements TournamentService {
     }
 
     @Override
+    @Transactional
     public void finish(Long tournamentId) {
         Tournament tournament = findById(tournamentId);
 
@@ -187,6 +190,7 @@ public class TournamentServiceImpl implements TournamentService {
     }
 
     @Override
+    @Transactional
     public void rollbackFinishTournament(Long tournamentId) {
         Tournament tournament = findById(tournamentId);
 
@@ -199,6 +203,7 @@ public class TournamentServiceImpl implements TournamentService {
     }
 
     @Override
+    @Transactional
     public void rollbackStartTournament(Long tournamentId) {
         Tournament tournament = findById(tournamentId);
 
@@ -213,6 +218,7 @@ public class TournamentServiceImpl implements TournamentService {
     }
 
     @Override
+    @Transactional
     public void draft(Long tournamentId) {
         Tournament tournament = findById(tournamentId);
 

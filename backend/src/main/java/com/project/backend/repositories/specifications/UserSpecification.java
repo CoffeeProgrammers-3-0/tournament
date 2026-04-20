@@ -34,6 +34,14 @@ public class UserSpecification {
                 cb.equal(root.get("email"), email);
     }
 
+    public static Specification<User> byEmailLike(String email) {
+        log.debug("UserSpecification.byEmailLike called with email={}", email);
+        if(email == null || email.isBlank()) return null;
+
+        return (root, query, cb) ->
+                cb.like(cb.lower(root.get("email")), "%" + email.toLowerCase() + "%");
+    }
+
     public static Specification<User> byKeycloakUserId(String keycloakUserId) {
         log.debug("UserSpecification.byKeycloakUserId called with keycloakUserId={}", keycloakUserId);
         if(keycloakUserId == null || keycloakUserId.isBlank()) return null;

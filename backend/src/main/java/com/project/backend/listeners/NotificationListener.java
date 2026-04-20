@@ -467,13 +467,9 @@ public class NotificationListener {
     public void handleTournamentRegistrationStartedEvent(TournamentRegistrationStartedEvent event) {
         Tournament tournament = tournamentRepository.findById(event.getId()).orElseThrow(() -> new EntityNotFoundException("Tournament with id " + event.getId() + " not found"));
 
-        ObjectNode payload = objectMapper.createObjectNode();
-        payload.put("tournamentId", tournament.getId());
-        payload.put("tournamentName", tournament.getName());
-
         GlobalAdminMessage globalAdminMessage = new GlobalAdminMessage();
         globalAdminMessage.setDate(Instant.now());
-        globalAdminMessage.setContent(NotificationKey.TOURNAMENT_REGISTRATION_STARTED.getI18nKey());
+        globalAdminMessage.setContent(tournament.getName() + " : " + tournament.getId() + " : " + NotificationKey.TOURNAMENT_REGISTRATION_STARTED.getI18nKey());
         globalAdminMessage.setSystem(true);
         globalAdminMessage = globalAdminMessageRepository.save(globalAdminMessage);
 

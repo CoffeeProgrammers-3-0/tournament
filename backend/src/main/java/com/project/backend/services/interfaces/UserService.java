@@ -45,5 +45,5 @@ public interface UserService {
 
     List<User> findAllUsersOfUsersTeam(User user, Long roundId);
 
-    List<User> findByEmail(String email, int count);
+    List<User> findUsersByEmailLike(String email, int count);
 }

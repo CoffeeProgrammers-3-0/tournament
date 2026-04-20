@@ -317,11 +317,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<User> findByEmail(String email, int count) {
+    public List<User> findUsersByEmailLike(String email, int count) {
         if (count <= 0) return List.of();
 
         PageRequest limit = PageRequest.of(0, count);
 
-        return userRepository.findAll(UserSpecification.byEmail(email), limit).getContent();
+        return userRepository.findAll(Specification.allOf(UserSpecification.byEmailLike(email), UserSpecification.byRole(Role.USER)), limit).getContent();
     }
 }

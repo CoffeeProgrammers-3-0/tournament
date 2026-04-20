@@ -10,7 +10,7 @@ import jakarta.persistence.criteria.Subquery;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.domain.Specification;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Slf4j
 public class RoundSpecification {
@@ -74,7 +74,7 @@ public class RoundSpecification {
                 cb.equal(root.get("status"), status);
     }
 
-    public static Specification<Round> beforeStartDate(LocalDateTime date) {
+    public static Specification<Round> beforeStartDate(Instant date) {
         log.debug("RoundSpecification.beforeStartDate called with date={}", date);
         if (date == null) return null;
 
@@ -82,7 +82,7 @@ public class RoundSpecification {
                 cb.lessThanOrEqualTo(root.get("startDate"), date);
     }
 
-    public static Specification<Round> afterStartDate(LocalDateTime date) {
+    public static Specification<Round> afterStartDate(Instant date) {
         log.debug("RoundSpecification.afterStartDate called with date={}", date);
         if (date == null) return null;
 
@@ -90,7 +90,7 @@ public class RoundSpecification {
                 cb.greaterThanOrEqualTo(root.get("startDate"), date);
     }
 
-    public static Specification<Round> betweenStartDate(LocalDateTime start, LocalDateTime end) {
+    public static Specification<Round> betweenStartDate(Instant start, Instant end) {
         log.debug("RoundSpecification.betweenStartDate called with start={}, end={}", start, end);
         if (start == null && end == null) return null;
         if (start == null) return beforeStartDate(end);
@@ -100,7 +100,7 @@ public class RoundSpecification {
                 cb.between(root.get("startDate"), start, end);
     }
 
-    public static Specification<Round> beforeEndDate(LocalDateTime date) {
+    public static Specification<Round> beforeEndDate(Instant date) {
         log.debug("RoundSpecification.beforeEndDate called with date={}", date);
         if (date == null) return null;
 
@@ -108,7 +108,7 @@ public class RoundSpecification {
                 cb.lessThanOrEqualTo(root.get("endDate"), date);
     }
 
-    public static Specification<Round> afterEndDate(LocalDateTime date) {
+    public static Specification<Round> afterEndDate(Instant date) {
         log.debug("RoundSpecification.afterEndDate called with date={}", date);
         if (date == null) return null;
 
@@ -116,7 +116,7 @@ public class RoundSpecification {
                 cb.greaterThanOrEqualTo(root.get("endDate"), date);
     }
 
-    public static Specification<Round> betweenEndDate(LocalDateTime start, LocalDateTime end) {
+    public static Specification<Round> betweenEndDate(Instant start, Instant end) {
         log.debug("RoundSpecification.betweenEndDate called with start={}, end={}", start, end);
         if (start == null && end == null) return null;
         if (start == null) return beforeEndDate(end);

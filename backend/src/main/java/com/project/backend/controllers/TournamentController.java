@@ -175,7 +175,7 @@ public class TournamentController {
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{tournament_id}/start-registration")
     @Operation(summary = "Starts registration", description = "Changes status of tournament from DRAFT to REGISTRATION and changes startRegistration")
-    private void startRegistration(
+    public void startRegistration(
             @Parameter(description = "ID of the tournament", example = "1")
             @PathVariable(value = "tournament_id") Long tournamentId
     ) {
@@ -185,7 +185,7 @@ public class TournamentController {
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{tournament_id}/start-tournament")
     @Operation(summary = "Starts tournament", description = "Changes status of tournament from REGISTRATION to RUNNING and changes endRegistration")
-    private void startTournament(
+    public void startTournament(
             @Parameter(description = "ID of the tournament", example = "1")
             @PathVariable(value = "tournament_id") Long tournamentId
     ) {
@@ -195,7 +195,7 @@ public class TournamentController {
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{tournament_id}/finish-tournament")
     @Operation(summary = "Sets tournament status to finished", description = "Changes status of tournament from RUNNING to FINISHED")
-    private void finish(
+    public void finish(
             @Parameter(description = "ID of the tournament", example = "1")
             @PathVariable(value = "tournament_id") Long tournamentId
     ) {
@@ -205,7 +205,7 @@ public class TournamentController {
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{tournament_id}/rollback-finish-tournament")
     @Operation(summary = "Rollback finish tournament", description = "Rollbacks status of tournament from FINISHED to RUNNING")
-    private void rollbackFinishTournament(
+    public void rollbackFinishTournament(
             @Parameter(description = "ID of the tournament", example = "1")
             @PathVariable(value = "tournament_id") Long tournamentId
     ) {
@@ -215,7 +215,7 @@ public class TournamentController {
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{tournament_id}/rollback-start-tournament")
     @Operation(summary = "Rollbacks start of the tournament", description = "Rollbacks status of tournament from RUNNING to REGISTRATION and changes endRegistration")
-    private void rollbackStartTournament(
+    public void rollbackStartTournament(
             @Parameter(description = "ID of the tournament", example = "1")
             @PathVariable(value = "tournament_id") Long tournamentId
     ) {
@@ -225,7 +225,7 @@ public class TournamentController {
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{tournament_id}/draft")
     @Operation(summary = "Sets tournament status to draft", description = "Rollbacks status of tournament from REGISTRATION to DRAFT")
-    private void draft(
+    public void draft(
             @Parameter(description = "ID of the tournament", example = "1")
             @PathVariable(value = "tournament_id") Long tournamentId
     ) {

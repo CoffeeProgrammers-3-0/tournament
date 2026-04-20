@@ -7,7 +7,7 @@ import com.project.backend.dto.round.RoundUpdateRequest;
 import com.project.backend.models.Round;
 import org.mapstruct.Mapper;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = {TournamentMapper.class})
 public interface RoundMapper {
     Round fromCreateRequestToRound(RoundCreateRequest roundCreateRequest);
     Round fromUpdateRequestToRound(RoundUpdateRequest roundUpdateRequest);

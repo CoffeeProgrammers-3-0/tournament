@@ -386,7 +386,7 @@ public class RoundController {
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/rounds/{round_id}/start-round")
     @Operation(summary = "Starts round", description = "Changes status of round from DRAFT to ACTIVE and changes startDate")
-    private void startRound(
+    public void startRound(
             @Parameter(description = "ID of the round", example = "1")
             @PathVariable(value = "round_id") Long roundId
     ) {
@@ -396,7 +396,7 @@ public class RoundController {
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/rounds/{round_id}/close-submissions")
     @Operation(summary = "Closes submissions", description = "Changes status of round from ACTIVE to SUBMISSION_CLOSED and changes endDate")
-    private void closeSubmissions(
+    public void closeSubmissions(
             @Parameter(description = "ID of the round", example = "1")
             @PathVariable(value = "round_id") Long roundId
     ) {
@@ -406,7 +406,7 @@ public class RoundController {
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/rounds/{round_id}/evaluate")
     @Operation(summary = "Sets round status to evaluated", description = "Changes status of round from SUBMISSION_CLOSED to EVALUATED")
-    private void evaluate(
+    public void evaluate(
             @Parameter(description = "ID of the round", example = "1")
             @PathVariable(value = "round_id") Long roundId
     ) {
@@ -416,7 +416,7 @@ public class RoundController {
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/rounds/{round_id}/rollback-close-submissions")
     @Operation(summary = "Rollback close submissions", description = "Rollbacks status of round from EVALUATED to SUBMISSION_CLOSED")
-    private void rollbackCloseSubmissions(
+    public void rollbackCloseSubmissions(
             @Parameter(description = "ID of the round", example = "1")
             @PathVariable(value = "round_id") Long roundId
     ) {
@@ -426,7 +426,7 @@ public class RoundController {
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/rounds/{round_id}/rollback-start-round")
     @Operation(summary = "Rollbacks start of the round", description = "Rollbacks status of round from SUBMISSION_CLOSED to ACTIVE and changes endDate")
-    private void rollbackStartRound(
+    public void rollbackStartRound(
             @Parameter(description = "ID of the round", example = "1")
             @PathVariable(value = "round_id") Long roundId
     ) {
@@ -436,7 +436,7 @@ public class RoundController {
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/rounds/{round_id}/draft")
     @Operation(summary = "Sets round status to draft", description = "Rollbacks status of round from ACTIVE to DRAFT")
-    private void draft(
+    public void draft(
             @Parameter(description = "ID of the round", example = "1")
             @PathVariable(value = "round_id") Long roundId
     ) {

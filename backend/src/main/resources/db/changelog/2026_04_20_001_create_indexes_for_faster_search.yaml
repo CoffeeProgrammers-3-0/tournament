@@ -1,0 +1,120 @@
+databaseChangeLog:
+  - changeSet:
+      id: calendar_and_dates_optimization
+      author: vladobrod
+      changes:
+        - createIndex:
+            tableName: tournaments
+            schemaName: tournament
+            indexName: idx_tournaments_reg_period
+            columns:
+              - column: {name: start_registration}
+              - column: {name: end_registration}
+
+        - createIndex:
+            tableName: tournaments
+            schemaName: tournament
+            indexName: idx_tournaments_main_dates
+            columns:
+              - column: {name: start_tournament}
+
+        - createIndex:
+            tableName: tournaments
+            schemaName: tournament
+            indexName: idx_tournaments_status
+            columns:
+              - column: {name: status}
+
+        - createIndex:
+            tableName: rounds
+            schemaName: tournament
+            indexName: idx_rounds_dates_overlap
+            columns:
+              - column: {name: start_date}
+              - column: {name: end_date}
+
+        - createIndex:
+            tableName: rounds
+            schemaName: tournament
+            indexName: idx_rounds_tournament_id
+            columns:
+              - column: {name: tournament_id}
+
+        - createIndex:
+            tableName: rounds
+            schemaName: tournament
+            indexName: idx_rounds_status
+            columns:
+              - column: {name: status}
+
+        - createIndex:
+            tableName: round_events
+            schemaName: tournament
+            indexName: idx_round_events_calendar_filter
+            columns:
+              - column: {name: start_date}
+              - column: {name: end_date}
+              - column: {name: type}
+
+        - createIndex:
+            tableName: round_events
+            schemaName: tournament
+            indexName: idx_round_events_round_link
+            columns:
+              - column: {name: round_id}
+
+  - changeSet:
+      id: core_performance_optimization
+      author: vladobrod
+      changes:
+        - createIndex:
+            tableName: submissions
+            schemaName: tournament
+            indexName: idx_submissions_round_id
+            columns:
+              - column: {name: round_id}
+
+        - createIndex:
+            tableName: submissions
+            schemaName: tournament
+            indexName: idx_submissions_team_id
+            columns:
+              - column: {name: team_id}
+
+        - createIndex:
+            tableName: jury_submission
+            schemaName: tournament
+            indexName: idx_js_submission_link
+            columns:
+              - column: {name: submission_id}
+
+        - createIndex:
+            tableName: criteria
+            schemaName: tournament
+            indexName: idx_criteria_category_id
+            columns:
+              - column: {name: category_id}
+
+        - createIndex:
+            tableName: team_tasks
+            schemaName: tournament
+            indexName: idx_team_tasks_team_round_composite
+            columns:
+              - column: {name: team_id}
+              - column: {name: round_id}
+
+        - createIndex:
+            tableName: notifications
+            schemaName: tournament
+            indexName: idx_notifications_unread_fast
+            columns:
+              - column: {name: receiver_id}
+              - column: {name: seen}
+              - column: {name: date}
+
+        - createIndex:
+            tableName: admin_messages
+            schemaName: tournament
+            indexName: idx_admin_messages_date_sort
+            columns:
+              - column: {name: date}

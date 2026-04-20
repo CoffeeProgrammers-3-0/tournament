@@ -1,5 +1,6 @@
 package com.project.backend.dto.round;
 
+import com.project.backend.dto.tournament.TournamentListResponse;
 import com.project.backend.models.constants.RoundStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -39,4 +40,7 @@ public class RoundFullResponse {
 
     @Schema(description = "Status of the round", example = "ACTIVE")
     private RoundStatus status;
+
+    @Schema(description = "Tournament of the round")
+    private TournamentListResponse tournament;
 }
