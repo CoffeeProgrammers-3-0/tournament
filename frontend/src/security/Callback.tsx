@@ -1,35 +1,47 @@
-import React, {useEffect, useRef} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {useNavigate} from 'react-router-dom';
 import {useTranslation} from 'react-i18next';
 import {Box, CircularProgress, Container, Paper, Typography} from '@mui/material';
-import {client} from '../utils/client'; // Assuming this is your configured Axios instance
+import axios from "axios";
 
 const Callback: React.FC = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const effectRan = useRef(false);
+    const [isProcessing, setIsProcessing] = useState(true);
 
     useEffect(() => {
         if (effectRan.current) return;
-        effectRan.current = true;
 
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
 
-        if (code) {
-            client.get(`/auth/callback?code=${encodeURIComponent(code)}`)
-                .then(() => {
-                    // Grab the saved path, default to /home
-                    const returnPath = localStorage.getItem('preLoginPath') || '/home';
-                    localStorage.removeItem('preLoginPath');
-                    navigate(returnPath, { replace: true });
-                })
-                .catch((err) => {
-                    console.error("Auth error:", err);
-                    navigate('/login', { replace: true }); // Send back to login on failure
-                });
+        if (!code) {
+            navigate('/login', { replace: true });
+            return;
         }
+
+        effectRan.current = true;
+
+        const authenticate = async () => {
+            try {
+                await axios.get(`${import.meta.env.VITE_API_BASE_URL}/auth/callback?code=${encodeURIComponent(code)}`, {
+                    withCredentials: true
+                });
+
+                const returnPath = localStorage.getItem('preLoginPath') || '/home';
+                localStorage.removeItem('preLoginPath');
+                navigate(returnPath, { replace: true });
+            } catch (err) {
+                console.error("Auth error:", err);
+                setIsProcessing(false);
+            }
+        };
+
+        authenticate();
     }, [navigate]);
+
+    if (!isProcessing) return null;
 
     return (
         <Container maxWidth="sm">

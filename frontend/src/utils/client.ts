@@ -35,6 +35,11 @@ client.interceptors.response.use(
         if (response) {
             const status = response.status;
 
+            if (originalRequest.url?.includes('/auth/callback') ||
+                originalRequest.url?.includes('/auth/refresh')) {
+                return Promise.reject(error);
+            }
+
             // 1. Обробка 401 (Refresh Token)
             if (status === 401 && originalRequest && !originalRequest._retried) {
                 originalRequest._retried = true;

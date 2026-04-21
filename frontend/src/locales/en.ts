@@ -678,9 +678,52 @@ export const en = {
         "success": "Project saved successfully!"
     },
 
-    notifications: {
+    "notifications": {
         "round": {
-            "created": "Round was created successfully!",
+            "created": "A new round '{{roundName}}' has been created",
+            "started": "The round '{{roundName}}' has officially started!",
+            "evaluated": "Results for the round '{{roundName}}' have been published",
+            "submission_closed": "Submissions for '{{roundName}}' are now closed",
+            "deadline_24h": "Only 24 hours left until the deadline for '{{roundName}}'"
         },
-    },
+        "jury_submission": {
+            "assigned": "A new submission from '{{teamName}}' has been assigned to you for '{{roundName}}'",
+            "unassigned": "Submission review for '{{teamName}}' has been reassigned"
+        },
+        "jury": {
+            "assigned_to_round": "You have been appointed as a jury for the round '{{roundName}}'",
+            "unassigned_from_round": "You are no longer a jury for the round '{{roundName}}'"
+        },
+        "points_changed": "The score for your team '{{teamName}}' has been updated by {{pointsDiff}} points",
+        "team": {
+            "created": "The team '{{teamName}}' has been successfully formed",
+            "assigned_to_round": "Your team '{{teamName}}' is now participating in '{{roundName}}'",
+            "unassigned_from_round": "Your team '{{teamName}}' was removed from '{{roundName}}'",
+            "user_added": "You joined team '{{teamName}}'",
+            "user_removed": "You has left your team '{{teamName}}'",
+            "user_set_to_leader": "You have been promoted to the leader of '{{teamName}}'",
+            "user_is_no_longer_leader": "You are no longer the leader of '{{teamName}}'"
+        },
+        "team_tasks": {
+            "created": "A new task '{{taskTitle}}' has been added to your team",
+            "updated": "The task '{{taskTitle}}' has been modified",
+            "deleted": "The task '{{taskTitle}}' was removed"
+        },
+        "round_admin_message": {
+            "created": "New message from the administrator for '{{roundName}}'"
+        },
+        "round_event": {
+            "created": "A new event '{{eventName}}' was added to '{{roundName}}'",
+            "before_1h": "The event '{{eventName}}' starts in 1 hour"
+        },
+        "tournament": {
+            "started": "The tournament '{{tournamentName}}' has begun! Good luck!"
+        },
+        "global": {
+            "tournament": {
+                "registration_started": "Registration for '{{tournamentName}}' is now open!"
+            },
+            "admin_message": "Global announcement from Administration"
+        }
+    }
 };
