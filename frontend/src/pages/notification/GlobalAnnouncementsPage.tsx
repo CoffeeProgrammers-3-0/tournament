@@ -42,44 +42,92 @@ const PAGE_SIZE = 10;
 
 // --- Мемоізовані під-компоненти ---
 
-const AnnouncementItem = React.memo(({msg, isAdmin, onEdit, onDelete, language}: any) => (
-    <Card sx={{
-        borderRadius: 3,
-        position: 'relative',
-        border: '1px solid',
-        borderColor: 'divider',
-        transition: '0.2s',
-        '&:hover': {boxShadow: 3}
-    }}>
-        <CardContent>
-            <Stack direction="row" spacing={2} alignItems="center" sx={{mb: 2}}>
-                <Avatar sx={{bgcolor: 'primary.main', fontWeight: 'bold'}}>
-                    {msg.creator?.fullName?.[0] || 'A'}
-                </Avatar>
-                <Box>
-                    <Typography variant="subtitle2" sx={{fontWeight: 800}}>{msg.creator?.fullName}</Typography>
-                    <Typography variant="caption" color="text.disabled">{formatDisplay(msg.date, language)}</Typography>
-                </Box>
-            </Stack>
-            <Box
-                sx={{
-                    typography: 'body1',
-                    lineHeight: 1.6,
-                    '& p': {m: 0, mb: 1},
-                    '& a': {color: 'primary.main', textDecoration: 'underline'}
-                }}
-                dangerouslySetInnerHTML={{__html: msg.content}}
-            />
-            {isAdmin && (
-                <Stack direction="row" sx={{position: 'absolute', top: 8, right: 8}}>
-                    <IconButton size="small" onClick={() => onEdit(msg)}><EditIcon fontSize="small"/></IconButton>
-                    <IconButton size="small" color="error" onClick={() => onDelete(msg.id)}><DeleteIcon
-                        fontSize="small"/></IconButton>
+const AnnouncementItem = React.memo(({msg, isAdmin, onEdit, onDelete, language, t}: any) => {
+    if (msg.system) {
+        const parts = msg.content.split(':').map((p: string) => p.trim());
+        const [name, id, key] = parts.length >= 3 ? parts : ['', '', msg.content];
+
+        const parsedMessage = parts.length >= 3
+            ? String(t(key, {
+                tournamentName: name,
+                roundName: name,
+                teamName: name,
+                id: id
+            }))
+            : msg.content; // Фолбек, якщо формат раптом неправильний
+
+        return (
+            <Card sx={{
+                borderRadius: 3,
+                border: '1px solid',
+                borderColor: 'divider',
+                bgcolor: 'action.hover',
+                transition: '0.2s',
+                '&:hover': {boxShadow: 2}
+            }}>
+                <CardContent sx={{display: 'flex', alignItems: 'center', gap: 2.5}}>
+                    <Avatar sx={{bgcolor: 'secondary.light'}}>
+                        <CampaignIcon color="secondary" fontSize="small"/>
+                    </Avatar>
+                    <Box sx={{flex: 1}}>
+                        <Typography variant="body2" sx={{fontWeight: 700}}>
+                            {parsedMessage}
+                        </Typography>
+                        <Typography variant="caption" color="text.disabled">
+                            {formatDisplay(msg.date, language)}
+                        </Typography>
+                    </Box>
+                    {isAdmin && (
+                        <Stack direction="row" sx={{ml: 2}}>
+                            <IconButton size="small" color="error" onClick={() => onDelete(msg.id)}>
+                                <DeleteIcon fontSize="small"/>
+                            </IconButton>
+                        </Stack>
+                    )}
+                </CardContent>
+            </Card>
+        );
+    }
+
+    return (
+        <Card sx={{
+            borderRadius: 3,
+            position: 'relative',
+            border: '1px solid',
+            borderColor: 'divider',
+            transition: '0.2s',
+            '&:hover': {boxShadow: 3}
+        }}>
+            <CardContent>
+                <Stack direction="row" spacing={2} alignItems="center" sx={{mb: 2}}>
+                    <Avatar sx={{bgcolor: 'primary.main', fontWeight: 'bold'}}>
+                        {msg.creator?.fullName?.[0] || 'A'}
+                    </Avatar>
+                    <Box>
+                        <Typography variant="subtitle2" sx={{fontWeight: 800}}>{msg.creator?.fullName}</Typography>
+                        <Typography variant="caption" color="text.disabled">{formatDisplay(msg.date, language)}</Typography>
+                    </Box>
                 </Stack>
-            )}
-        </CardContent>
-    </Card>
-));
+                <Box
+                    sx={{
+                        typography: 'body1',
+                        lineHeight: 1.6,
+                        '& p': {m: 0, mb: 1},
+                        '& a': {color: 'primary.main', textDecoration: 'underline'}
+                    }}
+                    dangerouslySetInnerHTML={{__html: msg.content}}
+                />
+                {isAdmin && (
+                    <Stack direction="row" sx={{position: 'absolute', top: 8, right: 8}}>
+                        <IconButton size="small" onClick={() => onEdit(msg)}><EditIcon fontSize="small"/></IconButton>
+                        <IconButton size="small" color="error" onClick={() => onDelete(msg.id)}><DeleteIcon
+                            fontSize="small"/></IconButton>
+                    </Stack>
+                )}
+            </CardContent>
+        </Card>
+    );
+});
 
 const NotificationItem = React.memo(({notif, onClick, t, language}: any) => {
     const payloadData = React.useMemo(() => {
@@ -261,6 +309,7 @@ export const GlobalAnnouncementsPage: React.FC = () => {
                                                         setSelectedMsg(m);
                                                         setMsgModalOpen(true);
                                                     }}
+                                                    t={t}
                                                     onDelete={handleDelete}
                                                 />
                                             ))

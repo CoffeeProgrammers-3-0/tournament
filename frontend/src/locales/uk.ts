@@ -688,7 +688,7 @@ export const uk = {
         },
         "jury_submission": {
             "assigned": "Вам призначено нову роботу від команди «{{teamName}}» (Раунд: {{roundName}})",
-            "unassigned": "Перевірку роботи команди «{{teamName}}» було скасовано або перепризначено"
+            "unassigned": "Перевірку роботи команди «{{teamName}}» було скасовано або перепризначено (Раунд: {{roundName}})"
         },
         "jury": {
             "assigned_to_round": "Вас призначено суддею на раунд «{{roundName}}»",
@@ -706,8 +706,8 @@ export const uk = {
         },
         "team_tasks": {
             "created": "Для вашої команди створено нове завдання «{{taskTitle}}»",
-            "updated": "Завдання «{{taskTitle}}» було оновлено",
-            "deleted": "Завдання «{{taskTitle}}» було видалено"
+            "updated": "Завдання «{{taskTitle}}» було оновлено для команди «{{taskTitle}}»",
+            "deleted": "Завдання «{{taskTitle}}» було видалено для команди «{{taskTitle}}»"
         },
         "round_admin_message": {
             "created": "Нове повідомлення від адміністратора раунду «{{roundName}}»"
@@ -717,7 +717,8 @@ export const uk = {
             "before_1h": "Подія «{{eventName}}» розпочнеться за 1 годину"
         },
         "tournament": {
-            "started": "Турнір «{{tournamentName}}» розпочався! Успіхів!"
+            "started": "Турнір «{{tournamentName}}» розпочався! Успіхів!",
+            "finished": "Турнір «{{tournamentName}}» закінчився!"
         },
         "global": {
             "tournament": {

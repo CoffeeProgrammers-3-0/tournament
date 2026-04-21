@@ -13,6 +13,7 @@ export interface GlobalAdminMessageResponseDto {
     date: string;
     targetType: AdminMessageTargetType;
     content: string;
+    system: boolean;
 }
 
 export interface RoundAdminMessageResponseDto {

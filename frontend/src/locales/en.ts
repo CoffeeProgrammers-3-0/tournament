@@ -688,13 +688,13 @@ export const en = {
         },
         "jury_submission": {
             "assigned": "A new submission from '{{teamName}}' has been assigned to you for '{{roundName}}'",
-            "unassigned": "Submission review for '{{teamName}}' has been reassigned"
+            "unassigned": "Submission review for '{{teamName}}' has been reassigned from you connected to round '{{roundName}}'"
         },
         "jury": {
             "assigned_to_round": "You have been appointed as a jury for the round '{{roundName}}'",
             "unassigned_from_round": "You are no longer a jury for the round '{{roundName}}'"
         },
-        "points_changed": "The score for your team '{{teamName}}' has been updated by {{pointsDiff}} points",
+        "points_changed": "The score for your team '{{teamName}}' has been updated by {{pointsDiff}} points in round '{{roundName}}'",
         "team": {
             "created": "The team '{{teamName}}' has been successfully formed",
             "assigned_to_round": "Your team '{{teamName}}' is now participating in '{{roundName}}'",
@@ -705,9 +705,9 @@ export const en = {
             "user_is_no_longer_leader": "You are no longer the leader of '{{teamName}}'"
         },
         "team_tasks": {
-            "created": "A new task '{{taskTitle}}' has been added to your team",
-            "updated": "The task '{{taskTitle}}' has been modified",
-            "deleted": "The task '{{taskTitle}}' was removed"
+            "created": "A new task '{{taskTitle}}' has been added to your team '{{teamName}}'",
+            "updated": "The task '{{taskTitle}}' has been modified in your team '{{teamName}}'",
+            "deleted": "The task '{{taskTitle}}' was removed in your team '{{teamName}}'"
         },
         "round_admin_message": {
             "created": "New message from the administrator for '{{roundName}}'"
@@ -717,7 +717,8 @@ export const en = {
             "before_1h": "The event '{{eventName}}' starts in 1 hour"
         },
         "tournament": {
-            "started": "The tournament '{{tournamentName}}' has begun! Good luck!"
+            "started": "The tournament '{{tournamentName}}' has begun! Good luck!",
+            "finished": "The tournament '{{tournamentName}}' has finished!"
         },
         "global": {
             "tournament": {
