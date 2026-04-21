@@ -30,7 +30,8 @@ public enum NotificationKey {
     ROUND_ADMIN_MESSAGE_CREATED("notifications.round_admin_message.created"),
     ROUND_EVENT_CREATED("notifications.round_event.created"),
     ROUND_EVENT_BEFORE_1H("notifications.round_event.before_1h"),
-    ROUND_EVALUATED("notifications.round.evaluated");
+    ROUND_EVALUATED("notifications.round.evaluated"),
+    TOURNAMENT_FINISHED("notifications.tournament.finished");
 
     private final String i18nKey;
 }
