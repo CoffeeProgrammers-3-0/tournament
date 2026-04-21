@@ -167,6 +167,7 @@ export const useTournamentDetails = () => {
         setErrors([]);
         try {
             const payload: TournamentUpdateRequestDto = {
+                ...tournamentData,
                 ...(editFormData as TournamentUpdateRequestDto),
                 startRegistration: toUtcIso(editFormData.startRegistration!),
                 endRegistration: toUtcIso(editFormData.endRegistration!),

@@ -12,7 +12,7 @@ import {
 import CloseIcon from "@mui/icons-material/Close";
 import {ErrorMessages} from "../../../../components/main/ErrorMessages.tsx";
 
-export const CreateRoundDialog = ({ state, t, tournament }: any) => {
+export const CreateRoundDialog = ({ state, t }: any) => {
     const { roundModalOpen, setRoundModalOpen, roundFormData, handleRoundFormChange, handleCreateRound, isCreatingRound } = state;
 
     return (
@@ -25,7 +25,7 @@ export const CreateRoundDialog = ({ state, t, tournament }: any) => {
                 <ErrorMessages errors={state.errors} />
                 <TextField required label={t("tournament_details.admin.create_modal.name")} name="name" value={roundFormData.name} onChange={handleRoundFormChange} fullWidth />
                 <Box sx={{ display: "flex", gap: 2 }}>
-                    <TextField required label={t("tournament_details.admin.create_modal.start")} name="startDate" type="datetime-local" value={roundFormData.startDate} onChange={handleRoundFormChange} fullWidth InputLabelProps={{ shrink: true }}  inputProps={{ min: tournament.startTournament || undefined, max: roundFormData.endDate }} />
+                    <TextField required label={t("tournament_details.admin.create_modal.start")} name="startDate" type="datetime-local" value={roundFormData.startDate} onChange={handleRoundFormChange} fullWidth InputLabelProps={{ shrink: true }}  inputProps={{ min: state.tournamentData.startTournament || undefined, max: roundFormData.endDate }} />
                     <TextField required label={t("tournament_details.admin.create_modal.end")} name="endDate" type="datetime-local" value={roundFormData.endDate} onChange={handleRoundFormChange} fullWidth InputLabelProps={{ shrink: true }} inputProps={{ min: roundFormData.startDate || undefined }} />
                 </Box>
                 <TextField required label={t("tournament_details.admin.create_modal.winners")} name="countOfWinners" type="number" value={roundFormData.countOfWinners} onChange={handleRoundFormChange} fullWidth inputProps={{ min: 1 }} />

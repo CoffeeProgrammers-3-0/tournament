@@ -21,14 +21,14 @@ export const RoundInfoTab = ({ state, t }: RoundInfoTabProps) => {
 
     const getControlButtons = () => [
         {
-            show: roundData.status === "DRAFT" && roundData.tournament.status !== "RUNNING",
+            show: roundData.status === "DRAFT" && roundData.tournament.status === "RUNNING",
             label: t("round_details.actions.startRound"),
             color: "success" as const,
             variant: "contained" as const,
             action: () => triggerConfirm({ title: t("round_details.confirm.start"), onConfirm: actions.start })
         },
         {
-            show: roundData.status === "ACTIVE" && roundData.tournament.status !== "RUNNING",
+            show: roundData.status === "ACTIVE" && roundData.tournament.status === "RUNNING",
             label: t("round_details.actions.closeSubmissions"),
             color: "warning" as const,
             variant: "contained" as const,
@@ -42,7 +42,7 @@ export const RoundInfoTab = ({ state, t }: RoundInfoTabProps) => {
             action: () => triggerConfirm({ title: t("round_details.confirm.toDraft"), onConfirm: actions.toDraft })
         },
         {
-            show: roundData.status === "SUBMISSION_CLOSED" && roundData.tournament.status !== "RUNNING",
+            show: roundData.status === "SUBMISSION_CLOSED" && roundData.tournament.status === "RUNNING",
             label: t("round_details.actions.evaluate"),
             color: "primary" as const,
             variant: "contained" as const,

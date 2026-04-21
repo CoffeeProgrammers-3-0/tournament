@@ -50,7 +50,7 @@ export const TournamentDetailsPage = () => {
                 onClose={state.closeDialog}
             />
 
-            <CreateRoundDialog state={state} t={t} tournament={state.tournamentData}/>
+            <CreateRoundDialog state={state} t={t}/>
         </Container>
     );
 };

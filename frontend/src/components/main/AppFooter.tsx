@@ -45,6 +45,10 @@ export const AppFooter = () => {
                                 {t("header.tournaments")}
                             </Typography>
 
+                            <Link component={RouterLink} to="/calendar" display="block" underline="hover" sx={{ mb: 1, color: "primary.main", fontWeight: 700, fontSize: "0.875rem" }}>
+                                {t("header.calendar") || "Календар подій"}
+                            </Link>
+
                             {role === 'ADMIN' ? (
                                 <>
                                     <Link component={RouterLink} to="/tournaments?tab=1&filter=ALL" display="block" underline="hover" sx={{ mb: 1, color: "text.secondary", fontSize: "0.875rem" }}>

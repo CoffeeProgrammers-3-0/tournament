@@ -30,6 +30,7 @@ import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import GroupsIcon from "@mui/icons-material/Groups";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import FavoriteIcon from "@mui/icons-material/Favorite";
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 
 import logo from "../../assets/logo.png";
 import {Link as RouterLink} from "react-router-dom";
@@ -78,6 +79,12 @@ export const AppHeader = () => {
             <Box component="img" src={logo} alt="Star for Life" sx={{height: 40, mb: 2}}/>
             <Divider/>
             <List>
+                <ListItem disablePadding>
+                    <ListItemButton component={RouterLink} to="/calendar">
+                        <ListItemIcon><CalendarMonthIcon color="primary"/></ListItemIcon>
+                        <ListItemText primary={t("header.calendar") || "Календар"}/>
+                    </ListItemButton>
+                </ListItem>
                 {(role === 'ADMIN' || role === 'USER') && (
                     <ListItem disablePadding>
                         <ListItemButton component={RouterLink}
@@ -170,6 +177,15 @@ export const AppHeader = () => {
                                 {t("header.tournaments")}
                             </Button>
                         )}
+                        <Button
+                            color="inherit"
+                            component={RouterLink}
+                            to="/calendar"
+                            sx={{textTransform: "none"}}
+                            startIcon={<CalendarMonthIcon sx={{opacity: 0.7}}/>}
+                        >
+                            {t("header.calendar") || "Календар"}
+                        </Button>
                         {isLoggedIn && (role === 'ADMIN' || role === 'USER') && (
                             <Button color="inherit" component={RouterLink} to={"/teams"} sx={{textTransform: "none"}}
                                     startIcon={<GroupsIcon sx={{opacity: 0.7}}/>}>

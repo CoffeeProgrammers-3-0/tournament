@@ -24,6 +24,7 @@ import {Error404Page} from "./pages/errors/Error404Page.tsx";
 import {GlobalAnnouncementsPage} from "./pages/notification/GlobalAnnouncementsPage.tsx";
 
 import {NotificationProvider} from "./context/NotificationContext.tsx";
+import CalendarPage from "./pages/calendar/CalendarPage.tsx";
 
 const App: React.FC = () => {
 
@@ -34,6 +35,7 @@ const App: React.FC = () => {
                     <Routes>
                         {/* --- ПУБЛІЧНІ (Доступні гостям) --- */}
                         <Route path="/" element={<PageContainer><HomePage/></PageContainer>}/>
+                        <Route path="/calendar" element={<PageContainer><CalendarPage/></PageContainer>}/>
                         <Route path="/home" element={<PageContainer><HomePage/></PageContainer>}/>
                         <Route path="/callback" element={<Callback/>}/>
                         <Route path="/login" element={<PageContainer><LoginPage/></PageContainer>}/>

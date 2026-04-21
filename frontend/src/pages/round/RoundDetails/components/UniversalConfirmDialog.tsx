@@ -7,8 +7,11 @@ import {
     DialogContentText,
     DialogTitle
 } from "@mui/material";
+import {useTranslation} from "react-i18next";
 
 export const UniversalConfirmDialog = ({ config, onClose }: { config: any, onClose: () => void }) => {
+    const {t} = useTranslation();
+
     return (
         <Dialog
             open={config.open}
@@ -23,7 +26,7 @@ export const UniversalConfirmDialog = ({ config, onClose }: { config: any, onClo
             </DialogContent>
             <DialogActions sx={{ p: 3, gap: 1 }}>
                 <Button onClick={onClose} color="inherit" sx={{ fontWeight: 600 }}>
-                    Cancel
+                    {t("common.cancel")}
                 </Button>
                 <Button
                     variant="contained"
@@ -32,7 +35,7 @@ export const UniversalConfirmDialog = ({ config, onClose }: { config: any, onClo
                     disabled={config.isLoading}
                     sx={{ borderRadius: "10px", px: 3, fontWeight: 700 }}
                 >
-                    {config.isLoading ? <CircularProgress size={24} /> : "Confirm"}
+                    {config.isLoading ? <CircularProgress size={24} /> : t("common.yes_confirm")}
                 </Button>
             </DialogActions>
         </Dialog>

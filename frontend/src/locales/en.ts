@@ -16,6 +16,7 @@ export const en = {
         "myTeam": "My Team",
         "role": "Role: ",
         "notifications": "Notifications",
+        "calendar": "Calendar",
     },
     footer: {
         "description": "Digital platform for hackathons and competitions by Star for Life Ukraine charity foundation.",
@@ -455,6 +456,19 @@ export const en = {
         }
     },
     round_details: {
+        "labels": {
+            "name": "Round Name",
+            "startDate": "Start Date & Time",
+            "endDate": "End Date & Time",
+            "task": "Round Task",
+            "requirements": "Submission Requirements",
+            "save": "Save Changes",
+            "cancel": "Cancel",
+            "no_description": "No task description has been added yet.",
+            "no_requirements": "No requirements specified for this round.",
+            "management": "Round Status Management",
+            "delete": "Delete Round"
+        },
         "export_leaderboard": "Export Leaderboard",
         "not_found": "Round not found",
         "header": {
@@ -579,7 +593,22 @@ export const en = {
             "auto_assign_title": "Auto assign juries",
             "auto_assign_desc": "Enter number of juries per submission. Note: this will erase all existing jury assignments and points.",
         },
+        "actions": {
+            "startRound": "Start Round",
+            "closeSubmissions": "Close Submissions",
+            "toDraft": "Revert to Draft",
+            "evaluate": "Start Evaluation",
+            "rollbackStart": "Rollback Start",
+            "rollbackClose": "Rollback Close"
+        },
         "confirm": {
+            "start": "Are you sure you want to start this round? This will make the task visible to participants.",
+            "close": "Close submissions? Participants will no longer be able to submit their work.",
+            "toDraft": "Revert round to draft status? This will hide the task from participants.",
+            "evaluate": "Start evaluation process? This will change the round status and allow judges to start grading.",
+            "rollbackStart": "Rollback round start? The status will return to 'Active', and submissions will be re-opened.",
+            "rollbackClose": "Rollback evaluation close? You will be able to review round results again.",
+            "delete": "Are you sure you want to delete this round? This action cannot be undone.",
             "assignAllTeams": {
                 "title": "Assign All Teams",
                 "description": "Are you sure you want to assign ALL available teams from the tournament to this round?"
@@ -725,6 +754,25 @@ export const en = {
                 "registration_started": "Registration for '{{tournamentName}}' is now open!"
             },
             "admin_message": "Global announcement from Administration"
+        }
+    },
+
+    "calendar": {
+        "title": "Event Calendar",
+        "filters_label": "Filter by type",
+        "next": "Next",
+        "prev": "Back",
+        "today": "Today",
+        "month": "Month",
+        "week": "Week",
+        "day": "Day",
+        "agenda": "Agenda",
+        "filters": {
+            "show_reg": "Registration",
+            "show_running": "Active Tournaments",
+            "show_rounds": "Rounds",
+            "show_offline": "Offline Events",
+            "show_online": "Online Events"
         }
     }
 };
