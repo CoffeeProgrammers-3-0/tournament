@@ -48,11 +48,11 @@ public class TournamentServiceImpl implements TournamentService {
             throw new IllegalArgumentException("Tournament cannot start before registration ends");
         }
 
-        if (tournament.getMaxCountOfTeam() <= 3) {
+        if (tournament.getMaxCountOfTeam() < 3) {
             throw new IllegalArgumentException("Max size of team can not be less than 3");
         }
 
-        if (tournament.getCountOfRounds() <= 1) {
+        if (tournament.getCountOfRounds() < 1) {
             throw new IllegalArgumentException("Count of rounds can not be less than 1");
         }
 
@@ -63,11 +63,11 @@ public class TournamentServiceImpl implements TournamentService {
     @Override
     @Transactional
     public Tournament update(Long tournamentId, Tournament tournament) {
-        if (tournament.getMaxCountOfTeam() <= 3) {
+        if (tournament.getMaxCountOfTeam() < 3) {
             throw new IllegalArgumentException("Max size of team can not be less than 3");
         }
 
-        if (tournament.getCountOfRounds() <= 1) {
+        if (tournament.getCountOfRounds() < 1) {
             throw new IllegalArgumentException("Count of rounds can not be less than 1");
         }
 
