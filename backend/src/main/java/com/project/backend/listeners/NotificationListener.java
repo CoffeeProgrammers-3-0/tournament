@@ -72,8 +72,9 @@ public class NotificationListener {
 
         ObjectNode payload = objectMapper.createObjectNode();
         payload.put("submissionId", submission.getId());
-        payload.put("submissionTeamName", submission.getTeam().getName());
-        payload.put("jurySubmissionId", js.getId());
+        payload.put("teamName", submission.getTeam().getName());
+        payload.put("roundName", submission.getRound().getName());
+        payload.put("roundId", submission.getRound().getId());
 
         List<Notification> notifications = createNotifications(List.of(js.getJury()), NotificationKey.JURY_ASSIGNED, payload);
         notifications = notificationRepository.saveAll(notifications);
@@ -92,9 +93,6 @@ public class NotificationListener {
         ObjectNode payload = objectMapper.createObjectNode();
         payload.put("roundId", round.getId());
         payload.put("roundName", round.getName());
-        payload.put("tournamentId", round.getTournament().getId());
-        payload.put("tournamentName", round.getTournament().getName());
-        payload.put("teamId", team.getId());
         payload.put("teamName", team.getName());
 
         List<Notification> notifications = createNotifications(users, NotificationKey.POINTS_CHANGED, payload);
@@ -167,10 +165,13 @@ public class NotificationListener {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleJurySubmissionDeletedEvent(JurySubmissionDeletedEvent event) {
+        Submission submission = event.getSubmission();
 
         ObjectNode payload = objectMapper.createObjectNode();
-        payload.put("submissionId", event.getSubmission().getId());
-        payload.put("submissionTeamName", event.getSubmission().getTeam().getName());
+        payload.put("submissionId", submission.getId());
+        payload.put("teamName", submission.getTeam().getName());
+        payload.put("roundName", submission.getRound().getName());
+        payload.put("roundId", submission.getRound().getId());
 
         List<Notification> notifications = createNotifications(List.of(event.getJury()), NotificationKey.JURY_UNASSIGNED, payload);
         notifications = notificationRepository.saveAll(notifications);
@@ -188,13 +189,10 @@ public class NotificationListener {
         List<User> users = userRepository.findAll(Specification.allOf(UserSpecification.byTeamId(team.getId()), UserSpecification.byRoundId(round.getId())));
 
         ObjectNode payload = objectMapper.createObjectNode();
-        payload.put("teamTaskId", team.getId());
-        payload.put("teamTaskTitle", teamTask.getTitle());
-        payload.put("teamTaskPriority", teamTask.getPriority().name());
+        payload.put("taskId", team.getId());
+        payload.put("taskTitle", teamTask.getTitle());
         payload.put("teamId", team.getId());
         payload.put("teamName", team.getName());
-        payload.put("roundId", round.getId());
-        payload.put("roundName", round.getName());
 
         List<Notification> notifications = createNotifications(users, NotificationKey.TEAM_TASK_CREATED, payload);
         notifications = notificationRepository.saveAll(notifications);
@@ -211,13 +209,10 @@ public class NotificationListener {
         Round round = teamTask.getRound();
 
         ObjectNode payload = objectMapper.createObjectNode();
-        payload.put("teamTaskId", team.getId());
-        payload.put("teamTaskTitle", teamTask.getTitle());
-        payload.put("teamTaskPriority", teamTask.getPriority().name());
+        payload.put("taskId", team.getId());
+        payload.put("taskTitle", teamTask.getTitle());
         payload.put("teamId", team.getId());
         payload.put("teamName", team.getName());
-        payload.put("roundId", round.getId());
-        payload.put("roundName", round.getName());
 
         List<Notification> notifications = createNotifications(List.of(teamTask.getAssignee()), NotificationKey.TEAM_TASK_UPDATED, payload);
         notifications = notificationRepository.saveAll(notifications);
@@ -234,11 +229,9 @@ public class NotificationListener {
         List<User> users = userRepository.findAll(Specification.allOf(UserSpecification.byTeamId(team.getId()), UserSpecification.byRoundId(round.getId())));
 
         ObjectNode payload = objectMapper.createObjectNode();
-        payload.put("teamTaskTitle", event.getTitle());
+        payload.put("taskTitle", event.getTitle());
         payload.put("teamId", team.getId());
         payload.put("teamName", team.getName());
-        payload.put("roundId", round.getId());
-        payload.put("roundName", round.getName());
 
         List<Notification> notifications = createNotifications(users, NotificationKey.TEAM_TASK_DELETED, payload);
         notifications = notificationRepository.saveAll(notifications);
@@ -438,7 +431,7 @@ public class NotificationListener {
         payload.put("tournamentId", tournament.getId());
         payload.put("tournamentName", tournament.getName());
 
-        List<Notification> notifications = createNotifications(users, NotificationKey.USER_IS_NO_LONGER_LEADER, payload);
+        List<Notification> notifications = createNotifications(users, NotificationKey.TOURNAMENT_FINISHED, payload);
         notifications = notificationRepository.saveAll(notifications);
 
         NewNotificationsEvent event1 = new NewNotificationsEvent(notifications);
@@ -505,6 +498,7 @@ public class NotificationListener {
         ObjectNode payload = objectMapper.createObjectNode();
         payload.put("roundId", round.getId());
         payload.put("roundName", round.getName());
+        payload.put("eventName", roundEvent.getTitle());
 
         List<Notification> notifications = createNotifications(users, NotificationKey.ROUND_EVENT_CREATED, payload);
         notifications = notificationRepository.saveAll(notifications);
@@ -523,6 +517,7 @@ public class NotificationListener {
         ObjectNode payload = objectMapper.createObjectNode();
         payload.put("roundId", round.getId());
         payload.put("roundName", round.getName());
+        payload.put("eventName", roundEvent.getTitle());
 
         List<Notification> notifications = createNotifications(users, NotificationKey.ROUND_EVENT_BEFORE_1H, payload);
         notifications = notificationRepository.saveAll(notifications);
