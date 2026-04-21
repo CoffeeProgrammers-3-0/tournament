@@ -43,6 +43,7 @@ export const useRoundInfoEditor = ({
         clearErrors();
         try {
             const payload = {
+                ...roundData,
                 ...editFormData,
                 startDate: toUtcIso(editFormData.startDate),
                 endDate: toUtcIso(editFormData.endDate),
