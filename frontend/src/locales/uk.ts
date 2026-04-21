@@ -699,8 +699,8 @@ export const uk = {
             "created": "Створено нову команду «{{teamName}}»",
             "assigned_to_round": "Вашу команду «{{teamName}}» додано до участі в раунді «{{roundName}}»",
             "unassigned_from_round": "Вашу команду «{{teamName}}» знято з участі в раунді «{{roundName}}»",
-            "user_added": "{{userName}} приєднався до команди «{{teamName}}»",
-            "user_removed": "{{userName}} покинув команду «{{teamName}}»",
+            "user_added": "Ви приєдналися до команди «{{teamName}}»",
+            "user_removed": "Ви покинули команду «{{teamName}}»",
             "user_set_to_leader": "Вас призначено капітаном команди «{{teamName}}»",
             "user_is_no_longer_leader": "Ви більше не є капітаном команди «{{teamName}}»"
         },
