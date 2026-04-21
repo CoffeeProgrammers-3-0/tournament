@@ -699,8 +699,8 @@ export const en = {
             "created": "The team '{{teamName}}' has been successfully formed",
             "assigned_to_round": "Your team '{{teamName}}' is now participating in '{{roundName}}'",
             "unassigned_from_round": "Your team '{{teamName}}' was removed from '{{roundName}}'",
-            "user_added": "{{userName}} joined your team '{{teamName}}'",
-            "user_removed": "{{userName}} has left your team '{{teamName}}'",
+            "user_added": "You joined team '{{teamName}}'",
+            "user_removed": "You has left your team '{{teamName}}'",
             "user_set_to_leader": "You have been promoted to the leader of '{{teamName}}'",
             "user_is_no_longer_leader": "You are no longer the leader of '{{teamName}}'"
         },
