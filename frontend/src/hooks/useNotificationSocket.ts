@@ -1,35 +1,32 @@
-import {useCallback, useEffect, useState} from "react";
+import {useEffect, useState} from "react";
 import {Client} from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 import Cookies from "js-cookie";
-import {notificationService} from "../services/impl/NotificationService.ts";
 import authService from "../services/auth/AuthService.ts";
-
 
 export const useNotificationSocket = (isLoggedIn: boolean) => {
     const [unseenCount, setUnseenCount] = useState<number>(0);
     const [latestNotification, setLatestNotification] = useState<any>(null);
-    const userId = Cookies.get("userId");
 
-    const fetchUnseenCount = useCallback(async () => {
-        if (!isLoggedIn) return;
-        try {
-            const response = await notificationService.getUnseenCount();
-            setUnseenCount(typeof response === 'object' ? (response as any).value : response);
-        } catch (error) {
-            console.error("Failed to fetch initial unseen count", error);
-        }
-    }, [isLoggedIn]);
+    const userId = Cookies.get("userId");
+    const accessToken = Cookies.get("accessToken"); // Get token for the header
 
     useEffect(() => {
-        if (!isLoggedIn) return;
-
+        // We allow the connection even if not logged in (for global messages)
         const client = new Client({
             webSocketFactory: () => new SockJS(`${import.meta.env.VITE_API_BASE_URL}/ws`),
             reconnectDelay: 5000,
+
+            // 1. Send the token only if logged in
+            connectHeaders: isLoggedIn && accessToken ? {
+                Authorization: `Bearer ${accessToken}`
+            } : {},
+
             onConnect: () => {
-                // Персональні сповіщення
-                if (userId) {
+                console.log("WS Connected. Status: ", isLoggedIn ? "Authorized" : "Guest");
+
+                // 2. Personal notifications (ONLY if logged in)
+                if (isLoggedIn && userId) {
                     client.subscribe(`/topic/notifications/${userId}`, (message) => {
                         const data = JSON.parse(message.body);
                         if (data.countUnseen !== undefined) setUnseenCount(data.countUnseen);
@@ -37,7 +34,7 @@ export const useNotificationSocket = (isLoggedIn: boolean) => {
                     });
                 }
 
-                // Глобальні повідомлення від адміна
+                // 3. Global messages (For everyone)
                 client.subscribe(`/topic/global_messages`, (message) => {
                     const data = JSON.parse(message.body);
                     setLatestNotification({
@@ -50,27 +47,18 @@ export const useNotificationSocket = (isLoggedIn: boolean) => {
                 });
             },
 
-
             onStompError: async (frame) => {
-                console.error('WS Error:', frame.headers['message']);
-
-                if (!isLoggedIn) return;
-
                 const errorMessage = frame.headers['message']?.toLowerCase() || '';
-                const isAuthError = errorMessage.includes('access denied') ||
-                    errorMessage.includes('expired') ||
-                    errorMessage.includes('unauthorized') ||
-                    errorMessage.includes('jwt');
+                console.error('WS Error:', errorMessage);
 
-                if (isAuthError) {
-                    console.warn("WebSocket Auth failed. Attempting to refresh token...");
+                // If we get an auth error while we think we're logged in, try to refresh
+                if (isLoggedIn && (errorMessage.includes('access denied') || errorMessage.includes('jwt'))) {
                     client.deactivate();
-
                     try {
                         await authService.refresh();
-                        client.activate(); // Перепідключаємось з новим токеном
+                        // The effect will re-run because accessToken changes (via state/cookie)
                     } catch (refreshError) {
-                        console.error("Token refresh failed. User needs to log in again.", refreshError);
+                        console.error("WS Auth refresh failed", refreshError);
                     }
                 }
             },
@@ -81,7 +69,7 @@ export const useNotificationSocket = (isLoggedIn: boolean) => {
         return () => {
             client.deactivate();
         };
-    }, [isLoggedIn, userId, fetchUnseenCount]);
+    }, [isLoggedIn, userId, accessToken]);
 
     return { unseenCount, latestNotification };
 };
