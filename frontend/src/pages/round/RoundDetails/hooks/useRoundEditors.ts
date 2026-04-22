@@ -12,6 +12,7 @@ type Params = {
     id?: string;
     roundData: RoundFullResponseDto | null;
     setRoundData: React.Dispatch<React.SetStateAction<RoundFullResponseDto | null>>;
+    fetchRound: () => Promise<void>;
     fetchCategories: () => Promise<void>;
     fetchJury: () => Promise<void>;
     fetchSubmissions: () => Promise<void>;
@@ -39,6 +40,7 @@ export const useRoundEditors = (params: Params) => {
         roundData: params.roundData,
         roundId: Number(params.id),
         setRoundData: params.setRoundData,
+        fetchRound: params.fetchRound,
         t: params.t,
         ...base,
     });

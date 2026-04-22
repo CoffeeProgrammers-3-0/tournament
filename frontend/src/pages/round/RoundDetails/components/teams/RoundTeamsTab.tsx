@@ -38,7 +38,7 @@ type Props = {
     isNextPageLoading: boolean;
     onLoadMore: () => void;
     roundData: RoundFullResponseDto;
-    onOpenStats: (teamId: number, e: React.MouseEvent) => void;
+    onOpenStats: (teamId: number, e?: React.MouseEvent) => void;
     navigate: (path: string) => void;
     t: (key: string, options?: any) => string;
     isAdmin: boolean;
@@ -50,7 +50,7 @@ type Props = {
     errors: string[];
     onAssignAllTeams: () => void;
     onUnassignAllTeams: () => void;
-    myTeamId?: number;
+    myTeamId?: number | string;
 };
 
 type WebSocketPayload = {
@@ -287,12 +287,16 @@ export const RoundTeamsTab = ({
                                                 </Tooltip>
                                             )}
 
-                                            {(isAdmin || team.id === myTeamId) && (
+                                            {/* Fix: Safely compare IDs ensuring type matching */}
+                                            {(isAdmin || String(team.id) === String(myTeamId)) && (
                                                 <Tooltip title="View Stats">
                                                     <IconButton
                                                         color="primary"
                                                         size="small"
-                                                        onClick={(e) => onOpenStats(team.id, e)}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation(); // Synchronous stop
+                                                            onOpenStats(team.id, e);
+                                                        }}
                                                         sx={{ bgcolor: "primary.50" }}
                                                     >
                                                         <InsertChartOutlinedIcon fontSize="small" />
@@ -313,7 +317,6 @@ export const RoundTeamsTab = ({
                         </TableBody>
                     </Table>
 
-                    {/* The "Load More" Section */}
                     {hasMore && (
                         <Box sx={{ p: 2, textAlign: 'center', borderTop: '1px solid #eee' }}>
                             <Button

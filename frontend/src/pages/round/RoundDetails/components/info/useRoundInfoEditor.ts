@@ -12,6 +12,7 @@ interface UseRoundInfoEditorProps {
     clearErrors: () => void;
     handleError: (error: any, message: string) => void;
     t: TFunction;
+    closeConfirm: () => void;
 }
 
 export const useRoundInfoEditor = ({
@@ -21,7 +22,8 @@ export const useRoundInfoEditor = ({
                                        fetchRound,
                                        clearErrors,
                                        handleError,
-                                       t
+                                       t,
+                                       closeConfirm
                                    }: UseRoundInfoEditorProps) => {
 
     const [isEditingInfo, setIsEditingInfo] = useState(false);
@@ -32,6 +34,7 @@ export const useRoundInfoEditor = ({
         try {
             await actionFn();
             if (fetchRound) await fetchRound();
+            closeConfirm()
         } catch (e: any) {
             handleError(e, t('round_details.errors.actionFailed'));
 

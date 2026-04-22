@@ -43,9 +43,14 @@ const PAGE_SIZE = 10;
 // --- Мемоізовані під-компоненти ---
 
 const AnnouncementItem = React.memo(({msg, isAdmin, onEdit, onDelete, language, t}: any) => {
+    // Safety check to prevent rendering null messages
+    if (!msg) return null;
+
     if (msg.system) {
-        const parts = msg.content.split(':').map((p: string) => p.trim());
-        const [name, id, key] = parts.length >= 3 ? parts : ['', '', msg.content];
+        // Safe split: handle cases where msg.content might be undefined/null
+        const contentStr = msg.content || '';
+        const parts = contentStr.split(':').map((p: string) => p.trim());
+        const [name, id, key] = parts.length >= 3 ? parts : ['', '', contentStr];
 
         const parsedMessage = parts.length >= 3
             ? String(t(key, {
@@ -54,7 +59,7 @@ const AnnouncementItem = React.memo(({msg, isAdmin, onEdit, onDelete, language, 
                 teamName: name,
                 id: id
             }))
-            : msg.content; // Фолбек, якщо формат раптом неправильний
+            : contentStr;
 
         return (
             <Card sx={{
@@ -104,7 +109,7 @@ const AnnouncementItem = React.memo(({msg, isAdmin, onEdit, onDelete, language, 
                         {msg.creator?.fullName?.[0] || 'A'}
                     </Avatar>
                     <Box>
-                        <Typography variant="subtitle2" sx={{fontWeight: 800}}>{msg.creator?.fullName}</Typography>
+                        <Typography variant="subtitle2" sx={{fontWeight: 800}}>{msg.creator?.fullName || 'Admin'}</Typography>
                         <Typography variant="caption" color="text.disabled">{formatDisplay(msg.date, language)}</Typography>
                     </Box>
                 </Stack>
@@ -115,7 +120,7 @@ const AnnouncementItem = React.memo(({msg, isAdmin, onEdit, onDelete, language, 
                         '& p': {m: 0, mb: 1},
                         '& a': {color: 'primary.main', textDecoration: 'underline'}
                     }}
-                    dangerouslySetInnerHTML={{__html: msg.content}}
+                    dangerouslySetInnerHTML={{__html: msg.content || ''}}
                 />
                 {isAdmin && (
                     <Stack direction="row" sx={{position: 'absolute', top: 8, right: 8}}>
@@ -130,6 +135,8 @@ const AnnouncementItem = React.memo(({msg, isAdmin, onEdit, onDelete, language, 
 });
 
 const NotificationItem = React.memo(({notif, onClick, t, language}: any) => {
+    if (!notif) return null;
+
     const payloadData = React.useMemo(() => {
         try {
             return JSON.parse(notif.payload || '{}');
@@ -139,7 +146,6 @@ const NotificationItem = React.memo(({notif, onClick, t, language}: any) => {
     }, [notif.payload]);
 
     return (
-
         <Card
             onClick={() => onClick(notif)}
             sx={{
@@ -189,12 +195,10 @@ export const GlobalAnnouncementsPage: React.FC = () => {
     const isAuthorized = !!Cookies.get('accessToken');
     const isAdmin = Cookies.get('role') === 'ADMIN';
 
-    // Розрахунок загальної кількості сторінок
     const totalPages = useMemo(() => {
         return tabValue === 0 ? (messages?.totalPages || 0) : (notifications?.totalPages || 0);
     }, [tabValue, messages, notifications]);
 
-    // Дані
     const fetchData = useCallback(async (targetPage: number, targetTab: number) => {
         setLoading(true);
         try {
@@ -216,22 +220,19 @@ export const GlobalAnnouncementsPage: React.FC = () => {
         fetchData(page, tabValue);
     }, [page, tabValue, fetchData]);
 
-    // WebSocket Live Updates
     useEffect(() => {
         if (!latestNotification) return;
         const isGlobal = !!latestNotification.isGlobal;
 
         if ((tabValue === 0 && isGlobal) || (tabValue === 1 && !isGlobal)) {
-            // Оновлюємо лише якщо ми на 1-й сторінці
             if (page === 1) fetchData(1, tabValue);
         }
     }, [latestNotification, tabValue, page, fetchData]);
 
-    // Навігація при кліку на сповіщення
     const handleNotificationClick = (notif: NotificationResponseDto) => {
         try {
             const data = JSON.parse(notif.payload || '{}');
-            const key = notif.key;
+            const key = notif.key || '';
 
             if (key.includes('.round')) navigate(`/rounds/${data.roundId}`);
             else if (key.includes('.team_tasks')) navigate(`/teams/${data.teamId}/tasks`);
@@ -251,8 +252,12 @@ export const GlobalAnnouncementsPage: React.FC = () => {
 
     const handleDelete = async (id: number) => {
         if (!window.confirm(t('common.confirm_delete'))) return;
-        await adminMessageService.deleteMessage(id);
-        fetchData(page, tabValue);
+        try {
+            await adminMessageService.deleteMessage(id);
+            fetchData(page, tabValue);
+        } catch (err) {
+            console.error("Delete failed", err);
+        }
     };
 
     return (
@@ -298,7 +303,8 @@ export const GlobalAnnouncementsPage: React.FC = () => {
                             <Box>
                                 <Stack spacing={2.5}>
                                     {tabValue === 0 ? (
-                                        messages?.content.length ? (
+                                        // Fixed: added optional chaining for .length
+                                        messages?.content?.length ? (
                                             messages.content.map(msg => (
                                                 <AnnouncementItem
                                                     key={msg.id}
@@ -315,7 +321,8 @@ export const GlobalAnnouncementsPage: React.FC = () => {
                                             ))
                                         ) : <EmptyState text={t('announcements.messages.empty')}/>
                                     ) : (
-                                        notifications?.content.length ? (
+                                        // Fixed: added optional chaining for .length
+                                        notifications?.content?.length ? (
                                             notifications.content.map(notif => (
                                                 <NotificationItem
                                                     key={notif.id}
@@ -345,10 +352,14 @@ export const GlobalAnnouncementsPage: React.FC = () => {
                 open={msgModalOpen}
                 onClose={() => setMsgModalOpen(false)}
                 onSubmit={async (data) => {
-                    if (selectedMsg) await adminMessageService.updateMessage(selectedMsg.id, data);
-                    else await adminMessageService.create(data);
-                    setMsgModalOpen(false);
-                    fetchData(page, tabValue);
+                    try {
+                        if (selectedMsg) await adminMessageService.updateMessage(selectedMsg.id, data);
+                        else await adminMessageService.create(data);
+                        setMsgModalOpen(false);
+                        fetchData(page, tabValue);
+                    } catch (err) {
+                        console.error("Save failed", err);
+                    }
                 }}
                 initialData={selectedMsg}
                 t={t}

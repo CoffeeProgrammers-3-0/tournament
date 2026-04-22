@@ -55,6 +55,7 @@ const RoundDetailsPage = () => {
         id: id,
         roundData: details.roundData,
         setRoundData: details.setRoundData,
+        fetchRound: details.fetchRound,
         fetchCategories: details.fetchCategories,
         fetchJury: details.fetchJury,
         fetchSubmissions: details.fetchSubmissions,
@@ -314,7 +315,7 @@ const RoundDetailsPage = () => {
                 isLoading={editors.announcements.actionLoading}
                 t={t} isAdmin={isAdmin}            />
 
-            <UniversalConfirmDialog config={editors.confirmDialog} onClose={editors.closeConfirm}/>
+            <UniversalConfirmDialog config={editors.confirmDialog} onClose={editors.closeConfirm} errors={editors.errors}/>
         </Box>
     );
 };
