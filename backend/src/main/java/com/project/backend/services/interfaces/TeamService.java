@@ -1,5 +1,6 @@
 package com.project.backend.services.interfaces;
 
+import com.project.backend.dto.leaderboard.LeaderboardResponse;
 import com.project.backend.dto.team.StatisticResponse;
 import com.project.backend.dto.team.TeamLeaderboardResponse;
 import com.project.backend.dto.user.UserCreateRequestForTeam;
@@ -40,7 +41,7 @@ public interface TeamService {
     Page<Team> findAllByTournament(Integer page, Integer size, String search, Long tournamentId);
 
     @Transactional
-    List<TeamLeaderboardResponse> getAllStatsByRoundId(Long roundId, Double lastTeamPoints, Long lastTeam, Integer size);
+    LeaderboardResponse getAllStatsByRoundId(Long roundId, Double lastTeamPoints, Long lastTeam, Integer size);
 
     @Transactional
     List<TeamLeaderboardResponse> getAllStatsByRoundId(Long roundId);
@@ -48,4 +49,6 @@ public interface TeamService {
     Page<Team> findAllByRound(Integer page, Integer size, String search, Long roundId);
 
     Page<Team> findAllByRoundNot(Integer page, Integer size, String search, Long roundId);
+
+    Long getIdOfMyTeamByRound(Long roundId, User me);
 }

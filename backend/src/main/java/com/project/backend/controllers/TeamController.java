@@ -4,6 +4,7 @@ import com.project.backend.auth.utils.CurrentUserContainer;
 import com.project.backend.dto.team.*;
 import com.project.backend.dto.user.UserCreateRequestForTeam;
 import com.project.backend.dto.user.UserResponse;
+import com.project.backend.dto.wrapper.LongDTO;
 import com.project.backend.dto.wrapper.PaginationListResponse;
 import com.project.backend.mappers.TeamMapper;
 import com.project.backend.mappers.UserMapper;
@@ -162,6 +163,20 @@ public class TeamController {
             @PathVariable(value = "round_id") Long roundId) {
         User me = currentUserContainer.getUser();
         return teamService.getStatisticsByRoundForUsersTeam(roundId, me);
+    }
+
+    @PreAuthorize("@userSecurity.isMemberOfTheTeamInRound(#roundId)")
+    @GetMapping("/rounds/{round_id}/my-id")
+    @Operation(summary = "Get my team statistics", description = "Returns statistics for the authenticated user's team in the specified round")
+    public LongDTO getIdOfMyTeamByRound(
+            @Parameter(description = "ID of the round", example = "2")
+            @PathVariable(value = "round_id") Long roundId) {
+        User me = currentUserContainer.getUser();
+
+        LongDTO response = new LongDTO();
+        response.setValue(teamService.getIdOfMyTeamByRound(roundId, me));
+
+        return response;
     }
 
     @PreAuthorize("@userSecurity.isLeaderOfTeamInTournament(#teamId, #tournamentId) or hasRole('ADMIN')")

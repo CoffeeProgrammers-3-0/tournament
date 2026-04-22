@@ -1,5 +1,6 @@
 package com.project.backend.controllers;
 
+import com.project.backend.dto.leaderboard.LeaderboardResponse;
 import com.project.backend.dto.round.RoundCreateRequest;
 import com.project.backend.dto.round.RoundFullResponse;
 import com.project.backend.dto.round.RoundListResponse;
@@ -219,7 +220,7 @@ public class RoundController {
 
     @GetMapping("/rounds/{round_id}/leaderboard")
     @Operation(summary = "Get my team statistics", description = "Returns leaderboard for the round")
-    public List<TeamLeaderboardResponse> getLeaderboardForRound(
+    public LeaderboardResponse getLeaderboardForRound(
             @Parameter(description = "ID of the round", example = "2")
             @PathVariable(value = "round_id") Long roundId,
 

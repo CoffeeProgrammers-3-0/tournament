@@ -2,6 +2,7 @@ package com.project.backend.services.implementations;
 
 import com.project.backend.auth.utils.SecurityUtil;
 import com.project.backend.dto.event.*;
+import com.project.backend.dto.leaderboard.LeaderboardResponse;
 import com.project.backend.dto.team.PointResponse;
 import com.project.backend.dto.team.StatisticResponse;
 import com.project.backend.dto.team.StatisticRowDTO;
@@ -16,10 +17,7 @@ import com.project.backend.models.constants.RoundStatus;
 import com.project.backend.models.constants.TournamentStatus;
 import com.project.backend.models.ids.TeamParticipantId;
 import com.project.backend.models.join_tables.TeamParticipant;
-import com.project.backend.repositories.RoundRepository;
-import com.project.backend.repositories.TeamParticipantRepository;
-import com.project.backend.repositories.TeamRepository;
-import com.project.backend.repositories.TournamentRepository;
+import com.project.backend.repositories.*;
 import com.project.backend.repositories.specifications.RoundSpecification;
 import com.project.backend.repositories.specifications.TeamParticipantSpecification;
 import com.project.backend.repositories.specifications.TeamSpecification;
@@ -52,6 +50,7 @@ public class TeamServiceImpl implements TeamService {
     private final TournamentRepository tournamentRepository;
     private final UserService userService;
     private final ApplicationEventPublisher eventPublisher;
+    private final CategoryRepository categoryRepository;
 
     @Override
     public boolean check(Long tournamentId, User user) {
@@ -417,11 +416,23 @@ public class TeamServiceImpl implements TeamService {
                 pageRequest);
     }
 
+    @Override
+    public Long getIdOfMyTeamByRound(Long roundId, User me) {
+        Team team = teamRepository.findOne(Specification.allOf(TeamSpecification.byUserId(me.getId()),TeamSpecification.byRoundId(roundId))).orElse(null);;
+        return team == null ? -1 : team.getId();
+    }
+
     @Transactional
     @Override
-    public List<TeamLeaderboardResponse> getAllStatsByRoundId(Long roundId, Double lastTeamPoints, Long lastTeam, Integer size) {
+    public LeaderboardResponse getAllStatsByRoundId(Long roundId, Double lastTeamPoints, Long lastTeam, Integer size) {
         checkDraftAccessRound(roundId);
-        return teamRepository.findLeaderboard(roundId, lastTeamPoints, lastTeam, size);
+        Long maxPoints = categoryRepository.calculateMaxPointsPerRoundOnlyDefault(roundId);
+
+        LeaderboardResponse leaderboardResponse = new LeaderboardResponse();
+        leaderboardResponse.setMaxPoints(maxPoints + 20); // 20 is additional points
+        leaderboardResponse.setLeaderboard(teamRepository.findLeaderboard(roundId, lastTeamPoints, lastTeam, size));
+
+        return leaderboardResponse;
     }
 
     @Transactional
