@@ -11,6 +11,8 @@ export const useRoundTeamsManager = ({
                                          handleError,
                                          triggerConfirm,
                                          closeConfirm,
+                                         myTeamId,
+                                         isAdmin,
     t
                                      }: any) => {
 
@@ -25,11 +27,10 @@ export const useRoundTeamsManager = ({
     const [tournamentRounds, setTournamentRounds] = useState<any[]>([]);
 
     const [isTeamsLoading, setIsTeamsLoading] = useState(false);
+    const [isExporting, setIsExporting] = useState(false);
 
     const [selectedStats, setSelectedStats] = useState<StatisticResponseDto | null>(null);
     const [statsModalOpen, setStatsModalOpen] = useState(false);
-
-    const [isExporting, setIsExporting] = useState(false);
     const [statsViewMode, setStatsViewMode] = useState<"aggregated" | "detailed">("aggregated");
 
     const handleOpenAddMissingModal = useCallback(async () => {
@@ -112,13 +113,22 @@ export const useRoundTeamsManager = ({
         if (!roundId) return;
         clearErrors();
         try {
-            const stats = await teamService.getTeamStats(teamId, roundId);
+            let stats;
+            if (isAdmin) {
+                // Admins can see any team's stats
+                stats = await teamService.getTeamStats(teamId, roundId);
+            } else if (teamId === myTeamId) {
+                // Regular users can only fetch their own team's stats
+                stats = await teamService.getMyTeamStats(roundId);
+            } else {
+                return; // Guard: Should not reach here if UI is conditionally rendered, but safe to have
+            }
             setSelectedStats(stats);
             setStatsModalOpen(true);
         } catch (error: any) {
             handleError(error, t('round_details.errors.loadStats'));
         }
-    }, [roundId, clearErrors, handleError]);
+    }, [roundId, isAdmin, myTeamId, clearErrors, handleError, t]);
 
     const handleExportLeaderboard = useCallback(async () => {
         if (!roundId) return;
@@ -143,18 +153,49 @@ export const useRoundTeamsManager = ({
     }, [roundId, closeConfirm, triggerConfirm, clearErrors, handleError]);
 
     const aggregatedCriteria = useMemo(() => {
-        if (!selectedStats?.pointsPerJury) return {};
-        const result: Record<string, { total: number; count: number }> = {};
-        Object.values(selectedStats.pointsPerJury).forEach(juryScores => {
-            if (!juryScores) return;
-            Object.entries(juryScores).forEach(([criteria, points]) => {
-                if (!result[criteria]) result[criteria] = { total: 0, count: 0 };
-                result[criteria].total += points;
-                result[criteria].count += 1;
+        if (!selectedStats) return { criteriaSums: {}, totalAdditional: 0, grandTotal: 0 };
+
+        const criteriaSums: Record<string, { totalPoints: number; totalBonus: number; count: number }> = {};
+        let grandTotal = 0;
+
+        // 1. Aggregate standard points
+        if (selectedStats.pointsPerJury) {
+            Object.values(selectedStats.pointsPerJury).forEach(juryScores => {
+                if (!juryScores) return;
+                Object.entries(juryScores).forEach(([criteria, pointData]) => {
+                    if (!criteriaSums[criteria]) criteriaSums[criteria] = { totalPoints: 0, totalBonus: 0, count: 0 };
+                    criteriaSums[criteria].totalPoints += pointData.points;
+                    criteriaSums[criteria].count += 1;
+                    grandTotal += pointData.points;
+                });
             });
-        });
-        return result;
+        }
+
+        // 2. Aggregate additional/bonus points
+        if (selectedStats.additionalPointsPerJury) {
+            Object.values(selectedStats.additionalPointsPerJury).forEach(juryBonus => {
+                if (!juryBonus) return;
+                Object.entries(juryBonus).forEach(([criteria, bonusPoints]) => {
+                    if (!criteriaSums[criteria]) criteriaSums[criteria] = { totalPoints: 0, totalBonus: 0, count: 0 };
+                    criteriaSums[criteria].totalBonus += bonusPoints;
+                    grandTotal += bonusPoints;
+                });
+            });
+        }
+
+        return { criteriaSums, grandTotal };
     }, [selectedStats]);
+
+    // Extract unique jury and criteria lists
+    const juryList = useMemo(() => {
+        if (!selectedStats) return [];
+        const juries = new Set<string>();
+        if (selectedStats.pointsPerJury) Object.keys(selectedStats.pointsPerJury).forEach(j => juries.add(j));
+        if (selectedStats.additionalPointsPerJury) Object.keys(selectedStats.additionalPointsPerJury).forEach(j => juries.add(j));
+        return Array.from(juries);
+    }, [selectedStats]);
+
+    const criteriaList = useMemo(() => Object.keys(aggregatedCriteria.criteriaSums), [aggregatedCriteria]);
 
     const handleAssignAllTeams = useCallback(() => {
         triggerConfirm({
@@ -226,8 +267,8 @@ export const useRoundTeamsManager = ({
         setStatsViewMode,
 
         aggregatedCriteria,
-        juryList: selectedStats?.pointsPerJury ? Object.keys(selectedStats.pointsPerJury) : [],
-        criteriaList: Object.keys(aggregatedCriteria),
+        juryList,
+        criteriaList,
 
         handleAssignAllTeams,
         handleUnassignAllTeams,

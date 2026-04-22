@@ -41,5 +41,11 @@ export interface StatisticResponseDto {
     id: number;
     name: string;
     email: string;
-    pointsPerJury: Record<string, Record<string, number>>;
+    pointsPerJury: Record<string, Record<string, PointResponse>>;
+    additionalPointsPerJury: Record<string, Record<string, number>>;
+}
+
+export interface PointResponse {
+    points: number;
+    comment: string;
 }

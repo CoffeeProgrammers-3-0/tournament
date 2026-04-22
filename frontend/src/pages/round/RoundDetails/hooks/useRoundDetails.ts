@@ -47,6 +47,8 @@ export const useRoundDetails = (id: string) => {
 
     const [myTeamUsers, setMyTeamUsers] = useState<UserResponseDto[]>([]);
 
+    const [myTeamId, setMyTeamId] = useState<number>(-1);
+
     const fetchCheckSubmission = useCallback(async () => {
         if (!id) return;
         try {
@@ -231,6 +233,7 @@ export const useRoundDetails = (id: string) => {
         messagesData,
         commsLoading,
         fetchEvents,
-        fetchMessages
+        fetchMessages,
+        myTeamId
     };
 };

@@ -220,7 +220,7 @@ const RoundDetailsPage = () => {
                                onExportLeaderboard={editors.handleExportLeaderboard} isExporting={editors.isExporting}
                                errors={editors.errors}
                                onAssignAllTeams={editors.handleAssignAllTeams}
-                    onUnassignAllTeams={editors.handleUnassignAllTeams}/>
+                    onUnassignAllTeams={editors.handleUnassignAllTeams} myTeamId={details.myTeamId}/>
             )}
             {activeTabId === "submissions" && (
                 <RoundSubmissionsTab submissions={details.submissions} loadingTab={details.loadingTab}

@@ -8,6 +8,12 @@ import type {SubmissionFullResponseDto} from "../../../entities/submission/submi
 import type {CategoryResponseDto} from "../../../entities/category/category.dto.ts";
 import type {JuryCriteriaRequestDto, JuryCriteriaResponseDto} from "../../../entities/juryCriteria/juryCriteria.dto.ts";
 
+export interface CriteriaScoreForm {
+    points: number | "";
+    comment: string;
+    additional: boolean;
+}
+
 export const useJuryEvaluate = () => {
     const { submissionId } = useParams<{ submissionId: string }>();
     const { t } = useTranslation();
@@ -19,7 +25,9 @@ export const useJuryEvaluate = () => {
 
     const [submission, setSubmission] = useState<SubmissionFullResponseDto | null>(null);
     const [categories, setCategories] = useState<CategoryResponseDto[]>([]);
-    const [scores, setScores] = useState<Record<number, number>>({});
+
+    // Updated state to hold objects
+    const [scores, setScores] = useState<Record<number, CriteriaScoreForm>>({});
     const [existingScores, setExistingScores] = useState<Record<number, JuryCriteriaResponseDto>>({});
 
     useEffect(() => {
@@ -41,11 +49,15 @@ export const useJuryEvaluate = () => {
 
                 const catData = await categoryService.getCategories(subData.round.id);
 
-                const scoresMap: Record<number, number> = {};
+                const scoresMap: Record<number, CriteriaScoreForm> = {};
                 const existingMap: Record<number, JuryCriteriaResponseDto> = {};
 
                 scoresData.forEach(sc => {
-                    scoresMap[sc.criteria.id] = sc.points;
+                    scoresMap[sc.criteria.id] = {
+                        points: sc.points,
+                        comment: sc.comment || "",
+                        additional: sc.additional || false
+                    };
                     existingMap[sc.criteria.id] = sc;
                 });
 
@@ -62,24 +74,40 @@ export const useJuryEvaluate = () => {
         fetchData();
     }, [submissionId, t]);
 
-    const handleScoreChange = (criteriaId: number, value: string) => {
-        const numValue = parseInt(value, 10);
-        if (value === "") {
-            setScores(prev => {
-                const next = { ...prev };
-                delete next[criteriaId];
-                return next;
-            });
-            return;
-        }
-        if (isNaN(numValue)) return;
-        setScores(prev => ({ ...prev, [criteriaId]: Math.min(Math.max(numValue, 0), 100) }));
+    // Calculate how many 'additional' bonuses are currently checked
+    const additionalCount = Object.values(scores).filter(s => s.additional).length;
+
+    // Updated handler to manage points, comments, and additional checkboxes
+    const handleScoreChange = (criteriaId: number, field: keyof CriteriaScoreForm, value: any) => {
+        setScores(prev => {
+            const current = prev[criteriaId] || { points: "", comment: "", additional: false };
+
+            if (field === "points") {
+                if (value === "") {
+                    current.points = "";
+                } else {
+                    const numValue = parseInt(value, 10);
+                    if (!isNaN(numValue)) {
+                        current.points = Math.min(Math.max(numValue, 0), 100);
+                    }
+                }
+            } else if (field === "comment") {
+                current.comment = value;
+            } else if (field === "additional") {
+                // Prevent checking if we already have 4, unless we are unchecking
+                if (value === true && additionalCount >= 4) {
+                    return prev;
+                }
+                current.additional = value;
+            }
+
+            return { ...prev, [criteriaId]: { ...current } };
+        });
     };
 
     const handleSaveScores = async () => {
         if (!submissionId || !submission) return;
 
-        // Додатковий запобіжник на фронтенді: не даємо зберегти, якщо статус EVALUATED
         if (submission.round.status === "EVALUATED") {
             setErrors([t('jury.errors.round_closed', 'Оцінювання для цього раунду вже завершено.')]);
             return;
@@ -92,12 +120,24 @@ export const useJuryEvaluate = () => {
             const promises = [];
             for (const category of categories) {
                 for (const criteria of category.criteria) {
-                    const points = scores[criteria.id];
-                    if (points === undefined) continue;
+                    const scoreData = scores[criteria.id];
+                    if (!scoreData || scoreData.points === "") continue;
 
-                    const payload : JuryCriteriaRequestDto = { points: points };
-                    // Оновлюємо тільки якщо значення змінилося або ще не існує
-                    if (!existingScores[criteria.id] || existingScores[criteria.id].points !== points) {
+                    const payload: JuryCriteriaRequestDto = {
+                        points: scoreData.points as number,
+                        additional: scoreData.additional,
+                        comment: scoreData.comment
+                    };
+
+                    const existing = existingScores[criteria.id];
+
+                    // Check if anything has actually changed
+                    const hasChanged = !existing ||
+                        existing.points !== payload.points ||
+                        existing.additional !== payload.additional ||
+                        existing.comment !== payload.comment;
+
+                    if (hasChanged) {
                         promises.push(juryCriteriaService.updateScore(Number(submissionId), criteria.id, payload));
                     }
                 }
@@ -108,7 +148,6 @@ export const useJuryEvaluate = () => {
             }
             setShowSuccessDialog(true);
 
-            // Рефреш локальних даних
             const updatedScores = await juryCriteriaService.getMyScoresForSubmission(Number(submissionId));
             const newExistingMap: Record<number, JuryCriteriaResponseDto> = {};
             updatedScores.forEach(sc => newExistingMap[sc.criteria.id] = sc);
@@ -123,6 +162,7 @@ export const useJuryEvaluate = () => {
 
     return {
         submission, categories, scores, loading, saving, errors, setErrors,
-        showSuccessDialog, setShowSuccessDialog, handleScoreChange, handleSaveScores, t
+        showSuccessDialog, setShowSuccessDialog, handleScoreChange, handleSaveScores,
+        additionalCount, t
     };
 };

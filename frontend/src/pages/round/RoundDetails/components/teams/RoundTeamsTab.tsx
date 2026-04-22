@@ -50,6 +50,7 @@ type Props = {
     errors: string[];
     onAssignAllTeams: () => void;
     onUnassignAllTeams: () => void;
+    myTeamId?: number;
 };
 
 type WebSocketPayload = {
@@ -61,7 +62,7 @@ export const RoundTeamsTab = ({
                                   setLeaderboard, leaderboard, loadingTab, hasMore, isNextPageLoading, onLoadMore,
                                   roundData, onOpenStats, navigate, t, isAdmin, onOpenAddMissingTeamsModal,
                                   onOpenAdvanceTeamsModal, onUnassignTeam, onExportLeaderboard, isExporting, errors,
-                                  onAssignAllTeams, onUnassignAllTeams
+                                  onAssignAllTeams, onUnassignAllTeams, myTeamId
                               }: Props) => {
 
 
@@ -285,11 +286,19 @@ export const RoundTeamsTab = ({
                                                     </IconButton>
                                                 </Tooltip>
                                             )}
-                                            <Tooltip title="View Stats">
-                                                <IconButton color="primary" size="small" onClick={(e) => onOpenStats(team.id, e)} sx={{ bgcolor: "primary.50" }}>
-                                                    <InsertChartOutlinedIcon fontSize="small" />
-                                                </IconButton>
-                                            </Tooltip>
+
+                                            {(isAdmin || team.id === myTeamId) && (
+                                                <Tooltip title="View Stats">
+                                                    <IconButton
+                                                        color="primary"
+                                                        size="small"
+                                                        onClick={(e) => onOpenStats(team.id, e)}
+                                                        sx={{ bgcolor: "primary.50" }}
+                                                    >
+                                                        <InsertChartOutlinedIcon fontSize="small" />
+                                                    </IconButton>
+                                                </Tooltip>
+                                            )}
                                         </Box>
                                     </TableCell>
                                 </TableRow>

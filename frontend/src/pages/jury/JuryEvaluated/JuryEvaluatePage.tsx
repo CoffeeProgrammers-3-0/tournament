@@ -22,7 +22,7 @@ export const JuryEvaluatePage = () => {
     const navigate = useNavigate();
     const {
         submission, categories, scores, loading, saving, errors,
-        showSuccessDialog, setShowSuccessDialog, handleScoreChange, handleSaveScores, t
+        showSuccessDialog, setShowSuccessDialog, handleScoreChange, handleSaveScores, t, additionalCount
     } = useJuryEvaluate();
 
     if (loading) return <Box sx={{ display: "flex", justifyContent: "center", py: 10 }}><CircularProgress thickness={5} /></Box>;
@@ -62,6 +62,7 @@ export const JuryEvaluatePage = () => {
                         scores={scores}
                         onScoreChange={handleScoreChange}
                         disabled={saving || isReadOnly}
+                        additionalCount={additionalCount}
                         t={t}
                     />
 
