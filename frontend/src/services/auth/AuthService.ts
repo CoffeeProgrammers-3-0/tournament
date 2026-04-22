@@ -15,13 +15,12 @@ class AuthService {
 
     static redirectToKeycloak(): void {
         const currentPath = window.location.pathname;
+        
+        if (currentPath === '/callback') return;
 
-        if (currentPath === '/callback' || currentPath === '/login') {
-            console.warn("Prevented redirect loop from:", currentPath);
-            return;
-        }
-
-        if (currentPath !== '/') {
+        if (currentPath === '/login') {
+            localStorage.setItem('preLoginPath', "/");
+        } else if (currentPath !== '/') {
             localStorage.setItem('preLoginPath', currentPath);
         }
 

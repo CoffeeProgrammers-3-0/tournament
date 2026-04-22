@@ -1,24 +1,32 @@
 import React, {useEffect, useState} from 'react';
-import {useAuth} from './useAuth.tsx';
-import AuthService from '../services/auth/AuthService';
 import {Box, CircularProgress} from '@mui/material';
+import AuthService from '../services/auth/AuthService';
 
 const AuthInit: React.FC<{ children: React.ReactElement }> = ({ children }) => {
-    const { isAuthenticated } = useAuth();
     const [isLoaded, setIsLoaded] = useState(false);
 
     useEffect(() => {
+        // 1. IMPORTANT: Detect if we are on the callback page
+        const currentPath = window.location.pathname;
+        if (currentPath === '/callback') {
+            setIsLoaded(true); // Don't run auth checks, just let the app load
+            return;
+        }
+
         const initAuth = async () => {
-            if (!isAuthenticated()) {
+            // Check if we already have the cookies (without redirecting)
+            // Replace 'userId' with whatever check 'isAuthenticated' uses
+            const hasCookies = document.cookie.includes('userId');
+
+            if (!hasCookies) {
                 try {
-                    // Try to silently refresh the token in the background
+                    // Try to silently refresh in the background
                     await AuthService.refresh();
                 } catch (e) {
-                    // If it fails, they are simply a guest. Do nothing.
                     console.log("No valid session found. User is a guest.");
                 }
             }
-            // FINALLY block equivalent - always load the app!
+            // Always set to loaded so the UI renders
             setIsLoaded(true);
         };
 

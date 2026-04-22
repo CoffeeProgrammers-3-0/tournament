@@ -8,7 +8,7 @@ const Callback: React.FC = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const effectRan = useRef(false);
-    const [isProcessing, setIsProcessing] = useState(true);
+    const isProcessing = useState(true);
 
     useEffect(() => {
         if (effectRan.current) return;
@@ -32,9 +32,10 @@ const Callback: React.FC = () => {
                 const returnPath = localStorage.getItem('preLoginPath') || '/home';
                 localStorage.removeItem('preLoginPath');
                 navigate(returnPath, { replace: true });
+
             } catch (err) {
                 console.error("Auth error:", err);
-                setIsProcessing(false);
+                navigate('/login', { replace: true });
             }
         };
 
