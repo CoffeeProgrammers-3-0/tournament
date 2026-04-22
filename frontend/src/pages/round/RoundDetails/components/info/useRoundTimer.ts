@@ -1,7 +1,9 @@
 import {useEffect, useState} from 'react';
+import {useTranslation} from "react-i18next";
 import {toLocalInput} from "../../../../../utils/data.ts";
 
 export const useRoundTimer = (endDate: string, status: string) => {
+    const { t } = useTranslation(); // Initialize translation
     const [timeLeft, setTimeLeft] = useState("");
     const [urgencyColor, setUrgencyColor] = useState("white");
 
@@ -14,7 +16,7 @@ export const useRoundTimer = (endDate: string, status: string) => {
             const diff = end - now;
 
             if (diff <= 0) {
-                setTimeLeft("Вичерпано");
+                setTimeLeft(t('timer.expired', 'Вичерпано'));
                 setUrgencyColor("#ff5252");
                 return;
             }
@@ -28,13 +30,19 @@ export const useRoundTimer = (endDate: string, status: string) => {
             else if (diff < 86400000) setUrgencyColor("#ffb74d");
             else setUrgencyColor("white");
 
-            setTimeLeft(`${d}д ${h}год ${m}хв ${s}с`);
+            // Use translation keys for units
+            const days = `${d}${t('timer.days', 'д')}`;
+            const hours = `${h}${t('timer.hours', 'год')}`;
+            const mins = `${m}${t('timer.mins', 'хв')}`;
+            const secs = `${s}${t('timer.secs', 'с')}`;
+
+            setTimeLeft(`${days} ${hours} ${mins} ${secs}`);
         };
 
         const timer = setInterval(updateTimer, 1000);
         updateTimer();
         return () => clearInterval(timer);
-    }, [endDate, status]);
+    }, [endDate, status, t]); // Added t to dependencies
 
     return { timeLeft, urgencyColor };
 };

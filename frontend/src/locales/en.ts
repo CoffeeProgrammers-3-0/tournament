@@ -483,7 +483,8 @@ export const en = {
             "leaderboard": "Teams(Leaderboard)",
             "submissions": "Submissions",
             "stats": "Statistics",
-            "tasks": "Team Tasks"
+            "tasks": "Team Tasks",
+            "announcements": "Announcements"
         },
         "tasks": {
             "title": "Team Tasks",
@@ -774,5 +775,12 @@ export const en = {
             "show_offline": "Offline Events",
             "show_online": "Online Events"
         }
+    },
+
+    timer: {
+        "days": "d",
+        "hours": "h",
+        "minutes": "m",
+        "seconds": "s",
     }
 };

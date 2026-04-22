@@ -470,7 +470,8 @@ export const uk = {
             "leaderboard": "Команди(Leaderboard)",
             "submissions": "Роботи надіслані на перевірку",
             "stats": "Statistics",
-            "tasks": "Завдання команди"
+            "tasks": "Завдання команди",
+            "announcements": "Оголошення та події"
         },
         "tasks": {
             "title": "Завдання команди",
@@ -774,5 +775,12 @@ export const uk = {
             "show_offline": "Офлайн події",
             "show_online": "Онлайн події"
         }
+    },
+
+    timer: {
+        "days": "д",
+        "hours": "г",
+        "minutes": "м",
+        "seconds": "с",
     }
 };
