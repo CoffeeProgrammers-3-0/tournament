@@ -7,6 +7,6 @@ import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring", uses = {CriteriaMapper.class})
 public interface JurySubmissionCriteriaMapper {
-    @Mapping(target = "jurySubmissionId", source = "jurySubmissionCriteria.id.jurySubmissionId")
+    @Mapping(target = "jurySubmissionId", source = "jurySubmissionCriteria.jurySubmission.id")
     JuryCriteriaResponse fromJurySubmissionCriteriaToResponse(JurySubmissionCriteria jurySubmissionCriteria);
 }

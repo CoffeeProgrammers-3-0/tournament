@@ -1,0 +1,47 @@
+databaseChangeLog:
+  - changeSet:
+      id: add_id_column
+      author: vladobrod
+      changes:
+        - addColumn:
+            tableName: jury_submission_criteria
+            schemaName: tournament
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+
+  - changeSet:
+      id: add_primary_key
+      author: vladobrod
+      changes:
+        - dropPrimaryKey:
+            tableName: jury_submission_criteria
+            schemaName: tournament
+
+        - addPrimaryKey:
+            tableName: jury_submission_criteria
+            schemaName: tournament
+            columnNames: id
+            constraintName: jury_submission_criteria_pkey
+
+  - changeSet:
+      id: add_unique_constraint
+      author: vladobrod
+      changes:
+        - addUniqueConstraint:
+            tableName: jury_submission_criteria
+            schemaName: tournament
+            columnNames: jury_submission_id, criteria_id
+            constraintName: unique_submission_criteria
+
+  - changeSet:
+      id: make_criteria_nullable
+      author: vladobrod
+      changes:
+        - dropNotNullConstraint:
+            tableName: jury_submission_criteria
+            schemaName: tournament
+            columnName: criteria_id
+            columnDataType: BIGINT

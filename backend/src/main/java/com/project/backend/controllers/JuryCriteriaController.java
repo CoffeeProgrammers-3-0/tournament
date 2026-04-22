@@ -29,19 +29,21 @@ public class JuryCriteriaController {
     private final CurrentUserContainer currentUserContainer;
 
     @PreAuthorize("hasRole('JURY') and @userSecurity.isJuryOfSubmission(#submissionId)")
-    @PutMapping("/submission/{submission_id}/criteria/{criteria_id}")
+    @PostMapping
     @Operation(summary = "Update criteria score", description = "Updates a previously given score for a submission criteria")
     public JuryCriteriaResponse set(
-            @Parameter(description = "ID of the submission being evaluated", example = "1")
-            @PathVariable(value = "submission_id") Long submissionId,
-
-            @Parameter(description = "ID of the criteria being scored", example = "5")
-            @PathVariable(value = "criteria_id") Long criteriaId,
-
-            @Parameter(description = "Updated score value")
+            @Parameter(description = "Request with data about jsc")
             @RequestBody @Valid JuryCriteriaRequest juryCriteriaRequest) {
         User jury = currentUserContainer.getUser();
-        JurySubmissionCriteria jurySubmissionCriteria = jurySubmissionCriteriaService.set(submissionId, criteriaId, juryCriteriaRequest.getPoints(), juryCriteriaRequest.isAdditional(), juryCriteriaRequest.getComment(), jury);
+        JurySubmissionCriteria jurySubmissionCriteria = jurySubmissionCriteriaService.set(
+                    juryCriteriaRequest.getId(),
+                    juryCriteriaRequest.getSubmissionId(),
+                    juryCriteriaRequest.getCriteriaId(),
+                    juryCriteriaRequest.getPoints(),
+                    juryCriteriaRequest.isAdditional(),
+                    juryCriteriaRequest.getComment(),
+                    jury
+        );
 
         return jurySubmissionCriteriaMapper.fromJurySubmissionCriteriaToResponse(jurySubmissionCriteria);
     }

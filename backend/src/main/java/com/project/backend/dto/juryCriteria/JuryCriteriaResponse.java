@@ -8,6 +8,9 @@ import lombok.Data;
 @Schema(name = "JuryCriteriaResponse", description = "DTO representing a jury's evaluation of a criterion")
 public class JuryCriteriaResponse {
 
+    @Schema(description = "ID of the jsc", example = "1")
+    private Long id;
+
     @Schema(description = "ID of the jury submission", example = "1")
     private Long jurySubmissionId;
 

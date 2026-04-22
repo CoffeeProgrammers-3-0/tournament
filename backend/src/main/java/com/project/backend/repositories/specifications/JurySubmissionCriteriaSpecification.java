@@ -14,7 +14,7 @@ public class JurySubmissionCriteriaSpecification {
         if (jurySubmissionId == null) return null;
 
         return (root, query, cb) ->
-                cb.equal(root.get("id").get("jurySubmissionId"), jurySubmissionId);
+                cb.equal(root.get("jurySubmission").get("id"), jurySubmissionId);
     }
 
     public static Specification<JurySubmissionCriteria> byCriteriaId(Long criteriaId) {
@@ -22,11 +22,12 @@ public class JurySubmissionCriteriaSpecification {
         if (criteriaId == null) return null;
 
         return (root, query, cb) ->
-                cb.equal(root.get("id").get("criteriaId"), criteriaId);
+                cb.equal(root.get("criteria").get("id"), criteriaId);
     }
 
-    public static Specification<JurySubmissionCriteria> isAdditional(boolean isAdditional) {
+    public static Specification<JurySubmissionCriteria> isAdditional(Boolean isAdditional) {
         log.debug("JurySubmissionCriteriaSpecification.isAdditional called with isAdditional={}", isAdditional);
+        if (isAdditional == null) return null;
 
         return (root, query, cb) ->
                 cb.equal(root.get("isAdditional"), isAdditional);
@@ -65,6 +66,6 @@ public class JurySubmissionCriteriaSpecification {
     }
 
     public static Specification<JurySubmissionCriteria> byJurySubmissionIdAndCriteriaId(Long jurySubmissionId, Long criteriaId) {
-        return byJurySubmissionId(jurySubmissionId).and(byCriteriaId(criteriaId));
+        return Specification.allOf(byJurySubmissionId(jurySubmissionId), byCriteriaId(criteriaId));
     }
 }

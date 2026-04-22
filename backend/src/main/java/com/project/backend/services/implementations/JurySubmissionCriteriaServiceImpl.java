@@ -3,7 +3,6 @@ package com.project.backend.services.implementations;
 import com.project.backend.dto.event.PointsChangedForTeamEvent;
 import com.project.backend.models.Criteria;
 import com.project.backend.models.User;
-import com.project.backend.models.ids.JurySubmissionCriteriaId;
 import com.project.backend.models.join_tables.JurySubmission;
 import com.project.backend.models.join_tables.JurySubmissionCriteria;
 import com.project.backend.repositories.CriteriaRepository;
@@ -22,7 +21,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -37,9 +35,16 @@ public class JurySubmissionCriteriaServiceImpl implements JurySubmissionCriteria
 
     @Transactional
     @Override
-    public JurySubmissionCriteria set(Long submissionId, Long criteriaId, Long value, boolean isAdditional, String comment, User jury) {
-        if (submissionId == null || criteriaId == null || value == null || jury == null) {
-            throw new IllegalArgumentException("SubmissionId, criteriaId, value and jury must not be null");
+    public JurySubmissionCriteria set(Long jscId,
+                                      Long submissionId,
+                                      Long criteriaId,
+                                      Long value,
+                                      boolean isAdditional,
+                                      String comment,
+                                      User jury) {
+
+        if (submissionId == null || value == null || jury == null) {
+            throw new IllegalArgumentException("SubmissionId, value and jury must not be null");
         }
 
         if (jury.getId() == null) {
@@ -47,71 +52,85 @@ public class JurySubmissionCriteriaServiceImpl implements JurySubmissionCriteria
         }
 
         if (value < 0) {
-            throw new IllegalArgumentException("Points value cannot be negative");
+            throw new IllegalArgumentException("Points cannot be negative");
         }
 
         JurySubmission jurySubmission = findJurySubmissionById(submissionId, jury.getId());
 
-        Criteria criteria = criteriaRepository.findById(criteriaId)
-                .orElseThrow(() -> new EntityNotFoundException("Criteria with id " + criteriaId + " not found"));
+        JurySubmissionCriteria jsc;
 
-        if (!criteria.getCategory().getRound().getId().equals(jurySubmission.getSubmission().getRound().getId())) {
-            throw new IllegalStateException("Criteria does not belong to the same round as submission");
+        boolean isNew = (jscId == null);
+
+        if (isNew) {
+            jsc = new JurySubmissionCriteria();
+        } else {
+            jsc = jurySubmissionCriteriaRepository.findById(jscId)
+                    .orElseThrow(() -> new EntityNotFoundException("JSC not found: " + jscId));
         }
 
-        JurySubmissionCriteriaId id = new JurySubmissionCriteriaId();
-        id.setJurySubmissionId(jurySubmission.getId());
-        id.setCriteriaId(criteriaId);
+        Criteria criteria = null;
 
-        Optional<JurySubmissionCriteria> optional = jurySubmissionCriteriaRepository.findById(id);
-
-        JurySubmissionCriteria jurySubmissionCriteria = optional.orElseGet(JurySubmissionCriteria::new);
-
-        long countAdditional = isAdditional ? jurySubmissionCriteriaRepository.count(
-                Specification.allOf(
-                        JurySubmissionCriteriaSpecification.isAdditional(true),
-                        JurySubmissionCriteriaSpecification.byJurySubmissionId(jurySubmission.getId())
-                )) : 0;
-
-        if (optional.isPresent()) {
-            if(value.equals(jurySubmissionCriteria.getPoints())) {
-                log.debug("Skip update: same value {} for criteria {} and submission {}", value, criteriaId, submissionId);
-                return jurySubmissionCriteria;
+        if (!isAdditional) {
+            if (criteriaId == null) {
+                throw new IllegalArgumentException("criteriaId must not be null for normal criteria");
             }
-            if(isAdditional && !jurySubmissionCriteria.isAdditional()) {
-                if(countAdditional >= 4) {
-                    throw new IllegalStateException("Can not add new additional jsc, because there are already 4 additional");
-                }
+
+            criteria = criteriaRepository.findById(criteriaId)
+                    .orElseThrow(() -> new EntityNotFoundException("Criteria not found: " + criteriaId));
+
+            if (!criteria.getCategory().getRound().getId()
+                    .equals(jurySubmission.getSubmission().getRound().getId())) {
+                throw new IllegalStateException("Criteria does not belong to same round");
             }
         }
 
-        if(isAdditional) {
-            if(countAdditional >= 4) {
-                throw new IllegalStateException("Can not add new additional jsc, because there are already 4 additional");
-            }
-            if(value > 5) {
-                throw new IllegalStateException("Can create additional jsc with points more than 5");
+        if (!isAdditional && isNew) {
+
+            boolean exists = jurySubmissionCriteriaRepository.exists(
+                    Specification.allOf(
+                            JurySubmissionCriteriaSpecification.byJurySubmissionId(jurySubmission.getId()),
+                            JurySubmissionCriteriaSpecification.byCriteriaId(criteriaId)
+                    )
+            );
+
+            if (exists) {
+                throw new IllegalStateException("Criteria already evaluated");
             }
         }
 
-        jurySubmissionCriteria.setId(id);
-        jurySubmissionCriteria.setPoints(value);
-        jurySubmissionCriteria.setCriteria(criteria);
-        jurySubmissionCriteria.setJurySubmission(jurySubmission);
-        jurySubmissionCriteria.setAdditional(isAdditional);
-        jurySubmissionCriteria.setComment(comment);
+        if (isAdditional && isNew) {
+            long countAdditional = jurySubmissionCriteriaRepository.count(
+                    Specification.allOf(
+                            JurySubmissionCriteriaSpecification.byJurySubmissionId(jurySubmission.getId()),
+                            JurySubmissionCriteriaSpecification.isAdditional(true)
+                    )
+            );
 
-        log.info("Set points {} for submission {} criteria {} by jury {} additional {}",
-                value, submissionId, criteriaId, jury.getId(), isAdditional);
-        jurySubmissionCriteria = jurySubmissionCriteriaRepository.save(jurySubmissionCriteria);
+            if (countAdditional >= 4) {
+                throw new IllegalStateException("Cannot add more than 4 additional criteria");
+            }
 
-        PointsChangedForTeamEvent event = new PointsChangedForTeamEvent(
-                jurySubmissionCriteria.getJurySubmission().getSubmission().getTeam().getId(),
-                jurySubmissionCriteria.getJurySubmission().getSubmission().getRound().getId()
+            if (value > 5) {
+                throw new IllegalStateException("Additional points cannot exceed 5");
+            }
+        }
+
+        jsc.setJurySubmission(jurySubmission);
+        jsc.setCriteria(criteria);
+        jsc.setPoints(value);
+        jsc.setAdditional(isAdditional);
+        jsc.setComment(comment);
+
+        jsc = jurySubmissionCriteriaRepository.save(jsc);
+
+        eventPublisher.publishEvent(
+                new PointsChangedForTeamEvent(
+                        jsc.getJurySubmission().getSubmission().getTeam().getId(),
+                        jsc.getJurySubmission().getSubmission().getRound().getId()
+                )
         );
-        eventPublisher.publishEvent(event);
 
-        return jurySubmissionCriteria;
+        return jsc;
     }
 
     private JurySubmissionCriteria findById(Long jurySubmissionId, Long criteriaId) {
