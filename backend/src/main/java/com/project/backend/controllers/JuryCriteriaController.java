@@ -28,7 +28,7 @@ public class JuryCriteriaController {
     private final JurySubmissionCriteriaMapper jurySubmissionCriteriaMapper;
     private final CurrentUserContainer currentUserContainer;
 
-    @PreAuthorize("hasRole('JURY') and @userSecurity.isJuryOfSubmission(#submissionId)")
+    @PreAuthorize("hasRole('JURY') and @userSecurity.isJuryOfSubmission(#juryCriteriaRequest.getSubmissionId())")
     @PostMapping
     @Operation(summary = "Update criteria score", description = "Updates a previously given score for a submission criteria")
     public JuryCriteriaResponse set(
