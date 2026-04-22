@@ -1,5 +1,6 @@
 package com.project.backend.services.implementations;
 
+import com.project.backend.auth.utils.SecurityUtil;
 import com.project.backend.dto.event.TournamentFinishedEvent;
 import com.project.backend.dto.event.TournamentRegistrationStartedEvent;
 import com.project.backend.dto.event.TournamentStartedEvent;
@@ -97,23 +98,51 @@ public class TournamentServiceImpl implements TournamentService {
     @Override
     public Page<Tournament> findAll(Integer page, Integer size, String search, TournamentStatus status) {
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "startRegistration"));
-        return tournamentRepository.findAll(Specification.allOf(TournamentSpecification.byName(search), TournamentSpecification.byTournamentStatus(status)), pageRequest);
+
+        Specification<Tournament> spec = Specification.allOf(
+                TournamentSpecification.byName(search),
+                TournamentSpecification.byTournamentStatus(status)
+        );
+
+        if (!SecurityUtil.isAdmin()) {
+            spec = spec.and(TournamentSpecification.notDraft());
+        }
+
+        return tournamentRepository.findAll(spec, pageRequest);
     }
 
     @Override
     public Page<Tournament> findAllByUser(Integer page, Integer size, String search, TournamentStatus status, User user) {
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "startRegistration", "name"));
-        return tournamentRepository.findAll(Specification.allOf(TournamentSpecification.byName(search), TournamentSpecification.byTournamentStatus(status), TournamentSpecification.byUserId(user.getId())), pageRequest);
+
+        Specification<Tournament> spec = Specification.allOf(
+                TournamentSpecification.byName(search),
+                TournamentSpecification.byTournamentStatus(status),
+                TournamentSpecification.byUserId(user.getId())
+        );
+
+        if (!SecurityUtil.isAdmin()) {
+            spec = spec.and(TournamentSpecification.notDraft());
+        }
+
+        return tournamentRepository.findAll(spec, pageRequest);
     }
 
     @Override
     public Page<Tournament> findAllByUserNot(Integer page, Integer size, String search, TournamentStatus status, User user) {
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "startRegistration", "name"));
-        return tournamentRepository.findAll(Specification.allOf(
-                        TournamentSpecification.byName(search),
-                        TournamentSpecification.byTournamentStatus(status),
-                        TournamentSpecification.byUserIdNot(user.getId())),
-                pageRequest);
+
+        Specification<Tournament> spec = Specification.allOf(
+                TournamentSpecification.byName(search),
+                TournamentSpecification.byTournamentStatus(status),
+                TournamentSpecification.byUserIdNot(user.getId())
+        );
+
+        if (!SecurityUtil.isAdmin()) {
+            spec = spec.and(TournamentSpecification.notDraft());
+        }
+
+        return tournamentRepository.findAll(spec, pageRequest);
     }
 
     @Override
@@ -136,7 +165,7 @@ public class TournamentServiceImpl implements TournamentService {
     @Override
     @Transactional
     public void startRegistration(Long tournamentId) {
-        Tournament tournament = findById(tournamentId);
+        Tournament tournament = findByIdAdmin(tournamentId);
 
         if(tournament.getStatus() != TournamentStatus.DRAFT) {
             throw new IllegalStateException("Only tournament with DRAFT status can be set to REGISTRATION");
@@ -154,7 +183,7 @@ public class TournamentServiceImpl implements TournamentService {
     @Override
     @Transactional
     public void startTournament(Long tournamentId) {
-        Tournament tournament = findById(tournamentId);
+        Tournament tournament = findByIdAdmin(tournamentId);
 
         if(tournament.getStatus() != TournamentStatus.REGISTRATION) {
             throw new IllegalStateException("Only tournament with REGISTRATION status can be set to RUNNING");
@@ -173,7 +202,7 @@ public class TournamentServiceImpl implements TournamentService {
     @Override
     @Transactional
     public void finish(Long tournamentId) {
-        Tournament tournament = findById(tournamentId);
+        Tournament tournament = findByIdAdmin(tournamentId);
 
         if(tournament.getStatus() != TournamentStatus.RUNNING) {
             throw new IllegalStateException("Only tournament with RUNNING status can be set to FINISHED");
@@ -192,7 +221,7 @@ public class TournamentServiceImpl implements TournamentService {
     @Override
     @Transactional
     public void rollbackFinishTournament(Long tournamentId) {
-        Tournament tournament = findById(tournamentId);
+        Tournament tournament = findByIdAdmin(tournamentId);
 
         if(tournament.getStatus() != TournamentStatus.FINISHED) {
             throw new IllegalStateException("Only tournament with FINISHED status can be rolled back to RUNNING");
@@ -205,7 +234,7 @@ public class TournamentServiceImpl implements TournamentService {
     @Override
     @Transactional
     public void rollbackStartTournament(Long tournamentId) {
-        Tournament tournament = findById(tournamentId);
+        Tournament tournament = findByIdAdmin(tournamentId);
 
         if(tournament.getStatus() != TournamentStatus.RUNNING) {
             throw new IllegalStateException("Only tournament with RUNNING status can be rolled back to REGISTRATION");
@@ -220,7 +249,7 @@ public class TournamentServiceImpl implements TournamentService {
     @Override
     @Transactional
     public void draft(Long tournamentId) {
-        Tournament tournament = findById(tournamentId);
+        Tournament tournament = findByIdAdmin(tournamentId);
 
         if(tournament.getStatus() != TournamentStatus.REGISTRATION) {
             throw new IllegalStateException("Only tournament with REGISTRATION status can be rolled back to DRAFT");

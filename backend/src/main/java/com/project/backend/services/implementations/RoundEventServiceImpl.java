@@ -1,11 +1,16 @@
 package com.project.backend.services.implementations;
 
+import com.project.backend.auth.utils.SecurityUtil;
 import com.project.backend.dto.event.RoundEventCreatedEvent;
+import com.project.backend.models.Round;
 import com.project.backend.models.RoundEvent;
 import com.project.backend.models.User;
+import com.project.backend.models.constants.RoundStatus;
+import com.project.backend.models.constants.TournamentStatus;
 import com.project.backend.repositories.RoundEventRepository;
 import com.project.backend.repositories.RoundRepository;
 import com.project.backend.repositories.specifications.RoundEventSpecification;
+import com.project.backend.repositories.specifications.RoundSpecification;
 import com.project.backend.services.interfaces.RoundEventService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +34,7 @@ public class RoundEventServiceImpl implements RoundEventService {
 
     @Override
     public Page<RoundEvent> findAll(Integer page, Integer size, Long roundId) {
+        checkDraftAccessRound(roundId);
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(
                 Sort.Order.desc("startDate"),
                 Sort.Order.desc("id")
@@ -38,6 +44,7 @@ public class RoundEventServiceImpl implements RoundEventService {
 
     @Override
     public RoundEvent findById(Long roundEventId) {
+        checkDraftAccessRoundEvent(roundEventId);
         return roundEventRepository.findById(roundEventId).orElseThrow(() -> new EntityNotFoundException("Round event with id " + roundEventId + " not found"));
     }
 
@@ -82,5 +89,27 @@ public class RoundEventServiceImpl implements RoundEventService {
     @Transactional
     public void delete(Long id) {
         roundEventRepository.deleteById(id);
+    }
+
+    private void checkDraftAccessRound(Long roundId) {
+        if (!SecurityUtil.isAdmin()) {
+            Round round = roundRepository.findById(roundId)
+                    .orElseThrow(() -> new EntityNotFoundException("Round not found"));
+
+            if (round.getTournament().getStatus() == TournamentStatus.DRAFT || round.getStatus() == RoundStatus.DRAFT) {
+                throw new EntityNotFoundException("Round not found");
+            }
+        }
+    }
+
+    private void checkDraftAccessRoundEvent(Long roundEventId) {
+        if (!SecurityUtil.isAdmin()) {
+            Round round = roundRepository.findOne(RoundSpecification.byRoundEventId(roundEventId))
+                    .orElseThrow(() -> new EntityNotFoundException("Round not found"));
+
+            if (round.getTournament().getStatus() == TournamentStatus.DRAFT || round.getStatus() == RoundStatus.DRAFT) {
+                throw new EntityNotFoundException("Round not found");
+            }
+        }
     }
 }

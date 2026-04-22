@@ -260,4 +260,9 @@ public class TournamentSpecification {
             return cb.not(cb.exists(subquery));
         };
     }
+
+    public static Specification<Tournament> notDraft() {
+        return (root, query, cb) ->
+                cb.notEqual(root.get("status"), TournamentStatus.DRAFT);
+    }
 }

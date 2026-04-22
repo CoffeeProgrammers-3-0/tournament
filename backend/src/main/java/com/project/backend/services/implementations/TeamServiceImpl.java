@@ -2,6 +2,7 @@ package com.project.backend.services.implementations;
 
 import com.project.backend.auth.utils.SecurityUtil;
 import com.project.backend.dto.event.*;
+import com.project.backend.dto.team.PointResponse;
 import com.project.backend.dto.team.StatisticResponse;
 import com.project.backend.dto.team.StatisticRowDTO;
 import com.project.backend.dto.team.TeamLeaderboardResponse;
@@ -11,6 +12,7 @@ import com.project.backend.models.Team;
 import com.project.backend.models.Tournament;
 import com.project.backend.models.User;
 import com.project.backend.models.constants.Role;
+import com.project.backend.models.constants.RoundStatus;
 import com.project.backend.models.constants.TournamentStatus;
 import com.project.backend.models.ids.TeamParticipantId;
 import com.project.backend.models.join_tables.TeamParticipant;
@@ -61,6 +63,7 @@ public class TeamServiceImpl implements TeamService {
     public Team create(Long tournamentId,
                        List<UserCreateRequestForTeam> users,
                        Team team) {
+        checkDraftAccessTournament(tournamentId);
         if (users == null || users.isEmpty()) {
             throw new IllegalArgumentException("Team must contain at least one participant");
         }
@@ -76,6 +79,10 @@ public class TeamServiceImpl implements TeamService {
 
         Tournament tournament = tournamentRepository.findById(tournamentId)
                 .orElseThrow(() -> new EntityNotFoundException("Tournament with id " + tournamentId + " not found"));
+
+        if(tournament.getStatus() != TournamentStatus.REGISTRATION) {
+            throw new IllegalStateException("Can not create team on tournament with status " + tournament.getStatus());
+        }
 
         if (users.size() > tournament.getMaxCountOfTeam()) {
             throw new IllegalArgumentException("Number of participants exceeds tournament maxCountOfTeam");
@@ -190,6 +197,7 @@ public class TeamServiceImpl implements TeamService {
     @Transactional
     @Override
     public Team addMember(Long teamId, Long tournamentId, UserCreateRequestForTeam userCreateRequestForTeam) {
+        checkDraftAccessTournament(tournamentId);
         Team team = findById(teamId);
 
         Tournament tournament = tournamentRepository.findOne(TournamentSpecification.byId(tournamentId))
@@ -263,6 +271,7 @@ public class TeamServiceImpl implements TeamService {
     @Override
     @Transactional
     public Team removeMember(Long teamId, Long userId, Long tournamentId) {
+        checkDraftAccessTournament(tournamentId);
         Team team = findById(teamId);
         Tournament tournament = tournamentRepository.findOne(TournamentSpecification.byId(tournamentId))
                 .orElseThrow(() -> new EntityNotFoundException("Tournament not found"));
@@ -295,6 +304,7 @@ public class TeamServiceImpl implements TeamService {
     @Transactional
     @Override
     public Team setLeader(Long teamId, Long userId, Long tournamentId) {
+        checkDraftAccessTournament(tournamentId);
         Tournament tournament = tournamentRepository.findById(tournamentId).orElseThrow(() -> new EntityNotFoundException("Tournament with id " + tournamentId + " not found"));
 
         if (!SecurityUtil.isAdmin()) {
@@ -334,7 +344,7 @@ public class TeamServiceImpl implements TeamService {
 
     @Override
     public StatisticResponse getStatisticsByRoundForTeam(Long roundId, Long teamId) {
-
+        checkDraftAccessRound(roundId);
         List<StatisticRowDTO> rows = teamRepository.getStatisticsByTeamAndRound(teamId, roundId);
 
         StatisticResponse response = new StatisticResponse();
@@ -348,9 +358,15 @@ public class TeamServiceImpl implements TeamService {
         response.setEmail(first.getTeamEmail());
 
         for (StatisticRowDTO row : rows) {
-            response.getPointsPerJury()
-                    .computeIfAbsent(row.getJuryEmail(), k -> new HashMap<>())
-                    .put(row.getCriteriaText(), row.getPoints().intValue());
+            if(row.isAdditional()) {
+                response.getAdditionalPointsPerJury()
+                        .computeIfAbsent(row.getJuryEmail(), k -> new HashMap<>())
+                        .put(row.getCriteriaText(), new PointResponse(row.getPoints(), row.getComment()));
+            } else {
+                response.getPointsPerJury()
+                        .computeIfAbsent(row.getJuryEmail(), k -> new HashMap<>())
+                        .put(row.getCriteriaText(), new PointResponse(row.getPoints(), row.getComment()));
+            }
         }
 
         return response;
@@ -358,12 +374,14 @@ public class TeamServiceImpl implements TeamService {
 
     @Override
     public StatisticResponse getStatisticsByRoundForUsersTeam(Long roundId, User user) {
+        checkDraftAccessRound(roundId);
         Team team = teamRepository.findOne(Specification.allOf(TeamSpecification.byUserId(user.getId()), TeamSpecification.byRoundId(roundId))).orElseThrow(() -> new EntityNotFoundException("Team not found"));
         return getStatisticsByRoundForTeam(roundId, team.getId());
     }
 
     @Override
     public Page<Team> findAllByTournament(Integer page, Integer size, String search, Long tournamentId) {
+        checkDraftAccessTournament(tournamentId);
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "name"));
         return teamRepository.findAll(
                 Specification.allOf(
@@ -375,6 +393,7 @@ public class TeamServiceImpl implements TeamService {
 
     @Override
     public Page<Team> findAllByRound(Integer page, Integer size, String search, Long roundId) {
+        checkDraftAccessRound(roundId);
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "name"));
         return teamRepository.findAll(
                 Specification.allOf(
@@ -386,6 +405,7 @@ public class TeamServiceImpl implements TeamService {
 
     @Override
     public Page<Team> findAllByRoundNot(Integer page, Integer size, String search, Long roundId) {
+        checkDraftAccessRound(roundId);
         Tournament tournament = tournamentRepository.findOne(TournamentSpecification.byRoundId(roundId)).orElseThrow(() -> new EntityNotFoundException("Tournament for round with id " + roundId + " not found"));
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "name"));
         return teamRepository.findAll(
@@ -400,12 +420,36 @@ public class TeamServiceImpl implements TeamService {
     @Transactional
     @Override
     public List<TeamLeaderboardResponse> getAllStatsByRoundId(Long roundId, Double lastTeamPoints, Long lastTeam, Integer size) {
+        checkDraftAccessRound(roundId);
         return teamRepository.findLeaderboard(roundId, lastTeamPoints, lastTeam, size);
     }
 
     @Transactional
     @Override
     public List<TeamLeaderboardResponse> getAllStatsByRoundId(Long roundId) {
+        checkDraftAccessRound(roundId);
         return teamRepository.findLeaderboard(roundId);
+    }
+
+    private void checkDraftAccessRound(Long roundId) {
+        if (!SecurityUtil.isAdmin()) {
+            Round round = roundRepository.findById(roundId)
+                    .orElseThrow(() -> new EntityNotFoundException("Round not found"));
+
+            if (round.getTournament().getStatus() == TournamentStatus.DRAFT || round.getStatus() == RoundStatus.DRAFT) {
+                throw new EntityNotFoundException("Round not found");
+            }
+        }
+    }
+
+    private void checkDraftAccessTournament(Long tournamentId) {
+        if (!SecurityUtil.isAdmin()) {
+            Tournament tournament = tournamentRepository.findById(tournamentId)
+                    .orElseThrow(() -> new EntityNotFoundException("Tournament not found"));
+
+            if (tournament.getStatus() == TournamentStatus.DRAFT) {
+                throw new EntityNotFoundException("Tournament not found");
+            }
+        }
     }
 }

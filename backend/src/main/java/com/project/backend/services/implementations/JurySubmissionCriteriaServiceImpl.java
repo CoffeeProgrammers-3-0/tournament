@@ -35,9 +35,9 @@ public class JurySubmissionCriteriaServiceImpl implements JurySubmissionCriteria
 
     private final ApplicationEventPublisher eventPublisher;
 
-    @Override
     @Transactional
-    public JurySubmissionCriteria set(Long submissionId, Long criteriaId, Long value, User jury) {
+    @Override
+    public JurySubmissionCriteria set(Long submissionId, Long criteriaId, Long value, boolean isAdditional, String comment, User jury) {
         if (submissionId == null || criteriaId == null || value == null || jury == null) {
             throw new IllegalArgumentException("SubmissionId, criteriaId, value and jury must not be null");
         }
@@ -67,18 +67,42 @@ public class JurySubmissionCriteriaServiceImpl implements JurySubmissionCriteria
 
         JurySubmissionCriteria jurySubmissionCriteria = optional.orElseGet(JurySubmissionCriteria::new);
 
-        if (optional.isPresent() && value.equals(jurySubmissionCriteria.getPoints())) {
-            log.debug("Skip update: same value {} for criteria {} and submission {}", value, criteriaId, submissionId);
-            return jurySubmissionCriteria;
+        long countAdditional = isAdditional ? jurySubmissionCriteriaRepository.count(
+                Specification.allOf(
+                        JurySubmissionCriteriaSpecification.isAdditional(true),
+                        JurySubmissionCriteriaSpecification.byJurySubmissionId(jurySubmission.getId())
+                )) : 0;
+
+        if (optional.isPresent()) {
+            if(value.equals(jurySubmissionCriteria.getPoints())) {
+                log.debug("Skip update: same value {} for criteria {} and submission {}", value, criteriaId, submissionId);
+                return jurySubmissionCriteria;
+            }
+            if(isAdditional && !jurySubmissionCriteria.isAdditional()) {
+                if(countAdditional >= 4) {
+                    throw new IllegalStateException("Can not add new additional jsc, because there are already 4 additional");
+                }
+            }
+        }
+
+        if(isAdditional) {
+            if(countAdditional >= 4) {
+                throw new IllegalStateException("Can not add new additional jsc, because there are already 4 additional");
+            }
+            if(value > 5) {
+                throw new IllegalStateException("Can create additional jsc with points more than 5");
+            }
         }
 
         jurySubmissionCriteria.setId(id);
         jurySubmissionCriteria.setPoints(value);
         jurySubmissionCriteria.setCriteria(criteria);
         jurySubmissionCriteria.setJurySubmission(jurySubmission);
+        jurySubmissionCriteria.setAdditional(isAdditional);
+        jurySubmissionCriteria.setComment(comment);
 
-        log.info("Set points {} for submission {} criteria {} by jury {}",
-                value, submissionId, criteriaId, jury.getId());
+        log.info("Set points {} for submission {} criteria {} by jury {} additional {}",
+                value, submissionId, criteriaId, jury.getId(), isAdditional);
         jurySubmissionCriteria = jurySubmissionCriteriaRepository.save(jurySubmissionCriteria);
 
         PointsChangedForTeamEvent event = new PointsChangedForTeamEvent(

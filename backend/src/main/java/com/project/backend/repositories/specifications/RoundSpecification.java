@@ -3,6 +3,7 @@ package com.project.backend.repositories.specifications;
 import com.project.backend.models.Round;
 import com.project.backend.models.Tournament;
 import com.project.backend.models.constants.RoundStatus;
+import com.project.backend.models.constants.TournamentStatus;
 import com.project.backend.models.join_tables.TeamRound;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Root;
@@ -163,6 +164,31 @@ public class RoundSpecification {
 
             Join<Round, TeamRound> teamRoundsJoin = root.join("teamRounds");
             return cb.equal(teamRoundsJoin.get("team").get("id"), teamId);
+        };
+    }
+
+    public static Specification<Round> notDraft() {
+        return (root, query, cb) -> cb.and(
+                cb.notEqual(root.get("status"), RoundStatus.DRAFT),
+                cb.notEqual(root.get("tournament").get("status"), TournamentStatus.DRAFT)
+        );
+    }
+
+    public static Specification<Round> byRoundEventId(Long roundEventId) {
+        if (roundEventId == null) return null;
+
+        return (root, query, cb) -> {
+            Join<Object, Object> events = root.join("roundEvents");
+            return cb.equal(events.get("id"), roundEventId);
+        };
+    }
+
+    public static Specification<Round> byCategoryId(Long categoryId) {
+        if (categoryId == null) return null;
+
+        return (root, query, cb) -> {
+            Join<Object, Object> categories = root.join("categories");
+            return cb.equal(categories.get("id"), categoryId);
         };
     }
 }

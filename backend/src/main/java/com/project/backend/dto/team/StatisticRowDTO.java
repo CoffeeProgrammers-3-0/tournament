@@ -14,4 +14,6 @@ public class StatisticRowDTO {
     private String juryEmail;
     private String criteriaText;
     private Long points;
+    private boolean isAdditional;
+    private String comment;
 }

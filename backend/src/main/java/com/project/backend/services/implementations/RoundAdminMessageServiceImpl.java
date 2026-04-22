@@ -1,9 +1,13 @@
 package com.project.backend.services.implementations;
 
+import com.project.backend.auth.utils.SecurityUtil;
 import com.project.backend.dto.event.RoundAdminMessageCreatedEvent;
+import com.project.backend.models.Round;
 import com.project.backend.models.User;
 import com.project.backend.models.adminMessages.AdminMessage;
 import com.project.backend.models.adminMessages.RoundAdminMessage;
+import com.project.backend.models.constants.RoundStatus;
+import com.project.backend.models.constants.TournamentStatus;
 import com.project.backend.repositories.RoundAdminMessageRepository;
 import com.project.backend.repositories.RoundRepository;
 import com.project.backend.repositories.specifications.RoundAdminMessageSpecification;
@@ -32,6 +36,7 @@ public class RoundAdminMessageServiceImpl implements RoundAdminMessageService {
 
     @Override
     public Page<RoundAdminMessage> findAll(Integer page, Integer size, Long roundId) {
+        checkDraftAccessRound(roundId);
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Order.desc("date")));
         return roundAdminMessageRepository.findAll(RoundAdminMessageSpecification.byRoundId(roundId), pageRequest);
     }
@@ -72,5 +77,16 @@ public class RoundAdminMessageServiceImpl implements RoundAdminMessageService {
     @Transactional
     public void delete(Long id) {
         roundAdminMessageRepository.deleteById(id);
+    }
+
+    private void checkDraftAccessRound(Long roundId) {
+        if (!SecurityUtil.isAdmin()) {
+            Round round = roundRepository.findById(roundId)
+                    .orElseThrow(() -> new EntityNotFoundException("Round not found"));
+
+            if (round.getTournament().getStatus() == TournamentStatus.DRAFT || round.getStatus() == RoundStatus.DRAFT) {
+                throw new EntityNotFoundException("Round not found");
+            }
+        }
     }
 }

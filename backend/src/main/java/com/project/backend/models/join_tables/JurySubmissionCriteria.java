@@ -28,4 +28,8 @@ public class JurySubmissionCriteria {
     private Criteria criteria;
 
     private Long points;
+
+    private String comment;
+
+    private boolean isAdditional;
 }

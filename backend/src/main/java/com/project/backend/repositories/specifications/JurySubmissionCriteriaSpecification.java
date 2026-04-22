@@ -25,6 +25,13 @@ public class JurySubmissionCriteriaSpecification {
                 cb.equal(root.get("id").get("criteriaId"), criteriaId);
     }
 
+    public static Specification<JurySubmissionCriteria> isAdditional(boolean isAdditional) {
+        log.debug("JurySubmissionCriteriaSpecification.isAdditional called with isAdditional={}", isAdditional);
+
+        return (root, query, cb) ->
+                cb.equal(root.get("isAdditional"), isAdditional);
+    }
+
     public static Specification<JurySubmissionCriteria> byJurySubmission(JurySubmission jurySubmission) {
         log.debug("JurySubmissionCriteriaSpecification.byJurySubmission called with jurySubmission={}", jurySubmission);
         if (jurySubmission == null) return null;

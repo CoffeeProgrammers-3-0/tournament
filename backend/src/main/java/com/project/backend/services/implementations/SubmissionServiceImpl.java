@@ -1,5 +1,6 @@
 package com.project.backend.services.implementations;
 
+import com.project.backend.auth.utils.SecurityUtil;
 import com.project.backend.dto.event.JurySubmissionCreatedEvent;
 import com.project.backend.dto.event.JurySubmissionDeletedEvent;
 import com.project.backend.dto.event.PointsChangedForTeamEvent;
@@ -9,6 +10,7 @@ import com.project.backend.models.Team;
 import com.project.backend.models.User;
 import com.project.backend.models.constants.Role;
 import com.project.backend.models.constants.RoundStatus;
+import com.project.backend.models.constants.TournamentStatus;
 import com.project.backend.models.join_tables.JurySubmission;
 import com.project.backend.repositories.*;
 import com.project.backend.repositories.specifications.JurySubmissionSpecification;
@@ -48,7 +50,7 @@ public class SubmissionServiceImpl implements SubmissionService {
     @Override
     @Transactional
     public Submission create(Long roundId, User creator, Submission submission) {
-
+        checkDraftAccessRound(roundId);
         if (roundId == null || creator == null || submission == null) {
             throw new IllegalArgumentException("roundId, creator, submission must not be null");
         }
@@ -224,5 +226,16 @@ public class SubmissionServiceImpl implements SubmissionService {
         eventPublisher.publishEvent(event1);
 
         return submission;
+    }
+
+    private void checkDraftAccessRound(Long roundId) {
+        if (!SecurityUtil.isAdmin()) {
+            Round round = roundRepository.findById(roundId)
+                    .orElseThrow(() -> new EntityNotFoundException("Round not found"));
+
+            if (round.getTournament().getStatus() == TournamentStatus.DRAFT || round.getStatus() == RoundStatus.DRAFT) {
+                throw new EntityNotFoundException("Round not found");
+            }
+        }
     }
 }

@@ -6,7 +6,7 @@ import com.project.backend.models.join_tables.JurySubmissionCriteria;
 import java.util.List;
 
 public interface JurySubmissionCriteriaService {
-    JurySubmissionCriteria set(Long submissionId, Long criteriaId, Long value, User jury);
+    JurySubmissionCriteria set(Long submissionId, Long criteriaId, Long value, boolean isAdditional, String comment, User jury);
 
     List<JurySubmissionCriteria> findAllBySubmissionForJury(Long submissionId, User jury);
 }

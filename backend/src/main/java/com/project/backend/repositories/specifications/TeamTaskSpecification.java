@@ -4,9 +4,7 @@ import com.project.backend.models.Round;
 import com.project.backend.models.Team;
 import com.project.backend.models.TeamTask;
 import com.project.backend.models.User;
-import com.project.backend.models.constants.TaskPriority;
-import com.project.backend.models.constants.TaskStatus;
-import com.project.backend.models.constants.TaskType;
+import com.project.backend.models.constants.*;
 import com.project.backend.models.join_tables.TeamParticipant;
 import jakarta.persistence.criteria.Join;
 import lombok.extern.slf4j.Slf4j;
@@ -123,5 +121,12 @@ public class TeamTaskSpecification {
 
             return cb.equal(tpJoin.get("user").get("id"), userId);
         };
+    }
+
+    public static Specification<TeamTask> notDraft() {
+        return (root, query, cb) -> cb.and(
+                cb.notEqual(root.get("round").get("status"), RoundStatus.DRAFT),
+                cb.notEqual(root.get("round").get("tournament").get("status"), TournamentStatus.DRAFT)
+        );
     }
 }

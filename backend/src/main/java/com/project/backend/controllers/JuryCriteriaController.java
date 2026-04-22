@@ -41,7 +41,7 @@ public class JuryCriteriaController {
             @Parameter(description = "Updated score value")
             @RequestBody @Valid JuryCriteriaRequest juryCriteriaRequest) {
         User jury = currentUserContainer.getUser();
-        JurySubmissionCriteria jurySubmissionCriteria = jurySubmissionCriteriaService.set(submissionId, criteriaId, juryCriteriaRequest.getPoints(), jury);
+        JurySubmissionCriteria jurySubmissionCriteria = jurySubmissionCriteriaService.set(submissionId, criteriaId, juryCriteriaRequest.getPoints(), juryCriteriaRequest.isAdditional(), juryCriteriaRequest.getComment(), jury);
 
         return jurySubmissionCriteriaMapper.fromJurySubmissionCriteriaToResponse(jurySubmissionCriteria);
     }

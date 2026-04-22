@@ -1,5 +1,6 @@
 package com.project.backend.services.implementations;
 
+import com.project.backend.auth.utils.SecurityUtil;
 import com.project.backend.dto.event.TeamTaskCreatedEvent;
 import com.project.backend.dto.event.TeamTaskDeletedEvent;
 import com.project.backend.dto.event.TeamTaskUpdatedEvent;
@@ -164,34 +165,59 @@ public class TeamTaskServiceImpl implements TeamTaskService {
     }
 
     @Override
-    public Page<TeamTask> findAllByTeamIdAndRoundId(Integer page, Integer size, String search, User user, Long roundId, TaskStatus status, TaskType type, TaskPriority priority) {
+    public Page<TeamTask> findAllByTeamIdAndRoundId(
+            Integer page,
+            Integer size,
+            String search,
+            User user,
+            Long roundId,
+            TaskStatus status,
+            TaskType type,
+            TaskPriority priority
+    ) {
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "priority"));
-        return teamTaskRepository.findAll(
-                Specification.allOf(
-                        TeamTaskSpecification.byTitle(search),
-                        TeamTaskSpecification.byUsersTeam(user.getId()),
-                        TeamTaskSpecification.byRoundId(roundId),
-                        TeamTaskSpecification.byStatus(status),
-                        TeamTaskSpecification.byType(type),
-                        TeamTaskSpecification.byPriority(priority)
-                ),
-                pageRequest
+
+        Specification<TeamTask> spec = Specification.allOf(
+                TeamTaskSpecification.byTitle(search),
+                TeamTaskSpecification.byUsersTeam(user.getId()),
+                TeamTaskSpecification.byRoundId(roundId),
+                TeamTaskSpecification.byStatus(status),
+                TeamTaskSpecification.byType(type),
+                TeamTaskSpecification.byPriority(priority)
         );
+
+        if (!SecurityUtil.isAdmin()) {
+            spec = spec.and(TeamTaskSpecification.notDraft());
+        }
+
+        return teamTaskRepository.findAll(spec, pageRequest);
     }
 
     @Override
-    public Page<TeamTask> findAllForUser(Integer page, Integer size, String search, User user, TaskStatus status, TaskType type, TaskPriority priority) {
+    public Page<TeamTask> findAllForUser(
+            Integer page,
+            Integer size,
+            String search,
+            User user,
+            TaskStatus status,
+            TaskType type,
+            TaskPriority priority
+    ) {
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "priority"));
-        return teamTaskRepository.findAll(
-                Specification.allOf(
-                        TeamTaskSpecification.byTitle(search),
-                        TeamTaskSpecification.byAssigneeId(user.getId()),
-                        TeamTaskSpecification.byStatus(status),
-                        TeamTaskSpecification.byType(type),
-                        TeamTaskSpecification.byPriority(priority)
-                ),
-                pageRequest
+
+        Specification<TeamTask> spec = Specification.allOf(
+                TeamTaskSpecification.byTitle(search),
+                TeamTaskSpecification.byAssigneeId(user.getId()),
+                TeamTaskSpecification.byStatus(status),
+                TeamTaskSpecification.byType(type),
+                TeamTaskSpecification.byPriority(priority)
         );
+
+        if (!SecurityUtil.isAdmin()) {
+            spec = spec.and(TeamTaskSpecification.notDraft());
+        }
+
+        return teamTaskRepository.findAll(spec, pageRequest);
     }
 
     @Override

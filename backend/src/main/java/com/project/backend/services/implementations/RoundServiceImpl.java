@@ -1,5 +1,6 @@
 package com.project.backend.services.implementations;
 
+import com.project.backend.auth.utils.SecurityUtil;
 import com.project.backend.dto.event.*;
 import com.project.backend.models.Round;
 import com.project.backend.models.Team;
@@ -153,18 +154,47 @@ public class RoundServiceImpl implements RoundService {
     @Override
     public Page<Round> findAllByTournament(Long tournamentId, Integer page, Integer size, String search, RoundStatus status) {
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "startDate"));
-        return roundRepository.findAll(Specification.allOf(RoundSpecification.byTournamentId(tournamentId), RoundSpecification.byStatus(status)), pageRequest);
+
+        Specification<Round> spec = Specification.allOf(
+                RoundSpecification.byTournamentId(tournamentId),
+                RoundSpecification.byStatus(status)
+        );
+
+        if (!SecurityUtil.isAdmin()) {
+            spec = spec.and(RoundSpecification.notDraft());
+        }
+
+        return roundRepository.findAll(spec, pageRequest);
     }
 
     @Override
     public Page<Round> findAllByRoundInSameTournament(Long roundId, Integer page, Integer size, String search, RoundStatus status) {
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "startDate"));
-        return roundRepository.findAll(Specification.allOf(RoundSpecification.belongingToSameTournamentAs(roundId), RoundSpecification.byStatus(status)), pageRequest);
+
+        Specification<Round> spec = Specification.allOf(
+                RoundSpecification.belongingToSameTournamentAs(roundId),
+                RoundSpecification.byStatus(status)
+        );
+
+        if (!SecurityUtil.isAdmin()) {
+            spec = spec.and(RoundSpecification.notDraft());
+        }
+
+        return roundRepository.findAll(spec, pageRequest);
     }
 
     @Override
     public Round findById(Long roundId) {
-        return roundRepository.findById(roundId).orElseThrow(() -> new EntityNotFoundException("Round with id " + roundId + " not found"));
+        Round round = roundRepository.findById(roundId)
+                .orElseThrow(() -> new EntityNotFoundException("Round with id " + roundId + " not found"));
+
+        if (!SecurityUtil.isAdmin() &&
+            (round.getStatus() == RoundStatus.DRAFT ||
+             round.getTournament().getStatus() == TournamentStatus.DRAFT)) {
+            throw new EntityNotFoundException("Round with id " + roundId + " not found");
+        }
+
+        return round;
     }
 
     @Override

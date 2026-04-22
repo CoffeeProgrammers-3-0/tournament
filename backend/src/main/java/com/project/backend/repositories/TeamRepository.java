@@ -12,7 +12,7 @@ import java.util.List;
 
 public interface TeamRepository extends JpaRepository<Team, Long>, JpaSpecificationExecutor<Team> {
     @Query("SELECT new com.project.backend.dto.team.StatisticRowDTO(" +
-            "t.id, t.name, t.email, js.jury.email, c.text, jsc.points) " +
+            "t.id, t.name, t.email, js.jury.email, c.text, jsc.points, jsc.isAdditional, jsc.comment) " +
             "FROM Team t " +
             "JOIN t.submissions s " +
             "JOIN s.jurySubmissions js " +
@@ -59,6 +59,7 @@ public interface TeamRepository extends JpaRepository<Team, Long>, JpaSpecificat
                     LEFT JOIN tournament.jury_submission_criteria jsc
                         ON jsc.jury_submission_id = js.id
                         AND jsc.criteria_id = c.id
+                        AND jsc.is_additional = false
                     JOIN (
                         SELECT category_id, COUNT(*) AS count_criteria
                         FROM tournament.criteria
@@ -66,6 +67,19 @@ public interface TeamRepository extends JpaRepository<Team, Long>, JpaSpecificat
                     ) cnt ON cnt.category_id = cat.id
                     WHERE s.round_id = :roundId
                     GROUP BY s.id, s.team_id, js.jury_id
+                ),
+                AdditionalScores AS (
+                    SELECT
+                        s.team_id,
+                        SUM(COALESCE(jsc.points, 0)) AS additional_points
+                    FROM tournament.submissions s
+                    JOIN TargetTeams tt ON tt.team_id = s.team_id
+                    JOIN tournament.jury_submission js ON js.submission_id = s.id
+                    JOIN tournament.jury_submission_criteria jsc
+                        ON jsc.jury_submission_id = js.id
+                    WHERE s.round_id = :roundId
+                      AND jsc.is_additional = true
+                    GROUP BY s.team_id
                 ),
                 ScoredSubmissions AS (
                     SELECT
@@ -80,9 +94,10 @@ public interface TeamRepository extends JpaRepository<Team, Long>, JpaSpecificat
                         tt.team_name,
                         tt.team_email,
                         tt.count_members AS countOfMembers,
-                        COALESCE(ss.total_points, 0) AS points
+                        COALESCE(ss.total_points, 0) + COALESCE(a.additional_points, 0) AS points
                     FROM TargetTeams tt
                     LEFT JOIN ScoredSubmissions ss ON tt.team_id = ss.team_id
+                    LEFT JOIN AdditionalScores a ON tt.team_id = a.team_id
                 )
                 SELECT * FROM FinalLeaderboard
                 WHERE (:lastPoints IS NULL
@@ -136,6 +151,7 @@ public interface TeamRepository extends JpaRepository<Team, Long>, JpaSpecificat
                 LEFT JOIN tournament.jury_submission_criteria jsc
                     ON jsc.jury_submission_id = js.id
                     AND jsc.criteria_id = c.id
+                    AND jsc.is_additional = false
                 JOIN (
                     SELECT category_id, COUNT(*) AS count_criteria
                     FROM tournament.criteria
@@ -143,6 +159,19 @@ public interface TeamRepository extends JpaRepository<Team, Long>, JpaSpecificat
                 ) cnt ON cnt.category_id = cat.id
                 WHERE s.round_id = :roundId
                 GROUP BY s.id, s.team_id, js.jury_id
+            ),
+            AdditionalScores AS (
+                SELECT
+                    s.team_id,
+                    SUM(COALESCE(jsc.points, 0)) AS additional_points
+                FROM tournament.submissions s
+                JOIN TargetTeams tt ON tt.team_id = s.team_id
+                JOIN tournament.jury_submission js ON js.submission_id = s.id
+                JOIN tournament.jury_submission_criteria jsc
+                    ON jsc.jury_submission_id = js.id
+                WHERE s.round_id = :roundId
+                  AND jsc.is_additional = true
+                GROUP BY s.team_id
             ),
             ScoredSubmissions AS (
                 SELECT
@@ -156,9 +185,10 @@ public interface TeamRepository extends JpaRepository<Team, Long>, JpaSpecificat
                 tt.team_name,
                 tt.team_email,
                 tt.count_members AS countOfMembers,
-                COALESCE(ss.total_points, 0) AS points
+                COALESCE(ss.total_points, 0) + COALESCE(a.additional_points, 0) AS points
             FROM TargetTeams tt
             LEFT JOIN ScoredSubmissions ss ON tt.team_id = ss.team_id
+            LEFT JOIN AdditionalScores a ON tt.team_id = a.team_id
             ORDER BY points DESC, tt.team_id DESC
             """, nativeQuery = true)
     List<TeamLeaderboardResponse> findLeaderboard(@Param("roundId") Long roundId);
@@ -201,6 +231,7 @@ public interface TeamRepository extends JpaRepository<Team, Long>, JpaSpecificat
             LEFT JOIN tournament.jury_submission_criteria jsc
                 ON jsc.jury_submission_id = js.id
                 AND jsc.criteria_id = c.id
+                AND jsc.is_additional = false
             JOIN (
                 SELECT category_id, COUNT(*) AS count_criteria
                 FROM tournament.criteria
@@ -208,6 +239,19 @@ public interface TeamRepository extends JpaRepository<Team, Long>, JpaSpecificat
             ) cnt ON cnt.category_id = cat.id
             WHERE s.round_id = :roundId
             GROUP BY s.id, s.team_id, js.jury_id
+        ),
+        AdditionalScores AS (
+            SELECT
+                s.team_id,
+                SUM(COALESCE(jsc.points, 0)) AS additional_points
+            FROM tournament.submissions s
+            JOIN TargetTeams tt ON tt.team_id = s.team_id
+            JOIN tournament.jury_submission js ON js.submission_id = s.id
+            JOIN tournament.jury_submission_criteria jsc
+                ON jsc.jury_submission_id = js.id
+            WHERE s.round_id = :roundId
+              AND jsc.is_additional = true
+            GROUP BY s.team_id
         ),
         ScoredSubmissions AS (
             SELECT
@@ -221,9 +265,10 @@ public interface TeamRepository extends JpaRepository<Team, Long>, JpaSpecificat
             tt.team_name,
             tt.team_email,
             tt.count_members AS countOfMembers,
-            COALESCE(ss.total_points, 0) AS points
+            COALESCE(ss.total_points, 0) + COALESCE(a.additional_points, 0) AS points
         FROM TargetTeams tt
         LEFT JOIN ScoredSubmissions ss ON tt.team_id = ss.team_id
+        LEFT JOIN AdditionalScores a ON tt.team_id = a.team_id
         """, nativeQuery = true)
     List<TeamLeaderboardResponse> findLeaderboardForTeams(
             @Param("roundId") Long roundId,

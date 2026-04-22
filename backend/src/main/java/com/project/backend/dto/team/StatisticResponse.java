@@ -19,5 +19,8 @@ public class StatisticResponse {
     private String email;
 
     @Schema(description = "Points per jury in a nested map structure")
-    private Map<String, Map<String, Integer>> pointsPerJury;
+    private Map<String, Map<String, PointResponse>> pointsPerJury;
+
+    @Schema(description = "Points per jury in a nested map structure")
+    private Map<String, Map<String, PointResponse>> additionalPointsPerJury;
 }
