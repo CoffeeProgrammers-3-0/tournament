@@ -72,6 +72,18 @@ export const useRoundDetails = (id: string) => {
         }
     }, [id]);
 
+    const fetchMyTeamId = useCallback(async () => {
+        if (!id) return;
+        try {
+            const data = -1//await teamService.getMyTeamIdByRoundId(Number(id));
+            setMyTeamId(data);
+        } catch (error) {
+            console.error("Failed to fetch my team id:", error);
+        } finally {
+            setLoading(false);
+        }
+    }, [id]);
+
     const fetchCategories = useCallback(async () => {
         if (!id) return;
         setLoadingTab(true);
@@ -101,6 +113,8 @@ export const useRoundDetails = (id: string) => {
 
     const loadLeaderboard = useCallback(async (isFirstLoad: boolean = false) => {
         if (!id) return;
+        fetchMyTeamId();
+
         const lastTeam = !isFirstLoad && leaderboard.length > 0
             ? leaderboard[leaderboard.length - 1]
             : null;
