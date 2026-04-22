@@ -178,7 +178,7 @@ export const TeamDetailsPage = () => {
 
             {/* Member Add Dialog */}
             <Dialog open={memberModal.open} onClose={closeMemberModal} fullWidth maxWidth="xs" PaperProps={{ sx: { borderRadius: "24px" } }}>
-                <DialogTitle sx={{ fontWeight: 800 }}>{t("team_details.admin.member_modal.title")}</DialogTitle>
+                <DialogTitle sx={{ fontWeight: 800 }}>{t("team_details.admin.member_modal.some_title")}</DialogTitle>
                 <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1 }}>
                     {errors.length > 0 && (
                         <Box sx={{ bgcolor: "error.light", color: "error.contrastText", p: 2, borderRadius: "12px" }}>

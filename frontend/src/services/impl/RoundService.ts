@@ -8,7 +8,7 @@ import type {
 } from "../../entities/round/round.dto.ts";
 import type {PaginationListResponseDto} from "../../entities/wrappers/wrapper.dto.ts";
 import type {UserResponseDto} from "../../entities/user/user.dto.ts";
-import type {TeamLeaderboardResponseDto, TeamListResponseDto} from "../../entities/team/team.dto.ts";
+import type {LeaderBoardResponseDto, TeamListResponseDto} from "../../entities/team/team.dto.ts";
 
 interface RoundQueryParams {
     page: number;
@@ -106,8 +106,8 @@ class RoundService extends BaseService {
 
     // --- Лідерборд ---
 
-    public getLeaderboardForRound(roundId: number, params: LeaderboardQueryParams): Promise<TeamLeaderboardResponseDto[]> {
-        return this.get<TeamLeaderboardResponseDto[]>(`/rounds/${roundId}/leaderboard`, { params });
+    public getLeaderboardForRound(roundId: number, params: LeaderboardQueryParams): Promise<LeaderBoardResponseDto> {
+        return this.get<LeaderBoardResponseDto>(`/rounds/${roundId}/leaderboard`, { params });
     }
 
     public exportLeaderboard(roundId: number): Promise<Blob> {

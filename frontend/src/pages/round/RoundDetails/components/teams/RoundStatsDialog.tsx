@@ -46,7 +46,7 @@ export const RoundStatsDialog = ({
                                  }: Props) => {
     return (
         <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
-            {selectedStats && (
+            {selectedStats ? (
                 <>
                     <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", pb: 1 }}>
                         <Typography variant="h6" fontWeight={800}>
@@ -171,7 +171,9 @@ export const RoundStatsDialog = ({
                         </Button>
                     </DialogActions>
                 </>
-            )}
+            ) :
+                <DialogContent>Loading...</DialogContent>
+            }
         </Dialog>
     );
 };

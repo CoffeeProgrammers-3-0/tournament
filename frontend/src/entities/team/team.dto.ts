@@ -29,6 +29,11 @@ export interface TeamListResponseDto {
     email: string;
 }
 
+export interface LeaderBoardResponseDto {
+    maxPoints: number;
+    leaderboard: TeamLeaderboardResponseDto[];
+}
+
 export interface TeamLeaderboardResponseDto {
     id: number;
     name: string;

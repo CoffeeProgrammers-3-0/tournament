@@ -13,7 +13,7 @@ export const useRoundTeamsManager = ({
                                          closeConfirm,
                                          myTeamId,
                                          isAdmin,
-                                         t
+                                         t,
                                      }: any) => {
 
     const [addMissingModalOpen, setAddMissingModalOpen] = useState(false);
@@ -109,36 +109,29 @@ export const useRoundTeamsManager = ({
     }, [t, triggerConfirm, roundId, fetchSubmissions, closeConfirm, handleError]);
 
     const handleOpenStats = useCallback(async (teamId: number, e?: React.MouseEvent) => {
-        // Fallback catch incase propogation didn't trigger
-        if (e && typeof e.stopPropagation === 'function') {
-            e.stopPropagation();
-        }
+        e?.stopPropagation?.();
 
         if (!roundId) return;
 
-        // Fix: If clearErrors is missing/undefined, executing it normally would crash the function silently.
-        if (typeof clearErrors === 'function') {
-            clearErrors();
-        }
+        clearErrors?.();
+        setStatsModalOpen(true);
+        setSelectedStats(null); // optional: treat as loading state
 
+        console.log("here")
         try {
             let stats;
+            console.log("isAdmin")
             if (isAdmin) {
                 stats = await teamService.getTeamStats(teamId, roundId);
-            } else if (String(teamId) === String(myTeamId)) { // Fix: Enforce string coercion
+            } else if (String(teamId) === String(myTeamId)) {
                 stats = await teamService.getMyTeamStats(roundId);
             } else {
                 return;
             }
+
             setSelectedStats(stats);
-            setStatsModalOpen(true);
-        } catch (error: any) {
-            // Fix: Fallback for unhandled promise rejection missing handleError
-            if (typeof handleError === 'function') {
-                handleError(error, t('round_details.errors.loadStats'));
-            } else {
-                console.error("Failed to load stats:", error);
-            }
+        } catch (error) {
+            handleError?.(error, t("round_details.errors.loadStats"));
         }
     }, [roundId, isAdmin, myTeamId, clearErrors, handleError, t]);
 

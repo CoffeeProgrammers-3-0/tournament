@@ -24,12 +24,6 @@ export const SubmissionHeader = ({ isLocked, isEditMode, actionLoading, onDelete
                 <Typography variant="h4" fontWeight={800} color={isLocked ? "text.secondary" : "text.primary"}>
                     {isEditMode ? t('submission.title_update') : t('submission.title_create')}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
-                    {isLocked
-                        ? t('submission.status.locked_description')
-                        : (isEditMode ? t('submission.subtitle_update') : t('submission.subtitle_create'))
-                    }
-                </Typography>
             </Box>
         </Box>
 

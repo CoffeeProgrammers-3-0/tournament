@@ -6,16 +6,23 @@ import {categoryService} from "../../../services/impl/CategoryService";
 import {juryCriteriaService} from "../../../services/impl/JuryCriteriaService";
 import type {SubmissionFullResponseDto} from "../../../entities/submission/submission.dto.ts";
 import type {CategoryResponseDto} from "../../../entities/category/category.dto.ts";
-import type {JuryCriteriaRequestDto, JuryCriteriaResponseDto} from "../../../entities/juryCriteria/juryCriteria.dto.ts";
+import type {JuryCriteriaResponseDto} from "../../../entities/juryCriteria/juryCriteria.dto.ts";
 
 export interface CriteriaScoreForm {
     points: number | "";
     comment: string;
-    additional: boolean;
+}
+
+export interface CustomCriteriaForm {
+    id: string | null;
+    text: string;
+    points: number | "";
+    comment: string;
 }
 
 export const useJuryEvaluate = () => {
     const { submissionId } = useParams<{ submissionId: string }>();
+    const subId = Number(submissionId);
     const { t } = useTranslation();
 
     const [loading, setLoading] = useState(true);
@@ -26,61 +33,117 @@ export const useJuryEvaluate = () => {
     const [submission, setSubmission] = useState<SubmissionFullResponseDto | null>(null);
     const [categories, setCategories] = useState<CategoryResponseDto[]>([]);
 
-    // Updated state to hold objects
     const [scores, setScores] = useState<Record<number, CriteriaScoreForm>>({});
     const [existingScores, setExistingScores] = useState<Record<number, JuryCriteriaResponseDto>>({});
+    const [customCriteria, setCustomCriteria] = useState<CustomCriteriaForm[]>(
+        Array.from({ length: 4 }, (_) => ({ id: null, text: "", points: "", comment: "" }))
+    );
 
-    useEffect(() => {
-        const fetchData = async () => {
-            const id = Number(submissionId);
+    const fetchData = async () => {
+        if (!subId) return;
+        setLoading(true);
+        try {
+            const [subData, scoresData] = await Promise.all([
+                submissionService.getSubmissionById(subId),
+                juryCriteriaService.getMyScoresForSubmission(subId)
+            ]);
+            const catData = await categoryService.getCategories(subData.round.id);
 
-            if (!submissionId || isNaN(id) || id < 1) {
-                window.location.replace('/404');
-                return;
-            }
+            const scoresMap: Record<number, CriteriaScoreForm> = {};
+            const existingMap: Record<number, JuryCriteriaResponseDto> = {};
 
-            setLoading(true);
-            setErrors([]);
-            try {
-                const [subData, scoresData] = await Promise.all([
-                    submissionService.getSubmissionById(id),
-                    juryCriteriaService.getMyScoresForSubmission(id)
-                ]);
+            // Отримуємо тільки додаткові бали
+            const fetchedCustom = scoresData.filter(sc => sc.additional).map(sc => {
+                const match = sc.comment?.match(/^\[(.*?)\]\s*(.*)$/);
+                return {
+                    id: sc.id.toString(),
+                    text: match ? match[1] : (sc.criteria?.text || ""),
+                    points: sc.points,
+                    comment: match ? match[2] : (sc.comment || "")
+                };
+            });
 
-                const catData = await categoryService.getCategories(subData.round.id);
+            // Створюємо масив рівно з 4 елементів: заповнюємо тими, що прийшли, решта — пусті
+            const finalCustom: CustomCriteriaForm[] = Array.from({ length: 4 }, (_, i) => {
+                return fetchedCustom[i] || { id: `temp-${i}`, text: "", points: "", comment: "" };
+            });
 
-                const scoresMap: Record<number, CriteriaScoreForm> = {};
-                const existingMap: Record<number, JuryCriteriaResponseDto> = {};
-
-                scoresData.forEach(sc => {
-                    scoresMap[sc.criteria.id] = {
-                        points: sc.points,
-                        comment: sc.comment || "",
-                        additional: sc.additional || false
-                    };
+            scoresData.forEach(sc => {
+                if (!sc.additional && sc.criteria) {
+                    scoresMap[sc.criteria.id] = { points: sc.points, comment: sc.comment || "" };
                     existingMap[sc.criteria.id] = sc;
+                }
+            });
+
+            setSubmission(subData);
+            setCategories(catData);
+            setScores(scoresMap);
+            setExistingScores(existingMap);
+            setCustomCriteria(finalCustom);
+        } catch (err) {
+            setErrors([t('jury.errors.load_eval_failed')]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => { fetchData(); }, [subId]);
+
+    const handleSaveScores = async () => {
+        if (!subId || saving) return;
+        setSaving(true);
+        setErrors([]);
+
+        try {
+            const promises: any[] = [];
+
+            // 1. Стандартні
+            categories.forEach(cat => {
+                cat.criteria.forEach(crit => {
+                    const score = scores[crit.id];
+                    if (score && score.points !== "") {
+                        promises.push(juryCriteriaService.setScore({
+                            id: existingScores[crit.id]?.id || null,
+                            submissionId: subId,
+                            criteriaId: crit.id,
+                            points: Number(score.points),
+                            additional: false,
+                            comment: score.comment
+                        }));
+                    }
                 });
+            });
 
-                setSubmission(subData);
-                setCategories(catData);
-                setScores(scoresMap);
-                setExistingScores(existingMap);
-            } catch (err) {
-                setErrors([t('jury.errors.load_eval_failed')]);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchData();
-    }, [submissionId, t]);
+            customCriteria.forEach(custom => {
+                const hasData = custom.points !== "" || custom.text.trim() !== "";
+                if (hasData) {
+                    // Якщо id починається на "temp-", значить це новий запис, шлемо null
+                    const isNew = String(custom.id).startsWith('temp-');
 
-    // Calculate how many 'additional' bonuses are currently checked
-    const additionalCount = Object.values(scores).filter(s => s.additional).length;
+                    promises.push(juryCriteriaService.setScore({
+                        id: isNew ? null : Number(custom.id),
+                        submissionId: subId,
+                        criteriaId: null,
+                        points: custom.points === "" ? 0 : Number(custom.points),
+                        additional: true,
+                        comment: `[${custom.text.trim()}] ${custom.comment}`
+                    }));
+                }
+            });
 
-    // Updated handler to manage points, comments, and additional checkboxes
+            await Promise.all(promises);
+            await fetchData(); // Оновлюємо все після успішного збереження
+            setShowSuccessDialog(true);
+        } catch (err: any) {
+            setErrors([t('jury.errors.save_failed')]);
+        } finally {
+            setSaving(false);
+        }
+    };
+
     const handleScoreChange = (criteriaId: number, field: keyof CriteriaScoreForm, value: any) => {
         setScores(prev => {
-            const current = prev[criteriaId] || { points: "", comment: "", additional: false };
+            const current = prev[criteriaId] || { points: "", comment: "" };
 
             if (field === "points") {
                 if (value === "") {
@@ -88,81 +151,43 @@ export const useJuryEvaluate = () => {
                 } else {
                     const numValue = parseInt(value, 10);
                     if (!isNaN(numValue)) {
+                        // Звичайні критерії оцінюються 0-100
                         current.points = Math.min(Math.max(numValue, 0), 100);
                     }
                 }
             } else if (field === "comment") {
                 current.comment = value;
-            } else if (field === "additional") {
-                // Prevent checking if we already have 4, unless we are unchecking
-                if (value === true && additionalCount >= 4) {
-                    return prev;
-                }
-                current.additional = value;
             }
 
             return { ...prev, [criteriaId]: { ...current } };
         });
     };
 
-    const handleSaveScores = async () => {
-        if (!submissionId || !submission) return;
+    const handleCustomCriteriaChange = (id: string, field: keyof CustomCriteriaForm, value: any) => {
+        setCustomCriteria(prev => prev.map(criteria => {
+            if (criteria.id !== id) return criteria;
 
-        if (submission.round.status === "EVALUATED") {
-            setErrors([t('jury.errors.round_closed', 'Оцінювання для цього раунду вже завершено.')]);
-            return;
-        }
-
-        setSaving(true);
-        setErrors([]);
-
-        try {
-            const promises = [];
-            for (const category of categories) {
-                for (const criteria of category.criteria) {
-                    const scoreData = scores[criteria.id];
-                    if (!scoreData || scoreData.points === "") continue;
-
-                    const payload: JuryCriteriaRequestDto = {
-                        points: scoreData.points as number,
-                        additional: scoreData.additional,
-                        comment: scoreData.comment
-                    };
-
-                    const existing = existingScores[criteria.id];
-
-                    // Check if anything has actually changed
-                    const hasChanged = !existing ||
-                        existing.points !== payload.points ||
-                        existing.additional !== payload.additional ||
-                        existing.comment !== payload.comment;
-
-                    if (hasChanged) {
-                        promises.push(juryCriteriaService.updateScore(Number(submissionId), criteria.id, payload));
+            const updated = { ...criteria };
+            if (field === "points") {
+                if (value === "") {
+                    updated.points = "";
+                } else {
+                    const numValue = parseInt(value, 10);
+                    if (!isNaN(numValue)) {
+                        // Кастомні критерії оцінюються 0-5
+                        updated.points = Math.min(Math.max(numValue, 0), 5);
                     }
                 }
+            } else {
+                (updated as any)[field] = value;
             }
-
-            if (promises.length > 0) {
-                await Promise.all(promises);
-            }
-            setShowSuccessDialog(true);
-
-            const updatedScores = await juryCriteriaService.getMyScoresForSubmission(Number(submissionId));
-            const newExistingMap: Record<number, JuryCriteriaResponseDto> = {};
-            updatedScores.forEach(sc => newExistingMap[sc.criteria.id] = sc);
-            setExistingScores(newExistingMap);
-        } catch (err: any) {
-            const messages = err.response?.data?.messages;
-            setErrors(Array.isArray(messages) ? messages : [t('jury.errors.save_failed')]);
-        } finally {
-            setSaving(false);
-        }
+            return updated;
+        }));
     };
 
     return {
         submission, categories, scores, loading, saving, errors, setErrors,
-        showSuccessDialog, setShowSuccessDialog, handleScoreChange, handleSaveScores,
-        additionalCount, t
+        showSuccessDialog, setShowSuccessDialog, handleScoreChange, handleSaveScores, t,
+        customCriteria, handleCustomCriteriaChange
     };
 };

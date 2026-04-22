@@ -1,6 +1,7 @@
 import type {CriteriaResponseDto} from '../criteria/criteria.dto';
 
 export interface JuryCriteriaResponseDto {
+    id: any;
     jurySubmissionId: number;
     criteria: CriteriaResponseDto;
     points: number;
@@ -9,6 +10,9 @@ export interface JuryCriteriaResponseDto {
 }
 
 export interface JuryCriteriaRequestDto {
+    id?: number | null;
+    submissionId: number;
+    criteriaId: number | null;
     points: number;
     additional: boolean;
     comment: string;

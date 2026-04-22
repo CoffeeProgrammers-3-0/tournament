@@ -11,21 +11,47 @@ import {getNotificationLink} from "../utils/notificationRouter.ts";
 interface NotificationContextType {
     unseenCount: number;
     latestNotification: any;
+    setUnseenCount: (count: number) => void; // <--- Add this
 }
 
 const NotificationContext = createContext<NotificationContextType>({
     unseenCount: 0,
-    latestNotification: null
+    latestNotification: null,
+    setUnseenCount: () => {
+    } // <--- Default empty function
 });
 
 export const useNotification = () => useContext(NotificationContext);
 
-export const NotificationProvider = ({ children }: { children: ReactNode }) => {
-    const { t } = useTranslation();
+export const NotificationProvider = ({children}: { children: ReactNode }) => {
+    const {t} = useTranslation();
     const navigate = useNavigate();
     const isLoggedIn = !!Cookies.get("userId");
-    const { unseenCount, latestNotification } = useNotificationSocket(isLoggedIn);
+
+    // 1. Get the data from the socket hook
+    const {unseenCount: socketUnseenCount, latestNotification} = useNotificationSocket(isLoggedIn);
+
+    // 2. Create a local state to manage the count UI
+    const [localUnseenCount, setLocalUnseenCount] = useState(0);
     const [toastOpen, setToastOpen] = useState(false);
+
+    // 3. Sync local state whenever the socket sends a new count
+    useEffect(() => {
+        setLocalUnseenCount(socketUnseenCount);
+    }, [socketUnseenCount]);
+
+    useEffect(() => {
+        if (latestNotification) setToastOpen(true);
+    }, [latestNotification]);
+
+    const handleNotificationClick = () => {
+        setToastOpen(false);
+        if (latestNotification) {
+            setLocalUnseenCount(prev => Math.max(0, prev - 1));
+            const link = getNotificationLink(latestNotification);
+            navigate(link);
+        }
+    };
 
     const payloadData = useMemo(() => {
         if (!latestNotification || latestNotification.isGlobal) return {};
@@ -40,16 +66,8 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
         if (latestNotification) setToastOpen(true);
     }, [latestNotification]);
 
-    const handleNotificationClick = () => {
-        setToastOpen(false);
-        if (latestNotification) {
-            const link = getNotificationLink(latestNotification);
-            navigate(link);
-        }
-    };
-
-    const { title, body } = useMemo(() => {
-        if (!latestNotification) return { title: '', body: '' };
+    const {title, body} = useMemo(() => {
+        if (!latestNotification) return {title: '', body: ''};
 
         const rawContent = String(latestNotification.content || '');
 
@@ -59,7 +77,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
                 const [name, id, key] = parts.length >= 3 ? parts : ['', '', rawContent];
 
                 return {
-                    title: t(key, { tournamentName: name, roundName: name, teamName: name, id }) as string,
+                    title: t(key, {tournamentName: name, roundName: name, teamName: name, id}) as string,
                     body: t('common.click_to_view')
                 };
             } else {
@@ -80,14 +98,18 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
     }, [latestNotification, payloadData, t]);
 
     return (
-        <NotificationContext.Provider value={{ unseenCount, latestNotification }}>
+        // 5. Pass the local count and the setter to the Provider
+        <NotificationContext.Provider value={{
+            unseenCount: localUnseenCount,
+            latestNotification,
+            setUnseenCount: setLocalUnseenCount
+        }}>
             {children}
             <Snackbar
                 open={toastOpen}
                 autoHideDuration={6000}
                 onClose={() => setToastOpen(false)}
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-            >
+                anchorOrigin={{vertical: 'bottom', horizontal: 'right'}}>
                 <Paper
                     onClick={handleNotificationClick}
                     sx={{
@@ -95,20 +117,27 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
                         borderLeft: '4px solid',
                         borderColor: latestNotification?.isGlobal ? 'secondary.main' : 'primary.main',
                         transition: 'transform 0.2s',
-                        '&:hover': { bgcolor: 'action.hover', transform: 'translateY(-2px)' }
+                        '&:hover': {bgcolor: 'action.hover', transform: 'translateY(-2px)'}
                     }}
                 >
-                    <Avatar sx={{ bgcolor: latestNotification?.isGlobal ? 'secondary.light' : 'primary.light' }}>
-                        {latestNotification?.isGlobal ? <CampaignIcon color="secondary" /> : <NotificationsActiveIcon color="primary" />}
+                    <Avatar sx={{bgcolor: latestNotification?.isGlobal ? 'secondary.light' : 'primary.light'}}>
+                        {latestNotification?.isGlobal ? <CampaignIcon color="secondary"/> :
+                            <NotificationsActiveIcon color="primary"/>}
                     </Avatar>
-                    <Box sx={{ flex: 1, minWidth: 200, maxWidth: 300 }}>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
+                    <Box sx={{flex: 1, minWidth: 200, maxWidth: 300}}>
+                        <Typography variant="subtitle2" sx={{fontWeight: 800}}>
                             {title}
                         </Typography>
                         <Typography
                             variant="body2"
                             color="text.secondary"
-                            sx={{ opacity: 0.8, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}
+                            sx={{
+                                opacity: 0.8,
+                                display: '-webkit-box',
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: 'vertical',
+                                overflow: 'hidden'
+                            }}
                         >
                             {body}
                         </Typography>

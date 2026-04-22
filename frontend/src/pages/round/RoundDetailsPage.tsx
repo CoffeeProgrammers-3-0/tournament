@@ -64,6 +64,7 @@ const RoundDetailsPage = () => {
         leaderboard: details.leaderboard,
         fetchEvents: details.fetchEvents,
         fetchMessages: details.fetchMessages,
+        isAdmin: isAdmin,
         t: t
     });
 
@@ -221,7 +222,8 @@ const RoundDetailsPage = () => {
                                onExportLeaderboard={editors.handleExportLeaderboard} isExporting={editors.isExporting}
                                errors={editors.errors}
                                onAssignAllTeams={editors.handleAssignAllTeams}
-                    onUnassignAllTeams={editors.handleUnassignAllTeams} myTeamId={details.myTeamId}/>
+                               onUnassignAllTeams={editors.handleUnassignAllTeams} myTeamId={details.myTeamId}
+                               maxPoints={details.maxPoints}/>
             )}
             {activeTabId === "submissions" && (
                 <RoundSubmissionsTab submissions={details.submissions} loadingTab={details.loadingTab}

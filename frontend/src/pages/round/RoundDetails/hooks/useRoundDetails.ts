@@ -111,6 +111,8 @@ export const useRoundDetails = (id: string) => {
         }
     }, [id]);
 
+    const [maxPoints, setMaxPoints] = useState<number>(0);
+
     const loadLeaderboard = useCallback(async (isFirstLoad: boolean = false) => {
         if (!id) return;
         fetchMyTeamId();
@@ -128,21 +130,35 @@ export const useRoundDetails = (id: string) => {
 
         try {
             const pageSize = 10;
-            const data = await roundService.getLeaderboardForRound(Number(id), {
+            // The response is of type LeaderBoardResponseDto
+            const response = await roundService.getLeaderboardForRound(Number(id), {
                 last_team_points: lastTeam ? lastTeam.points : 9999,
                 last_team_id: lastTeam ? lastTeam.id : 0,
                 size: pageSize
             });
 
+            // FIX: Extract the array and the maxPoints separately
+            const newTeams = response?.leaderboard || [];
+            const mPoints = response?.maxPoints || 0;
+
+            setMaxPoints(mPoints);
+
             setLeaderboard(prev => {
-                if (isFirstLoad) return data;
-                const combined = [...prev, ...data];
+                // Safety: Ensure prev is always an array
+                const safePrev = Array.isArray(prev) ? prev : [];
+
+                if (isFirstLoad) return newTeams;
+
+                const combined = [...safePrev, ...newTeams];
+                // Remove duplicates by ID
                 return combined.filter((v, i, a) => a.findIndex(t => t.id === v.id) === i);
             });
 
-            setHasMore(data.length === pageSize);
+            setHasMore(newTeams.length === pageSize);
+
         } catch (error) {
             console.error("Error fetching leaderboard:", error);
+            setLeaderboard([]); // Reset on error to prevent UI crash
         } finally {
             setLoadingTab(false);
             setIsNextPageLoading(false);
@@ -249,6 +265,7 @@ export const useRoundDetails = (id: string) => {
         fetchEvents,
         fetchMessages,
         myTeamId,
-        fetchRound
+        fetchRound,
+        maxPoints
     };
 };

@@ -29,45 +29,47 @@ client.interceptors.request.use(
 client.interceptors.response.use(
     (response: AxiosResponse) => response,
     async (error) => {
-        const { response, config } = error;
-        const originalRequest = config as CustomInternalConfig;
+        const originalRequest = error.config as CustomInternalConfig;
 
-        if (response) {
-            const status = response.status;
+        if (!error.response) {
+            console.error("Network error or CORS issue. No response received.");
+            AuthService.redirectToKeycloak();
+            // window.location.replace('/login');
+            return Promise.reject(error);
+        }
 
-            if (originalRequest.url?.includes('/auth/callback') ||
-                originalRequest.url?.includes('/auth/refresh')) {
-                return Promise.reject(error);
-            }
+        const { response } = error;
+        const status = response.status;
 
-            // 1. Обробка 401 (Refresh Token)
-            if (status === 401 && originalRequest && !originalRequest._retried) {
-                originalRequest._retried = true;
-                try {
-                    const success = await AuthService.refresh();
-                    if (success) {
-                        const newToken = Cookies.get('accessToken');
-                        if (newToken && originalRequest.headers) {
-                            originalRequest.headers.Authorization = `Bearer ${newToken}`;
-                        }
+        if (originalRequest.url?.includes('/auth/callback') ||
+            originalRequest.url?.includes('/auth/refresh')) {
+            return Promise.reject(error);
+        }
+
+        if (status === 401 && !originalRequest._retried) {
+            originalRequest._retried = true;
+
+            try {
+                console.log("401 detected, attempting token refresh...");
+                const success = await AuthService.refresh();
+
+                if (success) {
+                    const newToken = Cookies.get('accessToken');
+                    if (newToken) {
+                        originalRequest.headers.Authorization = `Bearer ${newToken}`;
                         return client(originalRequest);
                     }
-                } catch (refreshError) {
-                    return Promise.reject(refreshError);
                 }
-            }
-
-            // 2. Додана логіка: Редірект на 403 та 404
-            if (status === 403) {
-                window.location.replace('/403');
-                return Promise.reject(error); // Зупиняємо виконання коду в компоненті
-            }
-
-            if (status === 404) {
-                window.location.replace('/404');
-                return Promise.reject(error);
+            } catch (refreshError) {
+                console.error("Refresh token expired or failed. Logging out.");
+                Cookies.remove('accessToken');
+                window.location.replace('/login');
+                return Promise.reject(refreshError);
             }
         }
+
+        // if (status === 403) window.location.replace('/403');
+        if (status === 404) window.location.replace('/404');
 
         return Promise.reject(error);
     }

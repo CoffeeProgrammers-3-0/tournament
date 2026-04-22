@@ -21,6 +21,7 @@ type Params = {
     leaderboard: TeamLeaderboardResponseDto[];
     fetchEvents: (page: number) => Promise<void>; // Оновлено
     fetchMessages: (page: number) => Promise<void>; // Оновлено
+    isAdmin: boolean;
     t: any
 };
 
@@ -65,6 +66,7 @@ export const useRoundEditors = (params: Params) => {
         leaderboard: params.leaderboard,
         fetchSubmissions: params.fetchSubmissions,
         t: params.t,
+        isAdmin: params.isAdmin,
         ...base,
     });
 

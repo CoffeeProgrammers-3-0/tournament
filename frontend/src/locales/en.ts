@@ -699,6 +699,11 @@ export const en = {
             "description": "Solution Description",
             "placeholder_desc": "Briefly describe your work..."
         },
+        "actions": {
+            "delete": "Delete",
+            "update": "Update",
+            "submit": "Submit"
+        },
         "status": {
             "not_submitted": "Not submitted yet",
             "submitted": "Project submitted",

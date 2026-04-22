@@ -31,6 +31,7 @@ import {RoundFormula} from "./RoundFormula.tsx";
 import GroupRemoveIcon from "@mui/icons-material/GroupRemove";
 
 type Props = {
+    maxPoints: number;
     leaderboard: TeamLeaderboardResponseDto[];
     setLeaderboard: React.Dispatch<React.SetStateAction<TeamLeaderboardResponseDto[]>>;
     loadingTab: boolean;
@@ -62,7 +63,7 @@ export const RoundTeamsTab = ({
                                   setLeaderboard, leaderboard, loadingTab, hasMore, isNextPageLoading, onLoadMore,
                                   roundData, onOpenStats, navigate, t, isAdmin, onOpenAddMissingTeamsModal,
                                   onOpenAdvanceTeamsModal, onUnassignTeam, onExportLeaderboard, isExporting, errors,
-                                  onAssignAllTeams, onUnassignAllTeams, myTeamId
+                                  onAssignAllTeams, onUnassignAllTeams, myTeamId, maxPoints
                               }: Props) => {
 
 
@@ -268,10 +269,13 @@ export const RoundTeamsTab = ({
                                     </TableCell>
                                     <TableCell align="right">
                                         <Chip
-                                            label={team.points}
+                                            label={`${team.points} / ${maxPoints}`}
                                             color={index < (roundData?.countOfWinners || 0) ? "success" : "default"}
                                             variant="filled"
-                                            sx={{ fontWeight: 700 }}
+                                            sx={{
+                                                fontWeight: 700,
+                                                minWidth: '80px'
+                                            }}
                                         />
                                     </TableCell>
                                     <TableCell align="center">
