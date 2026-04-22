@@ -248,6 +248,7 @@ export const useRoundDetails = (id: string) => {
         commsLoading,
         fetchEvents,
         fetchMessages,
-        myTeamId
+        myTeamId,
+        fetchRound
     };
 };

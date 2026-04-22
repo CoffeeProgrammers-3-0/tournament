@@ -13,7 +13,7 @@ export const useRoundTeamsManager = ({
                                          closeConfirm,
                                          myTeamId,
                                          isAdmin,
-    t
+                                         t
                                      }: any) => {
 
     const [addMissingModalOpen, setAddMissingModalOpen] = useState(false);
@@ -34,7 +34,7 @@ export const useRoundTeamsManager = ({
     const [statsViewMode, setStatsViewMode] = useState<"aggregated" | "detailed">("aggregated");
 
     const handleOpenAddMissingModal = useCallback(async () => {
-        clearErrors();
+        if (typeof clearErrors === 'function') clearErrors();
         setIsTeamsLoading(true);
         setAddMissingModalOpen(true);
 
@@ -42,11 +42,11 @@ export const useRoundTeamsManager = ({
             const res = await roundService.getTeamsNotInRound(roundId, { page: 0, size: 500 });
             setMissingTeams(res.content || []);
         } catch (e) {
-            handleError(e, "Помилка завантаження команд");
+            if (typeof handleError === 'function') handleError(e, "Помилка завантаження команд");
         } finally {
             setIsTeamsLoading(false);
         }
-    }, []);
+    }, [clearErrors, handleError, roundId]);
 
     const handleConfirmAddMissing = useCallback(async () => {
         if (!selectedMissingIds.length) return;
@@ -57,11 +57,11 @@ export const useRoundTeamsManager = ({
             await fetchSubmissions();
             setAddMissingModalOpen(false);
         } catch (e) {
-            handleError(e, "Помилка додавання");
+            if (typeof handleError === 'function') handleError(e, "Помилка додавання");
         } finally {
             setIsTeamsLoading(false);
         }
-    }, [selectedMissingIds]);
+    }, [selectedMissingIds, roundId, fetchSubmissions, handleError]);
 
     const handleOpenAdvanceModal = useCallback(async () => {
         setAdvanceModalOpen(true);
@@ -73,9 +73,9 @@ export const useRoundTeamsManager = ({
             const topIds = leaderboard.slice(0, 3).map((t: any) => t.id);
             setSelectedAdvanceIds(topIds);
         } catch (e) {
-            handleError(e, t('round_details.errors.loadStats'));
+            if (typeof handleError === 'function') handleError(e, t('round_details.errors.loadStats'));
         }
-    }, [leaderboard]);
+    }, [leaderboard, roundId, t, handleError]);
 
     const handleConfirmAdvance = useCallback(async () => {
         if (!targetAdvanceRoundId) return;
@@ -85,11 +85,11 @@ export const useRoundTeamsManager = ({
             await roundService.assignTeams(targetAdvanceRoundId, selectedAdvanceIds);
             setAdvanceModalOpen(false);
         } catch (e) {
-            handleError(e, "Помилка переведення");
+            if (typeof handleError === 'function') handleError(e, "Помилка переведення");
         } finally {
             setIsTeamsLoading(false);
         }
-    }, [targetAdvanceRoundId, selectedAdvanceIds]);
+    }, [targetAdvanceRoundId, selectedAdvanceIds, handleError]);
 
     const handleUnassignTeam = useCallback((teamId: number) => {
         triggerConfirm({
@@ -102,38 +102,51 @@ export const useRoundTeamsManager = ({
                     await fetchSubmissions();
                     closeConfirm();
                 } catch (e) {
-                    handleError(e, "Помилка видалення");
+                    if (typeof handleError === 'function') handleError(e, "Помилка видалення");
                 }
             }
         });
-    }, []);
+    }, [t, triggerConfirm, roundId, fetchSubmissions, closeConfirm, handleError]);
 
-    const handleOpenStats = useCallback(async (teamId: number, e: React.MouseEvent) => {
-        e.stopPropagation();
+    const handleOpenStats = useCallback(async (teamId: number, e?: React.MouseEvent) => {
+        // Fallback catch incase propogation didn't trigger
+        if (e && typeof e.stopPropagation === 'function') {
+            e.stopPropagation();
+        }
+
         if (!roundId) return;
-        clearErrors();
+
+        // Fix: If clearErrors is missing/undefined, executing it normally would crash the function silently.
+        if (typeof clearErrors === 'function') {
+            clearErrors();
+        }
+
         try {
             let stats;
             if (isAdmin) {
-                // Admins can see any team's stats
                 stats = await teamService.getTeamStats(teamId, roundId);
-            } else if (teamId === myTeamId) {
-                // Regular users can only fetch their own team's stats
+            } else if (String(teamId) === String(myTeamId)) { // Fix: Enforce string coercion
                 stats = await teamService.getMyTeamStats(roundId);
             } else {
-                return; // Guard: Should not reach here if UI is conditionally rendered, but safe to have
+                return;
             }
             setSelectedStats(stats);
             setStatsModalOpen(true);
         } catch (error: any) {
-            handleError(error, t('round_details.errors.loadStats'));
+            // Fix: Fallback for unhandled promise rejection missing handleError
+            if (typeof handleError === 'function') {
+                handleError(error, t('round_details.errors.loadStats'));
+            } else {
+                console.error("Failed to load stats:", error);
+            }
         }
     }, [roundId, isAdmin, myTeamId, clearErrors, handleError, t]);
 
     const handleExportLeaderboard = useCallback(async () => {
         if (!roundId) return;
         setIsExporting(true);
-        clearErrors();
+        if (typeof clearErrors === 'function') clearErrors();
+
         try {
             const blob = await roundService.exportLeaderboard(roundId);
             const url = window.URL.createObjectURL(blob);
@@ -145,7 +158,7 @@ export const useRoundTeamsManager = ({
             link.remove();
             window.URL.revokeObjectURL(url);
         } catch (error: any) {
-            handleError(error, "Помилка експорту лідерборду");
+            if (typeof handleError === 'function') handleError(error, "Помилка експорту лідерборду");
             triggerConfirm({ title: "Export Failed", description: "Failed to download leaderboard file.", confirmColor: "error", onConfirm: closeConfirm });
         } finally {
             setIsExporting(false);
@@ -158,27 +171,25 @@ export const useRoundTeamsManager = ({
         const criteriaSums: Record<string, { totalPoints: number; totalBonus: number; count: number }> = {};
         let grandTotal = 0;
 
-        // 1. Aggregate standard points
         if (selectedStats.pointsPerJury) {
             Object.values(selectedStats.pointsPerJury).forEach(juryScores => {
                 if (!juryScores) return;
                 Object.entries(juryScores).forEach(([criteria, pointData]) => {
                     if (!criteriaSums[criteria]) criteriaSums[criteria] = { totalPoints: 0, totalBonus: 0, count: 0 };
-                    criteriaSums[criteria].totalPoints += pointData.points;
+                    criteriaSums[criteria].totalPoints += pointData.points || 0;
                     criteriaSums[criteria].count += 1;
-                    grandTotal += pointData.points;
+                    grandTotal += pointData.points || 0;
                 });
             });
         }
 
-        // 2. Aggregate additional/bonus points
         if (selectedStats.additionalPointsPerJury) {
             Object.values(selectedStats.additionalPointsPerJury).forEach(juryBonus => {
                 if (!juryBonus) return;
                 Object.entries(juryBonus).forEach(([criteria, bonusPoints]) => {
                     if (!criteriaSums[criteria]) criteriaSums[criteria] = { totalPoints: 0, totalBonus: 0, count: 0 };
-                    criteriaSums[criteria].totalBonus += bonusPoints;
-                    grandTotal += bonusPoints;
+                    criteriaSums[criteria].totalBonus += bonusPoints || 0;
+                    grandTotal += bonusPoints || 0;
                 });
             });
         }
@@ -186,7 +197,6 @@ export const useRoundTeamsManager = ({
         return { criteriaSums, grandTotal };
     }, [selectedStats]);
 
-    // Extract unique jury and criteria lists
     const juryList = useMemo(() => {
         if (!selectedStats) return [];
         const juries = new Set<string>();
@@ -206,10 +216,10 @@ export const useRoundTeamsManager = ({
                 setIsTeamsLoading(true);
                 try {
                     await roundService.assignAllTeams(roundId);
-                    await fetchSubmissions(); // Оновлюємо дані після додавання
+                    await fetchSubmissions();
                     closeConfirm();
                 } catch (e) {
-                    handleError(e, "Помилка додавання всіх команд");
+                    if (typeof handleError === 'function') handleError(e, "Помилка додавання всіх команд");
                 } finally {
                     setIsTeamsLoading(false);
                 }
@@ -226,10 +236,10 @@ export const useRoundTeamsManager = ({
                 setIsTeamsLoading(true);
                 try {
                     await roundService.unassignAllTeams(roundId);
-                    await fetchSubmissions(); // Оновлюємо дані після видалення
+                    await fetchSubmissions();
                     closeConfirm();
                 } catch (e) {
-                    handleError(e, "Помилка видалення всіх команд");
+                    if (typeof handleError === 'function') handleError(e, "Помилка видалення всіх команд");
                 } finally {
                     setIsTeamsLoading(false);
                 }

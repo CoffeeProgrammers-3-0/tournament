@@ -8,8 +8,9 @@ import {
     DialogTitle
 } from "@mui/material";
 import {useTranslation} from "react-i18next";
+import {ErrorMessages} from "../../../../components/main/ErrorMessages.tsx";
 
-export const UniversalConfirmDialog = ({ config, onClose }: { config: any, onClose: () => void }) => {
+export const UniversalConfirmDialog = ({ config, onClose, errors }: { config: any, onClose: () => void, errors: string[] }) => {
     const {t} = useTranslation();
 
     return (
@@ -18,6 +19,7 @@ export const UniversalConfirmDialog = ({ config, onClose }: { config: any, onClo
             onClose={onClose}
             PaperProps={{ sx: { borderRadius: "20px", p: 1, minWidth: "320px" } }}
         >
+            <ErrorMessages errors={errors} />
             <DialogTitle sx={{ fontWeight: 800 }}>{config.title}</DialogTitle>
             <DialogContent>
                 <DialogContentText color="text.primary">

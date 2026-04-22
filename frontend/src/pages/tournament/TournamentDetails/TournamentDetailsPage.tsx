@@ -48,6 +48,7 @@ export const TournamentDetailsPage = () => {
             <UniversalConfirmDialog
                 config={state.confirmDialog}
                 onClose={state.closeDialog}
+                errors={state.errors}
             />
 
             <CreateRoundDialog state={state} t={t}/>

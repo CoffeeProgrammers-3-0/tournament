@@ -48,24 +48,23 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
-    // Визначаємо, що показувати в тості, залежно від типу сповіщення
     const { title, body } = useMemo(() => {
         if (!latestNotification) return { title: '', body: '' };
 
+        const rawContent = String(latestNotification.content || '');
+
         if (latestNotification.isGlobal) {
             if (latestNotification.system) {
-                // Парсимо системне повідомлення "name : id : key"
-                const parts = latestNotification.content?.split(':').map((p: string) => p.trim()) || [];
-                const [name, id, key] = parts.length >= 3 ? parts : ['', '', latestNotification.content];
+                const parts = rawContent.split(':').map((p: string) => p.trim());
+                const [name, id, key] = parts.length >= 3 ? parts : ['', '', rawContent];
 
                 return {
                     title: t(key, { tournamentName: name, roundName: name, teamName: name, id }) as string,
                     body: t('common.click_to_view')
                 };
             } else {
-                // Звичайне повідомлення від адміна
-                // Видаляємо HTML-теги для короткого прев'ю в тості
-                const plainTextBody = latestNotification.content?.replace(/<[^>]+>/g, '') || '';
+                const plainTextBody = rawContent.replace(/<[^>]+>/g, '');
+
                 return {
                     title: t('notifications.global.admin_message') as string,
                     body: plainTextBody.length > 50 ? `${plainTextBody.substring(0, 50)}...` : plainTextBody
@@ -73,7 +72,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
             }
         }
 
-        // Звичайне персональне сповіщення
+        // Personal notification logic
         return {
             title: t(latestNotification.key, payloadData) as string,
             body: t('common.click_to_view') as string

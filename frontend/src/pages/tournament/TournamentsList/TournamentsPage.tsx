@@ -88,8 +88,8 @@ export const TournamentsPage = () => {
                 {/* Показуємо вкладки ТІЛЬКИ для адміна */}
                 {isAdmin ? (
                     <Tabs value={tabValue} onChange={(_, v) => handleTabChange(v)} sx={{ minHeight: 48 }}>
-                        <Tab value={TABS.MAIN} label={t("tournaments.tabs.available")} />
-                        <Tab value={TABS.ADMIN} label={t("tournaments.tabs.admin")} sx={{ color: "error.main", fontWeight: 700 }} />
+                        {!isAdmin ? <Tab value={TABS.MAIN} label={t("tournaments.tabs.available")} /> :
+                        <Tab value={TABS.ADMIN} label={t("tournaments.tabs.admin")} sx={{ color: "error.main", fontWeight: 700 }} />}
                     </Tabs>
                 ) : (
                     // Заглушка для звичайного користувача, щоб зберегти Flex-вирівнювання
