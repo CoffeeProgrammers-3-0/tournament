@@ -8,6 +8,7 @@ import com.project.backend.dto.team.StatisticResponse;
 import com.project.backend.dto.team.StatisticRowDTO;
 import com.project.backend.dto.team.TeamLeaderboardResponse;
 import com.project.backend.dto.user.UserCreateRequestForTeam;
+import com.project.backend.mappers.CategoryMapper;
 import com.project.backend.models.Round;
 import com.project.backend.models.Team;
 import com.project.backend.models.Tournament;
@@ -18,10 +19,7 @@ import com.project.backend.models.constants.TournamentStatus;
 import com.project.backend.models.ids.TeamParticipantId;
 import com.project.backend.models.join_tables.TeamParticipant;
 import com.project.backend.repositories.*;
-import com.project.backend.repositories.specifications.RoundSpecification;
-import com.project.backend.repositories.specifications.TeamParticipantSpecification;
-import com.project.backend.repositories.specifications.TeamSpecification;
-import com.project.backend.repositories.specifications.TournamentSpecification;
+import com.project.backend.repositories.specifications.*;
 import com.project.backend.services.interfaces.TeamService;
 import com.project.backend.services.interfaces.UserService;
 import jakarta.persistence.EntityNotFoundException;
@@ -45,6 +43,8 @@ import java.util.Objects;
 @Slf4j
 @Transactional(readOnly = true)
 public class TeamServiceImpl implements TeamService {
+    private final JurySubmissionRepository jurySubmissionRepository;
+    private final JuryRepository juryRepository;
     private final TeamRepository teamRepository;
     private final RoundRepository roundRepository;
     private final TeamParticipantRepository teamParticipantRepository;
@@ -52,6 +52,7 @@ public class TeamServiceImpl implements TeamService {
     private final UserService userService;
     private final ApplicationEventPublisher eventPublisher;
     private final CategoryRepository categoryRepository;
+    private final CategoryMapper categoryMapper;
 
     @Override
     public boolean check(Long tournamentId, User user) {
@@ -80,7 +81,7 @@ public class TeamServiceImpl implements TeamService {
         Tournament tournament = tournamentRepository.findById(tournamentId)
                 .orElseThrow(() -> new EntityNotFoundException("Tournament with id " + tournamentId + " not found"));
 
-        if(tournament.getStatus() != TournamentStatus.REGISTRATION) {
+        if (tournament.getStatus() != TournamentStatus.REGISTRATION) {
             throw new IllegalStateException("Can not create team on tournament with status " + tournament.getStatus());
         }
 
@@ -102,7 +103,7 @@ public class TeamServiceImpl implements TeamService {
             if (exists) {
                 throw new IllegalStateException(
                         "User with email " + request.getEmail() +
-                                " already has a team in this tournament"
+                        " already has a team in this tournament"
                 );
             }
         }
@@ -118,10 +119,10 @@ public class TeamServiceImpl implements TeamService {
                 user.setEmail(request.getEmail());
                 user = userService.createUser(user, Role.USER);
             } else {
-                if(user.getRole() == Role.JURY) {
+                if (user.getRole() == Role.JURY) {
                     throw new IllegalStateException("Jury " + user.getEmail() + " can not be member of a team");
                 }
-                if(user.getRole() == Role.ADMIN) {
+                if (user.getRole() == Role.ADMIN) {
                     throw new IllegalStateException("Admin " + user.getEmail() + " can not be member of a team");
                 }
             }
@@ -221,11 +222,11 @@ public class TeamServiceImpl implements TeamService {
             user.setEmail(userCreateRequestForTeam.getEmail());
             user = userService.createUser(user, Role.USER);
         } else {
-            if(user.getRole() == Role.JURY) {
+            if (user.getRole() == Role.JURY) {
                 throw new IllegalStateException("Jury " + user.getEmail() + " can not be member of a team");
             }
 
-            if(user.getRole() == Role.ADMIN) {
+            if (user.getRole() == Role.ADMIN) {
                 throw new IllegalStateException("Admin " + user.getEmail() + " can not be member of a team");
             }
 
@@ -251,7 +252,7 @@ public class TeamServiceImpl implements TeamService {
 
         team.getTeamParticipants().add(participant);
 
-        if(userCreateRequestForTeam.getIsLeader()) {
+        if (userCreateRequestForTeam.getIsLeader()) {
             team.getTeamParticipants()
                     .stream()
                     .filter(tp -> tp.getTournament().getId().equals(tournamentId))
@@ -359,9 +360,20 @@ public class TeamServiceImpl implements TeamService {
         response.setId(first.getTeamId());
         response.setName(first.getTeamName());
         response.setEmail(first.getTeamEmail());
+        response.setCategories(
+                categoryRepository.findAll(
+                        CategorySpecification.byRoundId(roundId)
+                ).stream().map(categoryMapper::fromCategoryToResponse).toList());
+        response.setJuryNames(
+                jurySubmissionRepository.findAll(
+                        Specification.allOf(
+                                JurySubmissionSpecification.byRoundId(roundId),
+                                JurySubmissionSpecification.byTeamId(teamId)
+                        )
+                ).stream().map(js -> js.getJury().getEmail()).toList());
 
         for (StatisticRowDTO row : rows) {
-            if(row.isAdditional()) {
+            if (row.isAdditional()) {
                 response.getAdditionalPointsPerJury()
                         .computeIfAbsent(row.getJuryEmail(), k -> new ArrayList<>())
                         .add(new PointResponse(row.getPoints(), row.getComment()));
@@ -422,7 +434,8 @@ public class TeamServiceImpl implements TeamService {
 
     @Override
     public Long getIdOfMyTeamByRound(Long roundId, User me) {
-        Team team = teamRepository.findOne(Specification.allOf(TeamSpecification.byUserId(me.getId()),TeamSpecification.byRoundId(roundId))).orElse(null);;
+        Team team = teamRepository.findOne(Specification.allOf(TeamSpecification.byUserId(me.getId()), TeamSpecification.byRoundId(roundId))).orElse(null);
+        ;
         return team == null ? -1 : team.getId();
     }
 

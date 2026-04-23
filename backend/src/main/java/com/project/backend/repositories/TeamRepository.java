@@ -12,18 +12,13 @@ import java.util.List;
 
 public interface TeamRepository extends JpaRepository<Team, Long>, JpaSpecificationExecutor<Team> {
     @Query("SELECT new com.project.backend.dto.team.StatisticRowDTO(" +
-           ":teamId, t.name, t.email, js.jury.email, c.text, jsc.points, jsc.isAdditional, jsc.comment) " +
+           "t.id, t.name, t.email, js.jury.email, c.text, jsc.points, jsc.isAdditional, jsc.comment) " +
            "FROM Team t " +
-           "CROSS JOIN User j " +
-           "LEFT JOIN Criteria c ON (c.category.round.id = :roundId) " +
-           "LEFT JOIN JurySubmissionCriteria jsc ON (" +
-           "    jsc.jurySubmission.submission.team.id = t.id AND " +
-           "    jsc.jurySubmission.jury.id = j.id AND " +
-           "    (jsc.criteria.id = c.id OR (jsc.criteria IS NULL AND jsc.isAdditional = true))" +
-           ") " +
-           "LEFT JOIN jsc.jurySubmission js " +
-           "WHERE t.id = :teamId AND j.role = 'JURY' " +
-           "AND (c.id IS NOT NULL OR jsc.id IS NOT NULL)")
+           "JOIN t.submissions s " +
+           "JOIN s.jurySubmissions js " +
+           "JOIN js.criteriaPoints jsc " +
+           "JOIN jsc.criteria c " +
+           "WHERE s.round.id = :roundId AND t.id = :teamId")
     List<StatisticRowDTO> getStatisticsByTeamAndRound(@Param("teamId") Long teamId,
                                                       @Param("roundId") Long roundId);
 

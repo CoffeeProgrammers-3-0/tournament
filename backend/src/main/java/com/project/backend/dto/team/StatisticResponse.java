@@ -1,5 +1,6 @@
 package com.project.backend.dto.team;
 
+import com.project.backend.dto.category.CategoryResponse;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -18,6 +19,10 @@ public class StatisticResponse {
 
     @Schema(description = "Email of the team", example = "coffee.programmers@example.com")
     private String email;
+
+    private List<CategoryResponse> categories;
+
+    private List<String> juryNames;
 
     @Schema(description = "Points per jury in a nested map structure")
     private Map<String, Map<String, PointResponse>> pointsPerJury;

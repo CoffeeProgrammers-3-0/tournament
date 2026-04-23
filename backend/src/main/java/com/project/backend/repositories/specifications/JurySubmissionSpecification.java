@@ -60,4 +60,12 @@ public class JurySubmissionSpecification {
         return (root, query, cb) ->
                 cb.equal(root.get("submission").get("round").get("id"), roundId);
     }
+
+    public static Specification<JurySubmission> byTeamId(Long teamId) {
+        log.debug("JurySubmissionSpecification.byTeamId called with teamId={}", teamId);
+        if (teamId == null) return null;
+
+        return (root, query, cb) ->
+                cb.equal(root.get("submission").get("team").get("id"), teamId);
+    }
 }
