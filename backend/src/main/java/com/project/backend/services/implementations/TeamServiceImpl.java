@@ -35,6 +35,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
@@ -346,8 +347,11 @@ public class TeamServiceImpl implements TeamService {
         checkDraftAccessRound(roundId);
         List<StatisticRowDTO> rows = teamRepository.getStatisticsByTeamAndRound(teamId, roundId);
 
+        log.info("Statistics for team {} and round {}: {}", teamId, roundId, rows);
         StatisticResponse response = new StatisticResponse();
+
         response.setPointsPerJury(new HashMap<>());
+        response.setAdditionalPointsPerJury(new HashMap<>());
 
         if (rows.isEmpty()) return response;
 
@@ -359,8 +363,8 @@ public class TeamServiceImpl implements TeamService {
         for (StatisticRowDTO row : rows) {
             if(row.isAdditional()) {
                 response.getAdditionalPointsPerJury()
-                        .computeIfAbsent(row.getJuryEmail(), k -> new HashMap<>())
-                        .put(row.getCriteriaText(), new PointResponse(row.getPoints(), row.getComment()));
+                        .computeIfAbsent(row.getJuryEmail(), k -> new ArrayList<>())
+                        .add(new PointResponse(row.getPoints(), row.getComment()));
             } else {
                 response.getPointsPerJury()
                         .computeIfAbsent(row.getJuryEmail(), k -> new HashMap<>())
