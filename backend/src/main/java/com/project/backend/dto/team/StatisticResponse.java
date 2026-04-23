@@ -3,6 +3,7 @@ package com.project.backend.dto.team;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
+import java.util.List;
 import java.util.Map;
 
 @Data
@@ -22,5 +23,5 @@ public class StatisticResponse {
     private Map<String, Map<String, PointResponse>> pointsPerJury;
 
     @Schema(description = "Points per jury in a nested map structure")
-    private Map<String, Map<String, PointResponse>> additionalPointsPerJury;
+    private Map<String, List<PointResponse>> additionalPointsPerJury;
 }
