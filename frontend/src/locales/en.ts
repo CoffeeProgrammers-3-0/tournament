@@ -577,11 +577,17 @@ export const en = {
             }
         },
         "stats_modal": {
-            "title": "Team stats: {{teamName}}",
+            "title": "Team Statistics",
             "view_aggregated": "Aggregated",
             "view_detailed": "Detailed",
-            "criteria": "Criterion",
-            "total": "Total",
+            "category_criteria": "Category / Criteria",
+            "weighted_average": "Weighted average",
+            "bonus_details": "Bonus Details",
+            "jury": "Jury",
+            "points": "Points",
+            "comment": "Comment",
+            "no_bonus_points": "No bonus points.",
+            "loading": "Loading statistics...",
             "total_score": "TOTAL SCORE",
             "close": "Close",
             "open": "Detailed statistics"

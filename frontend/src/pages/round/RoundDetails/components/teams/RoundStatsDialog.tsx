@@ -69,7 +69,7 @@ export const RoundStatsDialog = ({
                         <Box display="flex" justifyContent="space-between" alignItems="center" gap={2}>
                             <Box>
                                 <Typography variant="overline" color="text.secondary" fontWeight={600}>
-                                    Team Statistics
+                                    {t("round_details.stats_modal.title")}
                                 </Typography>
                                 <Typography variant="h5" fontWeight={800} color="primary.main">
                                     {selectedStats.name}
@@ -121,12 +121,12 @@ export const RoundStatsDialog = ({
                                 <TableHead sx={{ bgcolor: "grey.100" }}>
                                     <TableRow>
                                         <TableCell sx={{ fontWeight: 800, py: 2 }}>
-                                            Category / Criteria
+                                            {t("round_details.stats_modal.category_criteria")}
                                         </TableCell>
 
                                         {statsViewMode === "aggregated" ? (
                                             <TableCell align="right" sx={{ fontWeight: 800 }}>
-                                                Weighted average
+                                                {t("round_details.stats_modal.weighted_average")}
                                             </TableCell>
                                         ) : (
                                             juryList.map((jury) => (
@@ -230,16 +230,22 @@ export const RoundStatsDialog = ({
 
                         <Box mt={4}>
                             <Typography variant="h6" mb={2} fontWeight={700}>
-                                Bonus Details
+                                {t("round_details.stats_modal.bonus_details")}
                             </Typography>
 
                             <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: 1 }}>
                                 <Table size="small">
                                     <TableHead sx={{ bgcolor: "grey.100" }}>
                                         <TableRow>
-                                            <TableCell sx={{ fontWeight: 700 }}>Jury</TableCell>
-                                            <TableCell sx={{ fontWeight: 700 }}>Points</TableCell>
-                                            <TableCell sx={{ fontWeight: 700 }}>Comment</TableCell>
+                                            <TableCell sx={{ fontWeight: 700 }}>
+                                                {t("round_details.stats_modal.jury")}
+                                            </TableCell>
+                                            <TableCell sx={{ fontWeight: 700 }}>
+                                                {t("round_details.stats_modal.points")}
+                                            </TableCell>
+                                            <TableCell sx={{ fontWeight: 700 }}>
+                                                {t("round_details.stats_modal.comment")}
+                                            </TableCell>
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
@@ -262,7 +268,7 @@ export const RoundStatsDialog = ({
                                             <TableRow>
                                                 <TableCell colSpan={3} align="center">
                                                     <Typography color="text.secondary" py={2}>
-                                                        No bonus points.
+                                                        {t("round_details.stats_modal.no_bonus_points")}
                                                     </Typography>
                                                 </TableCell>
                                             </TableRow>
@@ -303,7 +309,7 @@ export const RoundStatsDialog = ({
                 >
                     <CircularProgress size={48} sx={{ mb: 2 }} />
                     <Typography color="text.secondary" fontWeight={600}>
-                        Loading statistics...
+                        {t("round_details.stats_modal.loading")}
                     </Typography>
                 </DialogContent>
             )}

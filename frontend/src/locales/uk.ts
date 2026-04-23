@@ -595,7 +595,15 @@ export const uk = {
             "total": "Разом",
             "total_score": "ЗАГАЛЬНИЙ БАЛ",
             "close": "Закрити",
-            "open": "Детальна статистика"
+            "open": "Детальна статистика",
+            "category_criteria": "Категорія / Критерія",
+            "weighted_average": "Середнє зважене",
+            "bonus_details": "Бонусна інформація",
+            "jury": "Журі",
+            "points": "Очки",
+            "comment": "Коментарі",
+            "no_bonus_points": "Відсутні бонусні очки",
+            "loading": "Завантаження статистики...",
         },
         "common": {
             "actions": "Дії"
