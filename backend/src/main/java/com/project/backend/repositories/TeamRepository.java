@@ -12,17 +12,18 @@ import java.util.List;
 
 public interface TeamRepository extends JpaRepository<Team, Long>, JpaSpecificationExecutor<Team> {
     @Query("SELECT new com.project.backend.dto.team.StatisticRowDTO(" +
-           "t.id, t.name, t.email, j.email, c.text, jsc.points, jsc.isAdditional, jsc.comment) " +
-           "FROM Criteria c " +
-           "JOIN c.category.round r " +
-           "CROSS JOIN Team t " +
-           "JOIN User j ON j.role = com.project.backend.models.constants.Role.JURY " +
-           "LEFT JOIN c.jurySubmissionCriteria jsc ON (" +
-           "  jsc.jurySubmission.submission.team.id = t.id AND " +
-           "  jsc.jurySubmission.submission.round.id = r.id AND " +
-           "  jsc.jurySubmission.jury.id = j.id" +
+           ":teamId, t.name, t.email, js.jury.email, c.text, jsc.points, jsc.isAdditional, jsc.comment) " +
+           "FROM Team t " +
+           "CROSS JOIN User j " +
+           "LEFT JOIN Criteria c ON (c.category.round.id = :roundId) " +
+           "LEFT JOIN JurySubmissionCriteria jsc ON (" +
+           "    jsc.jurySubmission.submission.team.id = t.id AND " +
+           "    jsc.jurySubmission.jury.id = j.id AND " +
+           "    (jsc.criteria.id = c.id OR (jsc.criteria IS NULL AND jsc.isAdditional = true))" +
            ") " +
-           "WHERE r.id = :roundId AND t.id = :teamId")
+           "LEFT JOIN jsc.jurySubmission js " +
+           "WHERE t.id = :teamId AND j.role = 'JURY' " +
+           "AND (c.id IS NOT NULL OR jsc.id IS NOT NULL)")
     List<StatisticRowDTO> getStatisticsByTeamAndRound(@Param("teamId") Long teamId,
                                                       @Param("roundId") Long roundId);
 
