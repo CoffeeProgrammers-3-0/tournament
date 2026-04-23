@@ -22,7 +22,7 @@ public class StatisticResponse {
 
     private List<CategoryResponse> categories;
 
-    private List<String> juryNames;
+    private List<String> juryEmails;
 
     @Schema(description = "Points per jury in a nested map structure")
     private Map<String, Map<String, PointResponse>> pointsPerJury;

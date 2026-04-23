@@ -364,7 +364,7 @@ public class TeamServiceImpl implements TeamService {
                 categoryRepository.findAll(
                         CategorySpecification.byRoundId(roundId)
                 ).stream().map(categoryMapper::fromCategoryToResponse).toList());
-        response.setJuryNames(
+        response.setJuryEmails(
                 jurySubmissionRepository.findAll(
                         Specification.allOf(
                                 JurySubmissionSpecification.byRoundId(roundId),
