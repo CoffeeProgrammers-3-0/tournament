@@ -1,4 +1,5 @@
 import type {UserCreateRequestForTeamDto, UserResponseForTeamDto} from '../user/user.dto';
+import type {CategoryResponseDto} from "../category/category.dto.ts";
 
 export interface TeamCreateRequestDto {
     name: string;
@@ -46,8 +47,10 @@ export interface StatisticResponseDto {
     id: number;
     name: string;
     email: string;
+    categories: CategoryResponseDto[];
+    juryEmails: string[];
     pointsPerJury: Record<string, Record<string, PointResponse>>;
-    additionalPointsPerJury: Record<string, Record<string, number>>;
+    additionalPointsPerJury:  Record<string, PointResponse[]>;
 }
 
 export interface PointResponse {

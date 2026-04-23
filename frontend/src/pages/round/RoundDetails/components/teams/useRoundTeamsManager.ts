@@ -1,7 +1,52 @@
-import {useCallback, useMemo, useState} from "react";
+import {type MouseEvent, useCallback, useMemo, useState} from "react";
 import {roundService} from "../../../../../services/impl/RoundService";
 import {teamService} from "../../../../../services/impl/TeamService.ts";
 import type {StatisticResponseDto} from "../../../../../entities/team/team.dto.ts";
+
+type StatsViewMode = "aggregated" | "detailed";
+
+export type PivotRow = {
+    id: string;
+    type: "category" | "criteria";
+    categoryId: number;
+    categoryTitle: string;
+    label: string;
+    depth: 0 | 1;
+    average: number;
+    juryValues: Record<string, number>;
+    juryComments?: Record<string, string>;
+    weight: number;
+};
+
+export type BonusRow = {
+    id: string;
+    jury: string;
+    points: number;
+    comment: string;
+};
+
+type Props = {
+    roundId: number;
+    leaderboard: Array<{ id: number }>;
+    fetchSubmissions: () => Promise<void>;
+    clearErrors?: () => void;
+    handleError?: (error: unknown, message: string) => void;
+    triggerConfirm: (config: {
+        title: string;
+        description: string;
+        confirmColor: "primary" | "error" | "warning" | "success";
+        onConfirm: () => Promise<void> | void;
+    }) => void;
+    closeConfirm: () => void;
+    myTeamId: number | string;
+    isAdmin: boolean;
+    t: (key: string, options?: any) => string;
+};
+
+const average = (values: number[]) => {
+    if (!values.length) return 0;
+    return values.reduce((sum, value) => sum + value, 0) / values.length;
+};
 
 export const useRoundTeamsManager = ({
                                          roundId,
@@ -14,8 +59,7 @@ export const useRoundTeamsManager = ({
                                          myTeamId,
                                          isAdmin,
                                          t,
-                                     }: any) => {
-
+                                     }: Props) => {
     const [addMissingModalOpen, setAddMissingModalOpen] = useState(false);
     const [advanceModalOpen, setAdvanceModalOpen] = useState(false);
 
@@ -31,10 +75,16 @@ export const useRoundTeamsManager = ({
 
     const [selectedStats, setSelectedStats] = useState<StatisticResponseDto | null>(null);
     const [statsModalOpen, setStatsModalOpen] = useState(false);
-    const [statsViewMode, setStatsViewMode] = useState<"aggregated" | "detailed">("aggregated");
+    const [statsViewMode, setStatsViewMode] = useState<StatsViewMode>("aggregated");
+
+    const handleCloseStats = useCallback(() => {
+        setStatsModalOpen(false);
+        setSelectedStats(null);
+        setStatsViewMode("aggregated");
+    }, []);
 
     const handleOpenAddMissingModal = useCallback(async () => {
-        if (typeof clearErrors === 'function') clearErrors();
+        clearErrors?.();
         setIsTeamsLoading(true);
         setAddMissingModalOpen(true);
 
@@ -42,7 +92,7 @@ export const useRoundTeamsManager = ({
             const res = await roundService.getTeamsNotInRound(roundId, { page: 0, size: 500 });
             setMissingTeams(res.content || []);
         } catch (e) {
-            if (typeof handleError === 'function') handleError(e, "Помилка завантаження команд");
+            handleError?.(e, "Помилка завантаження команд");
         } finally {
             setIsTeamsLoading(false);
         }
@@ -57,25 +107,28 @@ export const useRoundTeamsManager = ({
             await fetchSubmissions();
             setAddMissingModalOpen(false);
         } catch (e) {
-            if (typeof handleError === 'function') handleError(e, "Помилка додавання");
+            handleError?.(e, "Помилка додавання");
         } finally {
             setIsTeamsLoading(false);
         }
-    }, [selectedMissingIds, roundId, fetchSubmissions, handleError]);
+    }, [fetchSubmissions, handleError, roundId, selectedMissingIds]);
 
     const handleOpenAdvanceModal = useCallback(async () => {
         setAdvanceModalOpen(true);
 
         try {
-            const rounds = await roundService.getRoundsByRound(roundId, { page: 0, size: 100, status: 'DRAFT' });
-            setTournamentRounds(rounds.content);
+            const rounds = await roundService.getRoundsByRound(roundId, {
+                page: 0,
+                size: 100,
+                status: "DRAFT",
+            });
 
-            const topIds = leaderboard.slice(0, 3).map((t: any) => t.id);
-            setSelectedAdvanceIds(topIds);
+            setTournamentRounds(rounds.content || []);
+            setSelectedAdvanceIds(leaderboard.slice(0, 3).map((item: any) => item.id));
         } catch (e) {
-            if (typeof handleError === 'function') handleError(e, t('round_details.errors.loadStats'));
+            handleError?.(e, t("round_details.errors.loadStats"));
         }
-    }, [leaderboard, roundId, t, handleError]);
+    }, [handleError, leaderboard, roundId, t]);
 
     const handleConfirmAdvance = useCallback(async () => {
         if (!targetAdvanceRoundId) return;
@@ -85,16 +138,16 @@ export const useRoundTeamsManager = ({
             await roundService.assignTeams(targetAdvanceRoundId, selectedAdvanceIds);
             setAdvanceModalOpen(false);
         } catch (e) {
-            if (typeof handleError === 'function') handleError(e, "Помилка переведення");
+            handleError?.(e, "Помилка переведення");
         } finally {
             setIsTeamsLoading(false);
         }
-    }, [targetAdvanceRoundId, selectedAdvanceIds, handleError]);
+    }, [handleError, selectedAdvanceIds, targetAdvanceRoundId]);
 
     const handleUnassignTeam = useCallback((teamId: number) => {
         triggerConfirm({
-            title: t('round_details.confirm.removeTeam.title'),
-            description: t('round_details.confirm.removeTeam.description'),
+            title: t("round_details.confirm.removeTeam.title"),
+            description: t("round_details.confirm.removeTeam.description"),
             confirmColor: "error",
             onConfirm: async () => {
                 try {
@@ -102,108 +155,16 @@ export const useRoundTeamsManager = ({
                     await fetchSubmissions();
                     closeConfirm();
                 } catch (e) {
-                    if (typeof handleError === 'function') handleError(e, "Помилка видалення");
+                    handleError?.(e, "Помилка видалення");
                 }
-            }
+            },
         });
-    }, [t, triggerConfirm, roundId, fetchSubmissions, closeConfirm, handleError]);
-
-    const handleOpenStats = useCallback(async (teamId: number, e?: React.MouseEvent) => {
-        e?.stopPropagation?.();
-
-        if (!roundId) return;
-
-        clearErrors?.();
-        setStatsModalOpen(true);
-        setSelectedStats(null); // optional: treat as loading state
-
-        console.log("here")
-        try {
-            let stats;
-            console.log("isAdmin")
-            if (isAdmin) {
-                stats = await teamService.getTeamStats(teamId, roundId);
-            } else if (String(teamId) === String(myTeamId)) {
-                stats = await teamService.getMyTeamStats(roundId);
-            } else {
-                return;
-            }
-
-            setSelectedStats(stats);
-        } catch (error) {
-            handleError?.(error, t("round_details.errors.loadStats"));
-        }
-    }, [roundId, isAdmin, myTeamId, clearErrors, handleError, t]);
-
-    const handleExportLeaderboard = useCallback(async () => {
-        if (!roundId) return;
-        setIsExporting(true);
-        if (typeof clearErrors === 'function') clearErrors();
-
-        try {
-            const blob = await roundService.exportLeaderboard(roundId);
-            const url = window.URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.setAttribute('download', `leaderboard_round_${roundId}_${new Date().toISOString().slice(0, 10)}.xlsx`);
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-            window.URL.revokeObjectURL(url);
-        } catch (error: any) {
-            if (typeof handleError === 'function') handleError(error, "Помилка експорту лідерборду");
-            triggerConfirm({ title: "Export Failed", description: "Failed to download leaderboard file.", confirmColor: "error", onConfirm: closeConfirm });
-        } finally {
-            setIsExporting(false);
-        }
-    }, [roundId, closeConfirm, triggerConfirm, clearErrors, handleError]);
-
-    const aggregatedCriteria = useMemo(() => {
-        if (!selectedStats) return { criteriaSums: {}, totalAdditional: 0, grandTotal: 0 };
-
-        const criteriaSums: Record<string, { totalPoints: number; totalBonus: number; count: number }> = {};
-        let grandTotal = 0;
-
-        if (selectedStats.pointsPerJury) {
-            Object.values(selectedStats.pointsPerJury).forEach(juryScores => {
-                if (!juryScores) return;
-                Object.entries(juryScores).forEach(([criteria, pointData]) => {
-                    if (!criteriaSums[criteria]) criteriaSums[criteria] = { totalPoints: 0, totalBonus: 0, count: 0 };
-                    criteriaSums[criteria].totalPoints += pointData.points || 0;
-                    criteriaSums[criteria].count += 1;
-                    grandTotal += pointData.points || 0;
-                });
-            });
-        }
-
-        if (selectedStats.additionalPointsPerJury) {
-            Object.values(selectedStats.additionalPointsPerJury).forEach(juryBonus => {
-                if (!juryBonus) return;
-                Object.entries(juryBonus).forEach(([criteria, bonusPoints]) => {
-                    if (!criteriaSums[criteria]) criteriaSums[criteria] = { totalPoints: 0, totalBonus: 0, count: 0 };
-                    criteriaSums[criteria].totalBonus += bonusPoints || 0;
-                    grandTotal += bonusPoints || 0;
-                });
-            });
-        }
-
-        return { criteriaSums, grandTotal };
-    }, [selectedStats]);
-
-    const juryList = useMemo(() => {
-        if (!selectedStats) return [];
-        const juries = new Set<string>();
-        if (selectedStats.pointsPerJury) Object.keys(selectedStats.pointsPerJury).forEach(j => juries.add(j));
-        if (selectedStats.additionalPointsPerJury) Object.keys(selectedStats.additionalPointsPerJury).forEach(j => juries.add(j));
-        return Array.from(juries);
-    }, [selectedStats]);
-
-    const criteriaList = useMemo(() => Object.keys(aggregatedCriteria.criteriaSums), [aggregatedCriteria]);
+    }, [closeConfirm, fetchSubmissions, handleError, roundId, t, triggerConfirm]);
 
     const handleAssignAllTeams = useCallback(() => {
         triggerConfirm({
-            title: t('round_details.confirm.assignAllTeams.title'),
-            description: t('round_details.confirm.assignAllTeams.description'),
+            title: t("round_details.confirm.assignAllTeams.title"),
+            description: t("round_details.confirm.assignAllTeams.description"),
             confirmColor: "primary",
             onConfirm: async () => {
                 setIsTeamsLoading(true);
@@ -212,18 +173,18 @@ export const useRoundTeamsManager = ({
                     await fetchSubmissions();
                     closeConfirm();
                 } catch (e) {
-                    if (typeof handleError === 'function') handleError(e, "Помилка додавання всіх команд");
+                    handleError?.(e, "Помилка додавання всіх команд");
                 } finally {
                     setIsTeamsLoading(false);
                 }
-            }
+            },
         });
-    }, [roundId, t, triggerConfirm, closeConfirm, fetchSubmissions, handleError]);
+    }, [closeConfirm, fetchSubmissions, handleError, roundId, t, triggerConfirm]);
 
     const handleUnassignAllTeams = useCallback(() => {
         triggerConfirm({
-            title: t('round_details.confirm.unassignAllTeams.title'),
-            description: t('round_details.confirm.unassignAllTeams.description'),
+            title: t("round_details.confirm.unassignAllTeams.title"),
+            description: t("round_details.confirm.unassignAllTeams.description"),
             confirmColor: "error",
             onConfirm: async () => {
                 setIsTeamsLoading(true);
@@ -232,23 +193,211 @@ export const useRoundTeamsManager = ({
                     await fetchSubmissions();
                     closeConfirm();
                 } catch (e) {
-                    if (typeof handleError === 'function') handleError(e, "Помилка видалення всіх команд");
+                    handleError?.(e, "Помилка видалення всіх команд");
                 } finally {
                     setIsTeamsLoading(false);
                 }
-            }
+            },
         });
-    }, [roundId, t, triggerConfirm, closeConfirm, fetchSubmissions, handleError]);
+    }, [closeConfirm, fetchSubmissions, handleError, roundId, t, triggerConfirm]);
+
+    const handleOpenStats = useCallback(async (teamId: number, e?: MouseEvent) => {
+        e?.stopPropagation();
+
+        if (!roundId) return;
+
+        const canView = isAdmin || String(teamId) === String(myTeamId);
+        if (!canView) return;
+
+        clearErrors?.();
+        setStatsModalOpen(true);
+        setSelectedStats(null);
+
+        try {
+            const stats = isAdmin
+                ? await teamService.getTeamStats(teamId, roundId)
+                : await teamService.getMyTeamStats(roundId);
+
+            setSelectedStats(stats);
+        } catch (error) {
+            handleError?.(error, t("round_details.errors.loadStats"));
+        }
+    }, [clearErrors, handleError, isAdmin, myTeamId, roundId, t]);
+
+    const handleExportLeaderboard = useCallback(async () => {
+        if (!roundId) return;
+
+        setIsExporting(true);
+        clearErrors?.();
+
+        try {
+            const blob = await roundService.exportLeaderboard(roundId);
+            const url = window.URL.createObjectURL(blob);
+
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = `leaderboard_${roundId}.xlsx`;
+
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            handleError?.(error, "Помилка експорту");
+        } finally {
+            setIsExporting(false);
+        }
+    }, [clearErrors, handleError, roundId]);
+
+    const juryList = useMemo(() => {
+        if (!selectedStats) return [];
+
+        const set = new Set<string>();
+
+        selectedStats.juryEmails?.forEach((j) => set.add(j));
+        Object.keys(selectedStats.pointsPerJury || {}).forEach((j) => set.add(j));
+        Object.keys(selectedStats.additionalPointsPerJury || {}).forEach((j) => set.add(j));
+
+        return Array.from(set);
+    }, [selectedStats]);
+
+    const criteriaGroups = useMemo(() => {
+        if (!selectedStats) return [];
+
+        return selectedStats.categories.map((cat, categoryIndex) => ({
+            categoryId: cat.id,
+            categoryTitle: cat.title,
+            weight: cat.weight,
+            order: categoryIndex,
+            criteria: (cat.criteria || []).map((c, criteriaIndex) => ({
+                id: c.id,
+                text: c.text,
+                order: criteriaIndex,
+            })),
+        }));
+    }, [selectedStats]);
+
+    const criteriaList = useMemo(() => {
+        return criteriaGroups.flatMap((group) => group.criteria.map((item) => item.text));
+    }, [criteriaGroups]);
+
+    const getScore = useCallback(
+        (jury: string, criteria: string) =>
+            selectedStats?.pointsPerJury?.[jury]?.[criteria]?.points ?? 0,
+        [selectedStats],
+    );
+
+    const getComment = useCallback(
+        (jury: string, criteria: string) =>
+            selectedStats?.pointsPerJury?.[jury]?.[criteria]?.comment ?? "",
+        [selectedStats],
+    );
+
+    const bonusRows = useMemo<BonusRow[]>(() => {
+        if (!selectedStats) return [];
+
+        return Object.entries(selectedStats.additionalPointsPerJury || {}).flatMap(
+            ([jury, bonuses]) =>
+                (bonuses || []).map((b, index) => ({
+                    id: `${jury}-${index}`,
+                    jury,
+                    points: b.points ?? 0,
+                    comment: b.comment ?? "",
+                })),
+        );
+    }, [selectedStats]);
+
+    // weighted final total:
+    // for each category -> average of criteria scores per jury -> multiplied by category weight
+    // then averaged across juries, then summed across categories
+    const grandTotal = useMemo(() => {
+        if (!selectedStats) return 0;
+
+        let weightedTotal = 0;
+
+        criteriaGroups.forEach((group) => {
+            const juryCategoryScores = juryList.map((jury) => {
+                const rawScores = group.criteria.map((c) => getScore(jury, c.text));
+                const categoryRawAverage = average(rawScores);
+                return categoryRawAverage * group.weight;
+            });
+
+            weightedTotal += average(juryCategoryScores);
+        });
+
+        const bonusTotal = bonusRows.reduce((sum, row) => sum + row.points, 0);
+
+        return weightedTotal + bonusTotal;
+    }, [bonusRows, criteriaGroups, getScore, juryList, selectedStats]);
+
+    const pivotRows = useMemo<PivotRow[]>(() => {
+        if (!selectedStats) return [];
+
+        const rows: PivotRow[] = [];
+
+        criteriaGroups.forEach((group) => {
+            const categoryValues: Record<string, number> = {};
+
+            juryList.forEach((jury) => {
+                const values = group.criteria.map((c) => getScore(jury, c.text));
+                categoryValues[jury] = average(values) * group.weight;
+            });
+
+            rows.push({
+                id: `cat:${group.categoryId}`,
+                type: "category",
+                categoryId: group.categoryId,
+                categoryTitle: group.categoryTitle,
+                label: group.categoryTitle,
+                depth: 0,
+                average: average(Object.values(categoryValues)),
+                juryValues: categoryValues,
+                weight: group.weight,
+            });
+
+            group.criteria.forEach((c) => {
+                const juryValues: Record<string, number> = {};
+                const juryComments: Record<string, string> = {};
+
+                juryList.forEach((jury) => {
+                    juryValues[jury] = getScore(jury, c.text);
+                    juryComments[jury] = getComment(jury, c.text);
+                });
+
+                rows.push({
+                    id: `crit:${group.categoryId}:${c.id}`,
+                    type: "criteria",
+                    categoryId: group.categoryId,
+                    categoryTitle: group.categoryTitle,
+                    label: c.text,
+                    depth: 1,
+                    average: average(Object.values(juryValues)),
+                    juryValues,
+                    juryComments,
+                    weight: group.weight,
+                });
+            });
+        });
+
+        return rows;
+    }, [criteriaGroups, getComment, getScore, juryList, selectedStats]);
 
     return {
-        addMissingModalOpen, setAddMissingModalOpen,
-        advanceModalOpen, setAdvanceModalOpen,
+        addMissingModalOpen,
+        setAddMissingModalOpen,
+
+        advanceModalOpen,
+        setAdvanceModalOpen,
 
         missingTeams,
-        selectedMissingIds, setSelectedMissingIds,
+        selectedMissingIds,
+        setSelectedMissingIds,
 
-        selectedAdvanceIds, setSelectedAdvanceIds,
-        targetAdvanceRoundId, setTargetAdvanceRoundId,
+        selectedAdvanceIds,
+        setSelectedAdvanceIds,
+        targetAdvanceRoundId,
+        setTargetAdvanceRoundId,
         tournamentRounds,
 
         isTeamsLoading,
@@ -260,18 +409,24 @@ export const useRoundTeamsManager = ({
         handleUnassignTeam,
 
         handleOpenStats,
+        handleCloseStats,
         selectedStats,
         statsModalOpen,
         setStatsModalOpen,
 
         handleExportLeaderboard,
         isExporting,
+
         statsViewMode,
         setStatsViewMode,
 
-        aggregatedCriteria,
         juryList,
+        criteriaGroups,
         criteriaList,
+        pivotRows,
+        bonusRows,
+        grandTotal,
+        getComment,
 
         handleAssignAllTeams,
         handleUnassignAllTeams,

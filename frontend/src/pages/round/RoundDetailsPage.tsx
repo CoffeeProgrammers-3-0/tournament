@@ -242,12 +242,17 @@ const RoundDetailsPage = () => {
                                onAssignTeammate={editors.handleAssignTeammate} myTeamUsers={details.myTeamUsers || []}/>
             )}
 
-            {/* ІСНУЮЧІ МОДАЛКИ (згорнуто для компактності огляду, залишайте як було) */}
-            <RoundStatsDialog open={editors.statsModalOpen} onClose={() => editors.setStatsModalOpen(false)}
-                              selectedStats={editors.selectedStats} statsViewMode={editors.statsViewMode}
-                              setStatsViewMode={editors.setStatsViewMode}
-                              aggregatedCriteria={editors.aggregatedCriteria} juryList={editors.juryList}
-                              criteriaList={editors.criteriaList} t={t} errors={editors.errors}/>
+            <RoundStatsDialog
+                open={editors.statsModalOpen}
+                onClose={editors.handleCloseStats}
+                selectedStats={editors.selectedStats}
+                statsViewMode={editors.statsViewMode}
+                setStatsViewMode={editors.setStatsViewMode}
+                grandTotal={editors.grandTotal}
+                pivotRows={editors.pivotRows}
+                juryList={editors.juryList}
+                t={t}
+                errors={editors.errors} bonusRows={editors.bonusRows}            />
             <CategoryDialog open={editors.categoryModalOpen} onClose={() => editors.setCategoryModalOpen(false)}
                             newCategoryData={editors.newCategoryData} setNewCategoryData={editors.setNewCategoryData}
                             onSubmit={editors.handleAddCategory} t={t} errors={editors.errors}/>

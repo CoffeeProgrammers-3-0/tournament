@@ -1,28 +1,30 @@
 import {
     Box,
     Button,
+    Chip,
+    CircularProgress,
     Dialog,
     DialogActions,
     DialogContent,
     DialogTitle,
+    Paper,
+    Tab,
     Table,
     TableBody,
     TableCell,
     TableContainer,
-    TableFooter,
     TableHead,
     TableRow,
-    ToggleButton,
-    ToggleButtonGroup,
+    Tabs,
     Tooltip,
     Typography,
 } from "@mui/material";
+import StarIcon from "@mui/icons-material/Star";
 import ViewListIcon from "@mui/icons-material/ViewList";
 import ViewModuleIcon from "@mui/icons-material/ViewModule";
-import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
-import StarIcon from '@mui/icons-material/Star';
 import type {StatisticResponseDto} from "../../../../../entities/team/team.dto";
 import {ErrorMessages} from "../../../../../components/main/ErrorMessages.tsx";
+import type {BonusRow, PivotRow} from "./useRoundTeamsManager";
 
 type Props = {
     open: boolean;
@@ -30,150 +32,281 @@ type Props = {
     selectedStats: StatisticResponseDto | null;
     statsViewMode: "aggregated" | "detailed";
     setStatsViewMode: (mode: "aggregated" | "detailed") => void;
-    aggregatedCriteria: {
-        criteriaSums: Record<string, { totalPoints: number; totalBonus: number; count: number }>;
-        grandTotal: number;
-    };
+    grandTotal: number;
+    pivotRows: PivotRow[];
     juryList: string[];
-    criteriaList: string[];
+    bonusRows: BonusRow[];
     t: (key: string, options?: any) => string;
     errors: string[];
 };
 
 export const RoundStatsDialog = ({
-                                     open, onClose, selectedStats, statsViewMode, setStatsViewMode,
-                                     aggregatedCriteria, juryList, criteriaList, t, errors
+                                     open,
+                                     onClose,
+                                     selectedStats,
+                                     statsViewMode,
+                                     setStatsViewMode,
+                                     grandTotal,
+                                     pivotRows,
+                                     juryList,
+                                     bonusRows,
+                                     t,
+                                     errors,
                                  }: Props) => {
+    const fmt = (value: number) => (Number.isInteger(value) ? String(value) : value.toFixed(2));
+
     return (
-        <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
+        <Dialog
+            open={open}
+            onClose={onClose}
+            maxWidth="lg"
+            fullWidth
+            PaperProps={{ sx: { borderRadius: 3, overflow: "hidden" } }}
+        >
             {selectedStats ? (
                 <>
-                    <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", pb: 1 }}>
-                        <Typography variant="h6" fontWeight={800}>
-                            {t("round_details.stats_modal.title", { teamName: selectedStats.name })}
-                        </Typography>
+                    <DialogTitle sx={{ pb: 0, pt: 3, px: 4 }}>
+                        <Box display="flex" justifyContent="space-between" alignItems="center" gap={2}>
+                            <Box>
+                                <Typography variant="overline" color="text.secondary" fontWeight={600}>
+                                    Team Statistics
+                                </Typography>
+                                <Typography variant="h5" fontWeight={800} color="primary.main">
+                                    {selectedStats.name}
+                                </Typography>
+                            </Box>
 
-                        <ToggleButtonGroup
+                            <Box textAlign="right">
+                                <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    fontWeight={600}
+                                    textTransform="uppercase"
+                                >
+                                    {t("round_details.stats_modal.total_score")}
+                                </Typography>
+                                <Typography variant="h4" fontWeight={900} color="secondary.main" sx={{ lineHeight: 1 }}>
+                                    {fmt(grandTotal)}
+                                </Typography>
+                            </Box>
+                        </Box>
+
+                        <Tabs
                             value={statsViewMode}
-                            exclusive
-                            onChange={(_, newMode) => newMode && setStatsViewMode(newMode)}
-                            size="small"
-                            color="primary"
+                            onChange={(_, value) => setStatsViewMode(value)}
+                            sx={{ borderBottom: 1, borderColor: "divider", mt: 2 }}
                         >
-                            <ToggleButton value="aggregated">
-                                <ViewListIcon fontSize="small" sx={{ mr: 1 }} />
-                                {t("round_details.stats_modal.view_aggregated")}
-                            </ToggleButton>
-                            <ToggleButton value="detailed">
-                                <ViewModuleIcon fontSize="small" sx={{ mr: 1 }} />
-                                {t("round_details.stats_modal.view_detailed")}
-                            </ToggleButton>
-                        </ToggleButtonGroup>
+                            <Tab
+                                icon={<ViewListIcon />}
+                                iconPosition="start"
+                                label={t("round_details.stats_modal.view_aggregated")}
+                                value="aggregated"
+                                sx={{ fontWeight: 600, textTransform: "none" }}
+                            />
+                            <Tab
+                                icon={<ViewModuleIcon />}
+                                iconPosition="start"
+                                label={t("round_details.stats_modal.view_detailed")}
+                                value="detailed"
+                                sx={{ fontWeight: 600, textTransform: "none" }}
+                            />
+                        </Tabs>
                     </DialogTitle>
 
-                    <DialogContent dividers sx={{ p: 0 }}>
+                    <DialogContent dividers sx={{ p: 4, bgcolor: "grey.50", minHeight: 400 }}>
                         <ErrorMessages errors={errors} />
-                        <TableContainer>
-                            <Table size="medium">
-                                <TableHead sx={{ bgcolor: "grey.50" }}>
+
+                        <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: 1 }}>
+                            <Table>
+                                <TableHead sx={{ bgcolor: "grey.100" }}>
                                     <TableRow>
-                                        <TableCell width="30%"><b>{t("round_details.stats_modal.criteria")}</b></TableCell>
-
-                                        {statsViewMode === "detailed" && juryList.map((jury) => (
-                                            <TableCell key={jury} align="center"><b>{jury}</b></TableCell>
-                                        ))}
-
-                                        <TableCell align="right" sx={{ bgcolor: "primary.50" }}>
-                                            <b>{t("round_details.stats_modal.total")}</b>
+                                        <TableCell sx={{ fontWeight: 800, py: 2 }}>
+                                            Category / Criteria
                                         </TableCell>
+
+                                        {statsViewMode === "aggregated" ? (
+                                            <TableCell align="right" sx={{ fontWeight: 800 }}>
+                                                Weighted average
+                                            </TableCell>
+                                        ) : (
+                                            juryList.map((jury) => (
+                                                <TableCell key={jury} align="center" sx={{ fontWeight: 800 }}>
+                                                    {jury}
+                                                </TableCell>
+                                            ))
+                                        )}
                                     </TableRow>
                                 </TableHead>
 
                                 <TableBody>
-                                    {criteriaList.map((criteria) => {
-                                        const aggregated = aggregatedCriteria.criteriaSums[criteria];
+                                    {pivotRows.map((row) => {
+                                        const isCategory = row.type === "category";
 
                                         return (
-                                            <TableRow key={criteria} hover>
-                                                <TableCell><Typography fontWeight={600}>{criteria}</Typography></TableCell>
+                                            <TableRow
+                                                key={row.id}
+                                                hover
+                                                sx={{
+                                                    bgcolor: isCategory ? "rgba(0,0,0,0.02)" : "transparent",
+                                                }}
+                                            >
+                                                <TableCell
+                                                    sx={{
+                                                        fontWeight: isCategory ? 800 : 500,
+                                                        pl: row.depth === 1 ? 4 : 2,
+                                                        py: isCategory ? 1.5 : 1.2,
+                                                    }}
+                                                >
+                                                    <Box display="flex" alignItems="center" gap={1}>
+                                                        <Typography
+                                                            fontWeight={isCategory ? 800 : 500}
+                                                            color={isCategory ? "text.primary" : "text.secondary"}
+                                                        >
+                                                            {row.label}
+                                                        </Typography>
 
-                                                {/* Detailed View Columns */}
-                                                {statsViewMode === "detailed" && juryList.map((jury) => {
-                                                    const pointData = selectedStats.pointsPerJury?.[jury]?.[criteria];
-                                                    const bonus = selectedStats.additionalPointsPerJury?.[jury]?.[criteria] || 0;
-
-                                                    if (!pointData && !bonus) {
-                                                        return <TableCell key={jury} align="center" sx={{ color: "text.disabled" }}>-</TableCell>;
-                                                    }
-
-                                                    const Content = (
-                                                        <Box sx={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', cursor: pointData?.comment ? 'help' : 'default' }}>
-                                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                                                <Typography fontWeight={700}>{pointData?.points || 0}</Typography>
-                                                                {pointData?.comment && <ChatBubbleOutlineIcon sx={{ fontSize: 14, color: 'text.secondary' }} />}
-                                                            </Box>
-                                                            {bonus > 0 && (
-                                                                <Typography variant="caption" sx={{ color: 'warning.dark', display: 'flex', alignItems: 'center', fontWeight: 700 }}>
-                                                                    <StarIcon sx={{ fontSize: 10, mr: 0.5 }} /> +{bonus}
-                                                                </Typography>
-                                                            )}
-                                                        </Box>
-                                                    );
-
-                                                    return (
-                                                        <TableCell key={jury} align="center">
-                                                            {pointData?.comment ? (
-                                                                <Tooltip title={pointData.comment} arrow placement="top">
-                                                                    {Content}
-                                                                </Tooltip>
-                                                            ) : Content}
-                                                        </TableCell>
-                                                    );
-                                                })}
-
-                                                {/* Aggregated Total Column */}
-                                                <TableCell align="right" sx={{ bgcolor: "primary.50" }}>
-                                                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                                                        <Typography fontWeight={800}>{aggregated.totalPoints}</Typography>
-                                                        {aggregated.totalBonus > 0 && (
-                                                            <Typography variant="caption" sx={{ color: 'warning.dark', fontWeight: 700 }}>
-                                                                +{aggregated.totalBonus} Bonus
-                                                            </Typography>
+                                                        {isCategory && (
+                                                            <Chip
+                                                                size="small"
+                                                                label={`w: ${fmt(row.weight)}`}
+                                                                variant="outlined"
+                                                            />
                                                         )}
                                                     </Box>
                                                 </TableCell>
+
+                                                {statsViewMode === "aggregated" ? (
+                                                    <TableCell align="right">
+                                                        <Typography
+                                                            fontWeight={isCategory ? 800 : 600}
+                                                            color={isCategory ? "primary.main" : "text.primary"}
+                                                        >
+                                                            {fmt(row.average)}
+                                                        </Typography>
+                                                    </TableCell>
+                                                ) : (
+                                                    juryList.map((jury) => {
+                                                        const score = row.juryValues[jury] ?? 0;
+                                                        const comment = row.type === "criteria" ? row.juryComments?.[jury] || "" : "";
+
+                                                        return (
+                                                            <TableCell key={jury} align="center">
+                                                                <Box display="flex" flexDirection="column" alignItems="center" gap={0.25}>
+                                                                    <Typography
+                                                                        fontWeight={isCategory ? 800 : 600}
+                                                                        color={isCategory ? "primary.main" : "text.primary"}
+                                                                    >
+                                                                        {fmt(score)}
+                                                                    </Typography>
+
+                                                                    {row.type === "criteria" && comment ? (
+                                                                        <Tooltip title={comment}>
+                                                                            <Typography
+                                                                                variant="caption"
+                                                                                sx={{
+                                                                                    maxWidth: 150,
+                                                                                    whiteSpace: "nowrap",
+                                                                                    overflow: "hidden",
+                                                                                    textOverflow: "ellipsis",
+                                                                                    cursor: "help",
+                                                                                    color: "text.secondary",
+                                                                                }}
+                                                                            >
+                                                                                {comment}
+                                                                            </Typography>
+                                                                        </Tooltip>
+                                                                    ) : null}
+                                                                </Box>
+                                                            </TableCell>
+                                                        );
+                                                    })
+                                                )}
                                             </TableRow>
                                         );
                                     })}
                                 </TableBody>
-
-                                <TableFooter>
-                                    <TableRow>
-                                        <TableCell colSpan={statsViewMode === "detailed" ? juryList.length + 1 : 1} align="right">
-                                            <Typography fontWeight={800} color="primary" variant="subtitle1">
-                                                {t("round_details.stats_modal.total_score")}
-                                            </Typography>
-                                        </TableCell>
-                                        <TableCell align="right" sx={{ bgcolor: "primary.main", color: "white" }}>
-                                            <Typography fontWeight={900} variant="h5">
-                                                {aggregatedCriteria.grandTotal}
-                                            </Typography>
-                                        </TableCell>
-                                    </TableRow>
-                                </TableFooter>
                             </Table>
                         </TableContainer>
+
+                        <Box mt={4}>
+                            <Typography variant="h6" mb={2} fontWeight={700}>
+                                Bonus Details
+                            </Typography>
+
+                            <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: 1 }}>
+                                <Table size="small">
+                                    <TableHead sx={{ bgcolor: "grey.100" }}>
+                                        <TableRow>
+                                            <TableCell sx={{ fontWeight: 700 }}>Jury</TableCell>
+                                            <TableCell sx={{ fontWeight: 700 }}>Points</TableCell>
+                                            <TableCell sx={{ fontWeight: 700 }}>Comment</TableCell>
+                                        </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                        {bonusRows.length > 0 ? (
+                                            bonusRows.map((row) => (
+                                                <TableRow key={row.id} hover>
+                                                    <TableCell sx={{ fontWeight: 600 }}>{row.jury}</TableCell>
+                                                    <TableCell>
+                                                        <Chip
+                                                            icon={<StarIcon />}
+                                                            label={`+${row.points}`}
+                                                            size="small"
+                                                            color="warning"
+                                                        />
+                                                    </TableCell>
+                                                    <TableCell>{row.comment || "-"}</TableCell>
+                                                </TableRow>
+                                            ))
+                                        ) : (
+                                            <TableRow>
+                                                <TableCell colSpan={3} align="center">
+                                                    <Typography color="text.secondary" py={2}>
+                                                        No bonus points.
+                                                    </Typography>
+                                                </TableCell>
+                                            </TableRow>
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
+                        </Box>
                     </DialogContent>
 
-                    <DialogActions sx={{ p: 2, bgcolor: 'grey.50' }}>
-                        <Button onClick={onClose} variant="contained" sx={{ borderRadius: '8px' }}>
+                    <DialogActions
+                        sx={{
+                            p: 3,
+                            bgcolor: "background.paper",
+                            borderTop: "1px solid",
+                            borderColor: "grey.200",
+                        }}
+                    >
+                        <Button
+                            onClick={onClose}
+                            variant="contained"
+                            size="large"
+                            sx={{ borderRadius: 2, px: 4, fontWeight: 700, textTransform: "none" }}
+                        >
                             {t("round_details.stats_modal.close")}
                         </Button>
                     </DialogActions>
                 </>
-            ) :
-                <DialogContent>Loading...</DialogContent>
-            }
+            ) : (
+                <DialogContent
+                    sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        minHeight: 300,
+                    }}
+                >
+                    <CircularProgress size={48} sx={{ mb: 2 }} />
+                    <Typography color="text.secondary" fontWeight={600}>
+                        Loading statistics...
+                    </Typography>
+                </DialogContent>
+            )}
         </Dialog>
     );
 };
