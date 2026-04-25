@@ -7,6 +7,8 @@ import com.project.backend.models.join_tables.TeamParticipant;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.util.List;
+
 @Slf4j
 public class TeamParticipantSpecification {
 
@@ -72,5 +74,13 @@ public class TeamParticipantSpecification {
 
         return (root, query, cb) ->
                 cb.equal(root.get("user").get("email"), email);
+    }
+
+    public static Specification<TeamParticipant> byTeamIds(List<Long> teamIds) {
+        log.debug("TeamParticipantSpecification.byTeamIds called with teamIds={}", teamIds);
+        if (teamIds == null) return null;
+
+        return (root, query, cb) ->
+                root.get("team").get("id").in(teamIds);
     }
 }

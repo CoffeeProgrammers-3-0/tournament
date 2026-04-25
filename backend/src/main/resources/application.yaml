@@ -86,6 +86,15 @@ logging:
     com.project.backend.repositories.specifications: DEBUG
     com.project.backend.auth.utils: DEBUG
 
+storage:
+  type: local
+  local:
+    path: ./uploads
+
+pdf:
+  worker:
+    url: ${PDF_WORKER_URL}
+
 springdoc:
   swagger-ui:
     path: "/api-docs"

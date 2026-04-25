@@ -155,7 +155,7 @@ public class NotificationListener {
         payload.put("teamId", team.getId());
         payload.put("teamName", team.getName());
 
-        List<Notification> notifications = createNotifications(users, NotificationKey.TEAM_UNASSIGNED_FROM_ROUND, payload);
+        List<Notification> notifications = createNotifications(users, NotificationKey.TEAM_ASSIGNED_TO_ROUND, payload);
         notifications = notificationRepository.saveAll(notifications);
 
         NewNotificationsEvent event1 = new NewNotificationsEvent(notifications);
