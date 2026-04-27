@@ -573,7 +573,8 @@ export const en = {
                 "juries_count": "Number of Juries",
                 "jury_score_title": "Jury Score Calculation",
                 "category_avg": "Category Avg",
-                "weight": "Weight"
+                "weight": "Weight",
+                "additional_points": "Additional points",
             }
         },
         "stats_modal": {

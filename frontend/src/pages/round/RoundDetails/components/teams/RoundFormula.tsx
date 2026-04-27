@@ -120,6 +120,12 @@ export const RoundFormula = ({ t }: { t: any }) => {
                                     <Typography variant="body2" fontWeight={700} color="primary.main">
                                         {t("round_details.teams.formula.weight", "Вага")}
                                     </Typography>
+                                    <Typography variant="body2" sx={{ mx: 1, color: 'primary.main', fontWeight: 800 }}>
+                                        +
+                                    </Typography>
+                                    <Typography variant="body2" fontWeight={700} color="primary.main">
+                                        {t("round_details.teams.formula.additional_points", "Додаткові бали")}
+                                    </Typography>
                                 </Box>
                             </Stack>
                         </Box>

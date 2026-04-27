@@ -584,7 +584,8 @@ export const uk = {
                 "juries_count": "Кількість членів журі",
                 "jury_score_title": "Розрахунок бала журі",
                 "category_avg": "Сер. бал категорії",
-                "weight": "Вага"
+                "weight": "Вага",
+                "additional_points": "Додаткові бали",
             }
         },
         "stats_modal": {
