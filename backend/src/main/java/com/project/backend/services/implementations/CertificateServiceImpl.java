@@ -1,5 +1,6 @@
 package com.project.backend.services.implementations;
 
+import com.project.backend.auth.utils.SecurityUtil;
 import com.project.backend.dto.team.TeamLeaderboardResponse;
 import com.project.backend.models.*;
 import com.project.backend.models.constants.CertificateStatus;
@@ -128,13 +129,30 @@ public class CertificateServiceImpl implements CertificateService {
 
     @Override
     public Certificate getCertificateMetaById(Long id) {
-        return certificateRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Certificate with id " + id + " not found"));
+        Certificate certificate = certificateRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Certificate with id " + id + " not found"));
+
+        if(SecurityUtil.isAdmin()) {
+            return certificate;
+        }
+
+        if(certificate.getStatus() == CertificateStatus.DRAFT) {
+            throw new EntityNotFoundException("Certificate with id " + id + " not found");
+        }
+
+        return certificate;
     }
 
     @Override
     public Page<Certificate> findCertificatesByReceiver(Long userId, Integer page, Integer size) {
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Order.desc("createdAt")));
-        return certificateRepository.findAll(CertificateSpecification.byReceiverId(userId), pageRequest);
+
+        Specification<Certificate> spec = CertificateSpecification.byReceiverId(userId);
+
+        if(!SecurityUtil.isAdmin()) {
+            spec = Specification.allOf(spec, CertificateSpecification.byStatus(CertificateStatus.READY));
+        }
+
+        return certificateRepository.findAll(spec, pageRequest);
     }
 
     @Override

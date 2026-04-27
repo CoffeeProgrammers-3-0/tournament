@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -35,6 +36,7 @@ public class CertificateController {
 
     @PostMapping("/generate/single")
     @Operation(summary = "Generate a single certificate", description = "Creates a certificate based on a template and provided data")
+    @PreAuthorize("hasRole('ADMIN')")
     public CertificateResponse generateCertificate(
             @RequestParam Long templateId,
             @RequestParam String fileName,
@@ -50,6 +52,7 @@ public class CertificateController {
 
     @PostMapping("/generate/teams")
     @Operation(summary = "Generate certificates for all teams in a round")
+    @PreAuthorize("hasRole('ADMIN')")
     public List<CertificateResponse> generateCertificatesForTeams(
             @RequestParam Long templateId,
             @RequestParam Long roundId
@@ -61,6 +64,7 @@ public class CertificateController {
 
     @PostMapping("/generate/teams-batch")
     @Operation(summary = "Generate certificates for specific teams")
+    @PreAuthorize("hasRole('ADMIN')")
     public List<CertificateResponse> generateCertificatesForSpecificTeams(
             @RequestParam Long templateId,
             @RequestParam Long roundId,
@@ -72,6 +76,7 @@ public class CertificateController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("@userSecurity.hasAccessToCertificate(#id) or hasRole('ADMIN')")
     @Operation(summary = "Get certificate metadata by ID")
     public CertificateResponse getCertificateMeta(@PathVariable Long id) {
         log.info("Fetching metadata for certificate ID: {}", id);
@@ -98,6 +103,7 @@ public class CertificateController {
         return response;
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/created-by-me")
     public PaginationListResponse<CertificateResponse> getCreatedByMeCertificates(
             @Parameter(description = "Page number (starting from 0)", example = "0")
@@ -119,6 +125,7 @@ public class CertificateController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public PaginationListResponse<CertificateResponse> getCertificates(
             @Parameter(description = "Page number (starting from 0)", example = "0")
             @RequestParam(value = "page") Integer page,
@@ -126,7 +133,6 @@ public class CertificateController {
             @Parameter(description = "Page size", example = "10")
             @RequestParam(value = "size") Integer size
     ) {
-        User user = currentUserContainer.getUser();
         Page<Certificate> certificates = certificateService.findAll(page, size);
         PaginationListResponse<CertificateResponse> response = new PaginationListResponse<>();
 
@@ -139,6 +145,7 @@ public class CertificateController {
     }
 
     @GetMapping("/user/{user_id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public PaginationListResponse<CertificateResponse> getUsersCertificates(
             @Parameter(description = "Page number (starting from 0)", example = "0")
             @RequestParam(value = "page") Integer page,
@@ -162,6 +169,7 @@ public class CertificateController {
 
     @PatchMapping("/{id}/status")
     @Operation(summary = "Update certificate status")
+    @PreAuthorize("hasRole('ADMIN')")
     public CertificateResponse updateStatus(
             @PathVariable Long id,
             @RequestParam CertificateStatus status

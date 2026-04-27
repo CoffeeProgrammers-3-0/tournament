@@ -1,12 +1,14 @@
 package com.project.backend.auth.config;
 
 import com.project.backend.auth.utils.CurrentUserContainer;
+import com.project.backend.models.Certificate;
 import com.project.backend.models.User;
 import com.project.backend.models.constants.Role;
 import com.project.backend.repositories.*;
 import com.project.backend.repositories.specifications.AdminMessageSpecification;
 import com.project.backend.repositories.specifications.RoundEventSpecification;
 import com.project.backend.repositories.specifications.UserSpecification;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.domain.Specification;
@@ -19,6 +21,7 @@ import java.util.Objects;
 @Component("userSecurity")
 @RequiredArgsConstructor
 public class UserSecurity {
+    private final CertificateRepository certificateRepository;
     private final CurrentUserContainer currentUserContainer;
     private final TeamParticipantRepository teamParticipantRepository;
     private final JurySubmissionRepository jurySubmissionRepository;
@@ -85,5 +88,17 @@ public class UserSecurity {
                 RoundEventSpecification.byId(roundEventId),
                 RoundEventSpecification.byCreatorId(me.getId())
         ));
+    }
+
+    public boolean hasAccessToCertificate(Long certificateId) {
+        User me = currentUserContainer.getUser();
+        Certificate certificate = certificateRepository.findById(certificateId).orElseThrow(() -> new EntityNotFoundException("Certificate not found"));
+        if (me == null) return false;
+        if(certificate.getCreator() != null && certificate.getCreator().getId().equals(me.getId())) {
+            return true;
+        } else if(certificate.getReceiver() != null && certificate.getReceiver().getId().equals(me.getId())) {
+            return true;
+        }
+        return false;
     }
 }

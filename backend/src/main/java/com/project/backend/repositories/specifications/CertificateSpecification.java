@@ -1,6 +1,7 @@
 package com.project.backend.repositories.specifications;
 
 import com.project.backend.models.Certificate;
+import com.project.backend.models.constants.CertificateStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -20,5 +21,13 @@ public class CertificateSpecification {
 
         return (root, query, cb) ->
                 cb.equal(root.get("creator").get("id"), creatorId);
+    }
+
+    public static Specification<Certificate> byStatus(CertificateStatus status) {
+        log.debug("CertificateSpecification.byStatus called with status={}", status);
+        if (status == null) return null;
+
+        return (root, query, cb) ->
+                cb.equal(root.get("status"), status);
     }
 }

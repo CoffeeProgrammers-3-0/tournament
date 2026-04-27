@@ -39,7 +39,6 @@ public class SecurityConfig {
                 "/api/auth/callback",
                 "/api/auth/refresh",
                 "/api/ws/**",
-                "/api/certificate-templates",
                 "/files/**"
         };
 

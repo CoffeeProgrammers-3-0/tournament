@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -24,6 +25,7 @@ public class CertificateTemplateController {
     private final CertificateTemplateMapper certificateTemplateMapper;
     private final CurrentUserContainer currentUserContainer;
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public PaginationListResponse<TemplateResponse> getTemplates(
             @Parameter(description = "Page number (starting from 0)", example = "0")
@@ -48,6 +50,7 @@ public class CertificateTemplateController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public TemplateResponse uploadTemplate(@RequestParam MultipartFile file, @RequestParam(required = false, value = "name") String name) {
         log.info("Controller: upload template file");
         return certificateTemplateMapper.fromCertificateTemplateToResponse(templateService.upload(file, currentUserContainer.getUser(), name == null ? file.getName() : name));
