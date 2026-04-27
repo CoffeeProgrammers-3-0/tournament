@@ -38,7 +38,8 @@ public class SecurityConfig {
                 "/api/auth/logout",
                 "/api/auth/callback",
                 "/api/auth/refresh",
-                "/api/ws/**"
+                "/api/ws/**",
+                "/files/**"
         };
 
         RegexRequestMatcher[] getPermitAll = new RegexRequestMatcher[]{
