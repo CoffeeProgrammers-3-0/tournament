@@ -33,7 +33,7 @@ client.interceptors.response.use(
 
         if (!error.response) {
             console.error("Network error or CORS issue. No response received.");
-            AuthService.redirectToKeycloak();
+            await AuthService.refresh();
             // window.location.replace('/login');
             return Promise.reject(error);
         }
@@ -68,7 +68,7 @@ client.interceptors.response.use(
             }
         }
 
-        // if (status === 403) window.location.replace('/403');
+        if (status === 403) window.location.replace('/403');
         if (status === 404) window.location.replace('/404');
 
         return Promise.reject(error);

@@ -1,13 +1,13 @@
 import {useCallback, useState} from "react";
 import {roundService} from "../../../../../services/impl/RoundService";
-import {toUtcIso} from "../../../../../utils/data.ts";
+import {toLocalInput, toUtcIso} from "../../../../../utils/data.ts";
 import type {TFunction} from "i18next";
 import type {RoundFullResponseDto, RoundUpdateRequestDto} from "../../../../../entities/round/round.dto.ts";
 
 interface UseRoundInfoEditorProps {
     roundId: number;
     roundData: RoundFullResponseDto | null;
-    setRoundData: (data: any) => void;
+    setRoundData: (data: RoundFullResponseDto) => void;
     fetchRound?: () => Promise<void>;
     clearErrors: () => void;
     handleError: (error: any, message: string) => void;
@@ -23,48 +23,76 @@ export const useRoundInfoEditor = ({
                                        clearErrors,
                                        handleError,
                                        t,
-                                       closeConfirm
+                                       closeConfirm,
                                    }: UseRoundInfoEditorProps) => {
-
     const [isEditingInfo, setIsEditingInfo] = useState(false);
-    const [editFormData, setEditFormData] = useState<RoundUpdateRequestDto>({} as any);
+    const [editFormData, setEditFormData] = useState<RoundUpdateRequestDto>({} as RoundUpdateRequestDto);
 
-    const execute = useCallback(async (actionFn: () => Promise<void>) => {
-        clearErrors();
-        try {
-            await actionFn();
-            if (fetchRound) await fetchRound();
-            closeConfirm()
-        } catch (e: any) {
-            handleError(e, t('round_details.errors.actionFailed'));
+    const initializeEditForm = useCallback(() => {
+        if (!roundData) return;
 
-        }
-    }, [clearErrors, handleError, fetchRound, t]);
+        setEditFormData({
+            name: roundData.name ?? "",
+            startDate: toLocalInput(roundData.startDate),
+            endDate: toLocalInput(roundData.endDate),
+            countOfWinners: roundData.countOfWinners,
+            requirements: roundData.requirements ?? "",
+            task: roundData.task ?? "",
+        });
 
-    const handleSaveUpdate = useCallback(async (editFormData: any, setIsEditing: (val: boolean) => void) => {
+        setIsEditingInfo(true);
+    }, [roundData]);
+
+    const execute = useCallback(
+        async (actionFn: () => Promise<void>) => {
+            clearErrors();
+            try {
+                await actionFn();
+                if (fetchRound) await fetchRound();
+                closeConfirm();
+            } catch (e: any) {
+                handleError(e, t("round_details.errors.actionFailed"));
+            }
+        },
+        [clearErrors, closeConfirm, fetchRound, handleError, t],
+    );
+
+    const handleSaveUpdate = useCallback(async () => {
         if (!roundId || !roundData) return;
+
         clearErrors();
+
         try {
-            const payload = {
+            const payload: RoundUpdateRequestDto = {
                 ...roundData,
                 ...editFormData,
                 startDate: toUtcIso(editFormData.startDate),
                 endDate: toUtcIso(editFormData.endDate),
             };
+
             const updated = await roundService.updateRound(roundId, payload);
+
             setRoundData(updated);
-            setIsEditing(false);
-            setEditFormData(updated)
+            setIsEditingInfo(false);
+            setEditFormData({
+                name: updated.name ?? "",
+                startDate: toLocalInput(updated.startDate),
+                endDate: toLocalInput(updated.endDate),
+                countOfWinners: updated.countOfWinners,
+                requirements: updated.requirements ?? "",
+                task: updated.task ?? "",
+            });
         } catch (e: any) {
-            handleError(e, t('round_details.errors.updateRound'));
+            handleError(e, t("round_details.errors.updateRound"));
         }
-    }, [roundId, clearErrors, handleError, setRoundData, t]);
+    }, [clearErrors, editFormData, handleError, roundData, roundId, setRoundData, t]);
 
     return {
         isEditingInfo,
         setIsEditingInfo,
         editFormData,
         setEditFormData,
+        initializeEditForm,
         handleSaveUpdate,
         actions: {
             start: () => execute(() => roundService.startRound(roundId)),
@@ -78,9 +106,9 @@ export const useRoundInfoEditor = ({
                     await roundService.deleteRound(roundId);
                     window.location.href = `/tournaments/${roundData?.tournament.id}`;
                 } catch (e: any) {
-                    handleError(e, t('round_details.errors.delete'));
+                    handleError(e, t("round_details.errors.delete"));
                 }
-            }
-        }
+            },
+        },
     };
 };

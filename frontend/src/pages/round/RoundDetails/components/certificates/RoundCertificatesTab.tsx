@@ -57,14 +57,14 @@ import type {CertificateResponseDto, CertificateStatus} from '../../../../../ent
 type RoundCertificatesTabProps = UseRoundCertificatesTabParams;
 
 const fieldTranslationKey: Record<CertificateFieldKey, string> = {
-    eventTitle: 'eventTitle',
-    participantName: 'participantName',
-    teamName: 'teamName',
-    roundName: 'roundName',
+    fullName: 'fullName',
     place: 'place',
-    score: 'score',
-    eventDate: 'eventDate',
-    mentorName: 'mentorName',
+    isWinner: 'isWinner',
+    points: 'points',
+    roundName: 'roundName',
+    tournamentName: 'tournamentName',
+    teamName: 'teamName',
+    certDate: 'certDate',
 };
 
 function TabPanel({
@@ -219,7 +219,7 @@ export default function RoundCertificatesTab({ roundId, isAdmin = false }: Round
         [templates],
     );
 
-    const canDownloadApproved = (status?: CertificateStatus) => status === 'READY';
+    const canDownloadApproved = (status?: CertificateStatus) => status === 'READY' || isAdmin;
 
     const openPreview = (certificate: CertificateResponseDto) => {
         setCertificateResponseDto(certificate);
@@ -1167,7 +1167,7 @@ export default function RoundCertificatesTab({ roundId, isAdmin = false }: Round
                             fullWidth
                             variant="outlined"
                             onClick={() => CertificateResponseDto && downloadCertificate(CertificateResponseDto as never)}
-                            disabled={!CertificateResponseDto}
+                            disabled={!canDownloadApproved(CertificateResponseDto?.status)}
                             startIcon={<DownloadIcon />}
                         >
                             {t('certificate.download', 'Download')}

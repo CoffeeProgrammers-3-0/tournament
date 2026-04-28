@@ -17,7 +17,7 @@ interface RoundInfoTabProps {
 }
 
 export const RoundInfoTab = ({ state, t }: RoundInfoTabProps) => {
-    const { roundData, isEditing, editFormData, setEditFormData, triggerConfirm, actions } = state;
+    const { roundData, isEditing, editFormData, setEditFormData, triggerConfirm, actions, handleSaveMetadata, setIsEditing } = state;
 
     const getControlButtons = () => [
         {
@@ -25,42 +25,72 @@ export const RoundInfoTab = ({ state, t }: RoundInfoTabProps) => {
             label: t("round_details.actions.startRound"),
             color: "success" as const,
             variant: "contained" as const,
-            action: () => triggerConfirm({ title: t("round_details.confirm.start"), onConfirm: actions.start })
+            action: () => triggerConfirm({
+                title: t("round_details.confirm.start"),
+                description: t("round_details.confirm.startDesc", "This will start the round."),
+                confirmColor: "success",
+                onConfirm: actions.start,
+            }),
         },
         {
             show: roundData.status === "ACTIVE" && roundData.tournament.status === "RUNNING",
             label: t("round_details.actions.closeSubmissions"),
             color: "warning" as const,
             variant: "contained" as const,
-            action: () => triggerConfirm({ title: t("round_details.confirm.close"), onConfirm: actions.close })
+            action: () => triggerConfirm({
+                title: t("round_details.confirm.close"),
+                description: t("round_details.confirm.closeDesc", "This will close submissions for the round."),
+                confirmColor: "warning",
+                onConfirm: actions.close,
+            }),
         },
         {
             show: roundData.status === "ACTIVE" && roundData.tournament.status !== "FINISHED",
             label: t("round_details.actions.toDraft"),
             color: "error" as const,
             variant: "outlined" as const,
-            action: () => triggerConfirm({ title: t("round_details.confirm.toDraft"), onConfirm: actions.toDraft })
+            action: () => triggerConfirm({
+                title: t("round_details.confirm.toDraft"),
+                description: t("round_details.confirm.toDraftDesc", "This will move the round back to draft."),
+                confirmColor: "error",
+                onConfirm: actions.toDraft,
+            }),
         },
         {
             show: roundData.status === "SUBMISSION_CLOSED" && roundData.tournament.status === "RUNNING",
             label: t("round_details.actions.evaluate"),
             color: "primary" as const,
             variant: "contained" as const,
-            action: () => triggerConfirm({ title: t("round_details.confirm.evaluate"), onConfirm: actions.evaluate })
+            action: () => triggerConfirm({
+                title: t("round_details.confirm.evaluate"),
+                description: t("round_details.confirm.evaluateDesc", "This will start evaluation."),
+                confirmColor: "primary",
+                onConfirm: actions.evaluate,
+            }),
         },
         {
             show: roundData.status === "SUBMISSION_CLOSED" && roundData.tournament.status !== "FINISHED",
             label: t("round_details.actions.rollbackStart"),
             color: "warning" as const,
             variant: "outlined" as const,
-            action: () => triggerConfirm({ title: t("round_details.confirm.rollbackStart"), onConfirm: actions.rollbackStart })
+            action: () => triggerConfirm({
+                title: t("round_details.confirm.rollbackStart"),
+                description: t("round_details.confirm.rollbackStartDesc", "This will revert the round start."),
+                confirmColor: "warning",
+                onConfirm: actions.rollbackStart,
+            }),
         },
         {
             show: roundData.status === "EVALUATED" && roundData.tournament.status !== "FINISHED",
             label: t("round_details.actions.rollbackClose"),
             color: "warning" as const,
             variant: "outlined" as const,
-            action: () => triggerConfirm({ title: t("round_details.confirm.rollbackClose"), onConfirm: actions.rollbackClose })
+            action: () => triggerConfirm({
+                title: t("round_details.confirm.rollbackClose"),
+                description: t("round_details.confirm.rollbackCloseDesc", "This will revert the submission close."),
+                confirmColor: "warning",
+                onConfirm: actions.rollbackClose,
+            }),
         },
     ];
 
@@ -72,46 +102,54 @@ export const RoundInfoTab = ({ state, t }: RoundInfoTabProps) => {
                         <TextField
                             fullWidth
                             label={t("round_details.labels.name")}
-                            value={editFormData.name}
-                            onChange={e => setEditFormData({...editFormData, name: e.target.value})}
+                            value={editFormData.name ?? ""}
+                            onChange={(e) => setEditFormData((prev: any) => ({ ...prev, name: e.target.value }))}
                         />
+
                         <Grid container spacing={2}>
-                            <Grid size={{ xs: 6 }}>
+                            <Grid size={{ xs: 12, sm: 6 }}>
                                 <TextField
                                     fullWidth
                                     type="datetime-local"
                                     label={t("round_details.labels.startDate")}
-                                    InputLabelProps={{shrink: true}}
-                                    value={editFormData.startDate}
-                                    inputProps={{ min: roundData.tournament.startTournament || undefined, max: editFormData.endDate }}
-                                    onChange={e => setEditFormData({...editFormData, startDate: e.target.value})}
+                                    InputLabelProps={{ shrink: true }}
+                                    value={editFormData.startDate ?? ""}
+                                    inputProps={{ min: roundData.tournament.startTournament || undefined, max: editFormData.endDate ?? undefined }}
+                                    onChange={(e) => setEditFormData((prev: any) => ({ ...prev, startDate: e.target.value }))}
                                 />
                             </Grid>
-                            <Grid size={{ xs: 6 }}>
+
+                            <Grid size={{ xs: 12, sm: 6 }}>
                                 <TextField
                                     fullWidth
                                     type="datetime-local"
                                     disabled={roundData.status === "EVALUATED"}
                                     label={t("round_details.labels.endDate")}
-                                    InputLabelProps={{shrink: true}}
-                                    value={editFormData.endDate}
+                                    InputLabelProps={{ shrink: true }}
+                                    value={editFormData.endDate ?? ""}
                                     inputProps={{ min: roundData.startDate }}
-                                    onChange={e => setEditFormData({...editFormData, endDate: e.target.value})}
+                                    onChange={(e) => setEditFormData((prev: any) => ({ ...prev, endDate: e.target.value }))}
                                 />
                             </Grid>
                         </Grid>
 
                         <Typography variant="subtitle2">{t("round_details.labels.task")}</Typography>
-                        <ReactQuill value={editFormData.task} onChange={val => setEditFormData({...editFormData, task: val})} />
+                        <ReactQuill
+                            value={editFormData.task ?? ""}
+                            onChange={(val) => setEditFormData((prev: any) => ({ ...prev, task: val }))}
+                        />
 
                         <Typography variant="subtitle2">{t("round_details.labels.requirements")}</Typography>
-                        <ReactQuill value={editFormData.requirements} onChange={val => setEditFormData({...editFormData, requirements: val})} />
+                        <ReactQuill
+                            value={editFormData.requirements ?? ""}
+                            onChange={(val) => setEditFormData((prev: any) => ({ ...prev, requirements: val }))}
+                        />
 
-                        <Box sx={{ display: 'flex', gap: 2 }}>
-                            <Button variant="contained" onClick={state.handleSaveMetadata}>
+                        <Box sx={{ display: "flex", gap: 2 }}>
+                            <Button variant="contained" onClick={handleSaveMetadata}>
                                 {t("round_details.labels.save")}
                             </Button>
-                            <Button variant="outlined" onClick={() => state.setIsEditing(false)}>
+                            <Button variant="outlined" onClick={() => setIsEditing(false)}>
                                 {t("round_details.labels.cancel")}
                             </Button>
                         </Box>
@@ -119,12 +157,21 @@ export const RoundInfoTab = ({ state, t }: RoundInfoTabProps) => {
                 ) : (
                     <Stack spacing={4}>
                         <Box>
-                            <Typography variant="h6" fontWeight={700} color="primary">{t("round_details.labels.task")}</Typography>
-                            <Paper variant="outlined" sx={{ p: 2, mt: 1, bgcolor: '#fafafa' }} dangerouslySetInnerHTML={{ __html: roundData.task || t("round_details.labels.no_description") }} />
+                            <Typography variant="h6" fontWeight={700} color="primary">
+                                {t("round_details.labels.task")}
+                            </Typography>
+                            <Paper variant="outlined" sx={{ p: 2, mt: 1, bgcolor: "#fafafa" }}>
+                                <Box dangerouslySetInnerHTML={{ __html: roundData.task || t("round_details.labels.no_description") }} />
+                            </Paper>
                         </Box>
+
                         <Box>
-                            <Typography variant="h6" fontWeight={700} color="error">{t("round_details.labels.requirements")}</Typography>
-                            <Paper variant="outlined" sx={{ p: 2, mt: 1, bgcolor: '#fafafa' }} dangerouslySetInnerHTML={{ __html: roundData.requirements || t("round_details.labels.no_requirements") }} />
+                            <Typography variant="h6" fontWeight={700} color="error">
+                                {t("round_details.labels.requirements")}
+                            </Typography>
+                            <Paper variant="outlined" sx={{ p: 2, mt: 1, bgcolor: "#fafafa" }}>
+                                <Box dangerouslySetInnerHTML={{ __html: roundData.requirements || t("round_details.labels.no_requirements") }} />
+                            </Paper>
                         </Box>
                     </Stack>
                 )}
@@ -132,9 +179,12 @@ export const RoundInfoTab = ({ state, t }: RoundInfoTabProps) => {
 
             <Grid size={{ xs: 12, md: 4 }}>
                 <Card sx={{ p: 3, borderRadius: "24px", bgcolor: "#f8fafc" }}>
-                    <Typography variant="subtitle2" fontWeight={800} mb={2}>{t("round_details.labels.management")}</Typography>
+                    <Typography variant="subtitle2" fontWeight={800} mb={2}>
+                        {t("round_details.labels.management")}
+                    </Typography>
+
                     <Stack spacing={2}>
-                        {getControlButtons().filter(b => b.show).map((b, i) => (
+                        {getControlButtons().filter((b) => b.show).map((b, i) => (
                             <Button
                                 key={i}
                                 fullWidth
@@ -145,12 +195,20 @@ export const RoundInfoTab = ({ state, t }: RoundInfoTabProps) => {
                                 {b.label}
                             </Button>
                         ))}
+
                         <Divider />
-                        <Button fullWidth color="error" variant="outlined" onClick={() => triggerConfirm({
-                            title: t("round_details.confirm.delete"),
-                            confirmColor: "error",
-                            onConfirm: actions.delete
-                        })}>
+
+                        <Button
+                            fullWidth
+                            color="error"
+                            variant="outlined"
+                            onClick={() => triggerConfirm({
+                                title: t("round_details.confirm.delete"),
+                                description: t("round_details.confirm.deleteDesc", "This will permanently delete the round."),
+                                confirmColor: "error",
+                                onConfirm: actions.delete,
+                            })}
+                        >
                             {t("round_details.labels.delete")}
                         </Button>
                     </Stack>

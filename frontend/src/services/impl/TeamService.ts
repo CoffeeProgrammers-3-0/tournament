@@ -91,7 +91,7 @@ class TeamService extends BaseService {
     }
 
     public getMyTeamIdByRoundId(roundId: number): Promise<LongDto> {
-        return this.get<LongDto>(`/round/${roundId}/my-id`);
+        return this.get<LongDto>(`/rounds/${roundId}/my-id`);
     }
 }
 

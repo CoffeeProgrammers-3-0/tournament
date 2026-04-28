@@ -324,7 +324,7 @@ export const useRoundTeamsManager = ({
             weightedTotal += average(juryCategoryScores);
         });
 
-        const bonusTotal = bonusRows.reduce((sum, row) => sum + row.points, 0);
+        const bonusTotal = bonusRows.reduce((sum, row) => sum + row.points, 0) / juryList.length;
 
         return weightedTotal + bonusTotal;
     }, [bonusRows, criteriaGroups, getScore, juryList, selectedStats]);

@@ -19,7 +19,7 @@ import {roundEventService} from "../../../../services/impl/RoundEventService.ts"
 import type {RoundAdminMessageResponseDto} from "../../../../entities/adminMessage/adminMessage.dto.ts";
 import {roundAdminMessageService} from "../../../../services/impl/RoundAdminMessageService.ts";
 
-export const useRoundDetails = (id: string) => {
+export const useRoundDetails = (id: string, isUser: boolean) => {
     const navigate = useNavigate();
 
     const [loading, setLoading] = useState(true);
@@ -75,8 +75,8 @@ export const useRoundDetails = (id: string) => {
     const fetchMyTeamId = useCallback(async () => {
         if (!id) return;
         try {
-            const data = await teamService.getMyTeamIdByRoundId(Number(id));
-            setMyTeamId(data.value);
+            const data = isUser? (await teamService.getMyTeamIdByRoundId(Number(id))).value : -1;
+            setMyTeamId(data);
         } catch (error) {
             console.error("Failed to fetch my team id:", error);
         } finally {

@@ -5,24 +5,24 @@ import {certificateService} from '../../../../../services/impl/CertificateServic
 import {certificateTemplateService} from '../../../../../services/impl/CertificateTemplateService.ts';
 
 export type CertificateFieldKey =
-    | 'eventTitle'
-    | 'participantName'
-    | 'teamName'
-    | 'roundName'
+    | 'fullName'
     | 'place'
-    | 'score'
-    | 'eventDate'
-    | 'mentorName';
+    | 'isWinner'
+    | 'points'
+    | 'roundName'
+    | 'tournamentName'
+    | 'teamName'
+    | 'certDate';
 
 export const certificateFieldKeys: CertificateFieldKey[] = [
-    'eventTitle',
-    'participantName',
-    'teamName',
-    'roundName',
+    'fullName',
     'place',
-    'score',
-    'eventDate',
-    'mentorName',
+    'isWinner',
+    'points',
+    'roundName',
+    'tournamentName',
+    'teamName',
+    'certDate'
 ];
 
 export type CertificatesTabKey = 'my' | 'templates' | 'generate' | 'created';
@@ -46,7 +46,7 @@ export const templateBlocks: TemplateBlock[] = [
     {
         key: 'title',
         label: 'Title',
-        html: `<div class="title" th:text="\${eventTitle}">Event Title</div>`,
+        html: `<div class="title" th:text="\${tournamentName}">Tournament Name</div>`,
     },
     {
         key: 'subtitle',
@@ -56,24 +56,26 @@ export const templateBlocks: TemplateBlock[] = [
     {
         key: 'participant',
         label: 'Participant',
-        html: `<div class="name" th:text="\${participantName}">Participant Name</div>`,
+        html: `<div class="name" th:text="\${fullName}">Participant Name</div>`,
     },
     {
         key: 'metaRow',
         label: 'Meta row',
-        html: `<div class="meta">Team: <span th:text="\${teamName}">Team A</span></div>`,
+        html: `<div class="meta">
+  Team: <span th:text="\${teamName}">Team A</span>
+</div>`,
     },
     {
         key: 'divider',
         label: 'Divider',
-        html: `<hr style="border: 0; border-top: 1px solid #d1d5db; margin: 24px 0;" />`,
+        html: `<hr style="border:0;border-top:1px solid #d1d5db;margin:24px 0;" />`,
     },
     {
         key: 'signature',
         label: 'Signature',
         html: `<div style="margin-top: 28px; text-align: right">
-  <div style="font-size: 14px; color: #6b7280;">Mentor</div>
-  <div th:text="\${mentorName}">Mentor Name</div>
+  <div class="muted">Status</div>
+  <div th:text="\${isWinner} ? 'Winner' : 'Participant'">Winner</div>
 </div>`,
     },
     {
@@ -81,11 +83,11 @@ export const templateBlocks: TemplateBlock[] = [
         label: 'Footer',
         html: `<div class="footer">
   <div>
-    <div style="font-size: 14px; color: #6b7280;">Date</div>
-    <div th:text="\${eventDate}">2026-01-01</div>
+    <div class="muted">Date</div>
+    <div th:text="\${certDate}">2026-01-01</div>
   </div>
   <div style="text-align: right">
-    <div style="font-size: 14px; color: #6b7280;">Round</div>
+    <div class="muted">Round</div>
     <div th:text="\${roundName}">Final</div>
   </div>
 </div>`,
@@ -132,8 +134,6 @@ const DEFAULT_THYMELEAF_TEMPLATE = `<!doctype html>
     .title {
       font-size: 52px;
       font-weight: 700;
-      line-height: 1.1;
-      color: #111827;
       margin-bottom: 14px;
     }
 
@@ -146,13 +146,11 @@ const DEFAULT_THYMELEAF_TEMPLATE = `<!doctype html>
     .name {
       font-size: 40px;
       font-weight: 700;
-      color: #111827;
       margin: 12px 0 34px;
     }
 
     .meta {
       font-size: 18px;
-      color: #111827;
       margin: 10px 0;
     }
 
@@ -163,9 +161,7 @@ const DEFAULT_THYMELEAF_TEMPLATE = `<!doctype html>
       right: 60px;
       display: flex;
       justify-content: space-between;
-      gap: 24px;
       font-size: 16px;
-      color: #111827;
     }
 
     .muted {
@@ -173,37 +169,38 @@ const DEFAULT_THYMELEAF_TEMPLATE = `<!doctype html>
       font-size: 14px;
       margin-bottom: 4px;
     }
-
-    .sign-block {
-      text-align: right;
-    }
   </style>
 </head>
 <body>
   <div class="canvas">
     <div class="certificate">
 
-      <div class="title" th:text="\${eventTitle}">Event Title</div>
+      <div class="title" th:text="\${tournamentName}">Tournament Name</div>
       <div class="subtitle">Certificate of Achievement</div>
 
-      <div class="name" th:text="\${participantName}">Participant Name</div>
+      <div class="name" th:text="\${fullName}">Participant Name</div>
 
       <div class="meta">Team: <span th:text="\${teamName}">Team A</span></div>
       <div class="meta">Round: <span th:text="\${roundName}">Final</span></div>
       <div class="meta">Place: <span th:text="\${place}">1</span></div>
-      <div class="meta">Score: <span th:text="\${score}">100</span></div>
+      <div class="meta">Points: <span th:text="\${points}">100</span></div>
+      <div class="meta">
+        Status:
+        <span th:text="\${isWinner} ? 'Winner' : 'Participant'">Winner</span>
+      </div>
 
       <div class="footer">
         <div>
           <div class="muted">Date</div>
-          <div th:text="\${eventDate}">2026-01-01</div>
+          <div th:text="\${certDate}">2026-01-01</div>
         </div>
 
-        <div class="sign-block">
-          <div class="muted">Mentor</div>
-          <div th:text="\${mentorName}">Mentor Name</div>
+        <div>
+          <div class="muted">Round</div>
+          <div th:text="\${roundName}">Final</div>
         </div>
       </div>
+
     </div>
   </div>
 </body>
@@ -430,26 +427,21 @@ export function useRoundCertificatesTab({ roundId, isAdmin = false }: UseRoundCe
     );
 
     const downloadCertificate = useCallback((certificate: CertificateResponseDto) => {
-        const cert = certificate as CertificateResponseDto;
+        if (certificate.status !== 'READY' && !isAdmin) return;
 
-        if (cert.status !== 'READY') {
-            return;
-        }
+        const path = certificate.file?.path;
+        if (!path) return;
 
-        const downloadUrl = cert.file?.path;
+        const fullUrl = `${API_CONFIG.BASE_URL}${path}`;
 
-        if (downloadUrl) {
-            const link = document.createElement('a');
-            link.href = downloadUrl;
-            link.target = '_blank';
-            link.rel = 'noreferrer';
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-            return;
-        }
+        const link = document.createElement('a');
+        link.href = fullUrl;
+        link.target = '_blank';
+        link.rel = 'noreferrer';
 
-        window.open(API_CONFIG.BASE_URL + downloadUrl);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
     }, []);
 
     const selectedTemplate = useMemo(
