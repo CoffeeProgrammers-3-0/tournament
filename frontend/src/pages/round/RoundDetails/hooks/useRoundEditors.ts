@@ -22,7 +22,8 @@ type Params = {
     fetchEvents: (page: number) => Promise<void>; // Оновлено
     fetchMessages: (page: number) => Promise<void>; // Оновлено
     isAdmin: boolean;
-    t: any
+    t: any;
+    myTeamId: number | string;
 };
 
 export type ConfirmDialogConfig = {
@@ -67,6 +68,7 @@ export const useRoundEditors = (params: Params) => {
         fetchSubmissions: params.fetchSubmissions,
         t: params.t,
         isAdmin: params.isAdmin,
+        myTeamId: params.myTeamId,
         ...base,
     });
 

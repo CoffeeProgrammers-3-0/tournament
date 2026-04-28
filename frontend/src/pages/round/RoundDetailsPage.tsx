@@ -37,6 +37,7 @@ import {RoundTasksTab} from "./RoundDetails/components/tasks/RoundTasksTab.tsx";
 import {RoundAnnouncementsTab} from "./RoundDetails/components/events/RoundAnnouncementsTab.tsx";
 import {CreateEventDialog, CreateMessageDialog} from "./RoundDetails/components/events/AnnouncementDialogs.tsx";
 import {toLocalInput} from "../../utils/data.ts";
+import RoundCertificatesTab from "./RoundDetails/components/certificates/RoundCertificatesTab.tsx";
 
 const RoundDetailsPage = () => {
     const {t} = useTranslation();
@@ -65,13 +66,13 @@ const RoundDetailsPage = () => {
         fetchEvents: details.fetchEvents,
         fetchMessages: details.fetchMessages,
         isAdmin: isAdmin,
-        t: t
+        t: t,
+        myTeamId: details.myTeamId,
     });
 
     const TABS = [
         {id: "info", label: t("round_details.tabs.info"), show: true},
-        // НОВА ВКЛАДКА ДОСТУПНА ВСІМ
-        {id: "announcements", label: t("round_details.tabs.announcements", "Оголошення"), show: true},
+        {id: "announcements", label: t("round_details.tabs.announcements"), show: true},
         {id: "categories", label: t("round_details.tabs.categories"), show: true},
         {id: "jury", label: t("round_details.tabs.jury"), show: true},
         {
@@ -81,6 +82,13 @@ const RoundDetailsPage = () => {
         },
         {id: "submissions", label: t("round_details.tabs.submissions"), show: isAdmin},
         {id: "tasks", label: t("round_details.tabs.tasks"), show: isUser},
+
+        {
+            id: "certificates",
+            label: t("round_details.tabs.certificates", "Certificates"),
+            show: true
+        }
+
     ].filter(tab => tab.show);
 
     const activeTabId = TABS[details.tabValue]?.id;
@@ -108,6 +116,8 @@ const RoundDetailsPage = () => {
             case "tasks":
                 details.fetchTasks(0);
                 details.fetchAllMyTeammates();
+                break;
+            case "certificates":
                 break;
             default:
                 break;
@@ -240,6 +250,12 @@ const RoundDetailsPage = () => {
                                onDeleteTask={editors.handleDeleteTask} onUpdateMeta={editors.handleUpdateTaskMeta}
                                onUpdateTaskText={editors.handleUpdateTaskText} t={t}
                                onAssignTeammate={editors.handleAssignTeammate} myTeamUsers={details.myTeamUsers || []}/>
+            )}
+            {activeTabId === "certificates" && (
+                <RoundCertificatesTab
+                    roundId={Number(id)}
+                    isAdmin={isAdmin}
+                />
             )}
 
             <RoundStatsDialog

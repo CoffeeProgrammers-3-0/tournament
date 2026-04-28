@@ -3,6 +3,9 @@ import {roundService} from "../../../../../services/impl/RoundService";
 import {teamService} from "../../../../../services/impl/TeamService.ts";
 import type {StatisticResponseDto} from "../../../../../entities/team/team.dto.ts";
 
+import type {ConfirmDialogConfig} from "../../hooks/useRoundEditors"; // fix path
+
+
 type StatsViewMode = "aggregated" | "detailed";
 
 export type PivotRow = {
@@ -31,12 +34,7 @@ type Props = {
     fetchSubmissions: () => Promise<void>;
     clearErrors?: () => void;
     handleError?: (error: unknown, message: string) => void;
-    triggerConfirm: (config: {
-        title: string;
-        description: string;
-        confirmColor: "primary" | "error" | "warning" | "success";
-        onConfirm: () => Promise<void> | void;
-    }) => void;
+    triggerConfirm: (config: Omit<ConfirmDialogConfig, "open">) => void;
     closeConfirm: () => void;
     myTeamId: number | string;
     isAdmin: boolean;

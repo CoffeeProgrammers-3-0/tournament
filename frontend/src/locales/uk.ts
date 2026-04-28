@@ -65,9 +65,11 @@ export const uk = {
         "goHome": "На головну",
         "close": "Закрити",
         "post": "Опублікувати",
-        "confirm_delete": "Ви впевнені, що хочете видалити це повідомлення?"
+        "confirm_delete": "Ви впевнені, що хочете видалити це повідомлення?",
+        "refresh": "Оновити",
+        "unknownDate": "Невідома дата",
+        "selected": "Обрано"
     },
-
 
     announcements: {
         "messages": {
@@ -483,7 +485,8 @@ export const uk = {
             "submissions": "Роботи надіслані на перевірку",
             "stats": "Statistics",
             "tasks": "Завдання команди",
-            "announcements": "Оголошення та події"
+            "announcements": "Оголошення та події",
+            "certificates": "Сертифікати"
         },
         "tasks": {
             "title": "Завдання команди",
@@ -808,5 +811,74 @@ export const uk = {
         "hours": "г",
         "minutes": "м",
         "seconds": "с",
-    }
+    },
+
+    "certificate": {
+        "tabTitle": "Сертифікати",
+        "tabHeadline": "Робочий простір сертифікатів",
+        "tabDescription": "Створюйте шаблони, переглядайте їх у реальному часі, генеруйте сертифікати та підтверджуйте їх перед завантаженням.",
+
+        "myCertificates": "Мої сертифікати",
+        "myCertificatesHint": "Тут відображаються лише підтверджені сертифікати.",
+        "noMyCertificates": "У вас ще немає підтверджених сертифікатів.",
+
+        "templates": "Шаблони",
+        "templatesHint": "Знайдіть і оберіть шаблон для генерації сертифікатів.",
+        "noTemplates": "Шаблони відсутні.",
+        "searchTemplates": "Пошук шаблонів",
+
+        "createTemplate": "Створити шаблон",
+        "createTemplateHint": "Створюйте сертифікат за допомогою блоків і полів, переглядайте його та зберігайте.",
+
+        "templateName": "Назва шаблону",
+        "templateBody": "Тіло шаблону",
+        "templateBodyHelper": "Використовуйте HTML і змінні Thymeleaf, наприклад ${eventTitle}, ${participantName}.",
+        "templateFile": "Файл шаблону",
+
+        "downloadExample": "Завантажити приклад",
+        "downloadDraft": "Завантажити чернетку",
+        "resetDraft": "Скинути",
+        "saveTemplate": "Зберегти шаблон",
+
+        "uploadExistingTemplate": "Завантажити шаблон",
+        "uploadExistingHint": "Завантажте HTML-файл з плейсхолдерами.",
+        "chooseFile": "Обрати файл",
+
+        "blocks": "Блоки",
+        "fields": "Поля",
+        "dragHint": "Перетягніть блок або поле. Поля додають змінні типу ${participantName}.",
+
+        "preview": "Перегляд",
+        "previewHint": "Живий попередній перегляд HTML.",
+
+        "quickActions": "Швидкі дії",
+
+        "generate": "Генерація",
+        "generateCertificates": "Генерація сертифікатів",
+        "generateHint": "Сертифікати будуть створені на основі шаблону та даних бекенду.",
+        "generateHintShort": "Оберіть шаблон і згенеруйте сертифікати.",
+        "generateForRound": "Для раунду",
+        "generateForSelectedTeams": "Для вибраних команд",
+
+        "teamIds": "ID команд",
+        "teamIdsHelper": "ID через кому. Залиште порожнім для всіх команд.",
+
+        "selectedTemplate": "Обраний шаблон",
+
+        "createdByMe": "Створені мною",
+        "createdByMeHint": "Перевіряйте та підтверджуйте сертифікати.",
+        "noCreatedCertificates": "Ви ще не створювали сертифікати.",
+
+        "certificate": "Сертифікат",
+        "download": "Завантажити",
+
+        "fields.eventTitle": "Назва події",
+        "fields.participantName": "Ім’я учасника",
+        "fields.teamName": "Команда",
+        "fields.roundName": "Раунд",
+        "fields.place": "Місце",
+        "fields.score": "Бали",
+        "fields.eventDate": "Дата",
+        "fields.mentorName": "Ментор"
+    },
 };

@@ -63,7 +63,10 @@ export const en = {
         "goHome": "Go to Homepage",
         "close": "Close",
         "post": "Post",
-        "confirm_delete": "Are you sure you want to delete this message?"
+        "confirm_delete": "Are you sure you want to delete this message?",
+        "refresh": "Refresh",
+        "unknownDate": "Unknown date",
+        "selected": "Selected"
     },
     announcements: {
         "messages": {
@@ -485,7 +488,8 @@ export const en = {
             "submissions": "Submissions",
             "stats": "Statistics",
             "tasks": "Team Tasks",
-            "announcements": "Announcements"
+            "announcements": "Announcements",
+            "certificates": "Certificates"
         },
         "tasks": {
             "title": "Team Tasks",
@@ -795,5 +799,74 @@ export const en = {
         "hours": "h",
         "minutes": "m",
         "seconds": "s",
-    }
+    },
+
+    "certificate": {
+        "tabTitle": "Certificates",
+        "tabHeadline": "Certificate workspace",
+        "tabDescription": "Create templates, preview them live, generate certificates for teams, and approve them before users can download.",
+
+        "myCertificates": "My certificates",
+        "myCertificatesHint": "Only approved certificates are visible here.",
+        "noMyCertificates": "You do not have approved certificates yet.",
+
+        "templates": "Templates",
+        "templatesHint": "Search and select a template to generate certificates.",
+        "noTemplates": "No templates available yet.",
+        "searchTemplates": "Search templates",
+
+        "createTemplate": "Create template",
+        "createTemplateHint": "Build the certificate visually with blocks and fields, preview it live, then save or download the draft.",
+
+        "templateName": "Template name",
+        "templateBody": "Template body",
+        "templateBodyHelper": "Write valid HTML and Thymeleaf variables like ${eventTitle}, ${participantName}, ${teamName}.",
+        "templateFile": "Template file",
+
+        "downloadExample": "Download example",
+        "downloadDraft": "Download draft",
+        "resetDraft": "Reset draft",
+        "saveTemplate": "Save template",
+
+        "uploadExistingTemplate": "Upload existing template",
+        "uploadExistingHint": "Upload a ready-made HTML file with Thymeleaf placeholders.",
+        "chooseFile": "Choose file",
+
+        "blocks": "Blocks",
+        "fields": "Fields",
+        "dragHint": "Drag a block or a field into the editor. Blocks insert HTML; fields insert placeholders like ${participantName}.",
+
+        "preview": "Preview",
+        "previewHint": "Live HTML preview of the current draft.",
+
+        "quickActions": "Quick actions",
+
+        "generate": "Generate",
+        "generateCertificates": "Generate certificates",
+        "generateHint": "The generated certificates will use the selected template and Thymeleaf variables from your backend data.",
+        "generateHintShort": "Choose a template and generate certificates for teams.",
+        "generateForRound": "Generate for round",
+        "generateForSelectedTeams": "Generate for selected teams",
+
+        "teamIds": "Team IDs",
+        "teamIdsHelper": "Comma-separated team IDs. Leave empty to generate for all teams.",
+
+        "selectedTemplate": "Selected template",
+
+        "createdByMe": "Created by me",
+        "createdByMeHint": "Review drafts and approve certificates before users can download.",
+        "noCreatedCertificates": "You have not generated certificates yet.",
+
+        "certificate": "Certificate",
+        "download": "Download",
+
+        "fields.eventTitle": "Event title",
+        "fields.participantName": "Participant name",
+        "fields.teamName": "Team name",
+        "fields.roundName": "Round name",
+        "fields.place": "Place",
+        "fields.score": "Score",
+        "fields.eventDate": "Event date",
+        "fields.mentorName": "Mentor name"
+    },
 };
