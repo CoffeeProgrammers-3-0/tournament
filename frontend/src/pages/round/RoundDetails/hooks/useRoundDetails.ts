@@ -75,8 +75,8 @@ export const useRoundDetails = (id: string) => {
     const fetchMyTeamId = useCallback(async () => {
         if (!id) return;
         try {
-            const data = -1//await teamService.getMyTeamIdByRoundId(Number(id));
-            setMyTeamId(data);
+            const data = await teamService.getMyTeamIdByRoundId(Number(id));
+            setMyTeamId(data.value);
         } catch (error) {
             console.error("Failed to fetch my team id:", error);
         } finally {

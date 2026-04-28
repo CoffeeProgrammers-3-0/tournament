@@ -6,7 +6,7 @@ import type {
     TeamListResponseDto
 } from "../../entities/team/team.dto.ts";
 import type {UserCreateRequestForTeamDto, UserResponseDto} from "../../entities/user/user.dto.ts";
-import type {PaginationListResponseDto} from "../../entities/wrappers/wrapper.dto.ts";
+import type {LongDto, PaginationListResponseDto} from "../../entities/wrappers/wrapper.dto.ts";
 
 interface TeamQueryParams {
     page: number;
@@ -88,6 +88,10 @@ class TeamService extends BaseService {
 
     public getAllUsersByRoundOfMyTeam(roundId: number): Promise<UserResponseDto[]> {
         return this.get<UserResponseDto[]>(`/round/${roundId}/users`);
+    }
+
+    public getMyTeamIdByRoundId(roundId: number): Promise<LongDto> {
+        return this.get<LongDto>(`/round/${roundId}/my-id`);
     }
 }
 
