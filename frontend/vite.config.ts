@@ -18,6 +18,13 @@ export default defineConfig({
             exclude: [
                 "src/main.tsx",
                 "src/vite-env.d.ts",
+                "src/entities/**/*",
+                "src/services/**/*",
+                "src/themes/*",
+                "src/security/*",
+                "src/App.tsx",
+                "src/locales/*",
+                "src/i18n/index.ts",
             ],
         },
     },

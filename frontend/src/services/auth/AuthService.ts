@@ -15,11 +15,9 @@ class AuthService {
 
     static redirectToKeycloak(): void {
         const currentPath = window.location.pathname;
-        
-        if (currentPath === '/callback') return;
 
-        if (currentPath === '/login') {
-            localStorage.setItem('preLoginPath', "/");
+        if (currentPath === '/callback' || currentPath === '/login') {
+            localStorage.setItem('preLoginPath', '/home');
         } else if (currentPath !== '/') {
             localStorage.setItem('preLoginPath', currentPath);
         }
