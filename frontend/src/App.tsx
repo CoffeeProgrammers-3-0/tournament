@@ -26,6 +26,7 @@ import {GlobalAnnouncementsPage} from "./pages/notification/GlobalAnnouncementsP
 import {NotificationProvider} from "./context/NotificationContext.tsx";
 import CalendarPage from "./pages/calendar/CalendarPage.tsx";
 
+
 const App: React.FC = () => {
 
     return (

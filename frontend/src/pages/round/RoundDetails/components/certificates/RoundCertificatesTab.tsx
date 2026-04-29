@@ -156,11 +156,6 @@ export default function RoundCertificatesTab({ roundId, isAdmin = false }: Round
 
     const canManage = isAdmin;
 
-    const approvedMyCertificates = useMemo(
-        () => myCertificates.filter((certificate) => certificate.status === 'READY'),
-        [myCertificates],
-    );
-
     const filteredTemplates = useMemo(() => {
         const q = templateSearch.trim().toLowerCase();
         if (!q) return templates;
@@ -236,7 +231,7 @@ export default function RoundCertificatesTab({ roundId, isAdmin = false }: Round
     const stats = [
         {
             label: t('certificate.myCertificates', 'My certificates'),
-            value: approvedMyCertificates.length,
+            value: myCertificates.length,
             icon: <AutoAwesomeIcon fontSize="small" />,
         },
         {
@@ -352,7 +347,7 @@ export default function RoundCertificatesTab({ roundId, isAdmin = false }: Round
                                 <Box sx={{ py: 8, display: 'flex', justifyContent: 'center' }}>
                                     <CircularProgress />
                                 </Box>
-                            ) : approvedMyCertificates.length === 0 ? (
+                            ) : myCertificates.length === 0 ? (
                                 <Alert severity="info">
                                     {t('certificate.noMyCertificates', 'You do not have approved certificates yet.')}
                                 </Alert>
@@ -368,7 +363,7 @@ export default function RoundCertificatesTab({ roundId, isAdmin = false }: Round
                                         gap: 2,
                                     }}
                                 >
-                                    {approvedMyCertificates.map((certificate) => {
+                                    {myCertificates.map((certificate) => {
                                         const c = certificate as CertificateResponseDto;
                                         const meta = statusMeta(c.status);
 

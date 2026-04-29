@@ -264,10 +264,12 @@ export function useRoundCertificatesTab({ roundId, isAdmin = false }: UseRoundCe
     const fetchMyCertificates = useCallback(async () => {
         setLoadingMy(true);
         try {
-            const response = await certificateService.getMyCertificates({
-                page: myPage,
-                size: PAGE_SIZE,
-            });
+            const response = isAdmin ? await certificateService.getCreatedByMeCertificates({
+                    page: myPage,
+                    size: PAGE_SIZE,})
+                : await certificateService.getMyCertificates({
+                    page: myPage,
+                    size: PAGE_SIZE,});
             setMyCertificates(response.content);
             setMyTotalPages(response.totalPages);
         } finally {
@@ -280,7 +282,7 @@ export function useRoundCertificatesTab({ roundId, isAdmin = false }: UseRoundCe
 
         setLoadingCreated(true);
         try {
-            const response = await certificateService.getCreatedByMeCertificates({
+            const response = await certificateService.getAllCertificates({
                 page: createdPage,
                 size: PAGE_SIZE,
             });
