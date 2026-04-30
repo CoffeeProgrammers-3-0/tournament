@@ -741,7 +741,7 @@ export const en = {
             "assigned_to_round": "You have been appointed as a jury for the round '{{roundName}}'",
             "unassigned_from_round": "You are no longer a jury for the round '{{roundName}}'"
         },
-        "points_changed": "The score for your team '{{teamName}}' has been updated by {{pointsDiff}} points in round '{{roundName}}'",
+        "points_changed": "The score for your team '{{teamName}}' has been updated in round '{{roundName}}'",
         "team": {
             "created": "The team '{{teamName}}' has been successfully formed",
             "assigned_to_round": "Your team '{{teamName}}' is now participating in '{{roundName}}'",
