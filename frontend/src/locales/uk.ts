@@ -753,7 +753,7 @@ export const uk = {
             "assigned_to_round": "Вас призначено суддею на раунд «{{roundName}}»",
             "unassigned_from_round": "Вас усунено від суддівства в раунді «{{roundName}}»"
         },
-        "points_changed": "Бали вашої команди «{{teamName}}» змінилися на {{pointsDiff}}",
+        "points_changed": "Бали вашої команди «{{teamName}}» змінилися в раунді «{{roundName}}»",
         "team": {
             "created": "Створено нову команду «{{teamName}}»",
             "assigned_to_round": "Вашу команду «{{teamName}}» додано до участі в раунді «{{roundName}}»",
