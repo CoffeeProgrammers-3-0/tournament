@@ -47,6 +47,7 @@ services:
       KC_HTTP_RELATIVE_PATH: /auth
       KC_PROXY: edge
       KC_HOSTNAME: ${KEYCLOAK_URL}
+      SFL_SERVICE_URL: ${FRONTEND_URL}
     depends_on:
       postgres-keycloak:
         condition: service_healthy

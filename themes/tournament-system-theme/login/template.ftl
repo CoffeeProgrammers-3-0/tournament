@@ -193,7 +193,9 @@
         <div class="container">
             <div class="toolbar">
                 <div style="flex: 1;">
-                    <img src="${url.resourcesPath}/img/logo.png" alt="Star for Life" class="footer-logo" style="margin-bottom: 0; height: 50px;">
+                    <a href="${properties.sflServiceUrl!'#'}">
+                        <img src="${url.resourcesPath}/img/logo.png" alt="Star for Life" class="footer-logo" style="margin-bottom: 0; height: 50px;">
+                    </a>
                 </div>
 
                 <div style="flex: 1; display: flex; justify-content: flex-end; gap: 16px; align-items: center;">
