@@ -81,7 +81,8 @@ const RoundDetailsPage = () => {
         },
         { id: "submissions", label: t("round_details.tabs.submissions"), show: isAdmin },
         { id: "tasks", label: t("round_details.tabs.tasks"), show: isUser },
-        { id: "certificates", label: t("round_details.tabs.certificates", "Certificates"), show: true },
+        { id: "certificates", label: t("round_details.tabs.certificates", "Certificates"),
+            show: isAdmin || details.roundData?.status === "EVALUATED" || details.roundData?.status === "SUBMISSION_CLOSED" },
     ].filter((tab) => tab.show);
 
     const activeTabId = TABS[details.tabValue]?.id;
@@ -440,6 +441,7 @@ const RoundDetailsPage = () => {
                 initialData={editors.announcements.selectedMessage}
                 isLoading={editors.announcements.actionLoading}
                 t={t}
+                errors={editors.errors}
             />
 
             <CreateEventDialog
@@ -450,6 +452,7 @@ const RoundDetailsPage = () => {
                 isLoading={editors.announcements.actionLoading}
                 t={t}
                 isAdmin={isAdmin}
+                errors={editors.errors}
             />
 
             <UniversalConfirmDialog

@@ -13,41 +13,55 @@ import {
     Typography
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
-import type {RoundEventRequestDto,} from '../../../../../entities/roundEvent/roundEvent.dto';
 import ReactQuill from "react-quill-new";
+import type {RoundEventRequestDto} from '../../../../../entities/roundEvent/roundEvent.dto';
 import {HtmlContent, quillModules} from "./constants";
 import {toLocalInput, toUtcIso} from "../../../../../utils/data.ts";
+import {ErrorMessages} from "../../../../../components/main/ErrorMessages.tsx";
 
 export const CreateMessageDialog: React.FC<{
     open: boolean; onClose: () => void; t: any; isLoading?: boolean;
-    initialData?: any; onSubmit: (data: any) => Promise<void>;
-}> = ({ open, onClose, onSubmit, initialData, isLoading, t }) => {
+    initialData?: any; onSubmit: (data: any) => Promise<void>; errors: string[];
+}> = ({ open, onClose, onSubmit, initialData, isLoading, t, errors }) => {
     const [content, setContent] = useState('');
 
     useEffect(() => {
-        if (open) setContent(initialData?.content || '');
+        if (open) {
+            setContent(initialData?.content || '');
+        }
     }, [open, initialData]);
+
+    const handleSubmit = async () => {
+        await onSubmit({content});
+    }
 
     return (
         <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm" PaperProps={{ sx: { borderRadius: 3 } }}>
             <DialogTitle sx={{ fontWeight: 800 }}>
                 {initialData?.id ? `✏️ ${t('announcements.messages.edit_title')}` : `📢 ${t('announcements.messages.create_title')}`}
             </DialogTitle>
-            <DialogContent dividers sx={{ p: 0, minHeight: '300px' }}>
+            <DialogContent dividers sx={{ p: 0, minHeight: '300px', display: 'flex', flexDirection: 'column' }}>
+                {/* 👈 Render errors if they exist. Wrapped in Box for padding since Content has p: 0 */}
+                {errors.length > 0 && (
+                    <Box sx={{ p: 2, pb: 0 }}>
+                        <ErrorMessages errors={errors} />
+                    </Box>
+                )}
+
                 <ReactQuill
                     theme="snow"
                     value={content}
                     onChange={setContent}
                     modules={quillModules}
                     placeholder={t('announcements.messages.placeholder')}
-                    style={{ height: '250px', border: 'none' }}
+                    style={{ height: '250px', border: 'none', flexGrow: 1 }}
                 />
             </DialogContent>
             <DialogActions sx={{ p: 2, mt: 2 }}>
                 <Button onClick={onClose} color="inherit" sx={{ fontWeight: 700 }}>{t('common.cancel')}</Button>
                 <Button
                     variant="contained"
-                    onClick={() => onSubmit({ content })}
+                    onClick={handleSubmit} // 👈 Use the wrapped handler
                     disabled={isLoading || !content.replace(/<(.|\n)*?>/g, '').trim()}
                     sx={{ fontWeight: 700, borderRadius: 2 }}
                 >
@@ -60,14 +74,15 @@ export const CreateMessageDialog: React.FC<{
 
 export const CreateEventDialog: React.FC<{
     open: boolean; onClose: () => void; t: any; isAdmin: boolean; isLoading?: boolean;
-    initialData?: any; onSubmit: (data: any) => Promise<void>;
-}> = ({ open, onClose, onSubmit, initialData, isLoading, isAdmin, t }) => {
+    initialData?: any; onSubmit: (data: any) => Promise<void>; errors: string[];
+}> = ({ open, onClose, onSubmit, initialData, isLoading, isAdmin, t, errors }) => {
     const [formData, setFormData] = useState<Partial<RoundEventRequestDto>>({});
     const [isEditing, setIsEditing] = useState(false);
 
     useEffect(() => {
         if (open) {
             setIsEditing(!initialData);
+
             if (initialData) {
                 setFormData({
                     ...initialData,
@@ -123,16 +138,15 @@ export const CreateEventDialog: React.FC<{
         </Grid>
     );
 
-    const handleSave = () => {
+    const handleSave = async () => {
         const data = { ...formData } as RoundEventRequestDto;
         if (data.type === 'ONLINE') data.location = '';
         else data.platformUrl = '';
 
-        // ЄДИНЕ МІСЦЕ ДЛЯ КОНВЕРТАЦІЇ В БЕКЕНД ФОРМАТ
         data.startDate = toUtcIso(data.startDate);
         data.endDate = toUtcIso(data.endDate);
 
-        onSubmit(data);
+        await onSubmit(data);
     };
 
     return (
@@ -147,6 +161,9 @@ export const CreateEventDialog: React.FC<{
             </DialogTitle>
             <Divider />
             <DialogContent dividers>
+                {/* 👈 Render errors at the top of the modal content */}
+                <ErrorMessages errors={errors} />
+
                 <Grid container spacing={3}>
                     {renderField(t('announcements.events.label_title'), formData.title, 'title')}
                     <Grid size={{ xs: 12, md: 6 }}>

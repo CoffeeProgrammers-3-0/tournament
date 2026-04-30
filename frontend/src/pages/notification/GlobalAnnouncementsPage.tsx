@@ -145,6 +145,7 @@ const NotificationItem = React.memo(({notif, onClick, t, language}: any) => {
         }
     }, [notif.payload]);
 
+
     return (
         <Card
             onClick={() => onClick(notif)}
@@ -198,6 +199,15 @@ export const GlobalAnnouncementsPage: React.FC = () => {
     const totalPages = useMemo(() => {
         return tabValue === 0 ? (messages?.totalPages || 0) : (notifications?.totalPages || 0);
     }, [tabValue, messages, notifications]);
+
+    const [errors, setErrors] = useState<string[]>([]);
+
+    const clearErrors = useCallback(() => setErrors([]), []);
+
+    const handleError = useCallback((error: any, defaultMessage: string) => {
+        const messages = error.response?.data?.messages;
+        setErrors(Array.isArray(messages) ? messages : [defaultMessage]);
+    }, []);
 
     const fetchData = useCallback(async (targetPage: number, targetTab: number) => {
         setLoading(true);
@@ -356,13 +366,15 @@ export const GlobalAnnouncementsPage: React.FC = () => {
                         if (selectedMsg) await adminMessageService.updateMessage(selectedMsg.id, data);
                         else await adminMessageService.create(data);
                         setMsgModalOpen(false);
-                        fetchData(page, tabValue);
+                        clearErrors()
+                        await fetchData(page, tabValue);
                     } catch (err) {
-                        console.error("Save failed", err);
+                        handleError(err, "Save failed");
                     }
                 }}
                 initialData={selectedMsg}
                 t={t}
+                errors={errors}
             />
         </Container>
     );
