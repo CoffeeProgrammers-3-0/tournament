@@ -146,6 +146,7 @@ const RoundDetailsPage = () => {
         handleSaveMetadata,
         setIsEditing: editors.setIsEditingInfo,
         actions: editors.actions,
+        isAdmin: isAdmin,
     };
 
     return (

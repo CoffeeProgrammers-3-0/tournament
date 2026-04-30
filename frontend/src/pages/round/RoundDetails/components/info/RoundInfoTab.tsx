@@ -12,12 +12,23 @@ interface RoundInfoTabProps {
         handleSaveMetadata: () => void;
         setIsEditing: (val: boolean) => void;
         actions: Record<string, () => Promise<void>>;
+        isAdmin: boolean;
     };
     t: any;
 }
 
-export const RoundInfoTab = ({ state, t }: RoundInfoTabProps) => {
-    const { roundData, isEditing, editFormData, setEditFormData, triggerConfirm, actions, handleSaveMetadata, setIsEditing } = state;
+export const RoundInfoTab = ({state, t}: RoundInfoTabProps) => {
+    const {
+        roundData,
+        isEditing,
+        editFormData,
+        setEditFormData,
+        triggerConfirm,
+        actions,
+        handleSaveMetadata,
+        setIsEditing,
+        isAdmin
+    } = state;
 
     const getControlButtons = () => [
         {
@@ -96,39 +107,48 @@ export const RoundInfoTab = ({ state, t }: RoundInfoTabProps) => {
 
     return (
         <Grid container spacing={4}>
-            <Grid size={{ xs: 12, md: 8 }}>
+            <Grid size={{xs: 12, md: isAdmin ? 8 : 12}}>
                 {isEditing ? (
                     <Stack spacing={3}>
                         <TextField
                             fullWidth
                             label={t("round_details.labels.name")}
                             value={editFormData.name ?? ""}
-                            onChange={(e) => setEditFormData((prev: any) => ({ ...prev, name: e.target.value }))}
+                            onChange={(e) => setEditFormData((prev: any) => ({...prev, name: e.target.value}))}
                         />
 
                         <Grid container spacing={2}>
-                            <Grid size={{ xs: 12, sm: 6 }}>
+                            <Grid size={{xs: 12, sm: 6}}>
                                 <TextField
                                     fullWidth
                                     type="datetime-local"
                                     label={t("round_details.labels.startDate")}
-                                    InputLabelProps={{ shrink: true }}
+                                    InputLabelProps={{shrink: true}}
                                     value={editFormData.startDate ?? ""}
-                                    inputProps={{ min: roundData.tournament.startTournament || undefined, max: editFormData.endDate ?? undefined }}
-                                    onChange={(e) => setEditFormData((prev: any) => ({ ...prev, startDate: e.target.value }))}
+                                    inputProps={{
+                                        min: roundData.tournament.startTournament || undefined,
+                                        max: editFormData.endDate ?? undefined
+                                    }}
+                                    onChange={(e) => setEditFormData((prev: any) => ({
+                                        ...prev,
+                                        startDate: e.target.value
+                                    }))}
                                 />
                             </Grid>
 
-                            <Grid size={{ xs: 12, sm: 6 }}>
+                            <Grid size={{xs: 12, sm: 6}}>
                                 <TextField
                                     fullWidth
                                     type="datetime-local"
                                     disabled={roundData.status === "EVALUATED"}
                                     label={t("round_details.labels.endDate")}
-                                    InputLabelProps={{ shrink: true }}
+                                    InputLabelProps={{shrink: true}}
                                     value={editFormData.endDate ?? ""}
-                                    inputProps={{ min: roundData.startDate }}
-                                    onChange={(e) => setEditFormData((prev: any) => ({ ...prev, endDate: e.target.value }))}
+                                    inputProps={{min: roundData.startDate}}
+                                    onChange={(e) => setEditFormData((prev: any) => ({
+                                        ...prev,
+                                        endDate: e.target.value
+                                    }))}
                                 />
                             </Grid>
                         </Grid>
@@ -136,16 +156,16 @@ export const RoundInfoTab = ({ state, t }: RoundInfoTabProps) => {
                         <Typography variant="subtitle2">{t("round_details.labels.task")}</Typography>
                         <ReactQuill
                             value={editFormData.task ?? ""}
-                            onChange={(val) => setEditFormData((prev: any) => ({ ...prev, task: val }))}
+                            onChange={(val) => setEditFormData((prev: any) => ({...prev, task: val}))}
                         />
 
                         <Typography variant="subtitle2">{t("round_details.labels.requirements")}</Typography>
                         <ReactQuill
                             value={editFormData.requirements ?? ""}
-                            onChange={(val) => setEditFormData((prev: any) => ({ ...prev, requirements: val }))}
+                            onChange={(val) => setEditFormData((prev: any) => ({...prev, requirements: val}))}
                         />
 
-                        <Box sx={{ display: "flex", gap: 2 }}>
+                        <Box sx={{display: "flex", gap: 2}}>
                             <Button variant="contained" onClick={handleSaveMetadata}>
                                 {t("round_details.labels.save")}
                             </Button>
@@ -160,8 +180,9 @@ export const RoundInfoTab = ({ state, t }: RoundInfoTabProps) => {
                             <Typography variant="h6" fontWeight={700} color="primary">
                                 {t("round_details.labels.task")}
                             </Typography>
-                            <Paper variant="outlined" sx={{ p: 2, mt: 1, bgcolor: "#fafafa" }}>
-                                <Box dangerouslySetInnerHTML={{ __html: roundData.task || t("round_details.labels.no_description") }} />
+                            <Paper variant="outlined" sx={{p: 2, mt: 1, bgcolor: "#fafafa"}}>
+                                <Box
+                                    dangerouslySetInnerHTML={{__html: roundData.task || t("round_details.labels.no_description")}}/>
                             </Paper>
                         </Box>
 
@@ -169,51 +190,54 @@ export const RoundInfoTab = ({ state, t }: RoundInfoTabProps) => {
                             <Typography variant="h6" fontWeight={700} color="error">
                                 {t("round_details.labels.requirements")}
                             </Typography>
-                            <Paper variant="outlined" sx={{ p: 2, mt: 1, bgcolor: "#fafafa" }}>
-                                <Box dangerouslySetInnerHTML={{ __html: roundData.requirements || t("round_details.labels.no_requirements") }} />
+                            <Paper variant="outlined" sx={{p: 2, mt: 1, bgcolor: "#fafafa"}}>
+                                <Box
+                                    dangerouslySetInnerHTML={{__html: roundData.requirements || t("round_details.labels.no_requirements")}}/>
                             </Paper>
                         </Box>
                     </Stack>
                 )}
             </Grid>
 
-            <Grid size={{ xs: 12, md: 4 }}>
-                <Card sx={{ p: 3, borderRadius: "24px", bgcolor: "#f8fafc" }}>
-                    <Typography variant="subtitle2" fontWeight={800} mb={2}>
-                        {t("round_details.labels.management")}
-                    </Typography>
+            {isAdmin &&
+                <Grid size={{xs: 12, md: 4}}>
+                    <Card sx={{p: 3, borderRadius: "24px", bgcolor: "#f8fafc"}}>
+                        <Typography variant="subtitle2" fontWeight={800} mb={2}>
+                            {t("round_details.labels.management")}
+                        </Typography>
 
-                    <Stack spacing={2}>
-                        {getControlButtons().filter((b) => b.show).map((b, i) => (
+                        <Stack spacing={2}>
+                            {getControlButtons().filter((b) => b.show).map((b, i) => (
+                                <Button
+                                    key={i}
+                                    fullWidth
+                                    variant={b.variant}
+                                    color={b.color}
+                                    onClick={b.action}
+                                >
+                                    {b.label}
+                                </Button>
+                            ))}
+
+                            <Divider/>
+
                             <Button
-                                key={i}
                                 fullWidth
-                                variant={b.variant}
-                                color={b.color}
-                                onClick={b.action}
+                                color="error"
+                                variant="outlined"
+                                onClick={() => triggerConfirm({
+                                    title: t("round_details.confirm.delete"),
+                                    description: t("round_details.confirm.deleteDesc", "This will permanently delete the round."),
+                                    confirmColor: "error",
+                                    onConfirm: actions.delete,
+                                })}
                             >
-                                {b.label}
+                                {t("round_details.labels.delete")}
                             </Button>
-                        ))}
-
-                        <Divider />
-
-                        <Button
-                            fullWidth
-                            color="error"
-                            variant="outlined"
-                            onClick={() => triggerConfirm({
-                                title: t("round_details.confirm.delete"),
-                                description: t("round_details.confirm.deleteDesc", "This will permanently delete the round."),
-                                confirmColor: "error",
-                                onConfirm: actions.delete,
-                            })}
-                        >
-                            {t("round_details.labels.delete")}
-                        </Button>
-                    </Stack>
-                </Card>
-            </Grid>
+                        </Stack>
+                    </Card>
+                </Grid>
+            }
         </Grid>
     );
 };
