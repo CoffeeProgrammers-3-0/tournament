@@ -1,34 +1,46 @@
-import {useEffect} from "react";
+import {useEffect, useMemo, useState} from "react";
 import {
     Box,
     Button,
+    Card,
+    CardContent,
     Chip,
     CircularProgress,
     IconButton,
+    Pagination,
     Paper,
+    Stack,
     Table,
     TableBody,
     TableCell,
     TableContainer,
     TableHead,
     TableRow,
+    ToggleButton,
+    ToggleButtonGroup,
     Tooltip,
-    Typography
+    Typography,
 } from "@mui/material";
-import TrophyIcon from "@mui/icons-material/EmojiEvents";
-import InsertChartOutlinedIcon from "@mui/icons-material/InsertChartOutlined";
+import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
+import LeaderboardIcon from "@mui/icons-material/Leaderboard";
 import GroupAddIcon from "@mui/icons-material/GroupAdd";
 import PersonRemoveIcon from "@mui/icons-material/PersonRemove";
 import FastForwardIcon from "@mui/icons-material/FastForward";
 import GroupIcon from "@mui/icons-material/Group";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
+import GroupRemoveIcon from "@mui/icons-material/GroupRemove";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import TrendingUpIcon from "@mui/icons-material/TrendingUp";
+import ViewListIcon from "@mui/icons-material/ViewList";
 import {Client, type IMessage} from "@stomp/stompjs";
 import SockJS from "sockjs-client";
-import type {TeamLeaderboardResponseDto} from "../../../../../entities/team/team.dto";
+
+import type {TeamLeaderboardResponseDto, TeamListResponseDto} from "../../../../../entities/team/team.dto";
 import type {RoundFullResponseDto} from "../../../../../entities/round/round.dto";
 import {ErrorMessages} from "../../../../../components/main/ErrorMessages.tsx";
 import {RoundFormula} from "./RoundFormula.tsx";
-import GroupRemoveIcon from "@mui/icons-material/GroupRemove";
+
+type TeamViewMode = "all" | "leaderboard";
 
 type Props = {
     maxPoints: number;
@@ -52,96 +64,120 @@ type Props = {
     onAssignAllTeams: () => void;
     onUnassignAllTeams: () => void;
     myTeamId?: number | string;
+
+    allTeams: TeamListResponseDto[];
+    loadingAllTeams: boolean;
+    allTeamsPage: number;
+    allTeamsTotalPages: number;
+    setAllTeamsPage: (page: number) => void;
 };
 
 type WebSocketPayload = {
-    type: 'POINTS_CHANGED' | 'TEAM_DELETED' | 'TEAM_UNASSIGNED_FROM_ROUND' | 'TEAM_ASSIGNED_TO_ROUND';
+    type: "POINTS_CHANGED" | "TEAM_DELETED" | "TEAM_UNASSIGNED_FROM_ROUND" | "TEAM_ASSIGNED_TO_ROUND";
     content: any[];
 };
 
-export const RoundTeamsTab = ({
-                                  setLeaderboard, leaderboard, loadingTab, hasMore, isNextPageLoading, onLoadMore,
-                                  roundData, onOpenStats, navigate, t, isAdmin, onOpenAddMissingTeamsModal,
-                                  onOpenAdvanceTeamsModal, onUnassignTeam, onExportLeaderboard, isExporting, errors,
-                                  onAssignAllTeams, onUnassignAllTeams, myTeamId, maxPoints
-                              }: Props) => {
+const getTeamName = (team: any) => team.name || team.title || `#${team.id}`;
+const getTeamEmail = (team: any) => team.email || "—";
+const getMembersCount = (team: any) => team.countOfMembers ?? team.membersCount ?? 0;
+const getPoints = (team: any) => team.points ?? 0;
 
+export const RoundTeamsTab = ({
+                                  setLeaderboard,
+                                  leaderboard,
+                                  loadingTab,
+                                  hasMore,
+                                  isNextPageLoading,
+                                  onLoadMore,
+                                  roundData,
+                                  onOpenStats,
+                                  navigate,
+                                  t,
+                                  isAdmin,
+                                  onOpenAddMissingTeamsModal,
+                                  onOpenAdvanceTeamsModal,
+                                  onUnassignTeam,
+                                  onExportLeaderboard,
+                                  isExporting,
+                                  errors,
+                                  onAssignAllTeams,
+                                  onUnassignAllTeams,
+                                  myTeamId,
+                                  maxPoints,
+                                  allTeams,
+                                  loadingAllTeams,
+                                  allTeamsPage,
+                                  allTeamsTotalPages,
+                                  setAllTeamsPage,
+                              }: Props) => {
+    const [viewMode, setViewMode] = useState<TeamViewMode>("all");
 
     useEffect(() => {
-        if (!roundData?.id) return;
+        if (viewMode !== "leaderboard" || !roundData?.id) return;
 
         const updateWithWS = (message: IMessage) => {
             const payload: WebSocketPayload = JSON.parse(message.body);
-            const { type, content } = payload;
+            const {type, content} = payload;
 
             setLeaderboard((prevLeaderboard) => {
                 let updated = [...prevLeaderboard];
 
                 switch (type) {
-                    case 'TEAM_ASSIGNED_TO_ROUND': {
+                    case "TEAM_ASSIGNED_TO_ROUND": {
                         const newTeams = content.filter(
-                            (newTeam: TeamLeaderboardResponseDto) => !prevLeaderboard.some(t => t.id === newTeam.id)
+                            (newTeam: TeamLeaderboardResponseDto) => !prevLeaderboard.some((t) => t.id === newTeam.id),
                         );
                         updated = [...prevLeaderboard, ...newTeams];
                         break;
                     }
 
-                    case 'TEAM_UNASSIGNED_FROM_ROUND':
-                    case 'TEAM_DELETED': {
+                    case "TEAM_UNASSIGNED_FROM_ROUND":
+                    case "TEAM_DELETED": {
                         const idsToRemove = new Set(content.map((item: { id: number }) => item.id));
-                        updated = prevLeaderboard.filter(t => !idsToRemove.has(t.id));
+                        updated = prevLeaderboard.filter((t) => !idsToRemove.has(t.id));
                         break;
                     }
 
-                    case 'POINTS_CHANGED': {
-                        let newLeaderboard = [...prevLeaderboard];
+                    case "POINTS_CHANGED": {
+                        const next = [...prevLeaderboard];
 
                         content.forEach((updatedTeam: TeamLeaderboardResponseDto) => {
-                            const index = newLeaderboard.findIndex(t => t.id === updatedTeam.id);
+                            const index = next.findIndex((t) => t.id === updatedTeam.id);
 
                             if (index !== -1) {
-                                newLeaderboard[index] = { ...newLeaderboard[index], ...updatedTeam };
+                                next[index] = {...next[index], ...updatedTeam};
                             } else {
-                                const lowestVisiblePoints = newLeaderboard.length > 0
-                                    ? newLeaderboard[newLeaderboard.length - 1].points
-                                    : 0;
-
+                                const lowestVisiblePoints = next.length > 0 ? next[next.length - 1].points : 0;
                                 if (updatedTeam.points > lowestVisiblePoints) {
-                                    newLeaderboard.push(updatedTeam);
+                                    next.push(updatedTeam);
                                 }
                             }
                         });
 
-                        return newLeaderboard
-                            .sort((a, b) => b.points - a.points || a.name.localeCompare(b.name))
-                            .slice(0, prevLeaderboard.length > 20 ? prevLeaderboard.length : 20);
+                        return next.sort((a, b) => b.points - a.points || a.name.localeCompare(b.name));
                     }
 
                     default:
                         break;
                 }
 
-                return updated
-                    .sort((a, b) => b.points - a.points || b.id - a.id)
-                    .slice(0, Math.max(prevLeaderboard.length, 10));
+                return updated.sort((a, b) => b.points - a.points || a.name.localeCompare(b.name));
             });
         };
 
         const client = new Client({
-            webSocketFactory: () => new SockJS(`${import.meta.env.VITE_API_BASE_URL || ''}/ws`),
+            webSocketFactory: () => new SockJS(`${import.meta.env.VITE_API_BASE_URL || ""}/ws`),
             reconnectDelay: 5000,
             heartbeatIncoming: 10000,
             heartbeatOutgoing: 10000,
             onConnect: () => {
-                console.log(`Connected to WebSocket for Round ${roundData.id}`);
-
                 client.subscribe(`/topic/rounds/${roundData.id}/leaderboard`, (message) => {
                     updateWithWS(message);
                 });
             },
             onStompError: (frame) => {
-                console.error('Broker reported error: ' + frame.headers['message']);
-                console.error('Additional details: ' + frame.body);
+                console.error("Broker reported error: " + frame.headers["message"]);
+                console.error("Additional details: " + frame.body);
             },
         });
 
@@ -150,189 +186,412 @@ export const RoundTeamsTab = ({
         return () => {
             client.deactivate();
         };
-    }, [roundData?.id, setLeaderboard]);
+    }, [roundData?.id, setLeaderboard, viewMode]);
+
+    const winnerCount = roundData?.countOfWinners || 0;
+
+    const teamActions = (team: any) => {
+        const canViewStats = isAdmin || String(team.id) === String(myTeamId);
+
+        return (
+            <Box sx={{display: "flex", gap: 1, justifyContent: "center", flexWrap: "wrap"}}>
+                {viewMode === "all" && isAdmin && (
+                    <Tooltip title={t("round_details.teams.remove_from_round", "Remove from round")}>
+                        <IconButton
+                            color="error"
+                            size="small"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onUnassignTeam(team.id);
+                            }}
+                        >
+                            <PersonRemoveIcon fontSize="small"/>
+                        </IconButton>
+                    </Tooltip>
+                )}
+
+                {viewMode === "leaderboard" && canViewStats && (
+                    <Tooltip title={t("round_details.teams.view_stats", "View stats")}>
+                        <IconButton
+                            color="primary"
+                            size="small"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onOpenStats(team.id, e);
+                            }}
+                            sx={{bgcolor: "primary.50"}}
+                        >
+                            <VisibilityIcon fontSize="small"/>
+                        </IconButton>
+                    </Tooltip>
+                )}
+            </Box>
+        );
+    };
+
+    const allTeamsContent = useMemo(() => {
+        return allTeams.map((team, index) => (
+            <TableRow
+                key={team.id}
+                hover
+                onClick={() => navigate(`/teams/${team.id}`)}
+                sx={{
+                    cursor: "pointer",
+                    transition: "background-color 0.2s",
+                    "&:hover": {bgcolor: "rgba(25, 118, 210, 0.04) !important"},
+                }}
+            >
+                <TableCell align="center">
+                    <Typography fontWeight={700} color="text.secondary">
+                        {allTeamsPage * 10 + index + 1}
+                    </Typography>
+                </TableCell>
+
+                <TableCell>
+                    <Stack spacing={0.25}>
+                        <Typography fontWeight={700}>{getTeamName(team)}</Typography>
+                        <Typography variant="caption" color="text.secondary">
+                            ID: {team.id}
+                        </Typography>
+                    </Stack>
+                </TableCell>
+
+                <TableCell>
+                    <Typography variant="body2" color="text.secondary">
+                        {getTeamEmail(team)}
+                    </Typography>
+                </TableCell>
+
+                <TableCell align="center">
+                    <Box sx={{display: "flex", alignItems: "center", justifyContent: "center", gap: 0.75}}>
+                        <GroupIcon sx={{fontSize: 18, color: "text.secondary"}}/>
+                        <Typography variant="body2" fontWeight={700}>
+                            {getMembersCount(team)}
+                        </Typography>
+                    </Box>
+                </TableCell>
+
+                <TableCell align="center">
+                    {teamActions(team)}
+                </TableCell>
+            </TableRow>
+        ));
+    }, [allTeams, allTeamsPage, navigate, onOpenStats, onUnassignTeam, isAdmin, myTeamId, t, viewMode]);
+
+    const leaderboardContent = useMemo(() => {
+        return leaderboard.map((team, index) => (
+            <TableRow
+                key={team.id}
+                hover
+                onClick={() => navigate(`/teams/${team.id}`)}
+                sx={{
+                    cursor: "pointer",
+                    transition: "background-color 0.2s",
+                    "&:hover": {bgcolor: "rgba(25, 118, 210, 0.04) !important"},
+                    ...(index < winnerCount && {bgcolor: "rgba(76, 175, 80, 0.03)"}),
+                }}
+            >
+                <TableCell align="center" width="90px">
+                    {index === 0 ? (
+                        <EmojiEventsIcon sx={{color: "gold"}}/>
+                    ) : index === 1 ? (
+                        <EmojiEventsIcon sx={{color: "silver"}}/>
+                    ) : index === 2 ? (
+                        <EmojiEventsIcon sx={{color: "#cd7f32"}}/>
+                    ) : (
+                        <Typography fontWeight={800} color="text.secondary">
+                            {index + 1}
+                        </Typography>
+                    )}
+                </TableCell>
+
+                <TableCell>
+                    <Stack spacing={0.25}>
+                        <Typography fontWeight={800}>{getTeamName(team)}</Typography>
+                        <Typography variant="caption" color="text.secondary">
+                            {getTeamEmail(team)}
+                        </Typography>
+                    </Stack>
+                </TableCell>
+
+                <TableCell align="center">
+                    <Box sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 0.5,
+                        color: "text.secondary"
+                    }}>
+                        <GroupIcon sx={{fontSize: 18}}/>
+                        <Typography variant="body2" fontWeight={700}>
+                            {getMembersCount(team)}
+                        </Typography>
+                    </Box>
+                </TableCell>
+
+                <TableCell align="right">
+                    <Chip
+                        label={`${getPoints(team)} / ${maxPoints}`}
+                        color={index < winnerCount ? "success" : "default"}
+                        sx={{fontWeight: 800, minWidth: 100}}
+                    />
+                </TableCell>
+
+                <TableCell align="center">
+                    {teamActions(team)}
+                </TableCell>
+            </TableRow>
+        ));
+    }, [leaderboard, maxPoints, navigate, onOpenStats, onUnassignTeam, isAdmin, myTeamId, t, viewMode, winnerCount]);
 
     return (
         <Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Typography variant="h5" fontWeight={700}>
-                    {t("round_details.tabs.teams")}
-                </Typography>
-                <ErrorMessages errors={errors} />
+            <Paper
+                variant="outlined"
+                sx={{
+                    mb: 2.5,
+                    p: {xs: 2, md: 2.5},
+                    borderRadius: 4,
+                    background: "linear-gradient(135deg, rgba(15,23,42,0.03), rgba(59,130,246,0.04), rgba(255,255,255,1))",
+                }}
+            >
+                <Stack direction={{xs: "column", lg: "row"}} justifyContent="space-between" gap={2}
+                       alignItems={{lg: "center"}}>
+                    <Box>
+                        <Typography variant="overline" color="primary" fontWeight={800} letterSpacing={1.4}>
+                            {t("round_details.tabs.teams", "Teams")}
+                        </Typography>
 
-                <Box sx={{ display: 'flex', gap: 2, flexWrap: "wrap", justifyContent: "flex-end" }}>
-                    <Button
-                        variant="outlined"
-                        startIcon={isExporting ? <CircularProgress size={20} /> : <FileDownloadIcon />}
-                        onClick={onExportLeaderboard}
-                        disabled={isExporting || leaderboard.length === 0}
-                    >
-                        {t("round_details.export_leaderboard")}
-                    </Button>
+                        <Typography variant="h5" fontWeight={850}>
+                            {t("round_details.teams.title", "Teams overview")}
+                        </Typography>
 
-                    {isAdmin && (
-                        <>
-                            <Button
-                                variant="outlined"
-                                color="success"
-                                startIcon={<GroupAddIcon />}
-                                onClick={onAssignAllTeams}
-                            >
-                                {t("round_details.teams.assign_all")}
-                            </Button>
+                        <Typography variant="body2" color="text.secondary" sx={{mt: 0.75, maxWidth: 860}}>
+                            {viewMode === "all"
+                                ? t("round_details.teams.all_hint", "Full list of teams assigned to this round, with pagination.")
+                                : t("round_details.teams.leaderboard_hint", "Live leaderboard with scores, scroll loading, and instant updates.")}
+                        </Typography>
 
-                            <Button
-                                variant="outlined"
-                                color="error"
-                                startIcon={<GroupRemoveIcon />}
-                                onClick={onUnassignAllTeams}
-                                disabled={leaderboard.length === 0}
-                            >
-                                {t("round_details.teams.unassign_all")}
-                            </Button>
+                        <Stack direction="row" spacing={1} flexWrap="wrap" sx={{mt: 1.5}}>
+                            <Chip icon={<ViewListIcon fontSize="small"/>}
+                                  label={`${t("round_details.teams.all", "All teams")}: ${allTeams.length}`}
+                                  variant="outlined"/>
+                            <Chip icon={<LeaderboardIcon fontSize="small"/>}
+                                  label={`${t("round_details.teams.leaderboard", "Leaderboard")}: ${leaderboard.length}`}
+                                  variant="outlined"/>
+                            <Chip icon={<TrendingUpIcon fontSize="small"/>}
+                                  label={`${t("round_details.teams.winners", "Winners")}: ${winnerCount}`}
+                                  variant="outlined"/>
+                        </Stack>
+                    </Box>
 
-                            <Button
-                                variant="outlined"
-                                startIcon={<GroupAddIcon />}
-                                onClick={onOpenAddMissingTeamsModal}
-                            >
-                                {t("modals.add_teams.title")}
-                            </Button>
+                    <Stack spacing={1.25} alignItems={{xs: "stretch", lg: "flex-end"}}>
+                        <ToggleButtonGroup
+                            exclusive
+                            value={viewMode}
+                            onChange={(_, next) => next && setViewMode(next)}
+                            size="small"
+                            sx={{
+                                "& .MuiToggleButton-root": {
+                                    px: 2,
+                                    py: 1,
+                                    textTransform: "none",
+                                    fontWeight: 700,
+                                },
+                            }}
+                        >
+                            <ToggleButton value="all">
+                                {t("round_details.teams.all", "All teams")}
+                            </ToggleButton>
+                            <ToggleButton value="leaderboard">
+                                {t("round_details.teams.leaderboard", "Leaderboard")}
+                            </ToggleButton>
+                        </ToggleButtonGroup>
 
-                            <Button
-                                variant="contained"
-                                color="primary"
-                                startIcon={<FastForwardIcon />}
-                                onClick={onOpenAdvanceTeamsModal}
-                                disabled={leaderboard.length === 0}
-                            >
-                                {t("modals.advance_teams.title")}
-                            </Button>
-                        </>
-                    )}
-                </Box>
-            </Box>
+                        <Stack direction={{xs: "column", sm: "row"}} spacing={1}>
+                            {viewMode === "leaderboard" && (
+                                <Button
+                                    variant="outlined"
+                                    startIcon={isExporting ? <CircularProgress size={18}/> : <FileDownloadIcon/>}
+                                    onClick={onExportLeaderboard}
+                                    disabled={isExporting || leaderboard.length === 0}
+                                >
+                                    {t("round_details.export_leaderboard")}
+                                </Button>
+                            )}
 
-            <RoundFormula t={t} />
-            {loadingTab ? (
-                <CircularProgress sx={{ display: "block", mx: "auto", my: 4 }} />
+                            {isAdmin && (
+                                <>
+                                    <Button variant="outlined" color="success" startIcon={<GroupAddIcon/>}
+                                            onClick={onAssignAllTeams}>
+                                        {t("round_details.teams.assign_all")}
+                                    </Button>
+
+                                    <Button
+                                        variant="outlined"
+                                        color="error"
+                                        startIcon={<GroupRemoveIcon/>}
+                                        onClick={onUnassignAllTeams}
+                                        disabled={viewMode === "leaderboard" ? leaderboard.length === 0 : allTeams.length === 0}
+                                    >
+                                        {t("round_details.teams.unassign_all")}
+                                    </Button>
+
+                                    <Button variant="outlined" startIcon={<GroupAddIcon/>}
+                                            onClick={onOpenAddMissingTeamsModal}>
+                                        {t("modals.add_teams.title")}
+                                    </Button>
+
+                                    <Button
+                                        variant="contained"
+                                        color="primary"
+                                        startIcon={<FastForwardIcon/>}
+                                        onClick={onOpenAdvanceTeamsModal}
+                                        disabled={leaderboard.length === 0}
+                                    >
+                                        {t("modals.advance_teams.title")}
+                                    </Button>
+                                </>
+                            )}
+                        </Stack>
+                    </Stack>
+                </Stack>
+            </Paper>
+
+            <ErrorMessages errors={errors}/>
+
+            {viewMode === "all" ? (
+                <Card variant="outlined" sx={{borderRadius: 4, overflow: "hidden"}}>
+                    <CardContent sx={{p: 0}}>
+                        {loadingAllTeams ? (
+                            <Box sx={{py: 8, display: "flex", justifyContent: "center"}}>
+                                <CircularProgress/>
+                            </Box>
+                        ) : (
+                            <>
+                                <TableContainer sx={{overflowX: "auto"}}>
+                                    <Table>
+                                        <TableHead>
+                                            <TableRow>
+                                                <TableCell align="center" width="90">
+                                                    #
+                                                </TableCell>
+                                                <TableCell>
+                                                    {t("round_details.teams.name", "Team")}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {t("round_details.teams.email", "Email")}
+                                                </TableCell>
+                                                <TableCell align="center">
+                                                    {t("round_details.teams.members", "Members")}
+                                                </TableCell>
+                                                <TableCell align="center" width="160">
+                                                    {viewMode === "all" ? t("common.actions", "Actions") : t("round_details.teams.points", "Points")}
+                                                </TableCell>
+                                            </TableRow>
+                                        </TableHead>
+
+                                        <TableBody>
+                                            {allTeamsContent}
+                                            {allTeams.length === 0 && (
+                                                <TableRow>
+                                                    <TableCell colSpan={5} align="center"
+                                                               sx={{py: 5, color: "text.secondary"}}>
+                                                        {t("round_details.teams.no_data")}
+                                                    </TableCell>
+                                                </TableRow>
+                                            )}
+                                        </TableBody>
+                                    </Table>
+                                </TableContainer>
+
+                                <Box sx={{p: 2, display: "flex", justifyContent: "center"}}>
+                                    <Pagination
+                                        page={allTeamsPage + 1}
+                                        count={Math.max(allTeamsTotalPages, 1)}
+                                        onChange={(_, page) => setAllTeamsPage(page - 1)}
+                                        color="primary"
+                                    />
+                                </Box>
+                            </>
+                        )}
+                    </CardContent>
+                </Card>
             ) : (
-                <TableContainer
-                    component={Paper}
-                    elevation={0}
-                    sx={{
-                        border: "1px solid #eee",
-                        borderRadius: "16px",
-                        maxHeight: "600px",
-                        overflowY: "auto",
-                        "&::-webkit-scrollbar": { width: "8px" },
-                        "&::-webkit-scrollbar-thumb": { backgroundColor: "#ccc", borderRadius: "10px" }
-                    }}
-                >
-                    <Table stickyHeader>
-                        <TableHead>
-                            <TableRow>
-                                <TableCell align="center" width="80px" sx={{ bgcolor: "grey.50", fontWeight: 700 }}>Rank</TableCell>
-                                <TableCell sx={{ bgcolor: "grey.50", fontWeight: 700 }}>Team Name</TableCell>
-                                <TableCell sx={{ bgcolor: "grey.50", fontWeight: 700 }}>Email</TableCell>
-                                <TableCell align="center" sx={{ bgcolor: "grey.50", fontWeight: 700 }}>Members</TableCell>
-                                <TableCell align="right" sx={{ bgcolor: "grey.50", fontWeight: 700 }}>Points</TableCell>
-                                <TableCell align="center" width="120px" sx={{ bgcolor: "grey.50", fontWeight: 700 }}>Actions</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {leaderboard.map((team, index) => (
-                                <TableRow
-                                    key={team.id}
-                                    hover
-                                    onClick={() => navigate(`/teams/${team.id}`)}
+                <Box>
+                    <RoundFormula t={t}/>
+                    <Card variant="outlined" sx={{borderRadius: 4, overflow: "hidden"}}>
+                        <CardContent sx={{p: 0}}>
+                            {loadingTab ? (
+                                <Box sx={{py: 8, display: "flex", justifyContent: "center"}}>
+                                    <CircularProgress/>
+                                </Box>
+                            ) : (
+                                <TableContainer
+                                    component={Paper}
+                                    elevation={0}
                                     sx={{
-                                        cursor: "pointer",
-                                        transition: 'background-color 0.2s',
-                                        '&:hover': { bgcolor: 'rgba(25, 118, 210, 0.04) !important' },
-                                        ...(index < (roundData?.countOfWinners || 0) && { bgcolor: 'rgba(76, 175, 80, 0.02)' })
+                                        maxHeight: 680,
+                                        overflowY: "auto",
+                                        "&::-webkit-scrollbar": {width: 8},
+                                        "&::-webkit-scrollbar-thumb": {
+                                            backgroundColor: "#cbd5e1",
+                                            borderRadius: 999,
+                                        },
                                     }}
                                 >
-                                    <TableCell align="center">
-                                        {index === 0 ? <TrophyIcon sx={{ color: "gold" }} /> :
-                                            index === 1 ? <TrophyIcon sx={{ color: "silver" }} /> :
-                                                index === 2 ? <TrophyIcon sx={{ color: "#cd7f32" }} /> :
-                                                    <Typography fontWeight={700} color="text.secondary">{index + 1}</Typography>}
-                                    </TableCell>
-                                    <TableCell><Typography fontWeight={600}>{team.name}</Typography></TableCell>
-                                    <TableCell><Typography variant="body2" color="text.secondary">{team.email}</Typography></TableCell>
-                                    <TableCell align="center">
-                                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5, color: 'text.secondary' }}>
-                                            <GroupIcon sx={{ fontSize: 18 }} />
-                                            <Typography variant="body2" fontWeight={600}>{team.countOfMembers}</Typography>
-                                        </Box>
-                                    </TableCell>
-                                    <TableCell align="right">
-                                        <Chip
-                                            label={`${team.points} / ${maxPoints}`}
-                                            color={index < (roundData?.countOfWinners || 0) ? "success" : "default"}
-                                            variant="filled"
-                                            sx={{
-                                                fontWeight: 700,
-                                                minWidth: '80px'
-                                            }}
-                                        />
-                                    </TableCell>
-                                    <TableCell align="center">
-                                        <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
-                                            {isAdmin && (
-                                                <Tooltip title="Remove from Round">
-                                                    <IconButton color="error" size="small" onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        onUnassignTeam(team.id);
-                                                    }}>
-                                                        <PersonRemoveIcon fontSize="small" />
-                                                    </IconButton>
-                                                </Tooltip>
-                                            )}
+                                    <Table stickyHeader>
+                                        <TableHead>
+                                            <TableRow>
+                                                <TableCell align="center" width="90px">
+                                                    Rank
+                                                </TableCell>
+                                                <TableCell>{t("round_details.teams.name", "Team")}</TableCell>
+                                                <TableCell
+                                                    align="center">{t("round_details.teams.members", "Members")}</TableCell>
+                                                <TableCell
+                                                    align="right">{t("round_details.teams.points", "Points")}</TableCell>
+                                                <TableCell align="center" width="160px">
+                                                    {t("common.actions", "Actions")}
+                                                </TableCell>
+                                            </TableRow>
+                                        </TableHead>
 
-                                            {/* Fix: Safely compare IDs ensuring type matching */}
-                                            {(isAdmin || String(team.id) === String(myTeamId)) && (
-                                                <Tooltip title="View Stats">
-                                                    <IconButton
-                                                        color="primary"
-                                                        size="small"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation(); // Synchronous stop
-                                                            onOpenStats(team.id, e);
-                                                        }}
-                                                        sx={{ bgcolor: "primary.50" }}
-                                                    >
-                                                        <InsertChartOutlinedIcon fontSize="small" />
-                                                    </IconButton>
-                                                </Tooltip>
+                                        <TableBody>
+                                            {leaderboardContent}
+                                            {leaderboard.length === 0 && (
+                                                <TableRow>
+                                                    <TableCell colSpan={5} align="center"
+                                                               sx={{py: 5, color: "text.secondary"}}>
+                                                        {t("round_details.teams.no_data")}
+                                                    </TableCell>
+                                                </TableRow>
                                             )}
+                                        </TableBody>
+                                    </Table>
+
+                                    {hasMore && (
+                                        <Box sx={{
+                                            p: 2,
+                                            textAlign: "center",
+                                            borderTop: "1px solid",
+                                            borderColor: "divider"
+                                        }}>
+                                            <Button
+                                                onClick={onLoadMore}
+                                                disabled={isNextPageLoading}
+                                                startIcon={isNextPageLoading ?
+                                                    <CircularProgress size={16}/> : undefined}
+                                            >
+                                                {isNextPageLoading ? t("common.loading") : t("common.load_more")}
+                                            </Button>
                                         </Box>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                            {leaderboard.length === 0 && (
-                                <TableRow>
-                                    <TableCell colSpan={6} align="center" sx={{ py: 4, color: 'text.secondary' }}>
-                                        {t("round_details.teams.no_data")}
-                                    </TableCell>
-                                </TableRow>
+                                    )}
+                                </TableContainer>
                             )}
-                        </TableBody>
-                    </Table>
-
-                    {hasMore && (
-                        <Box sx={{ p: 2, textAlign: 'center', borderTop: '1px solid #eee' }}>
-                            <Button
-                                onClick={onLoadMore}
-                                disabled={isNextPageLoading}
-                                startIcon={isNextPageLoading && <CircularProgress size={16} />}
-                            >
-                                {isNextPageLoading ? t("common.loading") : t("common.load_more")}
-                            </Button>
-                        </Box>
-                    )}
-                </TableContainer>
+                        </CardContent>
+                    </Card>
+                </Box>
             )}
         </Box>
     );

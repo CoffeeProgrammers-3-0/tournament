@@ -1,10 +1,8 @@
-import {type MouseEvent, useCallback, useMemo, useState} from "react";
+import {type MouseEvent, useCallback, useEffect, useMemo, useState} from "react";
 import {roundService} from "../../../../../services/impl/RoundService";
 import {teamService} from "../../../../../services/impl/TeamService.ts";
-import type {StatisticResponseDto} from "../../../../../entities/team/team.dto.ts";
-
-import type {ConfirmDialogConfig} from "../../hooks/useRoundEditors"; // fix path
-
+import type {StatisticResponseDto, TeamListResponseDto} from "../../../../../entities/team/team.dto.ts";
+import type {ConfirmDialogConfig} from "../../hooks/useRoundEditors";
 
 type StatsViewMode = "aggregated" | "detailed";
 
@@ -41,6 +39,8 @@ type Props = {
     t: (key: string, options?: any) => string;
 };
 
+const PAGE_SIZE = 10;
+
 const average = (values: number[]) => {
     if (!values.length) return 0;
     return values.reduce((sum, value) => sum + value, 0) / values.length;
@@ -75,11 +75,45 @@ export const useRoundTeamsManager = ({
     const [statsModalOpen, setStatsModalOpen] = useState(false);
     const [statsViewMode, setStatsViewMode] = useState<StatsViewMode>("aggregated");
 
+    const [allTeams, setAllTeams] = useState<TeamListResponseDto[]>([]);
+    const [allTeamsPage, setAllTeamsPage] = useState(0);
+    const [allTeamsTotalPages, setAllTeamsTotalPages] = useState(0);
+    const [loadingAllTeams, setLoadingAllTeams] = useState(false);
+
     const handleCloseStats = useCallback(() => {
         setStatsModalOpen(false);
         setSelectedStats(null);
         setStatsViewMode("aggregated");
     }, []);
+
+    const fetchAllTeams = useCallback(
+        async (page = allTeamsPage) => {
+            if (!roundId) return;
+
+            setLoadingAllTeams(true);
+            clearErrors?.();
+
+            try {
+                const response = await roundService.getTeamsInRound(roundId, {
+                    page,
+                    size: PAGE_SIZE,
+                });
+
+                setAllTeams(response.content || []);
+                setAllTeamsTotalPages(response.totalPages || 0);
+                setAllTeamsPage(page);
+            } catch (e) {
+                handleError?.(e, "Помилка завантаження команд");
+            } finally {
+                setLoadingAllTeams(false);
+            }
+        },
+        [allTeamsPage, clearErrors, handleError, roundId],
+    );
+
+    useEffect(() => {
+        fetchAllTeams(0);
+    }, [fetchAllTeams]);
 
     const handleOpenAddMissingModal = useCallback(async () => {
         clearErrors?.();
@@ -103,13 +137,14 @@ export const useRoundTeamsManager = ({
         try {
             await roundService.assignTeams(roundId, selectedMissingIds);
             await fetchSubmissions();
+            await fetchAllTeams(allTeamsPage);
             setAddMissingModalOpen(false);
         } catch (e) {
             handleError?.(e, "Помилка додавання");
         } finally {
             setIsTeamsLoading(false);
         }
-    }, [fetchSubmissions, handleError, roundId, selectedMissingIds]);
+    }, [allTeamsPage, fetchAllTeams, fetchSubmissions, handleError, roundId, selectedMissingIds]);
 
     const handleOpenAdvanceModal = useCallback(async () => {
         setAdvanceModalOpen(true);
@@ -142,22 +177,26 @@ export const useRoundTeamsManager = ({
         }
     }, [handleError, selectedAdvanceIds, targetAdvanceRoundId]);
 
-    const handleUnassignTeam = useCallback((teamId: number) => {
-        triggerConfirm({
-            title: t("round_details.confirm.removeTeam.title"),
-            description: t("round_details.confirm.removeTeam.description"),
-            confirmColor: "error",
-            onConfirm: async () => {
-                try {
-                    await roundService.unassignTeams(roundId, [teamId]);
-                    await fetchSubmissions();
-                    closeConfirm();
-                } catch (e) {
-                    handleError?.(e, "Помилка видалення");
-                }
-            },
-        });
-    }, [closeConfirm, fetchSubmissions, handleError, roundId, t, triggerConfirm]);
+    const handleUnassignTeam = useCallback(
+        (teamId: number) => {
+            triggerConfirm({
+                title: t("round_details.confirm.removeTeam.title"),
+                description: t("round_details.confirm.removeTeam.description"),
+                confirmColor: "error",
+                onConfirm: async () => {
+                    try {
+                        await roundService.unassignTeams(roundId, [teamId]);
+                        await fetchSubmissions();
+                        await fetchAllTeams(allTeamsPage);
+                        closeConfirm();
+                    } catch (e) {
+                        handleError?.(e, "Помилка видалення");
+                    }
+                },
+            });
+        },
+        [allTeamsPage, closeConfirm, fetchAllTeams, fetchSubmissions, handleError, roundId, t, triggerConfirm],
+    );
 
     const handleAssignAllTeams = useCallback(() => {
         triggerConfirm({
@@ -169,6 +208,7 @@ export const useRoundTeamsManager = ({
                 try {
                     await roundService.assignAllTeams(roundId);
                     await fetchSubmissions();
+                    await fetchAllTeams(0);
                     closeConfirm();
                 } catch (e) {
                     handleError?.(e, "Помилка додавання всіх команд");
@@ -177,7 +217,7 @@ export const useRoundTeamsManager = ({
                 }
             },
         });
-    }, [closeConfirm, fetchSubmissions, handleError, roundId, t, triggerConfirm]);
+    }, [closeConfirm, fetchAllTeams, fetchSubmissions, handleError, roundId, t, triggerConfirm]);
 
     const handleUnassignAllTeams = useCallback(() => {
         triggerConfirm({
@@ -189,6 +229,7 @@ export const useRoundTeamsManager = ({
                 try {
                     await roundService.unassignAllTeams(roundId);
                     await fetchSubmissions();
+                    await fetchAllTeams(0);
                     closeConfirm();
                 } catch (e) {
                     handleError?.(e, "Помилка видалення всіх команд");
@@ -197,30 +238,33 @@ export const useRoundTeamsManager = ({
                 }
             },
         });
-    }, [closeConfirm, fetchSubmissions, handleError, roundId, t, triggerConfirm]);
+    }, [closeConfirm, fetchAllTeams, fetchSubmissions, handleError, roundId, t, triggerConfirm]);
 
-    const handleOpenStats = useCallback(async (teamId: number, e?: MouseEvent) => {
-        e?.stopPropagation();
+    const handleOpenStats = useCallback(
+        async (teamId: number, e?: MouseEvent) => {
+            e?.stopPropagation();
 
-        if (!roundId) return;
+            if (!roundId) return;
 
-        const canView = isAdmin || String(teamId) === String(myTeamId);
-        if (!canView) return;
+            const canView = isAdmin || String(teamId) === String(myTeamId);
+            if (!canView) return;
 
-        clearErrors?.();
-        setStatsModalOpen(true);
-        setSelectedStats(null);
+            clearErrors?.();
+            setStatsModalOpen(true);
+            setSelectedStats(null);
 
-        try {
-            const stats = isAdmin
-                ? await teamService.getTeamStats(teamId, roundId)
-                : await teamService.getMyTeamStats(roundId);
+            try {
+                const stats = isAdmin
+                    ? await teamService.getTeamStats(teamId, roundId)
+                    : await teamService.getMyTeamStats(roundId);
 
-            setSelectedStats(stats);
-        } catch (error) {
-            handleError?.(error, t("round_details.errors.loadStats"));
-        }
-    }, [clearErrors, handleError, isAdmin, myTeamId, roundId, t]);
+                setSelectedStats(stats);
+            } catch (error) {
+                handleError?.(error, t("round_details.errors.loadStats"));
+            }
+        },
+        [clearErrors, handleError, isAdmin, myTeamId, roundId, t],
+    );
 
     const handleExportLeaderboard = useCallback(async () => {
         if (!roundId) return;
@@ -281,14 +325,12 @@ export const useRoundTeamsManager = ({
     }, [criteriaGroups]);
 
     const getScore = useCallback(
-        (jury: string, criteria: string) =>
-            selectedStats?.pointsPerJury?.[jury]?.[criteria]?.points ?? 0,
+        (jury: string, criteria: string) => selectedStats?.pointsPerJury?.[jury]?.[criteria]?.points ?? 0,
         [selectedStats],
     );
 
     const getComment = useCallback(
-        (jury: string, criteria: string) =>
-            selectedStats?.pointsPerJury?.[jury]?.[criteria]?.comment ?? "",
+        (jury: string, criteria: string) => selectedStats?.pointsPerJury?.[jury]?.[criteria]?.comment ?? "",
         [selectedStats],
     );
 
@@ -306,9 +348,6 @@ export const useRoundTeamsManager = ({
         );
     }, [selectedStats]);
 
-    // weighted final total:
-    // for each category -> average of criteria scores per jury -> multiplied by category weight
-    // then averaged across juries, then summed across categories
     const grandTotal = useMemo(() => {
         if (!selectedStats) return 0;
 
@@ -324,7 +363,7 @@ export const useRoundTeamsManager = ({
             weightedTotal += average(juryCategoryScores);
         });
 
-        const bonusTotal = bonusRows.reduce((sum, row) => sum + row.points, 0) / juryList.length;
+        const bonusTotal = juryList.length > 0 ? bonusRows.reduce((sum, row) => sum + row.points, 0) / juryList.length : 0;
 
         return weightedTotal + bonusTotal;
     }, [bonusRows, criteriaGroups, getScore, juryList, selectedStats]);
@@ -399,6 +438,12 @@ export const useRoundTeamsManager = ({
         tournamentRounds,
 
         isTeamsLoading,
+        loadingAllTeams,
+        allTeams,
+        allTeamsPage,
+        setAllTeamsPage,
+        allTeamsTotalPages,
+        fetchAllTeams,
 
         handleOpenAddMissingModal,
         handleConfirmAddMissing,

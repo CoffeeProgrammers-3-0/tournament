@@ -244,7 +244,7 @@ const RoundDetailsPage = () => {
                     hasMore={details.hasMore}
                     isNextPageLoading={details.isNextPageLoading}
                     onLoadMore={() => details.loadLeaderboard(false)}
-                    roundData={details.roundData}
+                    roundData={details.roundData!}
                     onOpenStats={editors.handleOpenStats}
                     navigate={details.navigate}
                     t={t}
@@ -259,6 +259,11 @@ const RoundDetailsPage = () => {
                     onUnassignAllTeams={editors.handleUnassignAllTeams}
                     myTeamId={details.myTeamId}
                     maxPoints={details.maxPoints}
+                    allTeams={editors.allTeams}
+                    loadingAllTeams={editors.loadingAllTeams}
+                    allTeamsPage={editors.allTeamsPage}
+                    allTeamsTotalPages={editors.allTeamsTotalPages}
+                    setAllTeamsPage={editors.setAllTeamsPage}
                 />
             )}
 

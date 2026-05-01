@@ -579,7 +579,17 @@ export const en = {
                 "category_avg": "Category Avg",
                 "weight": "Weight",
                 "additional_points": "Additional points",
-            }
+            },
+            "title": "Teams overview",
+            "all": "All teams",
+            "leaderboard": "Leaderboard",
+            "winners": "Winners",
+            "all_hint": "Full list of teams in this round with pagination.",
+            "leaderboard_hint": "Live leaderboard with scores, scroll loading, and instant updates.",
+            "name": "Team",
+            "members": "Members",
+            "remove_from_round": "Remove from round",
+            "view_stats": "View stats",
         },
         "stats_modal": {
             "title": "Team Statistics",
