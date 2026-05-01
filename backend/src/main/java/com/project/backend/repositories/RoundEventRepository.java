@@ -18,7 +18,7 @@ public interface RoundEventRepository extends JpaRepository<RoundEvent, Long>, J
     );
 
     @Query("SELECT new com.project.backend.dto.calendar.CalendarEventDTO(" +
-           "re.id, re.title, re.startDate, re.endDate, " +
+           "re.round.id, re.title, re.startDate, re.endDate, " +
            "CASE " +
            "  WHEN re.type = com.project.backend.models.constants.RoundEventType.ONLINE THEN com.project.backend.dto.calendar.CalendarEventType.ROUND_EVENT_ONLINE " +
            "  ELSE com.project.backend.dto.calendar.CalendarEventType.ROUND_EVENT_OFFLINE " +
