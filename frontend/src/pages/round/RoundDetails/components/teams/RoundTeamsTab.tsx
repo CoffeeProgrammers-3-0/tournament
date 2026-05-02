@@ -1,11 +1,13 @@
 import {useEffect, useMemo, useState} from "react";
 import {
+    Alert,
     Box,
     Button,
     Card,
     CardContent,
     Chip,
     CircularProgress,
+    Divider,
     IconButton,
     Pagination,
     Paper,
@@ -111,6 +113,8 @@ export const RoundTeamsTab = ({
                                   setAllTeamsPage,
                               }: Props) => {
     const [viewMode, setViewMode] = useState<TeamViewMode>("all");
+
+    const isAllEmpty = !loadingAllTeams && allTeams.length === 0;
 
     useEffect(() => {
         if (viewMode !== "leaderboard" || !roundData?.id) return;
@@ -349,54 +353,91 @@ export const RoundTeamsTab = ({
             <Paper
                 variant="outlined"
                 sx={{
-                    mb: 2.5,
-                    p: {xs: 2, md: 2.5},
+                    mb: 3,
+                    p: { xs: 2, md: 3 }, // Slightly more padding on desktop for a premium feel
                     borderRadius: 4,
-                    background: "linear-gradient(135deg, rgba(15,23,42,0.03), rgba(59,130,246,0.04), rgba(255,255,255,1))",
+                    background: "linear-gradient(135deg, rgba(15,23,42,0.03) 0%, rgba(59,130,246,0.04) 50%, rgba(255,255,255,1) 100%)",
+                    boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.02)", // Adds depth
                 }}
             >
-                <Stack direction={{xs: "column", lg: "row"}} justifyContent="space-between" gap={2}
-                       alignItems={{lg: "center"}}>
-                    <Box>
-                        <Typography variant="overline" color="primary" fontWeight={800} letterSpacing={1.4}>
-                            {t("round_details.tabs.teams", "Teams")}
-                        </Typography>
+                {/* Outer stack uses spacing to separate Header from Controls */}
+                <Stack spacing={2.5}>
 
-                        <Typography variant="h5" fontWeight={850}>
-                            {t("round_details.teams.title", "Teams overview")}
-                        </Typography>
+                    {/* ============================== */}
+                    {/* TOP ROW: Header Context & Data */}
+                    {/* ============================== */}
+                    <Stack
+                        direction={{ xs: "column", md: "row" }}
+                        justifyContent="space-between"
+                        alignItems={{ xs: "flex-start", md: "flex-end" }}
+                        spacing={2}
+                    >
+                        <Box>
+                            <Typography variant="overline" color="primary" fontWeight={800} letterSpacing={1.2}>
+                                {t("round_details.tabs.teams", "Teams")}
+                            </Typography>
 
-                        <Typography variant="body2" color="text.secondary" sx={{mt: 0.75, maxWidth: 860}}>
-                            {viewMode === "all"
-                                ? t("round_details.teams.all_hint", "Full list of teams assigned to this round, with pagination.")
-                                : t("round_details.teams.leaderboard_hint", "Live leaderboard with scores, scroll loading, and instant updates.")}
-                        </Typography>
+                            <Typography variant="h5" fontWeight={800} sx={{ mt: -0.5, mb: 0.5 }}>
+                                {t("round_details.teams.title", "Teams overview")}
+                            </Typography>
 
-                        <Stack direction="row" spacing={1} flexWrap="wrap" sx={{mt: 1.5}}>
-                            <Chip icon={<ViewListIcon fontSize="small"/>}
-                                  label={`${t("round_details.teams.all", "All teams")}: ${allTeams.length}`}
-                                  variant="outlined"/>
-                            <Chip icon={<LeaderboardIcon fontSize="small"/>}
-                                  label={`${t("round_details.teams.leaderboard", "Leaderboard")}: ${leaderboard.length}`}
-                                  variant="outlined"/>
-                            <Chip icon={<TrendingUpIcon fontSize="small"/>}
-                                  label={`${t("round_details.teams.winners", "Winners")}: ${winnerCount}`}
-                                  variant="outlined"/>
+                            <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 700 }}>
+                                {viewMode === "all"
+                                    ? t("round_details.teams.all_hint", "Full list of teams assigned to this round, with pagination.")
+                                    : t("round_details.teams.leaderboard_hint", "Live leaderboard with scores, scroll loading, and instant updates.")}
+                            </Typography>
+                        </Box>
+
+                        {/* Stat Chips pinned to the right on desktop */}
+                        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                            <Chip
+                                icon={<ViewListIcon fontSize="small" />}
+                                label={`${t("round_details.teams.all", "All teams")}: ${allTeams.length}`}
+                                variant="outlined"
+                                sx={{ bgcolor: "background.paper" }}
+                            />
+                            <Chip
+                                icon={<LeaderboardIcon fontSize="small" />}
+                                label={`${t("round_details.teams.leaderboard", "Leaderboard")}: ${leaderboard.length}`}
+                                variant="outlined"
+                                sx={{ bgcolor: "background.paper" }}
+                            />
+                            <Chip
+                                icon={<TrendingUpIcon fontSize="small" />}
+                                label={`${t("round_details.teams.winners", "Winners")}: ${winnerCount}`}
+                                variant="outlined"
+                                sx={{ bgcolor: "background.paper" }}
+                            />
                         </Stack>
-                    </Box>
+                    </Stack>
 
-                    <Stack spacing={1.25} alignItems={{xs: "stretch", lg: "flex-end"}}>
+                    {/* Visual Separator */}
+                    <Divider sx={{ borderStyle: "dashed", borderColor: "rgba(0,0,0,0.08)" }} />
+
+                    {/* ============================== */}
+                    {/* BOTTOM ROW: Toolbar & Controls */}
+                    {/* ============================== */}
+                    <Stack
+                        direction={{ xs: "column", lg: "row" }}
+                        justifyContent="space-between"
+                        alignItems={{ xs: "stretch", lg: "center" }}
+                        spacing={2}
+                    >
+                        {/* Left Side: View Toggle */}
                         <ToggleButtonGroup
                             exclusive
                             value={viewMode}
                             onChange={(_, next) => next && setViewMode(next)}
                             size="small"
                             sx={{
+                                justifyContent: { xs: "center", lg: "flex-start" },
+                                bgcolor: "background.paper", // Makes toggle pop against the gradient
                                 "& .MuiToggleButton-root": {
-                                    px: 2,
+                                    px: 3,
                                     py: 1,
                                     textTransform: "none",
-                                    fontWeight: 700,
+                                    fontWeight: 600,
+                                    whiteSpace: "nowrap",
                                 },
                             }}
                         >
@@ -408,13 +449,23 @@ export const RoundTeamsTab = ({
                             </ToggleButton>
                         </ToggleButtonGroup>
 
-                        <Stack direction={{xs: "column", sm: "row"}} spacing={1}>
+                        {/* Right Side: Action Buttons */}
+                        <Stack
+                            direction="row"
+                            flexWrap="wrap"
+                            useFlexGap
+                            justifyContent={{ xs: "center", lg: "flex-end" }}
+                            alignItems="center"
+                            spacing={1.5}
+                        >
                             {viewMode === "leaderboard" && (
                                 <Button
                                     variant="outlined"
-                                    startIcon={isExporting ? <CircularProgress size={18}/> : <FileDownloadIcon/>}
+                                    color="inherit"
+                                    startIcon={isExporting ? <CircularProgress size={18} color="inherit" /> : <FileDownloadIcon />}
                                     onClick={onExportLeaderboard}
                                     disabled={isExporting || leaderboard.length === 0}
+                                    sx={{ textTransform: "none", bgcolor: "background.paper" }}
                                 >
                                     {t("round_details.export_leaderboard")}
                                 </Button>
@@ -422,32 +473,43 @@ export const RoundTeamsTab = ({
 
                             {isAdmin && (
                                 <>
-                                    <Button variant="outlined" color="success" startIcon={<GroupAddIcon/>}
-                                            onClick={onAssignAllTeams}>
+                                    <Button
+                                        variant="outlined"
+                                        color="success"
+                                        startIcon={<GroupAddIcon />}
+                                        onClick={onAssignAllTeams}
+                                        sx={{ textTransform: "none", bgcolor: "background.paper" }}
+                                    >
                                         {t("round_details.teams.assign_all")}
                                     </Button>
 
                                     <Button
                                         variant="outlined"
                                         color="error"
-                                        startIcon={<GroupRemoveIcon/>}
+                                        startIcon={<GroupRemoveIcon />}
                                         onClick={onUnassignAllTeams}
                                         disabled={viewMode === "leaderboard" ? leaderboard.length === 0 : allTeams.length === 0}
+                                        sx={{ textTransform: "none", bgcolor: "background.paper" }}
                                     >
                                         {t("round_details.teams.unassign_all")}
                                     </Button>
 
-                                    <Button variant="outlined" startIcon={<GroupAddIcon/>}
-                                            onClick={onOpenAddMissingTeamsModal}>
+                                    <Button
+                                        variant="outlined"
+                                        startIcon={<GroupAddIcon />}
+                                        onClick={onOpenAddMissingTeamsModal}
+                                        sx={{ textTransform: "none", bgcolor: "background.paper" }}
+                                    >
                                         {t("modals.add_teams.title")}
                                     </Button>
 
                                     <Button
                                         variant="contained"
                                         color="primary"
-                                        startIcon={<FastForwardIcon/>}
+                                        startIcon={<FastForwardIcon />}
                                         onClick={onOpenAdvanceTeamsModal}
                                         disabled={leaderboard.length === 0}
+                                        sx={{ textTransform: "none", boxShadow: 2 }}
                                     >
                                         {t("modals.advance_teams.title")}
                                     </Button>
@@ -455,57 +517,148 @@ export const RoundTeamsTab = ({
                             )}
                         </Stack>
                     </Stack>
+
                 </Stack>
             </Paper>
 
             <ErrorMessages errors={errors}/>
 
             {viewMode === "all" ? (
-                <Card variant="outlined" sx={{borderRadius: 4, overflow: "hidden"}}>
-                    <CardContent sx={{p: 0}}>
+                <Card
+                    variant="outlined"
+                    sx={{
+                        borderRadius: 4,
+                        overflow: "hidden",
+                        boxShadow: "0 12px 30px rgba(15, 23, 42, 0.06)",
+                        borderColor: "divider",
+                    }}
+                >
+                    <CardContent sx={{ p: 0 }}>
                         {loadingAllTeams ? (
-                            <Box sx={{py: 8, display: "flex", justifyContent: "center"}}>
-                                <CircularProgress/>
+                            <Box sx={{ py: 10, display: "flex", justifyContent: "center" }}>
+                                <CircularProgress />
+                            </Box>
+                        ) : isAllEmpty ? (
+                            <Box sx={{ p: { xs: 2, md: 4 } }}>
+                                <Alert
+                                    severity="warning"
+                                    variant="outlined"
+                                    sx={{
+                                        borderRadius: 3,
+                                        alignItems: "center",
+                                        mb: 2,
+                                    }}
+                                >
+                                    <Typography fontWeight={800}>
+                                        {t("round_details.teams.empty_all_title", "No teams in this round yet")}
+                                    </Typography>
+                                    <Typography variant="body2">
+                                        {t(
+                                            "round_details.teams.empty_all_desc",
+                                            "Please add users to this round first so the team list can appear here.",
+                                        )}
+                                    </Typography>
+                                </Alert>
+
+                                {isAdmin && (
+                                    <Paper
+                                        variant="outlined"
+                                        sx={{
+                                            p: 2.5,
+                                            borderRadius: 3,
+                                            bgcolor: "background.paper",
+                                        }}
+                                    >
+                                        <Stack
+                                            direction={{ xs: "column", sm: "row" }}
+                                            spacing={1.5}
+                                            alignItems={{ xs: "stretch", sm: "center" }}
+                                            justifyContent="space-between"
+                                        >
+                                            <Box>
+                                                <Typography fontWeight={800}>
+                                                    {t("round_details.teams.empty_all_admin_title", "Admin action required")}
+                                                </Typography>
+                                                <Typography variant="body2" color="text.secondary">
+                                                    {t(
+                                                        "round_details.teams.empty_all_admin_desc",
+                                                        "Add teams to this round to enable pagination, removal, and management actions.",
+                                                    )}
+                                                </Typography>
+                                            </Box>
+
+                                            <Button
+                                                variant="contained"
+                                                startIcon={<GroupAddIcon />}
+                                                onClick={onOpenAddMissingTeamsModal}
+                                            >
+                                                {t("modals.add_teams.title", "Add teams")}
+                                            </Button>
+                                        </Stack>
+                                    </Paper>
+                                )}
                             </Box>
                         ) : (
                             <>
-                                <TableContainer sx={{overflowX: "auto"}}>
+                                <Box
+                                    sx={{
+                                        px: { xs: 2, md: 3 },
+                                        py: 2,
+                                        borderBottom: "1px solid",
+                                        borderColor: "divider",
+                                        bgcolor: "rgba(59,130,246,0.03)",
+                                    }}
+                                >
+                                    <Stack
+                                        direction={{ xs: "column", md: "row" }}
+                                        justifyContent="space-between"
+                                        gap={2}
+                                        alignItems={{ md: "center" }}
+                                    >
+                                        <Box>
+                                            <Typography fontWeight={800}>
+                                                {t("round_details.teams.all_title", "All teams in round")}
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary">
+                                                {t(
+                                                    "round_details.teams.all_hint",
+                                                    "Paged list of every team assigned to this round.",
+                                                )}
+                                            </Typography>
+                                        </Box>
+
+                                        <Chip
+                                            icon={<ViewListIcon fontSize="small" />}
+                                            label={`${t("round_details.teams.all", "All teams")}: ${allTeams.length}`}
+                                            variant="outlined"
+                                            sx={{ fontWeight: 700 }}
+                                        />
+                                    </Stack>
+                                </Box>
+
+                                <TableContainer sx={{ overflowX: "auto" }}>
                                     <Table>
                                         <TableHead>
                                             <TableRow>
                                                 <TableCell align="center" width="90">
                                                     #
                                                 </TableCell>
-                                                <TableCell>
-                                                    {t("round_details.teams.name", "Team")}
-                                                </TableCell>
-                                                <TableCell>
-                                                    {t("round_details.teams.email", "Email")}
-                                                </TableCell>
-                                                <TableCell align="center">
-                                                    {t("round_details.teams.members", "Members")}
-                                                </TableCell>
+                                                <TableCell>{t("round_details.teams.name", "Team")}</TableCell>
+                                                <TableCell>{t("round_details.teams.email", "Email")}</TableCell>
+                                                <TableCell align="center">{t("round_details.teams.members", "Members")}</TableCell>
                                                 <TableCell align="center" width="160">
-                                                    {viewMode === "all" ? t("common.actions", "Actions") : t("round_details.teams.points", "Points")}
+                                                    {t("common.actions", "Actions")}
                                                 </TableCell>
                                             </TableRow>
                                         </TableHead>
 
                                         <TableBody>
                                             {allTeamsContent}
-                                            {allTeams.length === 0 && (
-                                                <TableRow>
-                                                    <TableCell colSpan={5} align="center"
-                                                               sx={{py: 5, color: "text.secondary"}}>
-                                                        {t("round_details.teams.no_data")}
-                                                    </TableCell>
-                                                </TableRow>
-                                            )}
                                         </TableBody>
                                     </Table>
                                 </TableContainer>
 
-                                <Box sx={{p: 2, display: "flex", justifyContent: "center"}}>
+                                <Box sx={{ p: 2, display: "flex", justifyContent: "center", borderTop: "1px solid", borderColor: "divider" }}>
                                     <Pagination
                                         page={allTeamsPage + 1}
                                         count={Math.max(allTeamsTotalPages, 1)}

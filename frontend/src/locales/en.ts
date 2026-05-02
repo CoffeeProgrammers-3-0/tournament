@@ -18,6 +18,10 @@ export const en = {
         "notifications": "Notifications",
         "calendar": "Calendar",
     },
+    login: {
+        "title": "Redirecting to login page. Please wait...",
+    },
+
     footer: {
         "description": "Digital platform for hackathons and competitions by Star for Life Ukraine charity foundation.",
         "tournaments": "Tournaments",
@@ -590,6 +594,11 @@ export const en = {
             "members": "Members",
             "remove_from_round": "Remove from round",
             "view_stats": "View stats",
+            "empty_all_title": "No teams in this round yet",
+            "empty_all_desc": "Please add users to this round first so the team list can appear here.",
+            "empty_all_admin_title": "Admin action required",
+            "empty_all_admin_desc": "Add teams to this round to enable pagination, removal, and management actions.",
+            "all_title": "All teams in round",
         },
         "stats_modal": {
             "title": "Team Statistics",
