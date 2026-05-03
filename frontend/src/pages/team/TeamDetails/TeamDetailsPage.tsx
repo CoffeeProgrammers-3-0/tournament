@@ -40,6 +40,7 @@ const TeamDetailsPage = () => {
 
     const [memberModal, setMemberModal] = useState<{ open: boolean, tournamentId: number | null }>({ open: false, tournamentId: null });
     const [newMember, setNewMember] = useState({ fullName: "", email: "", isLeader: false });
+    const [isExistingUser, setIsExistingUser] = useState(false); // <--- Added this state
     const [emailSearchLoading, setEmailSearchLoading] = useState(false);
     const [emailOptions, setEmailOptions] = useState<any[]>([]);
     const [searchError, setSearchError] = useState<string | null>(null);
@@ -68,17 +69,16 @@ const TeamDetailsPage = () => {
 
     useEffect(() => {
         const delayDebounceFn = setTimeout(() => {
-            if (newMember.email && newMember.email.length >= 3) {
+            if (newMember.email && newMember.email.length >= 3 && !isExistingUser) {
                 handleEmailSearch(newMember.email);
             }
         }, 500);
 
         return () => clearTimeout(delayDebounceFn);
-    }, [newMember.email, handleEmailSearch]);
+    }, [newMember.email, handleEmailSearch, isExistingUser]);
 
     if (loading) return <Box sx={{ display: "flex", justifyContent: "center", py: 10 }}><CircularProgress /></Box>;
 
-    // Improved logic: show error if team is missing, otherwise show 404
     if (!teamData) {
         return (
             <Container sx={{ mt: 5 }}>
@@ -91,6 +91,7 @@ const TeamDetailsPage = () => {
     const closeMemberModal = () => {
         setMemberModal({ open: false, tournamentId: null });
         setNewMember({ fullName: "", email: "", isLeader: false });
+        setIsExistingUser(false); // <--- Reset state on close
         setEmailOptions([]);
         setSearchError(null);
         clearErrors();
@@ -98,8 +99,6 @@ const TeamDetailsPage = () => {
 
     return (
         <Container maxWidth="lg" sx={{ pb: 6, pt: { xs: 2, md: 4 } }}>
-            {/* GLOBAL ERROR VIEW: Added onClose/onClear logic */}
-
             <TeamHeader
                 team={teamData}
                 isAdmin={isAdmin}
@@ -113,7 +112,6 @@ const TeamDetailsPage = () => {
             />
 
             {!memberModal.open && <ErrorMessages errors={errors} onClear={clearErrors} />}
-
 
             <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 4 }}>
                 <Tabs value={tabValue} onChange={(_, v) => setTabValue(v)} textColor="secondary" indicatorColor="secondary">
@@ -204,7 +202,13 @@ const TeamDetailsPage = () => {
                         options={emailOptions}
                         getOptionLabel={(option) => (typeof option === 'string' ? option : option.email)}
                         loading={emailSearchLoading}
-                        onInputChange={(_, value) => setNewMember({ ...newMember, email: value })}
+                        onInputChange={(_, value, reason) => {
+                            // If user is actively typing or clearing, unlock the field
+                            if (reason === 'input' || reason === 'clear') {
+                                setNewMember({ ...newMember, email: value });
+                                setIsExistingUser(false);
+                            }
+                        }}
                         onChange={(_, newValue) => {
                             if (newValue && typeof newValue !== 'string') {
                                 setNewMember({
@@ -212,6 +216,9 @@ const TeamDetailsPage = () => {
                                     email: newValue.email,
                                     fullName: newValue.fullName || ""
                                 });
+                                setIsExistingUser(true); // <--- Lock the field when an existing user is chosen
+                            } else {
+                                setIsExistingUser(false);
                             }
                         }}
                         renderInput={(params) => (
@@ -247,6 +254,7 @@ const TeamDetailsPage = () => {
                         value={newMember.fullName}
                         onChange={e => setNewMember({...newMember, fullName: e.target.value})}
                         variant="outlined"
+                        disabled={isExistingUser} // <--- Disable if existing user
                     />
 
                     <FormControlLabel
