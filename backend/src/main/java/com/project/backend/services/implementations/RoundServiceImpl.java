@@ -98,6 +98,8 @@ public class RoundServiceImpl implements RoundService {
     @Override
     @Transactional
     public Round update(Long roundId, Round round) {
+        log.info("Updating round with id: {}", roundId);
+        log.info("Round: {}", round);
 
         if (roundId == null || round == null) {
             throw new IllegalArgumentException("RoundId and round must not be null");
@@ -128,6 +130,7 @@ public class RoundServiceImpl implements RoundService {
         existing.setName(round.getName());
         existing.setRequirements(round.getRequirements());
         existing.setEndDate(round.getEndDate());
+        existing.setStartDate(round.getStartDate());
         existing.setTask(round.getTask());
         existing.setCountOfWinners(round.getCountOfWinners());
 

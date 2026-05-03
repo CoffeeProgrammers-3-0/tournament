@@ -93,7 +93,7 @@ export const CreateRoundDialog = ({ state, t }: any) => {
                     value={roundFormData.countOfWinners}
                     onChange={handleRoundFormChange}
                     fullWidth
-                    inputProps={{ min: 1 }}
+                    inputProps={{ min: 3 }}
                 />
 
                 <TextField
