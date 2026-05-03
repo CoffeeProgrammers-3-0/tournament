@@ -14,9 +14,6 @@ export const TeamHeader = ({ team, isAdmin, isEditing, onEdit, onCancel, onSave,
                     <Grid size={{ xs: 12, md: 4 }}>
                         <TextField fullWidth label="Organization" value={formData.organization} onChange={e => setFormData({ ...formData, organization: e.target.value })} />
                     </Grid>
-                    <Grid size={{ xs: 12, md: 4 }}>
-                        <TextField fullWidth label="Email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
-                    </Grid>
                     <Grid size={{ xs: 12 }} sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, mt: 1 }}>
                         <Button
                             fullWidth
