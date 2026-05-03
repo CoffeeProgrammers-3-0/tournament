@@ -627,7 +627,7 @@ export const en = {
         },
         "actions": {
             "startRound": "Start Round",
-            "closeSubmissions": "Close Submissions",
+            "closeSubmissions": "Close Submissions and start evaluating",
             "toDraft": "Revert to Draft",
             "evaluate": "End Evaluation",
             "rollbackStart": "Rollback Start",
