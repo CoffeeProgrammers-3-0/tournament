@@ -638,9 +638,9 @@ export const uk = {
         },
         "actions": {
             "startRound": "Почати раунд",
-            "closeSubmissions": "Закрити прийом робіт",
+            "closeSubmissions": "Закрити прийом робіт та почати оцінювання",
             "toDraft": "Повернути в чернетку",
-            "evaluate": "Запустити оцінювання",
+            "evaluate": "Закінчити оцінювання",
             "rollbackStart": "Відмінити старт раунду",
             "rollbackClose": "Відмінити закриття прийому"
         },
