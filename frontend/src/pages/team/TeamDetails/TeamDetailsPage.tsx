@@ -99,7 +99,6 @@ const TeamDetailsPage = () => {
     return (
         <Container maxWidth="lg" sx={{ pb: 6, pt: { xs: 2, md: 4 } }}>
             {/* GLOBAL ERROR VIEW: Added onClose/onClear logic */}
-            {!memberModal.open && <ErrorMessages errors={errors} onClear={clearErrors} />}
 
             <TeamHeader
                 team={teamData}
@@ -112,6 +111,9 @@ const TeamDetailsPage = () => {
                 onSave={handleUpdateTeam}
                 loading={isActionLoading}
             />
+
+            {!memberModal.open && <ErrorMessages errors={errors} onClear={clearErrors} />}
+
 
             <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 4 }}>
                 <Tabs value={tabValue} onChange={(_, v) => setTabValue(v)} textColor="secondary" indicatorColor="secondary">

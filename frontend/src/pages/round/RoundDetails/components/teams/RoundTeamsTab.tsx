@@ -39,7 +39,6 @@ import SockJS from "sockjs-client";
 
 import type {TeamLeaderboardResponseDto, TeamListResponseDto} from "../../../../../entities/team/team.dto";
 import type {RoundFullResponseDto} from "../../../../../entities/round/round.dto";
-import {ErrorMessages} from "../../../../../components/main/ErrorMessages.tsx";
 import {RoundFormula} from "./RoundFormula.tsx";
 
 type TeamViewMode = "all" | "leaderboard";
@@ -62,7 +61,6 @@ type Props = {
     onUnassignTeam: (teamId: number) => void;
     onExportLeaderboard: () => void;
     isExporting: boolean;
-    errors: string[];
     onAssignAllTeams: () => void;
     onUnassignAllTeams: () => void;
     myTeamId?: number | string;
@@ -101,7 +99,6 @@ export const RoundTeamsTab = ({
                                   onUnassignTeam,
                                   onExportLeaderboard,
                                   isExporting,
-                                  errors,
                                   onAssignAllTeams,
                                   onUnassignAllTeams,
                                   myTeamId,
@@ -520,8 +517,6 @@ export const RoundTeamsTab = ({
 
                 </Stack>
             </Paper>
-
-            <ErrorMessages errors={errors}/>
 
             {viewMode === "all" ? (
                 <Card

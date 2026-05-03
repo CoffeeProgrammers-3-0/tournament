@@ -161,6 +161,8 @@ const RoundDetailsPage = () => {
                 onEdit={openEdit}
             />
 
+            <ErrorMessages errors={editors.errors} onClear={editors.clearErrors} />
+
             <Tabs
                 value={details.tabValue}
                 onChange={(_, v) => {
@@ -220,7 +222,7 @@ const RoundDetailsPage = () => {
                     }}
                     onDeleteCriteria={editors.handleDeleteCriteria}
                     t={t}
-                    errors={editors.errors}
+
                 />
             )}
 
@@ -232,7 +234,7 @@ const RoundDetailsPage = () => {
                     onOpenJuryModal={editors.handleOpenJuryModal}
                     onRemoveJury={editors.handleRemoveJury}
                     t={t}
-                    errors={editors.errors}
+
                 />
             )}
 
@@ -254,7 +256,7 @@ const RoundDetailsPage = () => {
                     onUnassignTeam={editors.handleUnassignTeam}
                     onExportLeaderboard={editors.handleExportLeaderboard}
                     isExporting={editors.isExporting}
-                    errors={editors.errors}
+
                     onAssignAllTeams={editors.handleAssignAllTeams}
                     onUnassignAllTeams={editors.handleUnassignAllTeams}
                     myTeamId={details.myTeamId}
@@ -278,7 +280,7 @@ const RoundDetailsPage = () => {
                     onAssignManual={editors.handleOpenSubmissionJuryModal}
                     onRemoveJury={editors.handleRemoveJuryFromSubmission}
                     t={t}
-                    errors={editors.errors}
+
                 />
             )}
 

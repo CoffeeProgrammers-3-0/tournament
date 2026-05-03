@@ -2,7 +2,6 @@ import {Box, Button, CircularProgress, Pagination, Stack, Typography,} from "@mu
 import AutoModeIcon from "@mui/icons-material/AutoMode";
 import type {SubmissionListResponseDto} from "../../../../../entities/submission/submission.dto";
 import SubmissionItem from "./SubmissionItem.tsx";
-import {ErrorMessages} from "../../../../../components/main/ErrorMessages.tsx";
 
 type Props = {
     submissions: SubmissionListResponseDto[];
@@ -14,19 +13,17 @@ type Props = {
     onAssignManual: (submissionId: number) => void;
     onRemoveJury: (submissionId: number, juryId: number) => void; // ДОДАНО
     t: (key: string, options?: any) => string;
-    errors: string[];
 };
 
 export const RoundSubmissionsTab = ({
                                         submissions, loadingTab, page, totalPages,
-                                        onPageChange, onAutoAssign, onAssignManual, onRemoveJury, t, errors
+                                        onPageChange, onAutoAssign, onAssignManual, onRemoveJury, t
                                     }: Props) => {
 
     return (
         <Box>
             <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3, alignItems: "center" }}>
                 <Typography variant="h5" fontWeight={700}>{t("round_details.tabs.submissions")}</Typography>
-                <ErrorMessages errors={errors}/>
                 <Button variant="contained" color="secondary" startIcon={<AutoModeIcon />} onClick={onAutoAssign}>
                     {t("round_details.submissions.auto_assign")}
                 </Button>
