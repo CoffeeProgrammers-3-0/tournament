@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useState} from "react"; // Added useEffect
+import {useCallback, useEffect, useState} from "react";
 import {
     Autocomplete,
     Box,
@@ -26,8 +26,9 @@ import {useTeamDetails} from "./useTeamDetails";
 import {TeamHeader} from "./components/TeamHeader.tsx";
 import {MemberCard} from "./components/MemberCard.tsx";
 import {userService} from "../../../services/impl/UserService.ts";
+import {ErrorMessages} from "../../../components/main/ErrorMessages.tsx";
 
-export const TeamDetailsPage = () => {
+const TeamDetailsPage = () => {
     const { t } = useTranslation();
     const {
         teamData, loading, isAdmin, currentUserId,
@@ -37,33 +38,34 @@ export const TeamDetailsPage = () => {
         isEditingHeader, setIsEditingHeader, headerForm, setHeaderForm, handleUpdateTeam
     } = useTeamDetails();
 
-    // 1. States for New Member & Search
     const [memberModal, setMemberModal] = useState<{ open: boolean, tournamentId: number | null }>({ open: false, tournamentId: null });
     const [newMember, setNewMember] = useState({ fullName: "", email: "", isLeader: false });
     const [emailSearchLoading, setEmailSearchLoading] = useState(false);
     const [emailOptions, setEmailOptions] = useState<any[]>([]);
-    const [confirm, setConfirm] = useState<{ open: boolean, title: string, text: string, onConfirm: () => void } | null>(null);
+    const [searchError, setSearchError] = useState<string | null>(null);
+    const [confirm, setConfirm] = useState<{ open: boolean, title: string, text: string, onConfirm: () => Promise<any> | void } | null>(null);
 
-    // 2. Search Logic
     const handleEmailSearch = useCallback(async (email: string) => {
         if (!email || email.length < 3) {
             setEmailOptions([]);
+            setSearchError(null);
             return;
         }
 
         setEmailSearchLoading(true);
+        setSearchError(null);
         try {
             const results = await userService.getUserByEmail(email);
             setEmailOptions(results || []);
-        } catch (err) {
+        } catch (err: any) {
             console.error("Search failed", err);
             setEmailOptions([]);
+            setSearchError(err?.response?.data?.message || err.message || t("common.error", "Failed to search users."));
         } finally {
             setEmailSearchLoading(false);
         }
-    }, []);
+    }, [t]);
 
-    // 3. Debounce Effect
     useEffect(() => {
         const delayDebounceFn = setTimeout(() => {
             if (newMember.email && newMember.email.length >= 3) {
@@ -75,23 +77,29 @@ export const TeamDetailsPage = () => {
     }, [newMember.email, handleEmailSearch]);
 
     if (loading) return <Box sx={{ display: "flex", justifyContent: "center", py: 10 }}><CircularProgress /></Box>;
-    if (!teamData) return <Typography align="center" sx={{ mt: 5 }}>{t("common.not_found")}</Typography>;
+
+    // Improved logic: show error if team is missing, otherwise show 404
+    if (!teamData) {
+        return (
+            <Container sx={{ mt: 5 }}>
+                <ErrorMessages errors={errors} onClear={clearErrors} />
+                {!loading && <Typography align="center">{t("common.not_found")}</Typography>}
+            </Container>
+        );
+    }
 
     const closeMemberModal = () => {
         setMemberModal({ open: false, tournamentId: null });
         setNewMember({ fullName: "", email: "", isLeader: false });
         setEmailOptions([]);
+        setSearchError(null);
         clearErrors();
     };
 
     return (
         <Container maxWidth="lg" sx={{ pb: 6, pt: { xs: 2, md: 4 } }}>
-            {/* Error handling for general actions */}
-            {errors.length > 0 && !memberModal.open && (
-                <Box sx={{ mb: 3, p: 2, bgcolor: "#fee2e2", border: "1px solid #ef4444", borderRadius: "12px" }}>
-                    {errors.map((err, i) => <Typography key={i} color="error" variant="body2" fontWeight={600}>{err}</Typography>)}
-                </Box>
-            )}
+            {/* GLOBAL ERROR VIEW: Added onClose/onClear logic */}
+            {!memberModal.open && <ErrorMessages errors={errors} onClear={clearErrors} />}
 
             <TeamHeader
                 team={teamData}
@@ -158,13 +166,19 @@ export const TeamDetailsPage = () => {
                                                     open: true,
                                                     title: t("team_details.confirm.remove_title"),
                                                     text: `${t("team_details.confirm.remove_text")} ${user.fullName}?`,
-                                                    onConfirm: () => handleDeleteMember(user.id, tournamentIdNum)
+                                                    onConfirm: async () => {
+                                                        await handleDeleteMember(user.id, tournamentIdNum);
+                                                        setConfirm(null);
+                                                    }
                                                 })}
                                                 onPromote={() => setConfirm({
                                                     open: true,
                                                     title: t("common.confirm_promote"),
                                                     text: `${t("team_details.confirm.promote_text")} ${user.fullName}?`,
-                                                    onConfirm: () => handlePromote(user.id, tournamentIdNum)
+                                                    onConfirm: async () => {
+                                                        await handlePromote(user.id, tournamentIdNum);
+                                                        setConfirm(null);
+                                                    }
                                                 })}
                                             />
                                         </Grid>
@@ -180,13 +194,8 @@ export const TeamDetailsPage = () => {
             <Dialog open={memberModal.open} onClose={closeMemberModal} fullWidth maxWidth="xs" PaperProps={{ sx: { borderRadius: "24px" } }}>
                 <DialogTitle sx={{ fontWeight: 800 }}>{t("team_details.admin.member_modal.some_title")}</DialogTitle>
                 <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1 }}>
-                    {errors.length > 0 && (
-                        <Box sx={{ bgcolor: "error.light", color: "error.contrastText", p: 2, borderRadius: "12px" }}>
-                            <ul style={{ margin: 0, paddingLeft: "1.2rem" }}>
-                                {errors.map((err, i) => <li key={i}>{err}</li>)}
-                            </ul>
-                        </Box>
-                    )}
+
+                    <ErrorMessages errors={errors} onClear={clearErrors} />
 
                     <Autocomplete
                         freeSolo
@@ -209,6 +218,8 @@ export const TeamDetailsPage = () => {
                                 fullWidth
                                 label={t("team_details.admin.member_modal.email")}
                                 variant="outlined"
+                                error={!!searchError}
+                                helperText={searchError}
                                 InputProps={{
                                     ...params.InputProps,
                                     endAdornment: (
@@ -243,11 +254,13 @@ export const TeamDetailsPage = () => {
                 </DialogContent>
 
                 <DialogActions sx={{ p: 3 }}>
-                    <Button onClick={closeMemberModal} sx={{ fontWeight: 600 }}>{t("common.cancel")}</Button>
+                    <Button onClick={closeMemberModal} sx={{ fontWeight: 600 }} disabled={isActionLoading}>
+                        {t("common.cancel")}
+                    </Button>
                     <Button
                         variant="contained"
                         color="secondary"
-                        disabled={isActionLoading}
+                        disabled={isActionLoading || !!searchError}
                         sx={{ borderRadius: "10px", px: 3, fontWeight: 700, color: "black" }}
                         onClick={async () => {
                             if (memberModal.tournamentId) {
@@ -256,27 +269,30 @@ export const TeamDetailsPage = () => {
                             }
                         }}
                     >
-                        {isActionLoading ? <CircularProgress size={24} /> : t("team_details.admin.member_modal.submit")}
+                        {isActionLoading ? <CircularProgress size={24} color="inherit" /> : t("team_details.admin.member_modal.submit")}
                     </Button>
                 </DialogActions>
             </Dialog>
 
             {/* Confirm Dialog */}
-            <Dialog open={!!confirm?.open} onClose={() => setConfirm(null)} PaperProps={{ sx: { borderRadius: "20px" } }}>
+            <Dialog open={!!confirm?.open} onClose={() => !isActionLoading && setConfirm(null)} PaperProps={{ sx: { borderRadius: "20px" } }}>
                 <DialogTitle sx={{ fontWeight: 800 }}>{confirm?.title}</DialogTitle>
                 <DialogContent><DialogContentText>{confirm?.text}</DialogContentText></DialogContent>
                 <DialogActions sx={{ p: 3 }}>
-                    <Button onClick={() => setConfirm(null)}>{t("common.no")}</Button>
+                    <Button onClick={() => setConfirm(null)} disabled={isActionLoading}>{t("common.no")}</Button>
                     <Button
-                        onClick={() => { confirm?.onConfirm(); setConfirm(null); }}
+                        onClick={() => confirm?.onConfirm()}
                         variant="contained"
                         color="error"
+                        disabled={isActionLoading}
                         sx={{ borderRadius: "10px", fontWeight: 700 }}
                     >
-                        {t("common.yes_confirm")}
+                        {isActionLoading ? <CircularProgress size={24} color="inherit" /> : t("common.yes_confirm")}
                     </Button>
                 </DialogActions>
             </Dialog>
         </Container>
     );
 };
+
+export default TeamDetailsPage;

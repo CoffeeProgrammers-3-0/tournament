@@ -14,11 +14,19 @@ export const useTeamDetails = () => {
     const [loading, setLoading] = useState(true);
     const [tabValue, setTabValue] = useState(0);
 
-    // Editing State
+    // Editing & Error State
     const [isEditingHeader, setIsEditingHeader] = useState(false);
     const [headerForm, setHeaderForm] = useState({ name: "", organization: "", email: "" });
     const [errors, setErrors] = useState<string[]>([]);
     const [isActionLoading, setIsActionLoading] = useState(false);
+
+    // Helper to safely extract error messages from Axios responses
+    const extractErrors = (err: any): string[] => {
+        const messages = err?.response?.data?.messages || err?.response?.data?.message;
+        if (Array.isArray(messages)) return messages;
+        if (typeof messages === "string") return [messages];
+        return [err.message || "An unexpected error occurred. Please try again."];
+    };
 
     const fetchTeam = useCallback(async () => {
         if (!id || isNaN(Number(id)) || Number(id) < 1) {
@@ -27,6 +35,7 @@ export const useTeamDetails = () => {
         }
 
         setLoading(true);
+        setErrors([]);
         try {
             const team = await teamService.getTeamById(Number(id));
             setTeamData(team);
@@ -37,6 +46,7 @@ export const useTeamDetails = () => {
             });
         } catch (err) {
             console.error("Fetch error:", err);
+            setErrors(extractErrors(err));
         } finally {
             setLoading(false);
         }
@@ -53,9 +63,56 @@ export const useTeamDetails = () => {
             setTeamData(updated);
             setIsEditingHeader(false);
             return true;
-        } catch (err: any) {
-            const messages = err.response?.data?.messages;
-            setErrors(Array.isArray(messages) ? messages : ["Failed to update team"]);
+        } catch (err) {
+            setErrors(extractErrors(err));
+            return false;
+        } finally {
+            setIsActionLoading(false);
+        }
+    };
+
+    const handleAddMember = async (member: UserCreateRequestForTeamDto, tournamentId: number) => {
+        if (!teamData) return;
+        setErrors([]);
+        setIsActionLoading(true);
+        try {
+            const updated = await teamService.addMember(teamData.id, tournamentId, member);
+            setTeamData(updated);
+            return true;
+        } catch (err) {
+            setErrors(extractErrors(err));
+            return false;
+        } finally {
+            setIsActionLoading(false);
+        }
+    };
+
+    const handleDeleteMember = async (uId: number, tId: number) => {
+        if (!teamData) return;
+        setErrors([]);
+        setIsActionLoading(true);
+        try {
+            const updated = await teamService.removeMember(teamData.id, uId, tId);
+            setTeamData(updated);
+            return true;
+        } catch (err) {
+            setErrors(extractErrors(err));
+            return false;
+        } finally {
+            setIsActionLoading(false);
+        }
+    };
+
+    const handlePromote = async (uId: number, tId: number) => {
+        if (!teamData) return;
+        setErrors([]);
+        setIsActionLoading(true);
+        try {
+            const updated = await teamService.setTeamLeader(teamData.id, uId, tId);
+            setTeamData(updated);
+            return true;
+        } catch (err) {
+            setErrors(extractErrors(err));
             return false;
         } finally {
             setIsActionLoading(false);
@@ -64,13 +121,13 @@ export const useTeamDetails = () => {
 
     const membersByTournament = useMemo(() => {
         if (!teamData?.users) return {};
-        return teamData.users.reduce((acc: any, user: any) => { // Тут user має тип UserResponseForTeamDto
+        return teamData.users.reduce((acc: any, user: any) => {
             const tId = user.tournamentId;
             if (!acc[tId]) {
                 acc[tId] = {
                     name: user.tournamentName,
                     status: user.tournamentStatus,
-                    maxMembers: user.tournamentMaxCountOfTeam, // Додаємо ліміт з DTO
+                    maxMembers: user.tournamentMaxCountOfTeam,
                     members: []
                 };
             }
@@ -87,43 +144,17 @@ export const useTeamDetails = () => {
         const userInThisTournament = teamData?.users?.find(u => u.id === currentUserId && u.tournamentId === tournamentId);
         if (!userInThisTournament?.isLeader) return { can: false, reason: "NOT_LEADER" };
 
-        // Дозволяємо керувати складом команди лише якщо турнір у статусі DRAFT або REGISTRATION
-        // (Підставте ваші реальні статуси, якщо вони відрізняються)
         const hasStarted = !["DRAFT", "REGISTRATION"].includes(tournamentGroup.status);
         if (hasStarted) return { can: false, reason: "TOURNAMENT_STARTED" };
 
         return { can: true, reason: "LEADER_BEFORE_START" };
     }, [teamData, currentUserId, isAdmin, membersByTournament]);
 
-    const handleAddMember = async (member: UserCreateRequestForTeamDto, tournamentId: number) => {
-        if (!teamData) return;
-        setErrors([]);
-        setIsActionLoading(true);
-        try {
-            const updated = await teamService.addMember(teamData.id, tournamentId, member);
-            setTeamData(updated);
-            return true;
-        } catch (err: any) {
-            const messages = err.response?.data?.messages;
-            setErrors(Array.isArray(messages) ? messages : ["Failed to add member"]);
-            return false;
-        } finally {
-            setIsActionLoading(false);
-        }
-    };
-
     return {
         teamData, loading, isAdmin, currentUserId,
         tabValue, setTabValue, membersByTournament,
         canManageTournament, handleAddMember,
-        handleDeleteMember: async (uId: number, tId: number) => {
-            const updated = await teamService.removeMember(teamData!.id, uId, tId);
-            setTeamData(updated);
-        },
-        handlePromote: async (uId: number, tId: number) => {
-            const updated = await teamService.setTeamLeader(teamData!.id, uId, tId);
-            setTeamData(updated);
-        },
+        handleDeleteMember, handlePromote,
         errors, clearErrors: () => setErrors([]), isActionLoading,
         isEditingHeader, setIsEditingHeader, headerForm, setHeaderForm, handleUpdateTeam
     };

@@ -1,6 +1,7 @@
 import {Box, Button, Card, Divider, Grid, Paper, Stack, TextField, Typography} from "@mui/material";
 import ReactQuill from "react-quill-new";
 import type {RoundFullResponseDto} from "../../../../../entities/round/round.dto.ts";
+import {toLocalInput} from "../../../../../utils/data.ts";
 
 interface RoundInfoTabProps {
     state: {
@@ -126,7 +127,7 @@ export const RoundInfoTab = ({state, t}: RoundInfoTabProps) => {
                                     InputLabelProps={{shrink: true}}
                                     value={editFormData.startDate ?? ""}
                                     inputProps={{
-                                        min: roundData.tournament.startTournament || undefined,
+                                        min: toLocalInput(roundData.tournament.startTournament).replace(' ', 'T') || undefined,
                                         max: editFormData.endDate ?? undefined
                                     }}
                                     onChange={(e) => setEditFormData((prev: any) => ({
