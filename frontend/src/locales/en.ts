@@ -629,7 +629,7 @@ export const en = {
             "startRound": "Start Round",
             "closeSubmissions": "Close Submissions",
             "toDraft": "Revert to Draft",
-            "evaluate": "Start Evaluation",
+            "evaluate": "End Evaluation",
             "rollbackStart": "Rollback Start",
             "rollbackClose": "Rollback Close"
         },
