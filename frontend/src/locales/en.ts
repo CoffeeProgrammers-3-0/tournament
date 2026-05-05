@@ -630,7 +630,7 @@ export const en = {
             "closeSubmissions": "Close Submissions and start evaluating",
             "toDraft": "Revert to Draft",
             "evaluate": "End Evaluation",
-            "rollbackStart": "Rollback to submissioning",
+            "rollbackStart": "Rollback to submission sending",
             "rollbackClose": "Rollback Close"
         },
         "confirm": {
