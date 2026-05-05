@@ -67,10 +67,10 @@ export const RoundHeader = ({ roundData, isAdmin, isUser, submissionId, onEdit, 
                         <Button
                             variant="contained"
                             color="secondary"
-                            onClick={() => navigate(`/rounds/${roundData.id}/submission`)}
+                            onClick={() => Number(submissionId) > 0 ? navigate(`/rounds/${roundData.id}/submission/${submissionId}`) : navigate(`/rounds/${roundData.id}/submission`)}
                             sx={{ borderRadius: "12px", fontWeight: 800 }}
                         >
-                            {submissionId ? t("submission.status.edit") : t("round_details.submit_button")}
+                            {Number(submissionId) > 0 ? t("submission.status.edit") : t("round_details.submit_button")}
                         </Button>
                     )}
                 </Stack>
