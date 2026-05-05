@@ -641,7 +641,7 @@ export const uk = {
             "closeSubmissions": "Закрити прийом робіт та почати оцінювання",
             "toDraft": "Повернути в чернетку",
             "evaluate": "Закінчити оцінювання",
-            "rollbackStart": "Відмінити старт раунду",
+            "rollbackStart": "Повернутися до відкриття подачі",
             "rollbackClose": "Відмінити закриття прийому"
         },
         "confirm": {
