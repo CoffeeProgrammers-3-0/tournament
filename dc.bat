@@ -1,6 +1,6 @@
 @echo off
 SET PROFILE=%1
-IF "%PROFILE%"=="" SET PROFILE=dev
+IF "%PROFILE%"=="" SET PROFILE=prod
 
 IF /I "%PROFILE%"=="prod" (
     echo Starting PROD profile

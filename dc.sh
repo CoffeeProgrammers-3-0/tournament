@@ -1,5 +1,5 @@
 #!/bin/bash
-PROFILE=${1:-dev}
+PROFILE=${1:-prod}
 
 if [ "$PROFILE" = "prod" ]; then
   echo "Starting PROD profile"

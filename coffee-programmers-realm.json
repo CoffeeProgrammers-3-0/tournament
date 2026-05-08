@@ -420,8 +420,8 @@
   "webAuthnPolicyPasswordlessExtraOrigins" : [ ],
   "users" : [ {
     "id" : "a0d7b449-b1dd-461c-9511-3edeb0381157",
-    "username" : "admin@mail.com",
-    "email" : "admin@mail.com",
+    "username" : "admin@test-user.com",
+    "email" : "admin@test-user.com",
     "emailVerified" : true,
     "attributes" : {
       "fullName" : [ "Admin I am" ]
