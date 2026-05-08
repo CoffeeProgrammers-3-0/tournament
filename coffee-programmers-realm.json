@@ -443,7 +443,7 @@
     "clientRoles" : {
       "coffee-programmers-client" : [ "ADMIN" ]
     },
-    "notBefore" : 0,
+    "notBefore" : 1778271307,
     "groups" : [ ]
   } ],
   "scopeMappings" : [ {
@@ -599,8 +599,8 @@
     "alwaysDisplayInConsole" : false,
     "clientAuthenticatorType" : "client-secret",
     "secret" : "QRZGWTnEuxoXNo7eML4qXyZ3ru4xzrIY",
-    "redirectUris" : [ "http://localhost:8081/*", "http://localhost:3000/*" ],
-    "webOrigins" : [ "http://localhost:8081", "http://localhost:3000" ],
+    "redirectUris" : [ "http://localhost:8081/*", "http://localhost/api/*", "http://localhost:3000/*", "http://localhost/*" ],
+    "webOrigins" : [ "http://localhost:8081", "http://localhost", "http://localhost:3000", "http://localhost/api" ],
     "notBefore" : 0,
     "bearerOnly" : false,
     "consentRequired" : false,
@@ -1480,7 +1480,7 @@
       "subType" : "anonymous",
       "subComponents" : { },
       "config" : {
-        "allowed-protocol-mapper-types" : [ "saml-user-property-mapper", "oidc-full-name-mapper", "oidc-sha256-pairwise-sub-mapper", "saml-user-attribute-mapper", "oidc-usermodel-attribute-mapper", "oidc-address-mapper", "saml-role-list-mapper", "oidc-usermodel-property-mapper" ]
+        "allowed-protocol-mapper-types" : [ "saml-user-attribute-mapper", "saml-user-property-mapper", "oidc-sha256-pairwise-sub-mapper", "saml-role-list-mapper", "oidc-usermodel-attribute-mapper", "oidc-full-name-mapper", "oidc-usermodel-property-mapper", "oidc-address-mapper" ]
       }
     }, {
       "id" : "dac37a1d-1e49-4a27-bb54-787a9cf716f6",
@@ -1489,7 +1489,7 @@
       "subType" : "authenticated",
       "subComponents" : { },
       "config" : {
-        "allowed-protocol-mapper-types" : [ "saml-role-list-mapper", "oidc-usermodel-property-mapper", "oidc-usermodel-attribute-mapper", "saml-user-property-mapper", "oidc-sha256-pairwise-sub-mapper", "oidc-address-mapper", "oidc-full-name-mapper", "saml-user-attribute-mapper" ]
+        "allowed-protocol-mapper-types" : [ "saml-role-list-mapper", "oidc-full-name-mapper", "saml-user-property-mapper", "oidc-address-mapper", "saml-user-attribute-mapper", "oidc-sha256-pairwise-sub-mapper", "oidc-usermodel-attribute-mapper", "oidc-usermodel-property-mapper" ]
       }
     } ],
     "org.keycloak.userprofile.UserProfileProvider" : [ {
