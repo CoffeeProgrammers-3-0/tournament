@@ -28,7 +28,6 @@ import LeaderboardIcon from "@mui/icons-material/Leaderboard";
 import GroupAddIcon from "@mui/icons-material/GroupAdd";
 import PersonRemoveIcon from "@mui/icons-material/PersonRemove";
 import FastForwardIcon from "@mui/icons-material/FastForward";
-import GroupIcon from "@mui/icons-material/Group";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import GroupRemoveIcon from "@mui/icons-material/GroupRemove";
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -79,7 +78,6 @@ type WebSocketPayload = {
 
 const getTeamName = (team: any) => team.name || team.title || `#${team.id}`;
 const getTeamEmail = (team: any) => team.email || "—";
-const getMembersCount = (team: any) => team.countOfMembers ?? team.membersCount ?? 0;
 const getPoints = (team: any) => team.points ?? 0;
 
 export const RoundTeamsTab = ({
@@ -264,15 +262,6 @@ export const RoundTeamsTab = ({
                 </TableCell>
 
                 <TableCell align="center">
-                    <Box sx={{display: "flex", alignItems: "center", justifyContent: "center", gap: 0.75}}>
-                        <GroupIcon sx={{fontSize: 18, color: "text.secondary"}}/>
-                        <Typography variant="body2" fontWeight={700}>
-                            {getMembersCount(team)}
-                        </Typography>
-                    </Box>
-                </TableCell>
-
-                <TableCell align="center">
                     {teamActions(team)}
                 </TableCell>
             </TableRow>
@@ -313,21 +302,6 @@ export const RoundTeamsTab = ({
                             {getTeamEmail(team)}
                         </Typography>
                     </Stack>
-                </TableCell>
-
-                <TableCell align="center">
-                    <Box sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: 0.5,
-                        color: "text.secondary"
-                    }}>
-                        <GroupIcon sx={{fontSize: 18}}/>
-                        <Typography variant="body2" fontWeight={700}>
-                            {getMembersCount(team)}
-                        </Typography>
-                    </Box>
                 </TableCell>
 
                 <TableCell align="right">
@@ -640,7 +614,6 @@ export const RoundTeamsTab = ({
                                                 </TableCell>
                                                 <TableCell>{t("round_details.teams.name", "Team")}</TableCell>
                                                 <TableCell>{t("round_details.teams.email", "Email")}</TableCell>
-                                                <TableCell align="center">{t("round_details.teams.members", "Members")}</TableCell>
                                                 <TableCell align="center" width="160">
                                                     {t("common.actions", "Actions")}
                                                 </TableCell>
@@ -695,8 +668,6 @@ export const RoundTeamsTab = ({
                                                     Rank
                                                 </TableCell>
                                                 <TableCell>{t("round_details.teams.name", "Team")}</TableCell>
-                                                <TableCell
-                                                    align="center">{t("round_details.teams.members", "Members")}</TableCell>
                                                 <TableCell
                                                     align="right">{t("round_details.teams.points", "Points")}</TableCell>
                                                 <TableCell align="center" width="160px">

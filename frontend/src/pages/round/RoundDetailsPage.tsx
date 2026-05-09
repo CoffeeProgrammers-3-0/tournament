@@ -424,6 +424,7 @@ const RoundDetailsPage = () => {
             <Dialog open={editors.autoAssignModalOpen} onClose={() => editors.setAutoAssignModalOpen(false)}>
                 <DialogTitle>{t("round_details.submissions.auto_assign_title")}</DialogTitle>
                 <DialogContent>
+                    <Typography sx={{mb: 2}}>{t("round_details.submissions.auto_assign_desc")}</Typography>
                     <ErrorMessages errors={editors.errors} />
                     <TextField
                         type="number"

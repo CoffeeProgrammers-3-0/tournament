@@ -56,7 +56,7 @@ export const ProfileJurySubmissionsList = () => {
                             <Box key={submission.id}>
                                 <ListItem disablePadding>
                                     <ListItemButton
-                                        onClick={() => navigate(`/jury/submissions/${submission.id}`)}
+                                        onClick={() => navigate(`/jury/evaluate/${submission.id}`)}
                                         sx={{
                                             px: 0,
                                             py: 1.5,

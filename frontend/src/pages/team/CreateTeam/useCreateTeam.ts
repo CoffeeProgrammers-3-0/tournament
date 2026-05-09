@@ -151,7 +151,7 @@ export const useCreateTeam = () => {
             setTimeout(() => navigate(`/tournaments/${tournamentId}`), 1500);
         } catch (err: any) {
             const messages = err.response?.data?.messages;
-            setErrors(Array.isArray(messages) ? messages : [err.response?.data?.message || t("team_create.errors.error")]);
+            setErrors(messages);
         } finally {
             setLoading(false);
         }

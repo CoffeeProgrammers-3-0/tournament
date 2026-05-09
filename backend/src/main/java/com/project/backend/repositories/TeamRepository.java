@@ -274,9 +274,8 @@ public interface TeamRepository extends JpaRepository<Team, Long>, JpaSpecificat
 
     @Query("SELECT COUNT(t) > 0 " +
             "FROM Team t " +
-            "JOIN t.teamRounds tr " +
-            "JOIN tr.round r " +
-            "WHERE t.email = :email AND r.tournament.id = :tournamentId")
+            "JOIN t.teamParticipants tp " +
+            "WHERE t.email = :email AND tp.tournament.id = :tournamentId")
     boolean existsByEmailAndTournamentId(
             @Param("email") String email,
             @Param("tournamentId") Long tournamentId
