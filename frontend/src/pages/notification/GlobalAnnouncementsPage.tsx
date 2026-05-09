@@ -245,7 +245,6 @@ export const GlobalAnnouncementsPage: React.FC = () => {
             const key = notif.key || '';
 
             if (key.includes('.round')) navigate(`/rounds/${data.roundId}`);
-            else if (key.includes('.team_tasks')) navigate(`/teams/${data.teamId}/tasks`);
             else if (key.includes('.team')) navigate(`/teams/${data.teamId}`);
             else if (key.includes('.jury')) navigate(`/submissions/${data.submissionId}`);
             else if (key.includes('.tournament')) navigate('/tournament');
