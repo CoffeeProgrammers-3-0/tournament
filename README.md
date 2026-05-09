@@ -106,3 +106,7 @@ tournament/
 
 **Note: Users with email @test-user.com will be automatically created with password passWord1 and won`t receive any email.**
 
+---
+For any questions or feedback, write to 
+- Artem on [Telegram](https://t.me/dexip_ua)
+- team`s email: coffee.Programmers04@gmail.com
