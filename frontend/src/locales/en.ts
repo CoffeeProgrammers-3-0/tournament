@@ -70,7 +70,8 @@ export const en = {
         "confirm_delete": "Are you sure you want to delete this message?",
         "refresh": "Refresh",
         "unknownDate": "Unknown date",
-        "selected": "Selected"
+        "selected": "Selected",
+        "click_to_view": "Click to view",
     },
     announcements: {
         "messages": {
@@ -265,7 +266,32 @@ export const en = {
                 "deleteTitle": "Видалити турнір?",
                 "deleteDesc": "Це назавжди видалить турнір, всі команди та раунди. Дія незворотна."
             }
-        }
+        },
+        "control_panel": "Control Panel",
+        "actions": {
+            "openRegistration": "Open Registration",
+            "startTournament": "Start Tournament",
+            "backToDraft": "Back to Draft",
+            "completeTournament": "Complete Tournament",
+            "cancelStart": "Cancel Start",
+            "reopenTournament": "Reopen Tournament"
+        },
+        "dialog": {
+            "startRegTitle": "Start Registration",
+            "startRegDesc": "Are you sure you want to open registration for this tournament? Users will be able to sign up.",
+            "startTourTitle": "Start Tournament",
+            "startTourDesc": "Are you sure you want to start the tournament? This will generate the brackets and close registration.",
+            "toDraftTitle": "Revert to Draft",
+            "toDraftDesc": "Are you sure you want to revert this tournament to draft status? This will close active registration.",
+            "finishTitle": "Complete Tournament",
+            "finishDesc": "Are you sure you want to mark this tournament as finished? No further matches can be played.",
+            "rollbackStartTitle": "Cancel Tournament Start",
+            "rollbackStartDesc": "Are you sure you want to undo starting the tournament? This will revert it back to the registration phase and delete current bracket progress.",
+            "rollbackFinishTitle": "Reopen Tournament",
+            "rollbackFinishDesc": "Are you sure you want to reopen this finished tournament?",
+            "deleteTitle": "Delete Tournament",
+            "deleteDesc": "Are you absolutely sure you want to delete this tournament? This action is permanent and cannot be undone."
+        },
     },
 
     modals: {
@@ -355,6 +381,7 @@ export const en = {
         "members": {
             "title": "Team Roster"
         },
+
         "tournaments": {
             "title": "Tournament History",
             "coming_soon": "Tournament list will be available soon."

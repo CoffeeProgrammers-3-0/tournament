@@ -52,7 +52,7 @@ export const useNotificationSocket = (isLoggedIn: boolean) => {
                 console.error('WS Error:', errorMessage);
 
                 // If we get an auth error while we think we're logged in, try to refresh
-                if (isLoggedIn && (errorMessage.includes('access denied') || errorMessage.includes('jwt'))) {
+                if (isLoggedIn && (errorMessage.includes('access denied') || errorMessage.includes('clientinboundchannel'))) {
                     client.deactivate();
                     try {
                         await authService.refresh();

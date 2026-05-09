@@ -24,6 +24,8 @@ export const TournamentCreateForm = ({ onCancel, onSuccess }: { onCancel: () => 
     // Стан для масиву помилок
     const [errors, setErrors] = useState<string[]>([]);
 
+    const now = new Date().toISOString().slice(0, 16);
+
     const [formData, setFormData] = useState({
         name: "", description: "",
         startRegistration: "", endRegistration: "",
@@ -136,7 +138,9 @@ export const TournamentCreateForm = ({ onCancel, onSuccess }: { onCancel: () => 
                             InputLabelProps={{ shrink: true }}
                             onChange={handleChange}
                             required
-                            inputProps={{ min: formData.startRegistration || undefined }}
+                            inputProps={{
+                                min: formData.startRegistration > now ? formData.startRegistration : now
+                            }}
                         />
                     </Grid>
                     <Grid size={{xs:12, sm: 6}}>

@@ -69,11 +69,14 @@ export const NotificationProvider = ({children}: { children: ReactNode }) => {
     const {title, body} = useMemo(() => {
         if (!latestNotification) return {title: '', body: ''};
 
-        const rawContent = String(latestNotification.content || '');
+        const rawContent = latestNotification.content;
+
+        console.log(latestNotification)
 
         if (latestNotification.isGlobal) {
-            if (latestNotification.system) {
-                const parts = rawContent.split(':').map((p: string) => p.trim());
+            console.log(rawContent)
+            if (rawContent.system) {
+                const parts = rawContent.content.split(':').map((p: string) => p.trim());
                 const [name, id, key] = parts.length >= 3 ? parts : ['', '', rawContent];
 
                 return {
@@ -81,7 +84,7 @@ export const NotificationProvider = ({children}: { children: ReactNode }) => {
                     body: t('common.click_to_view')
                 };
             } else {
-                const plainTextBody = rawContent.replace(/<[^>]+>/g, '');
+                const plainTextBody = rawContent.content.replace(/<[^>]+>/g, '');
 
                 return {
                     title: t('notifications.global.admin_message') as string,
