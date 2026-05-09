@@ -2,7 +2,7 @@ import {useCallback, useEffect, useMemo, useState} from "react";
 import {useParams} from "react-router-dom";
 import Cookies from "js-cookie";
 import {teamService} from "../../../services/impl/TeamService";
-import type {TeamFullResponseDto} from "../../../entities/team/team.dto";
+import type {TeamFullResponseDto, TeamUpdateRequestDto} from "../../../entities/team/team.dto";
 import type {UserCreateRequestForTeamDto} from "../../../entities/user/user.dto";
 
 export const useTeamDetails = () => {
@@ -16,7 +16,7 @@ export const useTeamDetails = () => {
 
     // Editing & Error State
     const [isEditingHeader, setIsEditingHeader] = useState(false);
-    const [headerForm, setHeaderForm] = useState({ name: "", organization: "", email: "" });
+    const [headerForm, setHeaderForm] = useState<TeamUpdateRequestDto>({ name: "", organization: "", contact: "" });
     const [errors, setErrors] = useState<string[]>([]);
     const [isActionLoading, setIsActionLoading] = useState(false);
 
@@ -42,7 +42,7 @@ export const useTeamDetails = () => {
             setHeaderForm({
                 name: team.name,
                 organization: team.organization || "",
-                email: team.email
+                contact: team.contact
             });
         } catch (err) {
             console.error("Fetch error:", err);

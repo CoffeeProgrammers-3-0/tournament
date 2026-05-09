@@ -14,6 +14,9 @@ export const TeamHeader = ({ team, isAdmin, isEditing, onEdit, onCancel, onSave,
                     <Grid size={{ xs: 12, md: 4 }}>
                         <TextField fullWidth label="Organization" value={formData.organization} onChange={e => setFormData({ ...formData, organization: e.target.value })} />
                     </Grid>
+                    <Grid size={{ xs: 12, md: 4 }}>
+                        <TextField fullWidth label="Сontact" value={formData.contact} onChange={e => setFormData({ ...formData, contact: e.target.value })} />
+                    </Grid>
                     <Grid size={{ xs: 12 }} sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, mt: 1 }}>
                         <Button
                             fullWidth
@@ -61,6 +64,9 @@ export const TeamHeader = ({ team, isAdmin, isEditing, onEdit, onCancel, onSave,
                         </Typography>
                         <Typography variant="body1" sx={{ opacity: 0.9, wordBreak: "break-word" }}>
                             {team.organization || "No Organization"}
+                        </Typography>
+                        <Typography variant="body1" sx={{ opacity: 0.9, wordBreak: "break-word" }}>
+                            {team.contact || "No contact"}
                         </Typography>
                         <Typography variant="caption" sx={{ opacity: 0.7, display: "block", wordBreak: "break-all" }}>
                             {team.email}
