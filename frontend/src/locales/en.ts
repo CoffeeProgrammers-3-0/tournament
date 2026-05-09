@@ -768,7 +768,16 @@ export const en = {
         },
         "alerts.locked": "This round is not active so you can`t change you submission",
         "submit_btn": "Submit for Review",
-        "success": "Project saved successfully!"
+        "success": {
+            "created": "Submission created successfully!",
+            "updated": "Submission updated successfully!",
+            "deleted": "Submission deleted successfully!"
+        },
+        "errors": {
+            "save_failed": "Failed to save submission",
+            "delete_failed": "Failed to delete submission",
+            "load_failed": "Failed to load submission",
+        }
     },
 
     "notifications": {
