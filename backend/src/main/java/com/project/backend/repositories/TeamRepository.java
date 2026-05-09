@@ -270,4 +270,6 @@ public interface TeamRepository extends JpaRepository<Team, Long>, JpaSpecificat
             @Param("roundId") Long roundId,
             @Param("teamIds") List<Long> teamIds
     );
+
+    boolean existsByEmailAndTournamentId(String email, Long tournamentId);
 }

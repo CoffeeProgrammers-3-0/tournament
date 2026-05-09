@@ -78,6 +78,10 @@ public class TeamServiceImpl implements TeamService {
             throw new IllegalArgumentException("Team contains duplicate participants");
         }
 
+        if (teamRepository.existsByEmailAndTournamentId(team.getEmail(), tournamentId)) {
+            throw new IllegalArgumentException("Can`t create team with duplicate email on same tournament");
+        }
+
         Tournament tournament = tournamentRepository.findById(tournamentId)
                 .orElseThrow(() -> new EntityNotFoundException("Tournament with id " + tournamentId + " not found"));
 
