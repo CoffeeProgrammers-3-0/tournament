@@ -14,8 +14,9 @@ A comprehensive, full-stack platform built to manage and host the **SFL Programm
 * **Real-Time Capabilities:** Live updates and notifications using WebSockets (STOMP).
 * **Interactive Scheduling:** Advanced calendar and event management using React Big Calendar and Schedule-X.
 * **Multi-language Support:** Dynamic localization via `i18next` on the frontend and language detection on the backend.
-* **Automated Document Processing:** Dedicated `pdf-worker` microservice for generating and handling PDFs.
+* **Automated Document Processing:** Dedicated `pdf-worker` microservice for generating and handling PDF certeficates for teams.
 * **Modern UI/UX:** Built with Material UI (MUI) for a clean, responsive, and accessible interface.
+* **Task for team(per round):** Team can create tasks for each round and work with them.
 
 ---
 
