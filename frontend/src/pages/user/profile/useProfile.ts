@@ -69,11 +69,14 @@ export const useProfile = () => {
     const fetchProfileData = useCallback(async () => {
         try {
             setLoading(true);
-            const [userData, teamsData, tournamentsData] = await Promise.all([
+            const [userData, teamsData] = await Promise.all([
                 userService.getMyProfile(),
-                teamService.getMyTeams({ page: 0, size: 5 }),
-                tournamentService.getMyTournaments({ page: 0, size: 5, status: 'RUNNING' })
+                teamService.getMyTeams({ page: 0, size: 5 })
             ]);
+
+            const tournamentsData = userData.role === "USER" ?
+                await tournamentService.getMyTournaments({ page: 0, size: 5, status: 'RUNNING' }) :
+                await tournamentService.getAllTournaments({ page: 0, size: 5});
 
             setUser(userData);
             setEditName(userData.fullName);

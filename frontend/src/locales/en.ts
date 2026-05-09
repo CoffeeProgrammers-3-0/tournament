@@ -145,7 +145,7 @@ export const en = {
         "title": "My Profile",
         "role": "System Role",
         "teams": "My Teams",
-        "tournaments": "Active Tournaments",
+        "tournaments": "My Tournaments",
         "no_teams": "You haven't joined any teams yet",
         "no_tournaments": "No active tournaments at the moment",
         "error_loading": "Failed to load profile data",

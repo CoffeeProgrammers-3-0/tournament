@@ -37,7 +37,7 @@ export const ProfilePage = () => {
             </Typography>
 
             <Grid container spacing={4}>
-                <Grid size={{xs: 12, md: (role === "USER" ? 4 : role === "JURY" ? 6 : 12)}}>
+                <Grid size={{xs: 12, md: (role === "USER" ? 4 : role === "JURY" || role === "ADMIN" ? 6 : 12)}}>
                     <ProfileInfoCard
                         user={user}
                         isEditing={isEditing}
@@ -56,8 +56,8 @@ export const ProfilePage = () => {
                     </Grid>
                 }
 
-                {role === "USER" &&
-                    <Grid size={{xs: 12, md: 4}}>
+                {role !== "JURY" &&
+                    <Grid size={{xs: 12, md: role === "ADMIN" ? 6 : 4}}>
                         <ProfileTournamentsList tournaments={tournaments}/>
                     </Grid>
                 }
