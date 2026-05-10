@@ -48,6 +48,28 @@
                 color: var(--color-primary);
             }
 
+            .options-row {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-top: 8px;
+                margin-bottom: 16px;
+                font-size: 14px;
+            }
+            .options-row a {
+                color: var(--color-primary);
+                text-decoration: none;
+                font-weight: 600;
+            }
+            .options-row a:hover {
+                text-decoration: underline;
+            }
+            .remember-me {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+
             .mui-input.input-error { border-color: var(--color-danger) !important; background-color: #fff8f8; }
             .error-message { color: var(--color-danger); font-size: 12px; font-weight: 500; margin-top: 6px; display: block; }
             .btn-signin { width: 100%; background: var(--color-primary); color: white; border: none; padding: 14px; border-radius: 999px; font-weight: 700; font-size: 16px; cursor: pointer; margin-top: 6px; }
@@ -96,10 +118,17 @@
             </div>
 
             <div class="options-row">
-                <#if realm.rememberMe && !usernameHidden??>
-                    <input id="rememberMe" name="rememberMe" type="checkbox" <#if login.rememberMe??>checked</#if>>
-                    <label for="rememberMe" style="cursor: pointer;">${msg("rememberMe")}</label>
-                </#if>
+                <div class="remember-me">
+                    <#if realm.rememberMe && !usernameHidden??>
+                        <input id="rememberMe" name="rememberMe" type="checkbox" <#if login.rememberMe??>checked</#if>>
+                        <label for="rememberMe" style="cursor: pointer;">${msg("rememberMe")}</label>
+                    </#if>
+                </div>
+                <div class="forgot-password">
+                    <#if realm.resetPasswordAllowed>
+                        <a tabindex="5" href="${url.loginResetCredentialsUrl}">${msg("doForgotPassword")}</a>
+                    </#if>
+                </div>
             </div>
 
             <button class="btn-signin" type="submit">${msg("doLogIn")}</button>

@@ -1,5 +1,6 @@
 package com.project.backend.config;
 
+import com.project.backend.exception.CustomStompErrorHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -28,6 +29,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
+        registry.setErrorHandler(new CustomStompErrorHandler());
+
         registry.addEndpoint("/api/ws").setAllowedOriginPatterns("*").withSockJS();
     }
 

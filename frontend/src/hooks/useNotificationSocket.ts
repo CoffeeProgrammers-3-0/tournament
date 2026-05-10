@@ -8,6 +8,8 @@ export const useNotificationSocket = (isLoggedIn: boolean) => {
     const [unseenCount, setUnseenCount] = useState<number>(0);
     const [latestNotification, setLatestNotification] = useState<any>(null);
 
+    const [refreshToggle, setRefreshToggle] = useState(0);
+
     const userId = Cookies.get("userId");
     const accessToken = Cookies.get("accessToken"); // Get token for the header
 
@@ -52,10 +54,11 @@ export const useNotificationSocket = (isLoggedIn: boolean) => {
                 console.error('WS Error:', errorMessage);
 
                 // If we get an auth error while we think we're logged in, try to refresh
-                if (isLoggedIn && (errorMessage.includes('access denied') || errorMessage.includes('jwt'))) {
-                    client.deactivate();
+                if (isLoggedIn && (errorMessage.includes('is not authenticated') || errorMessage.includes('jwt'))) {
+                    await client.deactivate();
                     try {
                         await authService.refresh();
+                        setRefreshToggle(prev => prev + 1);
                         // The effect will re-run because accessToken changes (via state/cookie)
                     } catch (refreshError) {
                         console.error("WS Auth refresh failed", refreshError);
@@ -69,7 +72,7 @@ export const useNotificationSocket = (isLoggedIn: boolean) => {
         return () => {
             client.deactivate();
         };
-    }, [isLoggedIn, userId, accessToken]);
+    }, [isLoggedIn, userId, accessToken, refreshToggle]);
 
     return { unseenCount, latestNotification };
 };

@@ -16,10 +16,11 @@ class AuthService {
     static redirectToKeycloak(): void {
         const currentPath = window.location.pathname;
 
-        if (currentPath === '/callback' || currentPath === '/login') {
-            localStorage.setItem('preLoginPath', '/home');
-        } else if (currentPath !== '/') {
+        const technicalRoutes = ['/callback', '/login', '/logout'];
+        if (!technicalRoutes.includes(currentPath)) {
             localStorage.setItem('preLoginPath', currentPath);
+        } else if (!localStorage.getItem('preLoginPath')) {
+            localStorage.setItem('preLoginPath', '/home');
         }
 
         const loginUrl = `${AUTH_CONFIG.KEYCLOAK_AUTH_URL}/realms/${AUTH_CONFIG.KEYCLOAK_REALM}/protocol/openid-connect/auth?client_id=${AUTH_CONFIG.CLIENT_ID}&redirect_uri=${encodeURIComponent(AUTH_CONFIG.REDIRECT_URI)}&response_type=code&scope=openid`;

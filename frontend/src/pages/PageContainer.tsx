@@ -17,7 +17,7 @@ const PageContainer = ({ children, showBackButton = true }: PageContainerProps) 
     const { t } = useTranslation();
 
 
-    const isHomePage = location.pathname === "/";
+    const isHomePage = location.pathname === "/" || location.pathname === "/home";
     const shouldShowBack = showBackButton && !isHomePage;
 
     return (

@@ -169,6 +169,18 @@ export const TournamentCreateForm = ({ onCancel, onSuccess }: { onCancel: () => 
                     </Grid>
                 </Grid>
 
+                <Alert
+                    severity="warning"
+                    sx={{
+                        mb: 3,
+                        mt: 2,
+                        borderRadius: "16px",
+                        "& .MuiAlert-message": { width: "100%" }
+                    }}
+                >
+                    <AlertTitle sx={{ fontWeight: 700 }}> * {t("tournaments.admin.warn")}</AlertTitle>
+                </Alert>
+
                 <Box sx={{ mt: 5, display: "flex", justifyContent: "flex-end", gap: 2 }}>
                     <Button variant="outlined" onClick={onCancel} sx={{ borderRadius: "10px" }}>
                         {t("tournaments.admin.cancel")}

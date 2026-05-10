@@ -71,10 +71,7 @@ export const NotificationProvider = ({children}: { children: ReactNode }) => {
 
         const rawContent = latestNotification.content;
 
-        console.log(latestNotification)
-
         if (latestNotification.isGlobal) {
-            console.log(rawContent)
             if (rawContent.system) {
                 const parts = rawContent.content.split(':').map((p: string) => p.trim());
                 const [name, id, key] = parts.length >= 3 ? parts : ['', '', rawContent];

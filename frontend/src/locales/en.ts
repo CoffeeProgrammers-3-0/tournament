@@ -200,7 +200,8 @@ export const en = {
                 "endReg": "Registration End",
                 "maxTeams": "Max members of Team",
                 "rounds": "Rounds Count"
-            }
+            },
+            "warn": "Tournament will start auto when registration ends!"
         }
     },
     tournament_details: {

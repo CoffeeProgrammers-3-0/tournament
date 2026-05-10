@@ -37,6 +37,7 @@ export const responseError = async (error: any) => {
 
     if (status === 401 && !originalRequest._retried) {
         originalRequest._retried = true;
+        console.log("401 Unauthorized. Attempting refresh...")
 
         try {
             const success = await AuthService.refresh();
