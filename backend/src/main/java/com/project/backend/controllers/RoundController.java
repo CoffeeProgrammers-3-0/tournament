@@ -1,10 +1,12 @@
 package com.project.backend.controllers;
 
+import com.project.backend.auth.utils.CurrentUserContainer;
 import com.project.backend.dto.leaderboard.LeaderboardResponse;
 import com.project.backend.dto.round.RoundCreateRequest;
 import com.project.backend.dto.round.RoundFullResponse;
 import com.project.backend.dto.round.RoundListResponse;
 import com.project.backend.dto.round.RoundUpdateRequest;
+import com.project.backend.dto.team.StatisticResponse;
 import com.project.backend.dto.team.TeamLeaderboardResponse;
 import com.project.backend.dto.team.TeamListResponse;
 import com.project.backend.dto.user.UserResponse;
@@ -33,6 +35,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @RestController
@@ -49,6 +53,8 @@ public class RoundController {
     private final TeamMapper teamMapper;
     private final UserMapper userMapper;
     private final ExcelExportService excelExportService;
+
+    private final CurrentUserContainer currentUserContainer;
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/{tournament_id}/rounds")
@@ -242,7 +248,16 @@ public class RoundController {
             @PathVariable(value = "round_id") Long roundId
     ) throws IOException {
         List<TeamLeaderboardResponse> data = teamService.getAllStatsByRoundId(roundId);
-        byte[] excelBytes = excelExportService.exportToExcel(data);
+        User me = currentUserContainer.getUser();
+        List<StatisticResponse> statisticResponses = new ArrayList<>();
+        if(me.getRole().name().equals("ADMIN")){
+            for(TeamLeaderboardResponse teamLeaderboardResponse : data){
+                statisticResponses.add(teamService.getStatisticsByRoundForTeam(roundId, teamLeaderboardResponse.getId()));
+            }
+        }else{
+            statisticResponses = Collections.singletonList(teamService.getStatisticsByRoundForUsersTeam(roundId, me));
+        }
+        byte[] excelBytes = excelExportService.exportToExcel(data, statisticResponses);
 
         ByteArrayResource resource = new ByteArrayResource(excelBytes);
 
