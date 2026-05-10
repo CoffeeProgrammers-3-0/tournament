@@ -843,7 +843,7 @@ export const en = {
         "agenda": "Agenda",
         "filters": {
             "show_reg": "Registration",
-            "show_running": "Active Tournaments",
+            "show_running": "Tournaments",
             "show_rounds": "Rounds",
             "show_offline": "Offline Events",
             "show_online": "Online Events"
