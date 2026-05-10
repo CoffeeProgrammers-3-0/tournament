@@ -1,45 +1,120 @@
-import {Box, Card, CardContent, Chip, Paper, Typography} from "@mui/material";
+import {Box, Button, Card, CardContent, Chip, CircularProgress, Pagination, Paper, Typography} from "@mui/material";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import {useTranslation} from "react-i18next";
 import {useNavigate} from "react-router-dom";
 
-export const ProfileTournamentsList = ({ tournaments }: { tournaments: any[] }) => {
+interface ProfileTournamentsListProps {
+    tournaments: any[];
+    page: number; // 0-indexed backend page
+    totalPages: number;
+    onPageChange: (newPage: number) => void;
+    loading: boolean;
+}
+
+export const ProfileTournamentsList = ({
+                                           tournaments,
+                                           page,
+                                           totalPages,
+                                           onPageChange,
+                                           loading
+                                       }: ProfileTournamentsListProps) => {
     const { t } = useTranslation();
     const navigate = useNavigate();
 
+    const handlePageChange = (_event: React.ChangeEvent<unknown>, value: number) => {
+        // MUI is 1-indexed, backend is 0-indexed
+        onPageChange(value - 1);
+    };
+
     return (
-        <Paper sx={{ borderRadius: "20px", p: 3, height: "100%", border: "1px solid #f0f0f0" }} elevation={0}>
-            <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-                <EmojiEventsIcon sx={{ mr: 1.5, color: "warning.main" }} />
-                <Typography variant="h6" fontWeight={700}>{t("profile.tournaments")}</Typography>
+        <Paper
+            sx={{
+                borderRadius: "20px",
+                p: 3,
+                height: "100%",
+                border: "1px solid #f0f0f0",
+                display: "flex",
+                flexDirection: "column"
+            }}
+            elevation={0}
+        >
+            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 3 }}>
+                <Box sx={{ display: "flex", alignItems: "center" }}>
+                    <EmojiEventsIcon sx={{ mr: 1.5, color: "warning.main" }} />
+                    <Typography variant="h6" fontWeight={700}>
+                        {t("profile.tournaments")}
+                    </Typography>
+                </Box>
+
+                <Button
+                    size="small"
+                    sx={{ fontWeight: 600, borderRadius: "10px" }}
+                    onClick={() => navigate("/tournaments")} // Path to full list page
+                >
+                    {t("profile.view_all") || "View All"}
+                </Button>
             </Box>
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                {tournaments.map((tournament) => (
-                    <Card
-                        key={tournament.id}
-                        variant="outlined"
-                        onClick={() => navigate(`/tournaments/${tournament.id}`)}
-                        sx={{ borderRadius: "12px", cursor: "pointer", "&:hover": { borderColor: "primary.main" } }}
-                    >
-                        <CardContent sx={{ p: 2 }}>
-                            <Typography variant="subtitle1" fontWeight={700}>{tournament.name}</Typography>
-                            <Box sx={{ display: "flex", justifyContent: "space-between", mt: 1 }}>
-                                <Typography variant="body2" color="text.secondary">
-                                    {tournament.startTournament ? new Date(tournament.startTournament).toLocaleDateString() : 'TBA'}
-                                </Typography>
-                                <Chip
-                                    label={t(`profile.statuses.${tournament.status}`)}
-                                    size="small"
-                                    color={tournament.status === "RUNNING" ? "warning" : "success"}
-                                />
-                            </Box>
-                        </CardContent>
-                    </Card>
-                ))}
-                {tournaments.length === 0 && (
-                    <Typography color="text.secondary" align="center" sx={{ py: 4 }}>{t("profile.no_tournaments")}</Typography>
+
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 2, flex: 1, position: "relative" }}>
+                {loading ? (
+                    <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", flex: 1, py: 4 }}>
+                        <CircularProgress size={30} />
+                    </Box>
+                ) : (
+                    <>
+                        {tournaments.map((tournament) => (
+                            <Card
+                                key={tournament.id}
+                                variant="outlined"
+                                onClick={() => navigate(`/tournaments/${tournament.id}`)}
+                                sx={{
+                                    borderRadius: "12px",
+                                    cursor: "pointer",
+                                    "&:hover": { borderColor: "primary.main" }
+                                }}
+                            >
+                                <CardContent sx={{ p: 2, pb: "16px !important" }}>
+                                    <Typography variant="subtitle1" fontWeight={700}>
+                                        {tournament.name}
+                                    </Typography>
+                                    <Box sx={{ display: "flex", justifyContent: "space-between", mt: 1, alignItems: "center" }}>
+                                        <Typography variant="body2" color="text.secondary">
+                                            {tournament.startTournament ? new Date(tournament.startTournament).toLocaleDateString() : 'TBA'}
+                                        </Typography>
+                                        <Chip
+                                            label={t(`profile.statuses.${tournament.status}`)}
+                                            size="small"
+                                            color={tournament.status === "RUNNING" ? "warning" : "success"}
+                                            sx={{ fontWeight: 600 }}
+                                        />
+                                    </Box>
+                                </CardContent>
+                            </Card>
+                        ))}
+
+                        {tournaments.length === 0 && (
+                            <Typography color="text.secondary" align="center" sx={{ py: 4 }}>
+                                {t("profile.no_tournaments")}
+                            </Typography>
+                        )}
+                    </>
                 )}
             </Box>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+                <Box sx={{ display: "flex", justifyContent: "center", mt: 3, pt: 2, borderTop: "1px solid #f0f0f0" }}>
+                    <Pagination
+                        count={totalPages}
+                        page={page + 1} // Display page is 1-indexed
+                        onChange={handlePageChange}
+                        color="primary"
+                        size="small"
+                        shape="rounded"
+                        disabled={loading} // Prevent clicking while fetching
+                    />
+                </Box>
+            )}
         </Paper>
     );
 };

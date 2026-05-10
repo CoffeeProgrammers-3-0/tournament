@@ -142,6 +142,7 @@ export const en = {
     },
 
     profile: {
+        "view_all": "View all tournaments",
         "title": "My Profile",
         "role": "System Role",
         "teams": "My Teams",
@@ -158,7 +159,8 @@ export const en = {
         "statuses": {
             "RUNNING": "Running",
             "FINISHED": "Finished",
-            "REGISTRATION": "Registration"
+            "REGISTRATION": "Registration",
+            "DRAFT": "Draft",
         }
     },
 

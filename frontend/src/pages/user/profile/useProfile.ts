@@ -9,56 +9,54 @@ import {certificateService} from "../../../services/impl/CertificateService.ts";
 import type {CertificateResponseDto} from "../../../entities/certificate/certificate.dto.ts";
 
 const PAGE_SIZE = 8;
+const TOURNAMENTS_PAGE_SIZE = 4; // Display 4 tournaments per page
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8081';
-
-const API_CONFIG = {
-    BASE_URL: API_BASE.replace(/\/api\/?$/, '')
-};
+const API_CONFIG = { BASE_URL: API_BASE.replace(/\/api\/?$/, '') };
 
 export const useProfile = () => {
     const [user, setUser] = useState<UserResponseDto | null>(null);
     const [teams, setTeams] = useState<TeamListResponseDto[]>([]);
-    const [tournaments, setTournaments] = useState<TournamentListResponseDto[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
 
     const [isEditing, setIsEditing] = useState(false);
     const [editName, setEditName] = useState("");
     const [isSaving, setIsSaving] = useState(false);
 
+    // --- Certificates Pagination State ---
     const [loadingMy, setLoadingMy] = useState(false);
     const [myTotalPages, setMyTotalPages] = useState(0);
     const [myPage, setMyPage] = useState(0);
-
     const [myCertificates, setMyCertificates] = useState<CertificateResponseDto[]>([]);
+
+    // --- Tournaments Pagination State (NEW) ---
+    const [tournaments, setTournaments] = useState<TournamentListResponseDto[]>([]);
+    const [loadingTournaments, setLoadingTournaments] = useState(false);
+    const [tournamentsPage, setTournamentsPage] = useState(0);
+    const [tournamentsTotalPages, setTournamentsTotalPages] = useState(0);
 
     const downloadCertificate = useCallback((certificate: CertificateResponseDto) => {
         if (certificate.status !== 'READY' && !(user?.role === "ADMIN")) return;
-
         const path = certificate.file?.path;
         if (!path) return;
 
         const fullUrl = `${API_CONFIG.BASE_URL}${path}`;
-
         const link = document.createElement('a');
         link.href = fullUrl;
         link.target = '_blank';
         link.rel = 'noreferrer';
-
         document.body.appendChild(link);
         link.click();
         link.remove();
-    }, []);
+    }, [user]);
 
-    const fetchMyCertificates = useCallback(async () => {
+    // Fetch Certificates
+    const fetchMyCertificates = useCallback(async (currentUser: UserResponseDto) => {
         setLoadingMy(true);
         try {
-            const response = user?.role === "ADMIN" ? await certificateService.getCreatedByMeCertificates({
-                    page: myPage,
-                    size: PAGE_SIZE,})
-                : await certificateService.getMyCertificates({
-                    page: myPage,
-                    size: PAGE_SIZE,});
+            const response = currentUser.role === "ADMIN"
+                ? await certificateService.getCreatedByMeCertificates({ page: myPage, size: PAGE_SIZE })
+                : await certificateService.getMyCertificates({ page: myPage, size: PAGE_SIZE });
             setMyCertificates(response.content);
             setMyTotalPages(response.totalPages);
         } finally {
@@ -66,6 +64,30 @@ export const useProfile = () => {
         }
     }, [myPage]);
 
+    // Fetch Tournaments (Triggered on page change)
+    useEffect(() => {
+        if (!user) return;
+
+        const fetchTournaments = async () => {
+            setLoadingTournaments(true);
+            try {
+                const response = user.role === "USER"
+                    ? await tournamentService.getMyTournaments({ page: tournamentsPage, size: TOURNAMENTS_PAGE_SIZE, status: 'RUNNING' })
+                    : await tournamentService.getAllTournaments({ page: tournamentsPage, size: TOURNAMENTS_PAGE_SIZE });
+
+                setTournaments(response.content || []);
+                setTournamentsTotalPages(response.totalPages || 0);
+            } catch (error) {
+                console.error("Failed to fetch tournaments:", error);
+            } finally {
+                setLoadingTournaments(false);
+            }
+        };
+
+        fetchTournaments();
+    }, [user, tournamentsPage]); // Runs when user is loaded OR when page changes
+
+    // Initial Profile Load
     const fetchProfileData = useCallback(async () => {
         try {
             setLoading(true);
@@ -74,21 +96,18 @@ export const useProfile = () => {
                 teamService.getMyTeams({ page: 0, size: 5 })
             ]);
 
-            const tournamentsData = userData.role === "USER" ?
-                await tournamentService.getMyTournaments({ page: 0, size: 5, status: 'RUNNING' }) :
-                await tournamentService.getAllTournaments({ page: 0, size: 5});
-
             setUser(userData);
             setEditName(userData.fullName);
             setTeams(teamsData?.content || []);
-            setTournaments(tournamentsData?.content || []);
-            fetchMyCertificates();
+
+            // Call certificates with the explicit user data to avoid stale state issues
+            fetchMyCertificates(userData);
         } catch (error) {
             console.error("Failed to fetch profile data:", error);
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [fetchMyCertificates]);
 
     useEffect(() => {
         fetchProfileData();
@@ -114,10 +133,11 @@ export const useProfile = () => {
     };
 
     return {
-        user, teams, tournaments, loading,
+        user, teams, loading,
         isEditing, setIsEditing, editName, setEditName,
         isSaving, handleSaveProfile, cancelEditing,
-        myCertificates,
-        setMyPage, myPage, myTotalPages, loadingMy, downloadCertificate
+        myCertificates, setMyPage, myPage, myTotalPages, loadingMy, downloadCertificate,
+        // Expose new tournament states
+        tournaments, tournamentsPage, setTournamentsPage, tournamentsTotalPages, loadingTournaments
     };
 };

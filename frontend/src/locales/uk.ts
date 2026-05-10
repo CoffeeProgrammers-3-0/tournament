@@ -144,6 +144,7 @@ export const uk = {
     },
 
     profile: {
+        "view_all": "Переглянути усі турніри",
         "title": "Мій профіль",
         "role": "Роль у системі",
         "teams": "Мої команди",
@@ -160,7 +161,8 @@ export const uk = {
         "statuses": {
             "RUNNING": "Триває",
             "FINISHED": "Завершено",
-            "REGISTRATION": "Реєстрація"
+            "REGISTRATION": "Реєстрація",
+            "DRAFT": "Чернетка"
         }
     },
 

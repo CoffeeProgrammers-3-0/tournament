@@ -10,12 +10,14 @@ import {ProfileCertificates} from "./components/ProfileCertificates.tsx";
 export const ProfilePage = () => {
     const {t} = useTranslation();
     const {
-        user, teams, tournaments, loading,
+        user, teams, loading,
         isEditing, setIsEditing, editName, setEditName,
         isSaving, handleSaveProfile, cancelEditing,
-        myCertificates,
-        setMyPage, myPage, myTotalPages, loadingMy, downloadCertificate
+        myCertificates, setMyPage, myPage, myTotalPages, loadingMy, downloadCertificate,
+        // Extract new variables
+        tournaments, tournamentsPage, setTournamentsPage, tournamentsTotalPages, loadingTournaments
     } = useProfile();
+
     const role = user?.role;
 
     if (loading) return (
@@ -58,7 +60,13 @@ export const ProfilePage = () => {
 
                 {role !== "JURY" &&
                     <Grid size={{xs: 12, md: role === "ADMIN" ? 6 : 4}}>
-                        <ProfileTournamentsList tournaments={tournaments}/>
+                        <ProfileTournamentsList
+                            tournaments={tournaments}
+                            page={tournamentsPage}
+                            totalPages={tournamentsTotalPages}
+                            onPageChange={setTournamentsPage}
+                            loading={loadingTournaments}
+                        />
                     </Grid>
                 }
 
