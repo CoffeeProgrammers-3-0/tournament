@@ -45,6 +45,10 @@ public class ExcelExportServiceImpl implements ExcelExportService {
 
             createLeaderboardSheet(workbook, leaderboard, styles, statisticSheetNames);
 
+            int leaderboardIndex = workbook.getSheetIndex(LEADERBOARD_SHEET_NAME);
+            workbook.setActiveSheet(leaderboardIndex);
+            workbook.setFirstVisibleTab(leaderboardIndex);
+
             workbook.setSheetOrder(LEADERBOARD_SHEET_NAME, 0);
 
             workbook.write(out);
@@ -144,8 +148,8 @@ public class ExcelExportServiceImpl implements ExcelExportService {
 
             for (int j = 0; j < juries.size(); j++) {
                 String jury = juries.get(j);
-                String val = categoryScore(stat, jury, cat);
-                cell(catRow, j + 1, val, styles.categoryVal);
+                double val = weightedCategoryScore(stat, jury, cat);
+                cell(catRow, j + 1, val == 0d ? "" : val, styles.categoryVal);
             }
 
             for (var cr : safeList(cat.getCriteria())) {
@@ -185,6 +189,30 @@ public class ExcelExportServiceImpl implements ExcelExportService {
             }
         }
 
+        r++;
+
+        Row juryTotalTitle = sheet.createRow(r++);
+        cell(juryTotalTitle, 0, "Підсумок журі", styles.section);
+        sheet.addMergedRegion(new CellRangeAddress(r - 1, r - 1, 0, cols - 1));
+
+        Row juryTotalHeader = sheet.createRow(r++);
+        cell(juryTotalHeader, 0, "Журі", styles.header);
+        cell(juryTotalHeader, 1, "Сума балів", styles.header);
+        sheet.addMergedRegion(new CellRangeAddress(r - 1, r - 1, 1, cols - 1));
+
+        for (String jury : juries) {
+            Row row = sheet.createRow(r++);
+            cell(row, 0, jury, styles.body);
+            cell(row, 1, juryTotal(stat, jury), styles.bonus);
+        }
+
+        r++;
+
+        Row teamTotalRow = sheet.createRow(r++);
+        cell(teamTotalRow, 0, "Загальний бал команди", styles.section);
+        cell(teamTotalRow, 1, teamTotal(stat), styles.bonus);
+        sheet.addMergedRegion(new CellRangeAddress(r - 1, r - 1, 1, cols - 1));
+
         finish(sheet, cols);
 
         return sheetName;
@@ -194,25 +222,78 @@ public class ExcelExportServiceImpl implements ExcelExportService {
     // HELPERS
     // =========================
 
-    private String categoryScore(StatisticResponse stat, String jury, CategoryResponse cat) {
+    private double categoryAverage(StatisticResponse stat, String jury, CategoryResponse cat) {
         Map<String, PointResponse> map = safeMap(stat.getPointsPerJury()).get(jury);
-        if (map == null) return "";
+        if (map == null || cat.getCriteria() == null || cat.getCriteria().isEmpty()) {
+            return 0d;
+        }
 
-        PointResponse direct = map.get(cat.getTitle());
-        if (direct != null) return formatPoint(direct);
+        double sum = 0d;
+        int count = 0;
 
-        long sum = 0;
-        boolean hasAny = false;
+        for (var cr : cat.getCriteria()) {
+            if (cr == null || cr.getText() == null) {
+                continue;
+            }
 
-        for (var cr : safeList(cat.getCriteria())) {
             PointResponse p = map.get(cr.getText());
             if (p != null && p.getPoints() != null) {
                 sum += p.getPoints();
-                hasAny = true;
+                count++;
             }
         }
 
-        return hasAny ? String.valueOf(sum) : "";
+        return count == 0 ? 0d : sum / count;
+    }
+
+    private double weightedCategoryScore(StatisticResponse stat, String jury, CategoryResponse cat) {
+        double avg = categoryAverage(stat, jury, cat);
+        double weight = cat.getWeight() != null ? cat.getWeight() : 0d;
+        return avg * weight;
+    }
+
+    private double additionalPoints(StatisticResponse stat, String jury) {
+        List<PointResponse> points = safeMap(stat.getAdditionalPointsPerJury()).get(jury);
+        if (points == null || points.isEmpty()) {
+            return 0d;
+        }
+
+        double sum = 0d;
+        for (PointResponse p : points) {
+            if (p != null && p.getPoints() != null) {
+                sum += p.getPoints();
+            }
+        }
+        return sum;
+    }
+
+    private double juryTotal(StatisticResponse stat, String jury) {
+        double sum = 0d;
+
+        for (CategoryResponse cat : safeList(stat.getCategories())) {
+            if (cat == null) continue;
+            sum += weightedCategoryScore(stat, jury, cat);
+        }
+
+        sum += additionalPoints(stat, jury);
+        return sum;
+    }
+
+    private double teamTotal(StatisticResponse stat) {
+        List<String> juries = resolveJuries(stat);
+        if (juries.isEmpty()) {
+            return 0d;
+        }
+
+        double sum = 0d;
+        int count = 0;
+
+        for (String jury : juries) {
+            sum += juryTotal(stat, jury);
+            count++;
+        }
+
+        return count == 0 ? 0d : sum / count;
     }
 
     private PointResponse point(StatisticResponse stat, String jury, String key, String fallback) {
@@ -313,6 +394,7 @@ public class ExcelExportServiceImpl implements ExcelExportService {
         final CellStyle title;
         final CellStyle header;
         final CellStyle body;
+        final CellStyle bodyAlt;
         final CellStyle linkBody;
         final CellStyle category;
         final CellStyle categoryVal;
@@ -320,48 +402,80 @@ public class ExcelExportServiceImpl implements ExcelExportService {
         final CellStyle criterionVal;
         final CellStyle section;
         final CellStyle bonus;
+        final CellStyle summaryLabel;
+        final CellStyle summaryValue;
 
         ExcelStyles(Workbook wb) {
-            Font bold = wb.createFont();
-            bold.setBold(true);
-
             Font titleFont = wb.createFont();
             titleFont.setBold(true);
-            titleFont.setFontHeightInPoints((short) 14);
+            titleFont.setFontHeightInPoints((short) 15);
             titleFont.setColor(IndexedColors.WHITE.getIndex());
 
             Font headerFont = wb.createFont();
             headerFont.setBold(true);
             headerFont.setColor(IndexedColors.WHITE.getIndex());
 
+            Font boldFont = wb.createFont();
+            boldFont.setBold(true);
+
             Font linkFont = wb.createFont();
-            linkFont.setColor(IndexedColors.BLUE.getIndex());
+            linkFont.setColor(IndexedColors.DARK_BLUE.getIndex());
             linkFont.setUnderline(FontUnderline.SINGLE.getByteValue());
 
-            title = style(wb, IndexedColors.DARK_BLUE, titleFont, HorizontalAlignment.LEFT);
-            header = style(wb, IndexedColors.ROYAL_BLUE, headerFont, HorizontalAlignment.CENTER);
-            category = style(wb, IndexedColors.GREY_25_PERCENT, bold, HorizontalAlignment.LEFT);
-            categoryVal = style(wb, IndexedColors.LIGHT_TURQUOISE, bold, HorizontalAlignment.CENTER);
-            section = style(wb, IndexedColors.GREY_25_PERCENT, bold, HorizontalAlignment.LEFT);
-            bonus = style(wb, IndexedColors.LIGHT_ORANGE, bold, HorizontalAlignment.CENTER);
+            title = base(wb, HorizontalAlignment.LEFT);
+            title.setFillForegroundColor(IndexedColors.DARK_BLUE.getIndex());
+            title.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            title.setFont(titleFont);
+
+            header = base(wb, HorizontalAlignment.CENTER);
+            header.setFillForegroundColor(IndexedColors.BLUE_GREY.getIndex());
+            header.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            header.setFont(headerFont);
+
+            section = base(wb, HorizontalAlignment.LEFT);
+            section.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
+            section.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            section.setFont(boldFont);
+
+            category = base(wb, HorizontalAlignment.LEFT);
+            category.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
+            category.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            category.setFont(boldFont);
+
+            categoryVal = base(wb, HorizontalAlignment.CENTER);
+            categoryVal.setFillForegroundColor(IndexedColors.PALE_BLUE.getIndex());
+            categoryVal.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            categoryVal.setFont(boldFont);
 
             body = base(wb, HorizontalAlignment.LEFT);
+
+            bodyAlt = base(wb, HorizontalAlignment.LEFT);
+            bodyAlt.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
+            bodyAlt.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+
             criterion = base(wb, HorizontalAlignment.LEFT);
             criterion.setIndention((short) 1);
 
             criterionVal = base(wb, HorizontalAlignment.CENTER);
             criterionVal.setWrapText(true);
 
+            bonus = base(wb, HorizontalAlignment.CENTER);
+            bonus.setFillForegroundColor(IndexedColors.LIGHT_YELLOW.getIndex());
+            bonus.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            bonus.setFont(boldFont);
+
+            summaryLabel = base(wb, HorizontalAlignment.LEFT);
+            summaryLabel.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
+            summaryLabel.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            summaryLabel.setFont(boldFont);
+
+            summaryValue = base(wb, HorizontalAlignment.CENTER);
+            summaryValue.setFillForegroundColor(IndexedColors.LIGHT_TURQUOISE.getIndex());
+            summaryValue.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+            summaryValue.setFont(boldFont);
+
             linkBody = base(wb, HorizontalAlignment.LEFT);
             linkBody.setFont(linkFont);
-        }
-
-        private CellStyle style(Workbook wb, IndexedColors color, Font font, HorizontalAlignment align) {
-            CellStyle s = base(wb, align);
-            s.setFillForegroundColor(color.getIndex());
-            s.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-            s.setFont(font);
-            return s;
         }
 
         private CellStyle base(Workbook wb, HorizontalAlignment align) {
