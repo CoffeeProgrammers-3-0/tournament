@@ -83,7 +83,8 @@ public class StatusSchedulerServiceImpl {
         log.info("notifyDeadline24h: Scheduled task started at {}", now);
 
         Instant from = now.plus(24, ChronoUnit.HOURS);
-        Instant to = from.plus(5, ChronoUnit.MINUTES);
+        Instant to = from;
+        from = from.minus(5, ChronoUnit.MINUTES);
 
         List<Long> rounds = roundRepository.findRoundsWithDeadlineBetween(from, to);
 
