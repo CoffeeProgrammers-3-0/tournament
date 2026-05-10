@@ -157,7 +157,7 @@ export const en = {
         },
         "statuses": {
             "RUNNING": "Running",
-            "COMPLETED": "Completed",
+            "FINISHED": "Finished",
             "REGISTRATION": "Registration"
         }
     },

@@ -159,7 +159,7 @@ export const uk = {
         },
         "statuses": {
             "RUNNING": "Триває",
-            "COMPLETED": "Завершено",
+            "FINISHED": "Завершено",
             "REGISTRATION": "Реєстрація"
         }
     },

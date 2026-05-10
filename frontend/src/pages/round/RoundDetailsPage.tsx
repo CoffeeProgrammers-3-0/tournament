@@ -280,7 +280,7 @@ const RoundDetailsPage = () => {
                     onAssignManual={editors.handleOpenSubmissionJuryModal}
                     onRemoveJury={editors.handleRemoveJuryFromSubmission}
                     t={t}
-
+                    isEvaluated={details.roundData?.status === "EVALUATED"}
                 />
             )}
 

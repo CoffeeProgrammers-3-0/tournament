@@ -1,8 +1,8 @@
-import {Box, Button, CircularProgress, Pagination, Stack, Typography,} from "@mui/material";
+import { Box, Button, CircularProgress, Pagination, Stack, Typography } from "@mui/material";
 import AutoModeIcon from "@mui/icons-material/AutoMode";
-import type {SubmissionListResponseDto} from "../../../../../entities/submission/submission.dto";
+import type { SubmissionListResponseDto } from "../../../../../entities/submission/submission.dto";
 import SubmissionItem from "./SubmissionItem.tsx";
-
+ 
 type Props = {
     submissions: SubmissionListResponseDto[];
     loadingTab: boolean;
@@ -11,20 +11,35 @@ type Props = {
     onPageChange: (page: number) => void;
     onAutoAssign: () => void;
     onAssignManual: (submissionId: number) => void;
-    onRemoveJury: (submissionId: number, juryId: number) => void; // ДОДАНО
+    onRemoveJury: (submissionId: number, juryId: number) => void;
     t: (key: string, options?: any) => string;
+    isEvaluated: boolean; // ADDED: prop to check if round is evaluated
 };
 
 export const RoundSubmissionsTab = ({
-                                        submissions, loadingTab, page, totalPages,
-                                        onPageChange, onAutoAssign, onAssignManual, onRemoveJury, t
-                                    }: Props) => {
+    submissions,
+    loadingTab,
+    page,
+    totalPages,
+    onPageChange,
+    onAutoAssign,
+    onAssignManual,
+    onRemoveJury,
+    t,
+    isEvaluated // ADDED
+}: Props) => {
 
     return (
         <Box>
             <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3, alignItems: "center" }}>
                 <Typography variant="h5" fontWeight={700}>{t("round_details.tabs.submissions")}</Typography>
-                <Button variant="contained" color="secondary" startIcon={<AutoModeIcon />} onClick={onAutoAssign}>
+                <Button 
+                    variant="contained" 
+                    color="secondary" 
+                    startIcon={<AutoModeIcon />} 
+                    onClick={onAutoAssign}
+                    disabled={isEvaluated} // ADDED: Disables the button if evaluated
+                >
                     {t("round_details.submissions.auto_assign")}
                 </Button>
             </Box>
