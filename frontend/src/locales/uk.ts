@@ -852,7 +852,7 @@ export const uk = {
         "agenda": "Розклад",
         "filters": {
             "show_reg": "Реєстрація",
-            "show_running": "Турніри в процесі",
+            "show_running": "Турніри",
             "show_rounds": "Раунди",
             "show_offline": "Офлайн події",
             "show_online": "Онлайн події"
