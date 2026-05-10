@@ -5,6 +5,7 @@ import com.project.backend.dto.team.PointResponse;
 import com.project.backend.dto.team.StatisticResponse;
 import com.project.backend.dto.team.TeamLeaderboardResponse;
 import com.project.backend.services.interfaces.ExcelExportService;
+import org.apache.poi.common.usermodel.HyperlinkType;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -12,10 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class ExcelExportServiceImpl implements ExcelExportService {
@@ -32,15 +30,22 @@ public class ExcelExportServiceImpl implements ExcelExportService {
 
             ExcelStyles styles = new ExcelStyles(workbook);
 
-            createLeaderboardSheet(workbook, leaderboard, styles);
+            Map<Long, String> statisticSheetNames = new LinkedHashMap<>();
 
             if (statisticResponses != null) {
                 for (StatisticResponse stat : statisticResponses) {
                     if (stat != null) {
-                        createTeamSheet(workbook, stat, styles);
+                        String sheetName = createTeamSheet(workbook, stat, styles);
+                        if (stat.getId() != null) {
+                            statisticSheetNames.put(stat.getId(), sheetName);
+                        }
                     }
                 }
             }
+
+            createLeaderboardSheet(workbook, leaderboard, styles, statisticSheetNames);
+
+            workbook.setSheetOrder(LEADERBOARD_SHEET_NAME, 0);
 
             workbook.write(out);
             return out.toByteArray();
@@ -53,7 +58,8 @@ public class ExcelExportServiceImpl implements ExcelExportService {
 
     private void createLeaderboardSheet(Workbook wb,
                                         List<TeamLeaderboardResponse> data,
-                                        ExcelStyles styles) {
+                                        ExcelStyles styles,
+                                        Map<Long, String> statisticSheetNames) {
 
         Sheet sheet = wb.createSheet(LEADERBOARD_SHEET_NAME);
 
@@ -68,24 +74,38 @@ public class ExcelExportServiceImpl implements ExcelExportService {
         if (data != null) {
             for (TeamLeaderboardResponse t : data) {
                 Row row = sheet.createRow(rowIdx++);
+
                 cell(row, 0, place++, styles.body);
-                cell(row, 1, t.getName(), styles.body);
-                cell(row, 2, t.getEmail(), styles.body);
-                cell(row, 3, t.getCountOfMembers(), styles.body);
-                cell(row, 4, t.getPoints(), styles.body);
+
+                Cell teamCell = row.createCell(1);
+                teamCell.setCellValue(t != null && t.getName() != null ? t.getName() : "");
+                teamCell.setCellStyle(styles.linkBody);
+
+                if (t != null && t.getId() != null && statisticSheetNames.containsKey(t.getId())) {
+                    String targetSheet = statisticSheetNames.get(t.getId());
+                    CreationHelper helper = wb.getCreationHelper();
+                    Hyperlink link = helper.createHyperlink(HyperlinkType.DOCUMENT);
+                    link.setAddress("'" + escapeSheetName(targetSheet) + "'!A1");
+                    teamCell.setHyperlink(link);
+                    teamCell.setCellStyle(styles.linkBody);
+                }
+
+                cell(row, 2, t != null ? t.getEmail() : "", styles.body);
+                cell(row, 3, t != null ? t.getCountOfMembers() : null, styles.body);
+                cell(row, 4, t != null ? t.getPoints() : null, styles.body);
             }
         }
 
-        finish(sheet, headers.length, rowIdx);
+        finish(sheet, headers.length);
     }
 
     // =========================
     // TEAM STAT SHEET
     // =========================
 
-    private void createTeamSheet(Workbook wb,
-                                 StatisticResponse stat,
-                                 ExcelStyles styles) {
+    private String createTeamSheet(Workbook wb,
+                                   StatisticResponse stat,
+                                   ExcelStyles styles) {
 
         String name = safe(stat.getName());
         String sheetName = uniqueSheetName(wb, sanitize(name));
@@ -97,14 +117,12 @@ public class ExcelExportServiceImpl implements ExcelExportService {
 
         int r = 0;
 
-        // TITLE
         Row title = sheet.createRow(r++);
         cell(title, 0, "Team: " + name, styles.title);
         sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, cols - 1));
 
         r++;
 
-        // HEADER (jury emails)
         Row header = sheet.createRow(r++);
         cell(header, 0, "Категорія / Критерія", styles.header);
 
@@ -112,7 +130,6 @@ public class ExcelExportServiceImpl implements ExcelExportService {
             cell(header, i + 1, juries.get(i), styles.header);
         }
 
-        // MATRIX
         for (CategoryResponse cat : safeList(stat.getCategories())) {
 
             String catName = safe(cat.getTitle());
@@ -131,9 +148,7 @@ public class ExcelExportServiceImpl implements ExcelExportService {
                 cell(catRow, j + 1, val, styles.categoryVal);
             }
 
-            // CRITERIA
             for (var cr : safeList(cat.getCriteria())) {
-
                 String text = cr.getText() != null ? cr.getText() : "";
 
                 Row row = sheet.createRow(r++);
@@ -151,7 +166,6 @@ public class ExcelExportServiceImpl implements ExcelExportService {
             r++;
         }
 
-        // BONUS
         r++;
         Row bonusTitle = sheet.createRow(r++);
         cell(bonusTitle, 0, "Бонусна інформація", styles.section);
@@ -171,7 +185,9 @@ public class ExcelExportServiceImpl implements ExcelExportService {
             }
         }
 
-        finish(sheet, cols, r);
+        finish(sheet, cols);
+
+        return sheetName;
     }
 
     // =========================
@@ -186,17 +202,24 @@ public class ExcelExportServiceImpl implements ExcelExportService {
         if (direct != null) return formatPoint(direct);
 
         long sum = 0;
+        boolean hasAny = false;
+
         for (var cr : safeList(cat.getCriteria())) {
             PointResponse p = map.get(cr.getText());
-            if (p != null && p.getPoints() != null) sum += p.getPoints();
+            if (p != null && p.getPoints() != null) {
+                sum += p.getPoints();
+                hasAny = true;
+            }
         }
-        return sum == 0 ? "" : String.valueOf(sum);
+
+        return hasAny ? String.valueOf(sum) : "";
     }
 
     private PointResponse point(StatisticResponse stat, String jury, String key, String fallback) {
         Map<String, PointResponse> map = safeMap(stat.getPointsPerJury()).get(jury);
         if (map == null) return null;
-        return map.getOrDefault(key, map.get(fallback));
+        PointResponse p = map.get(key);
+        return p != null ? p : map.get(fallback);
     }
 
     private String formatPoint(PointResponse p) {
@@ -207,7 +230,9 @@ public class ExcelExportServiceImpl implements ExcelExportService {
     }
 
     private List<String> resolveJuries(StatisticResponse stat) {
-        if (stat.getJuryEmails() != null) return stat.getJuryEmails();
+        if (stat.getJuryEmails() != null && !stat.getJuryEmails().isEmpty()) {
+            return stat.getJuryEmails();
+        }
         return new ArrayList<>(safeMap(stat.getPointsPerJury()).keySet());
     }
 
@@ -224,42 +249,58 @@ public class ExcelExportServiceImpl implements ExcelExportService {
         }
     }
 
-    private void finish(Sheet s, int cols, int rows) {
+    private void finish(Sheet s, int cols) {
         for (int i = 0; i < cols; i++) {
             s.autoSizeColumn(i);
+            int width = s.getColumnWidth(i);
+            s.setColumnWidth(i, Math.min(width + 700, 16000));
         }
         s.createFreezePane(1, 2);
     }
 
     private void cell(Row r, int c, Object val, CellStyle st) {
         Cell cell = r.createCell(c);
-        if (val instanceof Number n) cell.setCellValue(n.doubleValue());
-        else cell.setCellValue(val != null ? val.toString() : "");
+        if (val instanceof Number n) {
+            cell.setCellValue(n.doubleValue());
+        } else {
+            cell.setCellValue(val != null ? val.toString() : "");
+        }
         cell.setCellStyle(st);
     }
 
     private String sanitize(String s) {
-        return s == null ? "Sheet" : s.replaceAll("[\\\\/*?:\\[\\]]", "_");
+        return s == null ? "Sheet" : s.replaceAll("[\\\\/*?:\\[\\]]", "_").trim();
     }
 
     private String uniqueSheetName(Workbook wb, String base) {
         String name = base;
         int i = 1;
+
         while (wb.getSheet(name) != null) {
-            name = base + "_" + i++;
+            String suffix = "_" + i++;
+            int maxBaseLen = MAX_SHEET_NAME_LENGTH - suffix.length();
+            String shortened = base.length() > maxBaseLen ? base.substring(0, maxBaseLen) : base;
+            name = shortened + suffix;
         }
+
         return name.length() > MAX_SHEET_NAME_LENGTH
                 ? name.substring(0, MAX_SHEET_NAME_LENGTH)
                 : name;
     }
 
-    private String safe(String s) { return s == null ? "" : s; }
+    private String escapeSheetName(String sheetName) {
+        return sheetName.replace("'", "''");
+    }
+
+    private String safe(String s) {
+        return s == null ? "" : s;
+    }
 
     private <T> List<T> safeList(List<T> l) {
         return l == null ? Collections.emptyList() : l;
     }
 
-    private <K,V> Map<K,V> safeMap(Map<K,V> m) {
+    private <K, V> Map<K, V> safeMap(Map<K, V> m) {
         return m == null ? Collections.emptyMap() : m;
     }
 
@@ -269,38 +310,61 @@ public class ExcelExportServiceImpl implements ExcelExportService {
 
     private static class ExcelStyles {
 
-        CellStyle title, header, body, category, categoryVal, criterion, criterionVal, section, bonus;
+        final CellStyle title;
+        final CellStyle header;
+        final CellStyle body;
+        final CellStyle linkBody;
+        final CellStyle category;
+        final CellStyle categoryVal;
+        final CellStyle criterion;
+        final CellStyle criterionVal;
+        final CellStyle section;
+        final CellStyle bonus;
 
         ExcelStyles(Workbook wb) {
-
             Font bold = wb.createFont();
             bold.setBold(true);
 
-            title = style(wb, IndexedColors.DARK_BLUE, bold);
-            header = style(wb, IndexedColors.BLUE, bold);
-            category = style(wb, IndexedColors.GREY_25_PERCENT, bold);
-            categoryVal = style(wb, IndexedColors.LIGHT_TURQUOISE, bold);
-            section = style(wb, IndexedColors.GREY_25_PERCENT, bold);
+            Font titleFont = wb.createFont();
+            titleFont.setBold(true);
+            titleFont.setFontHeightInPoints((short) 14);
+            titleFont.setColor(IndexedColors.WHITE.getIndex());
 
-            body = base(wb);
-            criterion = base(wb);
+            Font headerFont = wb.createFont();
+            headerFont.setBold(true);
+            headerFont.setColor(IndexedColors.WHITE.getIndex());
+
+            Font linkFont = wb.createFont();
+            linkFont.setColor(IndexedColors.BLUE.getIndex());
+            linkFont.setUnderline(FontUnderline.SINGLE.getByteValue());
+
+            title = style(wb, IndexedColors.DARK_BLUE, titleFont, HorizontalAlignment.LEFT);
+            header = style(wb, IndexedColors.ROYAL_BLUE, headerFont, HorizontalAlignment.CENTER);
+            category = style(wb, IndexedColors.GREY_25_PERCENT, bold, HorizontalAlignment.LEFT);
+            categoryVal = style(wb, IndexedColors.LIGHT_TURQUOISE, bold, HorizontalAlignment.CENTER);
+            section = style(wb, IndexedColors.GREY_25_PERCENT, bold, HorizontalAlignment.LEFT);
+            bonus = style(wb, IndexedColors.LIGHT_ORANGE, bold, HorizontalAlignment.CENTER);
+
+            body = base(wb, HorizontalAlignment.LEFT);
+            criterion = base(wb, HorizontalAlignment.LEFT);
             criterion.setIndention((short) 1);
 
-            criterionVal = base(wb);
+            criterionVal = base(wb, HorizontalAlignment.CENTER);
             criterionVal.setWrapText(true);
 
-            bonus = style(wb, IndexedColors.LIGHT_ORANGE, bold);
+            linkBody = base(wb, HorizontalAlignment.LEFT);
+            linkBody.setFont(linkFont);
         }
 
-        private CellStyle style(Workbook wb, IndexedColors color, Font f) {
-            CellStyle s = base(wb);
+        private CellStyle style(Workbook wb, IndexedColors color, Font font, HorizontalAlignment align) {
+            CellStyle s = base(wb, align);
             s.setFillForegroundColor(color.getIndex());
             s.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-            s.setFont(f);
+            s.setFont(font);
             return s;
         }
 
-        private CellStyle base(Workbook wb) {
+        private CellStyle base(Workbook wb, HorizontalAlignment align) {
             CellStyle s = wb.createCellStyle();
             s.setBorderBottom(BorderStyle.THIN);
             s.setBorderTop(BorderStyle.THIN);
@@ -308,6 +372,7 @@ public class ExcelExportServiceImpl implements ExcelExportService {
             s.setBorderRight(BorderStyle.THIN);
             s.setWrapText(true);
             s.setVerticalAlignment(VerticalAlignment.CENTER);
+            s.setAlignment(align);
             return s;
         }
     }
