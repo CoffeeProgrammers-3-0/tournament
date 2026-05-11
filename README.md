@@ -108,5 +108,6 @@ tournament/
 
 ---
 For any questions or feedback, write to 
+- Vlad on [Telegram](https://t.me/vladobrod)
 - Artem on [Telegram](https://t.me/dexip_ua)
 - team`s email: coffee.Programmers04@gmail.com
