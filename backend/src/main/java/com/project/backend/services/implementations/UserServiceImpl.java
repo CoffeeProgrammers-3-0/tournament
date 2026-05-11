@@ -85,44 +85,50 @@ public class UserServiceImpl implements UserService {
 
     private void createUserInKeycloak(User user) {
         String email = user.getEmail();
-        boolean isTestDomain = email != null && email.toLowerCase().endsWith("@test-user.com");
+        List<UserRepresentation> listOfUsers = realmResource.users().search(email);
+        if(listOfUsers.isEmpty()) {
+            boolean isTestDomain = email != null && email.toLowerCase().endsWith("@test-user.com");
 
-        String password = isTestDomain ? "passWord1" : PasswordGenerationUtil.generatePassword(12);
-        boolean isTemporary = !isTestDomain;
+            String password = isTestDomain ? "passWord1" : PasswordGenerationUtil.generatePassword(12);
+            boolean isTemporary = !isTestDomain;
 
-        UserRepresentation userRepresentation = new UserRepresentation();
-        CredentialRepresentation credentialRepresentation = new CredentialRepresentation();
-        credentialRepresentation.setTemporary(isTemporary);
-        credentialRepresentation.setType(CredentialRepresentation.PASSWORD);
-        credentialRepresentation.setValue(password);
+            UserRepresentation userRepresentation = new UserRepresentation();
+            CredentialRepresentation credentialRepresentation = new CredentialRepresentation();
+            credentialRepresentation.setTemporary(isTemporary);
+            credentialRepresentation.setType(CredentialRepresentation.PASSWORD);
+            credentialRepresentation.setValue(password);
 
-        userRepresentation.setCredentials(List.of(credentialRepresentation));
-        userRepresentation.singleAttribute("fullName", user.getFullName());
-        userRepresentation.setEmail(email);
-        userRepresentation.setEnabled(true);
+            userRepresentation.setCredentials(List.of(credentialRepresentation));
+            userRepresentation.singleAttribute("fullName", user.getFullName());
+            userRepresentation.setEmail(email);
+            userRepresentation.setEnabled(true);
 
-        Response response = realmResource.users().create(userRepresentation);
-        if (response.getStatus() == 201) {
-            if (!isTestDomain) {
-                eventPublisher.publishEvent(new SendPasswordEvent(password, email));
+            Response response = realmResource.users().create(userRepresentation);
+            if (response.getStatus() == 201) {
+                if (!isTestDomain) {
+                    eventPublisher.publishEvent(new SendPasswordEvent(password, email));
+                }
+                URI location = response.getLocation();
+                String path = location.getPath();
+                String keycloakUserId = path.substring(path.lastIndexOf('/') + 1);
+                user.setKeycloakUserId(keycloakUserId);
+            } else {
+                log.error("Failed to create user in Keycloak. Status: {}, Error: {}",
+                        response.getStatus(), response.readEntity(String.class));
+                response.close();
+                throw new IllegalStateException("Failed to create user in Keycloak");
             }
-            URI location = response.getLocation();
-            String path = location.getPath();
-            String keycloakUserId = path.substring(path.lastIndexOf('/') + 1);
-            user.setKeycloakUserId(keycloakUserId);
-        } else {
-            log.error("Failed to create user in Keycloak. Status: {}, Error: {}",
-                    response.getStatus(), response.readEntity(String.class));
             response.close();
-            throw new IllegalStateException("Failed to create user in Keycloak");
-        }
-        response.close();
 
-        realmResource.users()
-                .get(user.getKeycloakUserId())
-                .roles()
-                .clientLevel(clientUUID)
-                .add(List.of(clientRoles.get(user.getRole().name())));
+            realmResource.users()
+                    .get(user.getKeycloakUserId())
+                    .roles()
+                    .clientLevel(clientUUID)
+                    .add(List.of(clientRoles.get(user.getRole().name())));
+        }else{
+            log.info("User with email {} already exists in Keycloak", email);
+            user.setKeycloakUserId(listOfUsers.get(0).getId());
+        }
     }
 
     @Override
