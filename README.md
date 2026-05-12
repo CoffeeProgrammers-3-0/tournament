@@ -39,8 +39,11 @@ A comprehensive, full-stack platform built to manage and host the **SFL Programm
    ```
    cd tournament
    ```
-5. Start with the dc.bat file or use the dc.sh file to start the containers
-
+5. Start with the dc.bat file or use the dc.sh file to start the containers:
+   ```
+   ./dc.bat (dev/prod)   # for Windows
+   ./dc.sh  (dev/prod)   # for Linux/MacOS
+   ```
 6. After a full start of all containers,
     - for dev – go to the [localhost:3000](http://localhost:3000) to see the application.
     - for prod – go to the [localhost](http://localhost) to see the application.
