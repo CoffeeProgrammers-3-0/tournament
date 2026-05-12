@@ -29,7 +29,7 @@ export const TournamentCreateForm = ({ onCancel, onSuccess }: { onCancel: () => 
     const [formData, setFormData] = useState({
         name: "", description: "",
         startRegistration: "", endRegistration: "",
-        maxCountOfTeam: 16, countOfRounds: 4
+        maxCountOfTeam: 5, countOfRounds: 4
     });
 
     const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
