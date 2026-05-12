@@ -96,113 +96,209 @@ export const templateBlocks: TemplateBlock[] = [
 
 const PAGE_SIZE = 8;
 
-const DEFAULT_THYMELEAF_TEMPLATE = `<!doctype html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+const DEFAULT_THYMELEAF_TEMPLATE = `<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="pdf-width" content="210mm"/>
-  <meta name="pdf-height" content="148mm"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Certificate</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: Georgia, "Times New Roman", serif;
-      background: #f3f4f6;
-    }
+    <meta charset="UTF-8"/>
+    <meta name="pdf-width" content="210mm"/>
+    <meta name="pdf-height" content="148mm"/>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
 
-    .canvas {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-      box-sizing: border-box;
-    }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Montserrat', sans-serif;
+        }
 
-    .certificate {
-      width: 1000px;
-      min-height: 700px;
-      background: #fff;
-      border: 10px solid #111827;
-      padding: 60px;
-      box-sizing: border-box;
-      position: relative;
-      text-align: center;
-    }
+        .certificate-container {
+            width: 210mm;
+            height: 148mm;
+            background: white;
+            position: relative;
+            margin: auto;
+            display: flex;
+            flex-direction: column;
+            padding: 60px 80px; /* Немного уменьшил padding сверху */
+            box-sizing: border-box;
+            overflow: hidden;
+        }
 
-    .title {
-      font-size: 52px;
-      font-weight: 700;
-      margin-bottom: 14px;
-    }
+        .decor {
+            position: absolute;
+            right: -50px;
+            top: 20%;
+            width: 500px;
+            height: 600px;
+            background: 
+                radial-gradient(circle at right, rgba(255,215,0,0.2), transparent 70%),
+                radial-gradient(circle at top right, rgba(244,67,54,0.15), transparent 60%),
+                radial-gradient(circle at bottom right, rgba(76,175,80,0.15), transparent 60%);
+            filter: blur(50px);
+            z-index: 1;
+        }
 
-    .subtitle {
-      font-size: 22px;
-      color: #6b7280;
-      margin-bottom: 40px;
-    }
+        .content {
+            position: relative;
+            z-index: 2;
+        }
 
-    .name {
-      font-size: 40px;
-      font-weight: 700;
-      margin: 12px 0 34px;
-    }
+        .header-box {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+        }
 
-    .meta {
-      font-size: 18px;
-      margin: 10px 0;
-    }
+        h1 {
+            color: #007bbd;
+            font-size: 60px;
+            margin: 0;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
 
-    .footer {
-      position: absolute;
-      bottom: 40px;
-      left: 60px;
-      right: 60px;
-      display: flex;
-      justify-content: space-between;
-      font-size: 16px;
-    }
+        .tournament-info {
+            font-size: 14px;
+            color: #555;
+            text-align: right;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
 
-    .muted {
-      color: #6b7280;
-      font-size: 14px;
-      margin-bottom: 4px;
-    }
-  </style>
+        .recipient-name {
+            font-size: 36px;
+            font-weight: 700;
+            margin: 20px 0 5px 0;
+            text-transform: uppercase;
+            border-bottom: 2px solid #000;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .team-name {
+            font-size: 18px;
+            color: #007bbd;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        .description {
+            font-size: 18px;
+            max-width: 680px;
+            line-height: 1.4;
+            margin-top: 20px;
+            color: #333;
+        }
+
+        .stats-badge {
+            margin-top: 15px;
+            display: inline-block;
+            background: #f0f0f0;
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-weight: 700;
+        }
+
+        .winner-tag {
+            color: #d4af37; /* Gold color */
+            text-transform: uppercase;
+            margin-left: 10px;
+        }
+
+        .footer {
+            margin-top: auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .date-block {
+            margin-bottom: 20px;
+            font-size: 16px;
+            color: #555;
+        }
+
+        .signer-name {
+            color: #007bbd;
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        .signature-wrap {
+            text-align: center;
+        }
+
+        .signature-line {
+            width: 200px;
+            border-bottom: 1px solid #000;
+            margin-bottom: 5px;
+            height: 40px;
+            position: relative;
+        }
+
+        .sig-font {
+            font-family: cursive;
+            font-size: 24px;
+            color: #1a237e;
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+    </style>
 </head>
 <body>
-  <div class="canvas">
-    <div class="certificate">
 
-      <div class="title" th:text="\${tournamentName}">Tournament Name</div>
-      <div class="subtitle">Certificate of Achievement</div>
+<div class="certificate-container">
+    <div class="decor"></div>
 
-      <div class="name" th:text="\${fullName}">Participant Name</div>
-
-      <div class="meta">Team: <span th:text="\${teamName}">Team A</span></div>
-      <div class="meta">Round: <span th:text="\${roundName}">Final</span></div>
-      <div class="meta">Place: <span th:text="\${place}">1</span></div>
-      <div class="meta">Points: <span th:text="\${points}">100</span></div>
-      <div class="meta">
-        Status:
-        <span th:text="\${isWinner} ? 'Winner' : 'Participant'">Winner</span>
-      </div>
-
-      <div class="footer">
-        <div>
-          <div class="muted">Date</div>
-          <div th:text="\${certDate}">2026-01-01</div>
+    <div class="content">
+        <div class="header-box">
+            <h1 th:text="\${isWinner} ? 'CERTIFICATE' : 'GRATITUDE'">GRATITUDE</h1>
+            <div class="tournament-info">
+                <div th:text="\${tournamentName}">Tournament Name</div>
+                <div th:text="\${roundName}">Round Name</div>
+            </div>
+        </div>
+        
+        <div class="recipient-name" th:text="\${fullName}">
+            BULAKOVSKYI VLADYSLAV
+        </div>
+        <div class="team-name">
+            Team: <span th:text="\${teamName}">Dream Team</span>
         </div>
 
-        <div>
-          <div class="muted">Round</div>
-          <div th:text="\${roundName}">Final</div>
-        </div>
-      </div>
+        <p class="description">
+            For outstanding performance and dedication during the competition. Your hard work and spirit contributed to the success of the event.
+        </p>
 
+        <div class="stats-badge">
+            Result: <span th:text="\${place}">1</span> Place 
+            (<span th:text="\${points}">100</span> pts)
+            <span th:if="\${isWinner}" class="winner-tag">🏆 Winner</span>
+        </div>
     </div>
-  </div>
+
+    <div class="footer">
+        <div class="info-side">
+            <div class="date-block">
+                Date: <span th:text="\${certDate}">24.04.2024</span>
+            </div>
+            
+            <div class="signer-name">Denis Volovyk</div>
+            <div>Executive Director</div>
+            <div>Star for Life Ukraine</div>
+        </div>
+
+        <div class="signature-wrap">
+            <div class="signature-line">
+                <span class="sig-font">Volovyk</span>
+            </div>
+            <div style="font-size: 12px;">Signature</div>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>`;
 

@@ -193,12 +193,12 @@ public class ExcelExportServiceImpl implements ExcelExportService {
 
         Row juryTotalTitle = sheet.createRow(r++);
         cell(juryTotalTitle, 0, "Підсумок журі", styles.section);
-        sheet.addMergedRegion(new CellRangeAddress(r - 1, r - 1, 0, cols - 1));
+        safeMerge(sheet, r - 1, 0, cols - 1);
 
         Row juryTotalHeader = sheet.createRow(r++);
         cell(juryTotalHeader, 0, "Журі", styles.header);
         cell(juryTotalHeader, 1, "Сума балів", styles.header);
-        sheet.addMergedRegion(new CellRangeAddress(r - 1, r - 1, 1, cols - 1));
+        safeMerge(sheet, r - 1, 1, cols - 1);
 
         for (String jury : juries) {
             Row row = sheet.createRow(r++);
@@ -211,7 +211,7 @@ public class ExcelExportServiceImpl implements ExcelExportService {
         Row teamTotalRow = sheet.createRow(r++);
         cell(teamTotalRow, 0, "Загальний бал команди", styles.section);
         cell(teamTotalRow, 1, teamTotal(stat), styles.bonus);
-        sheet.addMergedRegion(new CellRangeAddress(r - 1, r - 1, 1, cols - 1));
+        safeMerge(sheet, r - 1, 1, cols - 1);
 
         finish(sheet, cols);
 
@@ -383,6 +383,12 @@ public class ExcelExportServiceImpl implements ExcelExportService {
 
     private <K, V> Map<K, V> safeMap(Map<K, V> m) {
         return m == null ? Collections.emptyMap() : m;
+    }
+
+    private void safeMerge(Sheet sheet, int row, int fromCol, int toCol) {
+        if (toCol > fromCol) {
+            sheet.addMergedRegion(new CellRangeAddress(row, row, fromCol, toCol));
+        }
     }
 
     // =========================

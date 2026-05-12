@@ -127,10 +127,13 @@ export const CreateEventDialog: React.FC<{
             ) : (
                 <Box sx={{ mt: 0.5 }}>
                     {type === 'quill' ? (
-                        <HtmlContent dangerouslySetInnerHTML={{ __html: value || '—' }} sx={{ bgcolor: 'action.hover', p: 2, borderRadius: 2 }} />
+                        <HtmlContent
+                            dangerouslySetInnerHTML={{ __html: value || '—' }}
+                            sx={{ bgcolor: 'action.hover', p: 2, borderRadius: 2 }}
+                        />
                     ) : (
                         <Typography variant="body1" sx={{ fontWeight: 600, color: 'text.primary' }}>
-                            {type === 'datetime' && (value  || '—')}
+                            {value || '—'}
                         </Typography>
                     )}
                 </Box>
