@@ -125,17 +125,13 @@ export const en = {
         "how_it_works": {
             "title": "How it works?",
             "steps": {
-                "step1": {
-                    "title": "Registration",
-                    "desc": "Create your profile and get access to the list of current tournaments in your region or online."
-                },
                 "step2": {
                     "title": "Team Formation",
-                    "desc": "Find like-minded people, create your own team, or join an existing one to participate in competitions."
+                    "desc": "Create your own team with friends to participate in tournaments."
                 },
                 "step3": {
                     "title": "Path to Victory",
-                    "desc": "Complete round tasks, get scores from professional jury, and climb to the top of the leaderboard."
+                    "desc": "Complete round tasks, get scores from professional jury, climb to the top of the leaderboard and win tournaments."
                 }
             }
         }
