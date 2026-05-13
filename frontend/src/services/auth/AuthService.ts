@@ -39,17 +39,15 @@ class AuthService {
         } catch (e) {
             console.error("Logout failed", e);
         } finally {
-            // Обов'язково чистимо кукі на випадок, якщо бекенд впав
             Cookies.remove('accessToken');
             Cookies.remove('refreshToken');
             Cookies.remove('userId');
 
-            // Після логауту зазвичай повертають на головну сторінку як гостя
             window.location.href = '/home';
         }
     }
 
-    static refresh(): Promise<boolean> {
+    static async refresh(): Promise<boolean> {
         if (this.refreshPromise) return this.refreshPromise;
 
         this.refreshPromise = (async () => {
@@ -61,35 +59,50 @@ class AuthService {
                 console.log("No refresh token available");
                 if (isAuthed) {
                     this.redirectToKeycloak();
-                    return false;
                 }
                 return false;
             }
 
-            try {
-                await axios.post(
-                    `${AUTH_CONFIG.API_BASE_URL}/auth/refresh`,
-                    {},
-                    {
-                        params: { refreshToken: encodeURIComponent(refreshToken) },
-                        withCredentials: true,
+            const MAX_RETRIES = 3;
+
+            for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+                try {
+                    await axios.post(
+                        `${AUTH_CONFIG.API_BASE_URL}/auth/refresh`,
+                        {},
+                        {
+                            params: { refreshToken: encodeURIComponent(refreshToken) },
+                            withCredentials: true,
+                        }
+                    );
+
+                    console.log(`Refresh success on attempt ${attempt}`);
+                    return true;
+
+                } catch (error) {
+                    console.warn(`Refresh attempt ${attempt} failed`, error);
+
+                    if (attempt < MAX_RETRIES) {
+                        await new Promise(res => setTimeout(res, 500));
+                    } else {
+                        console.error("All refresh attempts failed");
+
+                        if (hasAccessToken) {
+                            this.redirectToKeycloak();
+                        }
+                        return false;
                     }
-                );
-                return true;
-            } catch (error) {
-                console.error("Token refresh failed", error);
-
-                // Якщо спроба оновлення провалилася і користувач БУВ авторизований
-                if (hasAccessToken) {
-                    this.redirectToKeycloak();
                 }
-                return false;
-            } finally {
-                this.refreshPromise = null;
             }
+
+            return false;
         })();
 
-        return this.refreshPromise;
+        try {
+            return await this.refreshPromise;
+        } finally {
+            this.refreshPromise = null;
+        }
     }
 }
 
