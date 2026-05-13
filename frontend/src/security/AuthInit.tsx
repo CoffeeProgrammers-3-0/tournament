@@ -16,7 +16,7 @@ const AuthInit: React.FC<{ children: React.ReactElement }> = ({ children }) => {
         const initAuth = async () => {
             // Check if we already have the cookies (without redirecting)
             // Replace 'userId' with whatever check 'isAuthenticated' uses
-            const hasCookies = document.cookie.includes('userId');
+            const hasCookies = document.cookie.includes('refreshToken') && document.cookie.includes('accessToken');
 
             if (!hasCookies) {
                 try {

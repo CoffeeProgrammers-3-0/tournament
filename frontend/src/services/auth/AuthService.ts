@@ -1,7 +1,6 @@
 import axios from 'axios';
 import Cookies from 'js-cookie';
 
-// Збираємо всі посилання та параметри в один конфіг
 const AUTH_CONFIG = {
     KEYCLOAK_AUTH_URL: import.meta.env.VITE_KEYCLOAK_URL || "http://localhost:8080/auth",
     KEYCLOAK_REALM: import.meta.env.VITE_KEYCLOAK_REALM || "coffee-programmers",
@@ -13,17 +12,26 @@ const AUTH_CONFIG = {
 class AuthService {
     private static refreshPromise: Promise<boolean> | null = null;
 
+    private static delay(ms: number) {
+        return new Promise(res => setTimeout(res, ms));
+    }
+
     static redirectToKeycloak(): void {
         const currentPath = window.location.pathname;
 
         const technicalRoutes = ['/callback', '/login', '/logout'];
+
         if (!technicalRoutes.includes(currentPath)) {
             localStorage.setItem('preLoginPath', currentPath);
         } else if (!localStorage.getItem('preLoginPath')) {
             localStorage.setItem('preLoginPath', '/home');
         }
 
-        const loginUrl = `${AUTH_CONFIG.KEYCLOAK_AUTH_URL}/realms/${AUTH_CONFIG.KEYCLOAK_REALM}/protocol/openid-connect/auth?client_id=${AUTH_CONFIG.CLIENT_ID}&redirect_uri=${encodeURIComponent(AUTH_CONFIG.REDIRECT_URI)}&response_type=code&scope=openid`;
+        const loginUrl =
+            `${AUTH_CONFIG.KEYCLOAK_AUTH_URL}/realms/${AUTH_CONFIG.KEYCLOAK_REALM}` +
+            `/protocol/openid-connect/auth?client_id=${AUTH_CONFIG.CLIENT_ID}` +
+            `&redirect_uri=${encodeURIComponent(AUTH_CONFIG.REDIRECT_URI)}` +
+            `&response_type=code&scope=openid`;
 
         window.location.href = loginUrl;
     }
@@ -32,17 +40,18 @@ class AuthService {
         const userId = Cookies.get('userId');
 
         try {
-            await axios.post(`${AUTH_CONFIG.API_BASE_URL}/auth/logout`, {}, {
-                params: { userId },
-                withCredentials: true,
-            });
+            await axios.post(
+                `${AUTH_CONFIG.API_BASE_URL}/auth/logout`,
+                {},
+                {
+                    params: { userId },
+                    withCredentials: true,
+                }
+            );
         } catch (e) {
             console.error("Logout failed", e);
         } finally {
-            Cookies.remove('accessToken');
-            Cookies.remove('refreshToken');
-            Cookies.remove('userId');
-
+            this.clearAuth();
             window.location.href = '/home';
         }
     }
@@ -52,14 +61,9 @@ class AuthService {
 
         this.refreshPromise = (async () => {
             const refreshToken = Cookies.get("refreshToken");
-            const hasAccessToken = Cookies.get('accessToken') !== undefined;
-            const isAuthed = Cookies.get("userId") !== undefined;
 
             if (!refreshToken) {
-                console.log("No refresh token available");
-                if (isAuthed) {
-                    this.redirectToKeycloak();
-                }
+                this.clearAuth();
                 return false;
             }
 
@@ -71,30 +75,23 @@ class AuthService {
                         `${AUTH_CONFIG.API_BASE_URL}/auth/refresh`,
                         {},
                         {
-                            params: { refreshToken: encodeURIComponent(refreshToken) },
+                            params: { refreshToken },
                             withCredentials: true,
                         }
                     );
 
-                    console.log(`Refresh success on attempt ${attempt}`);
                     return true;
 
-                } catch (error) {
-                    console.warn(`Refresh attempt ${attempt} failed`, error);
+                } catch (err) {
+                    console.warn(`Refresh attempt ${attempt} failed`);
 
                     if (attempt < MAX_RETRIES) {
-                        await new Promise(res => setTimeout(res, 500));
-                    } else {
-                        console.error("All refresh attempts failed");
-
-                        if (hasAccessToken) {
-                            this.redirectToKeycloak();
-                        }
-                        return false;
+                        await this.delay(300 * attempt); // smoother backoff
                     }
                 }
             }
 
+            this.clearAuth();
             return false;
         })();
 
@@ -103,6 +100,16 @@ class AuthService {
         } finally {
             this.refreshPromise = null;
         }
+    }
+
+    private static clearAuth(): void {
+        const keys = ["accessToken", "refreshToken", "userId", "role"];
+
+        keys.forEach(key => {
+            try {
+                Cookies.remove(key);
+            } catch (_) {}
+        });
     }
 }
 
