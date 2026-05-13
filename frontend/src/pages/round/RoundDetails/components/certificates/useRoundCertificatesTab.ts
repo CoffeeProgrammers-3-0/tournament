@@ -254,18 +254,18 @@ const DEFAULT_THYMELEAF_TEMPLATE = `<!DOCTYPE html>
 
     <div class="content">
         <div class="header-box">
-            <h1 th:text="\${isWinner} ? 'CERTIFICATE' : 'GRATITUDE'">GRATITUDE</h1>
+            <h1 th:text="\${isWinner} ? 'CERTIFICATE' : 'GRATITUDE'">isWinner</h1>
             <div class="tournament-info">
-                <div th:text="\${tournamentName}">Tournament Name</div>
-                <div th:text="\${roundName}">Round Name</div>
+                <div th:text="\${tournamentName}">tournamentName</div>
+                <div th:text="\${roundName}">roundName</div>
             </div>
         </div>
         
         <div class="recipient-name" th:text="\${fullName}">
-            BULAKOVSKYI VLADYSLAV
+            fullName
         </div>
         <div class="team-name">
-            Team: <span th:text="\${teamName}">Dream Team</span>
+            Team: <span th:text="\${teamName}">teamName</span>
         </div>
 
         <p class="description">
@@ -273,16 +273,16 @@ const DEFAULT_THYMELEAF_TEMPLATE = `<!DOCTYPE html>
         </p>
 
         <div class="stats-badge">
-            Result: <span th:text="\${place}">1</span> Place 
-            (<span th:text="\${points}">100</span> pts)
-            <span th:if="\${isWinner}" class="winner-tag">🏆 Winner</span>
+            Result: <span th:text="\${place}">1</span> place 
+            (<span th:text="\${points}">points</span> pts)
+            <span th:if="\${isWinner}" class="winner-tag">isWinner</span>
         </div>
     </div>
 
     <div class="footer">
         <div class="info-side">
             <div class="date-block">
-                Date: <span th:text="\${certDate}">24.04.2024</span>
+                Date: <span th:text="\${certDate}">certDate</span>
             </div>
             
             <div class="signer-name">Denis Volovyk</div>

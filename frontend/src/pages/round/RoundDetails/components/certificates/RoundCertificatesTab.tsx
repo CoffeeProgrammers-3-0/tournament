@@ -185,7 +185,7 @@ export default function RoundCertificatesTab({ roundId, isAdmin = false }: Round
     };
 
     const insertPlaceholder = (fieldKey: CertificateFieldKey) => {
-        insertAtCursor(`<span th:text="\${${fieldKey}}"></span>`);
+        insertAtCursor(`<span th:text="\${${fieldKey}}">${fieldKey}</span>`);
     };
 
     const handleDrop: React.DragEventHandler<HTMLDivElement> = (event) => {
