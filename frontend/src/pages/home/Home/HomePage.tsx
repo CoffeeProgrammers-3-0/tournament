@@ -47,7 +47,7 @@ export const HomePage = () => {
 
                 <Grid container spacing={4}>
                     {steps.map((step, index) => (
-                        <Grid size={{xs: 12, md: 4}} key={index}>
+                        <Grid size={{xs: 12, md: 6}} key={index}>
                             <StepCard
                                 icon={step.icon}
                                 title={step.title}
