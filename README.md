@@ -5,6 +5,7 @@
 [![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.5-6DB33F?style=for-the-badge&logo=spring&logoColor=white)](https://spring.io/)
 [![React 19](https://img.shields.io/badge/React-19-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://react.dev/)
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
+[![Server](https://img.shields.io/badge/Mission-SFL_Programming_Tournament-blue?style=for-the-badge)](https://acutely-culpable-spoiler.ngrok-free.dev/)
 
 A comprehensive, full-stack platform built to manage and host the **SFL Programming Tournament 2026**. This application provides a seamless experience for participants and administrators, featuring robust authentication, real-time updates, interactive scheduling, and automated document processing.
 
