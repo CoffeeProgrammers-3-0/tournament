@@ -26,11 +26,13 @@ public class KeycloakAdminConfig {
     private String clientId;
     @Value("${keycloak-url}")
     private String keycloakUrl;
+    @Value("${keycloak-container-url}")
+    private String keycloakContainerUrl;
 
     @Bean
     public Keycloak keycloak() {
         return KeycloakBuilder.builder()
-                .serverUrl(keycloakUrl)
+                .serverUrl(keycloakContainerUrl)
                 .realm("master")
                 .grantType(OAuth2Constants.PASSWORD)
                 .clientId("admin-cli")
@@ -61,7 +63,7 @@ public class KeycloakAdminConfig {
 
     @Bean
     public WebClient webClient() {
-        return WebClient.create(keycloakUrl);
+        return WebClient.create(keycloakContainerUrl);
     }
 }
 

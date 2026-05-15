@@ -1,0 +1,10 @@
+databaseChangeLog:
+  - changeSet:
+      id: drop_user_keycloak_user_id_not_null_constraint
+      author: vladobrod
+      changes:
+        - dropNotNullConstraint:
+            schemaName: tournament
+            columnName: keycloak_user_id
+            tableName: users
+            columnDataType: varchar(37)

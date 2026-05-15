@@ -1,0 +1,268 @@
+package com.project.backend.controllers;
+
+import com.project.backend.auth.utils.CurrentUserContainer;
+import com.project.backend.dto.team.*;
+import com.project.backend.dto.user.UserCreateRequestForTeam;
+import com.project.backend.dto.user.UserResponse;
+import com.project.backend.dto.wrapper.LongDTO;
+import com.project.backend.dto.wrapper.PaginationListResponse;
+import com.project.backend.mappers.TeamMapper;
+import com.project.backend.mappers.UserMapper;
+import com.project.backend.models.Team;
+import com.project.backend.models.User;
+import com.project.backend.services.interfaces.TeamService;
+import com.project.backend.services.interfaces.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequiredArgsConstructor
+@Slf4j
+@RequestMapping("/api/teams")
+@Tag(name = "Teams", description = "API for managing teams and team members")
+public class TeamController {
+    private final TeamService teamService;
+    private final UserService userService;
+    private final UserMapper userMapper;
+    private final TeamMapper teamMapper;
+    private final CurrentUserContainer currentUserContainer;
+
+    @GetMapping("/check/{tournament_id}")
+    @Operation(summary = "Check team registration", description = "Checks if the authenticated user is already registered in a team for the tournament")
+    public boolean checkIfRegistered(
+            @Parameter(description = "ID of the tournament", example = "1")
+            @PathVariable(value = "tournament_id") Long tournamentId) {
+        User me = currentUserContainer.getUser();
+
+        return teamService.check(tournamentId, me);
+    }
+
+    @PostMapping("/{tournament_id}")
+    @Operation(summary = "Create team", description = "Creates a new team in the specified tournament")
+    public TeamFullResponse create(
+            @Parameter(description = "ID of the tournament", example = "1")
+            @PathVariable(value = "tournament_id") Long tournamentId,
+
+            @Parameter(description = "Team creation data")
+            @RequestBody @Valid TeamCreateRequest teamCreateRequest) {
+        Team team = teamService.create(
+                tournamentId,
+                teamCreateRequest.getUsers(),
+                teamMapper.fromCreateRequestToTeam(teamCreateRequest)
+        );
+
+        return teamMapper.fromTeamToFullResponse(team);
+    }
+
+    @PreAuthorize("@userSecurity.isLeaderOfTeam(#teamId) or hasRole('ADMIN')")
+    @PutMapping("/{team_id}")
+    @Operation(summary = "Update team", description = "Updates team information")
+    public TeamFullResponse update(
+            @Parameter(description = "ID of the team", example = "10")
+            @PathVariable(value = "team_id") Long teamId,
+
+            @Parameter(description = "Updated team data")
+            @RequestBody @Valid TeamUpdateRequest teamUpdateRequest) {
+        Team team = teamService.update(teamId, teamMapper.fromUpdateRequestToTeam(teamUpdateRequest));
+
+        return teamMapper.fromTeamToFullResponse(team);
+    }
+
+    @PreAuthorize("@userSecurity.isLeaderOfTeam(#teamId) or hasRole('ADMIN')")
+    @DeleteMapping("/{team_id}")
+    @Operation(summary = "Delete team", description = "Deletes a team by its ID")
+    public void delete(
+            @Parameter(description = "ID of the team", example = "10")
+            @PathVariable(value = "team_id") Long teamId) {
+        teamService.delete(teamId);
+    }
+
+    @GetMapping("/{team_id}")
+    @Operation(summary = "Get team by ID", description = "Returns full information about a team")
+    public TeamFullResponse getById(
+            @Parameter(description = "ID of the team", example = "10")
+            @PathVariable(value = "team_id") Long teamId) {
+        Team team = teamService.findById(teamId);
+
+        return teamMapper.fromTeamToFullResponse(team);
+    }
+
+    @GetMapping
+    @Operation(summary = "Get all teams", description = "Returns paginated list of teams with optional search")
+    public PaginationListResponse<TeamListResponse> getAll(
+            @Parameter(description = "Search teams by name", example = "Alpha")
+            @RequestParam(value = "search", required = false) String search,
+
+            @Parameter(description = "Page number (starting from 0)", example = "0")
+            @RequestParam(value = "page") Integer page,
+
+            @Parameter(description = "Page size", example = "10")
+            @RequestParam(value = "size") Integer size) {
+        Page<Team> teamPage = teamService.findAll(page, size, search);
+
+        PaginationListResponse<TeamListResponse> response = new PaginationListResponse<>();
+
+        response.setTotalPages(teamPage.getTotalPages());
+        response.setContent(teamPage.getContent().stream()
+                .map(teamMapper::fromTeamToListResponse)
+                .toList());
+
+        return response;
+    }
+
+    @GetMapping("/my")
+    @Operation(summary = "Get my teams", description = "Returns paginated list of teams where the authenticated user participates")
+    public PaginationListResponse<TeamListResponse> getAllMy(
+            @Parameter(description = "Search teams by name", example = "Alpha")
+            @RequestParam(value = "search", required = false) String search,
+
+            @Parameter(description = "Page number (starting from 0)", example = "0")
+            @RequestParam(value = "page") Integer page,
+
+            @Parameter(description = "Page size", example = "10")
+            @RequestParam(value = "size") Integer size) {
+        User me = currentUserContainer.getUser();
+        Page<Team> teamPage = teamService.findAllByUser(me, page, size, search);
+
+        PaginationListResponse<TeamListResponse> response = new PaginationListResponse<>();
+
+        response.setTotalPages(teamPage.getTotalPages());
+        response.setContent(teamPage.getContent().stream()
+                .map(teamMapper::fromTeamToListResponse)
+                .toList());
+
+        return response;
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN', 'JURY')")
+    @GetMapping("/{team_id}/statistics/{round_id}")
+    @Operation(summary = "Get team statistics", description = "Returns statistics of a team for a specific round")
+    public StatisticResponse getStatsForTeam(
+            @Parameter(description = "ID of the team", example = "10")
+            @PathVariable(value = "team_id") Long teamId,
+
+            @Parameter(description = "ID of the round", example = "2")
+            @PathVariable(value = "round_id") Long roundId) {
+        return teamService.getStatisticsByRoundForTeam(roundId, teamId);
+    }
+
+    @PreAuthorize("@userSecurity.isMemberOfTheTeamInRound(#roundId)")
+    @GetMapping("/statistics/{round_id}")
+    @Operation(summary = "Get my team statistics", description = "Returns statistics for the authenticated user's team in the specified round")
+    public StatisticResponse getStatsForMyTeam(
+            @Parameter(description = "ID of the round", example = "2")
+            @PathVariable(value = "round_id") Long roundId) {
+        User me = currentUserContainer.getUser();
+        return teamService.getStatisticsByRoundForUsersTeam(roundId, me);
+    }
+
+    @PreAuthorize("@userSecurity.isMemberOfTheTeamInRound(#roundId)")
+    @GetMapping("/rounds/{round_id}/my-id")
+    @Operation(summary = "Get my team statistics", description = "Returns statistics for the authenticated user's team in the specified round")
+    public LongDTO getIdOfMyTeamByRound(
+            @Parameter(description = "ID of the round", example = "2")
+            @PathVariable(value = "round_id") Long roundId) {
+        User me = currentUserContainer.getUser();
+
+        LongDTO response = new LongDTO();
+        response.setValue(teamService.getIdOfMyTeamByRound(roundId, me));
+
+        return response;
+    }
+
+    @PreAuthorize("@userSecurity.isLeaderOfTeamInTournament(#teamId, #tournamentId) or hasRole('ADMIN')")
+    @PostMapping("/{team_id}/tournaments/{tournament_id}/members")
+    @Operation(summary = "Add team member", description = "Adds a new member to the team")
+    public TeamFullResponse addMember(
+            @Parameter(description = "ID of the team", example = "10")
+            @PathVariable(value = "team_id") Long teamId,
+
+            @Parameter(description = "ID of the tournament", example = "2")
+            @PathVariable(value = "tournament_id") Long tournamentId,
+
+            @Parameter(description = "User data for new team member")
+            @RequestBody @Valid UserCreateRequestForTeam userCreateRequestForTeam) {
+        Team team = teamService.addMember(teamId, tournamentId, userCreateRequestForTeam);
+
+        return teamMapper.fromTeamToFullResponse(team);
+    }
+
+    @PreAuthorize("@userSecurity.isLeaderOfTeamInTournament(#teamId, #tournamentId) or hasRole('ADMIN')")
+    @DeleteMapping("/{team_id}/tournaments/{tournament_id}/members/{user_id}")
+    @Operation(summary = "Remove team member", description = "Removes a user from the team")
+    public TeamFullResponse removeMember(
+            @Parameter(description = "ID of the team", example = "10")
+            @PathVariable(value = "team_id") Long teamId,
+
+            @Parameter(description = "ID of the user", example = "5")
+            @PathVariable(value = "user_id") Long userId,
+
+            @Parameter(description = "ID of the tournament", example = "2")
+            @PathVariable(value = "tournament_id") Long tournamentId) {
+        Team team = teamService.removeMember(teamId, userId, tournamentId);
+
+        return teamMapper.fromTeamToFullResponse(team);
+    }
+
+    @PreAuthorize("@userSecurity.isLeaderOfTeamInTournament(#teamId, #tournamentId) or hasRole('ADMIN')")
+    @PatchMapping("/{team_id}/tournaments/{tournament_id}/set-leader/{user_id}")
+    @Operation(summary = "Set team leader", description = "Sets a user as the leader of the team")
+    public TeamFullResponse setLeader(
+            @Parameter(description = "ID of the team", example = "10")
+            @PathVariable(value = "team_id") Long teamId,
+
+            @Parameter(description = "ID of the user who will become leader", example = "5")
+            @PathVariable(value = "user_id") Long userId,
+
+            @Parameter(description = "ID of the tournament", example = "2")
+            @PathVariable(value = "tournament_id") Long tournamentId) {
+        Team team = teamService.setLeader(teamId, userId, tournamentId);
+
+        return teamMapper.fromTeamToFullResponse(team);
+    }
+
+    @GetMapping("/tournament/{tournament_id}")
+    @Operation(summary = "Get teams by tournament", description = "Returns paginated list of teams for the specified tournament")
+    public PaginationListResponse<TeamListResponse> getAllByTournament(
+            @Parameter(description = "Search teams by name", example = "Alpha")
+            @RequestParam(value = "search", required = false) String search,
+
+            @Parameter(description = "Page number (starting from 0)", example = "0")
+            @RequestParam(value = "page") Integer page,
+
+            @Parameter(description = "Page size", example = "10")
+            @RequestParam(value = "size") Integer size,
+
+            @Parameter(description = "ID of the tournament", example = "1")
+            @PathVariable(value = "tournament_id") Long tournamentId) {
+        Page<Team> teamPage = teamService.findAllByTournament(page, size, search, tournamentId);
+
+        PaginationListResponse<TeamListResponse> response = new PaginationListResponse<>();
+        response.setTotalPages(teamPage.getTotalPages());
+        response.setContent(teamPage.getContent().stream()
+                .map(teamMapper::fromTeamToListResponse)
+                .toList());
+
+        return response;
+    }
+
+    @PreAuthorize("@userSecurity.isMemberOfTheTeamInRound(#roundId)")
+    @GetMapping("/round/{round_id}/users")
+    @Operation(summary = "Get users by round", description = "Returns list of users for the specified round of my team")
+    public List<UserResponse> getAllUsersByRoundOfMyTeam(
+            @Parameter(description = "ID of the round", example = "1")
+            @PathVariable(value = "round_id") Long roundId
+    ) {
+        User me = currentUserContainer.getUser();
+        return userService.findAllUsersOfUsersTeam(me, roundId).stream().map(userMapper::fromUserToResponse).toList();
+    }
+}

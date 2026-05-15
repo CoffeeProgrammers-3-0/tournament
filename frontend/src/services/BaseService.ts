@@ -18,7 +18,9 @@ export default class BaseService {
     }
 
     public get<T>(path: string, config: AxiosRequestConfig = {}): Promise<T> {
-        return this.handleRequest(() => client.get<T>(`${this.endpoint}${path}`, config));
+        return this.handleRequest(() => client.get<T>(`${this.endpoint}${path}`, {
+            ...config,
+        }));
     }
 
     public post<T>(path: string, data: unknown = {}, config: AxiosRequestConfig = {}): Promise<T> {

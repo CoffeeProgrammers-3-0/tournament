@@ -1,16 +1,38 @@
 import axios from 'axios';
 import Cookies from 'js-cookie';
 
+const AUTH_CONFIG = {
+    KEYCLOAK_AUTH_URL: import.meta.env.VITE_KEYCLOAK_URL || "http://localhost:8080/auth",
+    KEYCLOAK_REALM: import.meta.env.VITE_KEYCLOAK_REALM || "coffee-programmers",
+    CLIENT_ID: import.meta.env.VITE_KEYCLOAK_CLIENT_ID || "coffee-programmers-client",
+    REDIRECT_URI: import.meta.env.VITE_REDIRECT_URI || `${window.location.origin}/callback`,
+    API_BASE_URL: import.meta.env.VITE_API_BASE_URL || "http://localhost:8081/api"
+};
+
 class AuthService {
     private static refreshPromise: Promise<boolean> | null = null;
 
-    static redirectToKeycloak(): void {
-        localStorage.setItem('preLoginPath', window.location.pathname);
+    private static delay(ms: number) {
+        return new Promise(res => setTimeout(res, ms));
+    }
 
-        const keycloakUrl = "http://localhost:8080/realms/coffee-programmers/protocol/openid-connect/auth";
-        const clientId = "coffee-programmers-client";
-        const redirectUri = "http://localhost:3000/callback";
-        const loginUrl = `${keycloakUrl}?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=openid`;
+    static redirectToKeycloak(): void {
+        const currentPath = window.location.pathname;
+
+        const technicalRoutes = ['/callback', '/login', '/logout'];
+
+        if (!technicalRoutes.includes(currentPath)) {
+            localStorage.setItem('preLoginPath', currentPath);
+        } else if (!localStorage.getItem('preLoginPath')) {
+            localStorage.setItem('preLoginPath', '/home');
+        }
+
+        const loginUrl =
+            `${AUTH_CONFIG.KEYCLOAK_AUTH_URL}/realms/${AUTH_CONFIG.KEYCLOAK_REALM}` +
+            `/protocol/openid-connect/auth?client_id=${AUTH_CONFIG.CLIENT_ID}` +
+            `&redirect_uri=${encodeURIComponent(AUTH_CONFIG.REDIRECT_URI)}` +
+            `&response_type=code&scope=openid`;
+
         window.location.href = loginUrl;
     }
 
@@ -18,56 +40,76 @@ class AuthService {
         const userId = Cookies.get('userId');
 
         try {
-            await axios.post('http://localhost:8081/api/auth/logout', {}, {
-                params: {
-                    userId,
-                },
-                withCredentials: true,
-            });
-            this.redirectToKeycloak()
+            await axios.post(
+                `${AUTH_CONFIG.API_BASE_URL}/auth/logout`,
+                {},
+                {
+                    params: { userId },
+                    withCredentials: true,
+                }
+            );
         } catch (e) {
             console.error("Logout failed", e);
+        } finally {
+            this.clearAuth();
+            window.location.href = '/home';
         }
     }
 
-    static refresh(): Promise<boolean> {
-        if (this.refreshPromise) {
-            return this.refreshPromise;
-        }
+    static async refresh(): Promise<boolean> {
+        if (this.refreshPromise) return this.refreshPromise;
 
         this.refreshPromise = (async () => {
-            console.log("Refreshing token");
-
             const refreshToken = Cookies.get("refreshToken");
+
             if (!refreshToken) {
-                console.log("No refresh token, redirecting to Keycloak");
-                this.redirectToKeycloak();
+                this.clearAuth();
                 return false;
             }
 
-            try {
-                await axios.post(
-                    "http://localhost:8081/api/auth/refresh",
-                    {},
-                    {
-                        params: {
-                            refreshToken: encodeURIComponent(refreshToken),
-                        },
-                        withCredentials: true,
+            const MAX_RETRIES = 3;
+
+            for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+                try {
+                    await axios.post(
+                        `${AUTH_CONFIG.API_BASE_URL}/auth/refresh`,
+                        {},
+                        {
+                            params: { refreshToken },
+                            withCredentials: true,
+                        }
+                    );
+
+                    return true;
+
+                } catch (err) {
+                    console.warn(`Refresh attempt ${attempt} failed`);
+
+                    if (attempt < MAX_RETRIES) {
+                        await this.delay(300 * attempt);
                     }
-                );
-
-                return true;
-            } catch (error) {
-                console.error("Token refresh failed", error);
-                this.redirectToKeycloak();
-                return false;
-            } finally {
-                this.refreshPromise = null;
+                }
             }
+
+            this.clearAuth();
+            return false;
         })();
 
-        return this.refreshPromise;
+        try {
+            return await this.refreshPromise;
+        } finally {
+            this.refreshPromise = null;
+        }
+    }
+
+    private static clearAuth(): void {
+        const keys = ["accessToken", "refreshToken", "userId", "role"];
+
+        keys.forEach(key => {
+            try {
+                Cookies.remove(key);
+            } catch (_) {}
+        });
     }
 }
 

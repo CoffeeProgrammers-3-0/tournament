@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: create_admin_messages
+      author: vladobrod
+      changes:
+        - addColumn:
+            schemaName: tournament
+            tableName: admin_messages
+            columns:
+              - column:
+                  name: is_system
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false

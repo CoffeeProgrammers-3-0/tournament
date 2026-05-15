@@ -1,12 +1,26 @@
-FROM node:20-alpine
+FROM node:20 AS build
 
 WORKDIR /app
 
+ARG VITE_API_BASE_URL
+ARG VITE_KEYCLOAK_URL
+ARG VITE_KEYCLOAK_CLIENT_ID
+ARG VITE_REDIRECT_URI
+ARG VITE_KEYCLOAK_REALM
+
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+ENV VITE_KEYCLOAK_URL=$VITE_KEYCLOAK_URL
+ENV VITE_KEYCLOAK_CLIENT_ID=$VITE_KEYCLOAK_CLIENT_ID
+ENV VITE_REDIRECT_URI=$VITE_REDIRECT_URI
+ENV VITE_KEYCLOAK_REALM=$VITE_KEYCLOAK_REALM
+
 COPY package*.json ./
+COPY .npmrc ./
+
 RUN npm install
 
 COPY . .
 
-EXPOSE 3000
+RUN npm run build
 
-CMD ["npm", "run", "dev"]
+CMD ["sh", "-c", "cp -r /app/dist/* /usr/share/nginx/html/ && echo 'Frontend built succesfully:' && ls -l /usr/share/nginx/html/"]

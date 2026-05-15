@@ -1,0 +1,42 @@
+databaseChangeLog:
+  - changeSet:
+      id: add_team_rounds_table
+      author: vladobrod
+      changes:
+        - createTable:
+            schemaName: tournament
+            tableName: team_rounds
+            columns:
+              - column:
+                  name: team_id
+                  type: bigint
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: round_id
+                  type: bigint
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - addForeignKeyConstraint:
+                  constraintName: fk_tr_team
+                  baseTableSchemaName: tournament
+                  baseTableName: team_rounds
+                  baseColumnNames: team_id
+                  referencedTableSchemaName: tournament
+                  referencedTableName: teams
+                  referencedColumnNames: id
+                  onDelete: CASCADE
+
+              - addForeignKeyConstraint:
+                  constraintName: fk_tr_round
+                  baseTableSchemaName: tournament
+                  baseTableName: team_rounds
+                  baseColumnNames: round_id
+                  referencedTableSchemaName: tournament
+                  referencedTableName: rounds
+                  referencedColumnNames: id
+                  onDelete: CASCADE

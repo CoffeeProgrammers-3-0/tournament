@@ -1,0 +1,10 @@
+databaseChangeLog:
+  - changeSet:
+      id: change_user_role_field
+      author: vladobrod
+      changes:
+        - modifyDataType:
+            schemaName: tournament
+            tableName: users
+            columnName: role
+            newDataType: BIGINT

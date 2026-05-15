@@ -1,0 +1,59 @@
+import {Box, CircularProgress, Container, Tab, Tabs, Typography} from "@mui/material";
+import {useTranslation} from "react-i18next";
+import {useNavigate} from "react-router-dom";
+
+import {useTournamentDetails} from "./useTournamentDetails.ts";
+import {TournamentHero} from "./components/TournamentHero";
+import {CreateRoundDialog} from "./components/CreateRoundDialog";
+import {InfoTab} from "./tabs/InfoTab";
+import {RoundsTab} from "./tabs/RoundsTab";
+import {TeamsTab} from "./tabs/TeamsTab";
+import {UniversalConfirmDialog} from "../../round/RoundDetails/components/UniversalConfirmDialog.tsx";
+
+export const TournamentDetailsPage = () => {
+    const { t } = useTranslation();
+    const navigate = useNavigate();
+    const state = useTournamentDetails();
+
+    if (state.loading) {
+        return <Box sx={{ display: "flex", justifyContent: "center", mt: 10 }}><CircularProgress /></Box>;
+    }
+
+    if (!state.tournamentData) {
+        return <Typography align="center" mt={10}>Tournament not found</Typography>;
+    }
+
+    return (
+        <Container maxWidth="lg" sx={{ pb: 6, pt: 1 }}>
+            <TournamentHero state={state} t={t} navigate={navigate} />
+
+            <Tabs
+                value={state.tabValue}
+                onChange={(_, v) => state.setTabValue(v)}
+                sx={{ mb: 4, borderBottom: 1, borderColor: 'divider', '& .MuiTab-root': { fontWeight: 700, fontSize: "1rem" } }}
+            >
+                {((state.tournamentData.status === "RUNNING" || state.tournamentData.status === "FINISHED" || state.isAdmin) ? ['info', 'rounds', 'teams'] : ['info', 'rounds']).map((label, idx) => (
+                    <Tab key={idx} label={t(`tournament_details.tabs.${label}`)} />
+                ))}
+            </Tabs>
+
+            <Box sx={{ mt: 2 }}>
+                {state.tabValue === 0 && <InfoTab state={state} t={t} />}
+                {state.tabValue === 1 && <RoundsTab state={state} t={t} navigate={navigate} />}
+                {state.tabValue === 2
+                    && ((state.tournamentData.status === "RUNNING" || state.tournamentData.status === "FINISHED" || state.isAdmin)
+                    && <TeamsTab state={state} t={t} navigate={navigate} />)}
+            </Box>
+
+            <UniversalConfirmDialog
+                config={state.confirmDialog}
+                onClose={state.closeDialog}
+                errors={state.errors}
+            />
+
+            <CreateRoundDialog state={state} t={t}/>
+        </Container>
+    );
+};
+
+export default TournamentDetailsPage;

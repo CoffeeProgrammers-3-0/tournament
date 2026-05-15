@@ -1,0 +1,12 @@
+databaseChangeLog:
+  - changeSet:
+      id: add_status_to_round
+      author: vladobrod
+      changes:
+        - addColumn:
+            schemaName: tournament
+            tableName: rounds
+            columns:
+              - column:
+                  name: status
+                  type: bigint

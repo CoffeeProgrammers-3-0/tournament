@@ -1,0 +1,25 @@
+databaseChangeLog:
+  - changeSet:
+      id: add_is_additional_column
+      author: vladobrod
+      changes:
+        - addColumn:
+            schemaName: tournament
+            tableName: jury_submission_criteria
+            columns:
+              - column:
+                  name: is_additional
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+
+        - createIndex:
+            schemaName: tournament
+            tableName: jury_submission_criteria
+            indexName: idx_jury_submission_criteria_jury_submission_additional
+            columns:
+              - column:
+                  name: jury_submission_id
+              - column:
+                  name: is_additional

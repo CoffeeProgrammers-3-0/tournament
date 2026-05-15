@@ -2,12 +2,13 @@ package com.project.backend.services.interfaces;
 
 import com.project.backend.dto.wrapper.PasswordRequest;
 import com.project.backend.models.User;
+import com.project.backend.models.constants.Role;
 import org.springframework.data.domain.Page;
 import org.springframework.security.core.Authentication;
 
-public interface UserService {
-    User createUserKeycloak(User user);
+import java.util.List;
 
+public interface UserService {
     User updateUser(User user, long userId);
 
     User updateUserKeycloak(User user, long userId);
@@ -30,5 +31,19 @@ public interface UserService {
 
     void delete(Long userId);
 
-    Page<User> findAllByQuery(Integer page, Integer size, String query);
+    User createUser(User user, Role role);
+
+    Page<User> findAllByRole(Integer page, Integer size, String query, Role role);
+
+    Page<User> findAllJuriesUsersForRound(Integer page, Integer size, String query, Long roundId);
+
+    User findUserByEmailOrNull(String email);
+
+    Page<User> findAllJuriesUsersForSubmission(Integer page, Integer size, String query, Long submissionId);
+
+    Page<User> findAllAvailableJuriesUsersForSubmission(Integer page, Integer size, String query, Long submissionId);
+
+    List<User> findAllUsersOfUsersTeam(User user, Long roundId);
+
+    List<User> findUsersByEmailLike(String email, int count);
 }

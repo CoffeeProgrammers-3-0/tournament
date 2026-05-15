@@ -1,17 +1,24 @@
-import React from 'react';
-import {Outlet, useLocation} from 'react-router-dom';
-import {useAuth} from './useAuth.tsx';
-import AuthService from '../services/auth/AuthService';
+import {Navigate, Outlet} from "react-router-dom";
+import Cookies from "js-cookie";
 
-const PrivateRoute: React.FC = () => {
-    const { isAuthenticated } = useAuth();
-    const location = useLocation();
+type Role = 'ADMIN' | 'JURY' | 'USER';
 
-    if (location.pathname === "/callback") {
-        return <Outlet />;
+interface PrivateRouteProps {
+    allowedRoles?: Role[];
+}
+
+const PrivateRoute = ({ allowedRoles }: PrivateRouteProps) => {
+    const isLoggedIn = !!Cookies.get("token") || !!Cookies.get("userId");
+    const userRole = (Cookies.get("role") as Role) || 'USER';
+
+    if (!isLoggedIn) {
+        return <Navigate to="/login" replace />;
+    }
+    if (allowedRoles && !allowedRoles.includes(userRole)) {
+        return <Navigate to="/403" replace />;
     }
 
-    return isAuthenticated() ? <Outlet /> : AuthService.refresh();
+    return <Outlet />;
 };
 
 export default PrivateRoute;

@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: change_unique_leader_idx
+      author: vladobrod
+      changes:
+        - dropIndex:
+            indexName: idx_unique_leader_per_team
+            tableName: team_participants
+            schemaName: tournament
+        - sql: >
+            CREATE UNIQUE INDEX idx_unique_leader_per_team
+            ON tournament.team_participants (team_id, tournament_id)
+            WHERE is_leader = true;
+          stripComments: true

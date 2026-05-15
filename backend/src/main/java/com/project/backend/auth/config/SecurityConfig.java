@@ -11,8 +11,12 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.util.matcher.RegexRequestMatcher;
+
+import static org.springframework.security.web.util.matcher.RegexRequestMatcher.regexMatcher;
 
 @Slf4j
 @Configuration
@@ -25,15 +29,61 @@ public class SecurityConfig {
     private String clientId;
     @Value("${frontend-url}")
     private String frontendUrl;
+
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, KeycloakJwtAuthenticationConverter keycloakJwtAuthenticationConverter) throws Exception {;
+    public SecurityFilterChain filterChain(HttpSecurity http, KeycloakJwtAuthenticationConverter keycloakJwtAuthenticationConverter) throws Exception {
+        String[] permitAll = new String[]{
+                "/api-docs",
+                "/swagger-ui/**",
+                "/v3/api-docs/**",
+                "/api/auth/logout",
+                "/api/auth/callback",
+                "/api/auth/refresh",
+                "/api/ws/**",
+                "/files/**"
+        };
+
+        RegexRequestMatcher[] getPermitAll = new RegexRequestMatcher[]{
+                regexMatcher(HttpMethod.GET, "^/api/rounds/\\d+/categories(\\?.*)?$"),
+                regexMatcher(HttpMethod.GET, "^/api/tournaments/\\d+/rounds(\\?.*)?$"),
+                regexMatcher(HttpMethod.GET, "^/api/tournaments/rounds-by-round/\\d+(\\?.*)?$"),
+                regexMatcher(HttpMethod.GET, "^/api/tournaments/rounds/\\d+(\\?.*)?$"),
+                regexMatcher(HttpMethod.GET, "^/api/tournaments/rounds/\\d+/leaderboard(\\?.*)?$"),
+                regexMatcher(HttpMethod.GET, "^/api/tournaments/rounds/\\d+/leaderboard/export(\\?.*)?$"),
+                regexMatcher(HttpMethod.GET, "^/api/tournaments/rounds/\\d+/juries(\\?.*)?$"),
+                regexMatcher(HttpMethod.GET, "^/api/tournaments/rounds/\\d+/teams(\\?.*)?$"),
+                regexMatcher(HttpMethod.GET, "^/api/teams/\\d+(\\?.*)?$"),
+                regexMatcher(HttpMethod.GET, "^/api/teams(\\?.*)?$"),
+                regexMatcher(HttpMethod.GET, "^/api/teams/tournament/\\d+(\\?.*)?$"),
+                regexMatcher(HttpMethod.GET, "^/api/tournaments/\\d+(\\?.*)?$"),
+                regexMatcher(HttpMethod.GET, "^/api/tournaments(\\?.*)?$"),
+                regexMatcher(HttpMethod.GET, "^/api/users/\\d+(\\?.*)?$"),
+                regexMatcher(HttpMethod.GET, "^/api/users/by_email(\\?.*)?$"),
+                regexMatcher(HttpMethod.GET, "^/api/admin-messages/global(\\?.*)?$"),
+                regexMatcher(HttpMethod.GET, "^/api/admin-messages/round/\\d+(\\?.*)?$"),
+                regexMatcher(HttpMethod.GET, "^/api/round-events/round/\\d+(\\?.*)?$"),
+                regexMatcher(HttpMethod.GET, "^/api/round-events/\\d+(\\?.*)?$"),
+                regexMatcher(HttpMethod.GET, "^/api/calendar(\\?.*)?$")
+        };
+
+        RegexRequestMatcher[] postPermitAll = new RegexRequestMatcher[]{
+                regexMatcher(HttpMethod.POST, "^/api/teams/\\d+(\\?.*)?$")
+        };
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(a -> a
-                        .requestMatchers("/api/auth/logout", "/api/auth/callback", "/ws/**", "/api/auth/refresh").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/shopItems/*", "/api/shopItems/getAll/*", "/api/shopItems/getAll", "/api/users/*").permitAll()
+                        .requestMatchers(permitAll).permitAll()
+                        .requestMatchers(getPermitAll).permitAll()
+                        .requestMatchers(postPermitAll).permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .anyRequest().authenticated())
+                        .anyRequest().authenticated()
+                )
+                .headers(headers -> headers
+                        .frameOptions(HeadersConfigurer.FrameOptionsConfig::disable)
+                        .contentSecurityPolicy(csp -> csp
+                                .policyDirectives("frame-ancestors " + frontendUrl)
+                        )
+                )
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .oauth2ResourceServer(oauth2ResourceServer -> oauth2ResourceServer
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(keycloakJwtAuthenticationConverter)))

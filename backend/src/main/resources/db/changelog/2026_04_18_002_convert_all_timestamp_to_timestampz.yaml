@@ -1,0 +1,58 @@
+databaseChangeLog:
+  - changeSet:
+      id: convert_all_timestamp_to_timestamptz
+      author: vladobrod
+      changes:
+        - modifyDataType:
+            schemaName: tournament
+            tableName: tournaments
+            columnName: start_tournament
+            newDataType: TIMESTAMP WITH TIME ZONE
+
+        - modifyDataType:
+            schemaName: tournament
+            tableName: tournaments
+            columnName: start_registration
+            newDataType: TIMESTAMP WITH TIME ZONE
+
+        - modifyDataType:
+            schemaName: tournament
+            tableName: tournaments
+            columnName: end_registration
+            newDataType: TIMESTAMP WITH TIME ZONE
+
+        - modifyDataType:
+            schemaName: tournament
+            tableName: rounds
+            columnName: start_date
+            newDataType: TIMESTAMP WITH TIME ZONE
+
+        - modifyDataType:
+            schemaName: tournament
+            tableName: rounds
+            columnName: end_date
+            newDataType: TIMESTAMP WITH TIME ZONE
+
+        - modifyDataType:
+            schemaName: tournament
+            tableName: admin_messages
+            columnName: date
+            newDataType: TIMESTAMP WITH TIME ZONE
+
+        - modifyDataType:
+            schemaName: tournament
+            tableName: round_events
+            columnName: start_date
+            newDataType: TIMESTAMP WITH TIME ZONE
+
+        - modifyDataType:
+            schemaName: tournament
+            tableName: round_events
+            columnName: end_date
+            newDataType: TIMESTAMP WITH TIME ZONE
+
+        - modifyDataType:
+            schemaName: tournament
+            tableName: notifications
+            columnName: date
+            newDataType: TIMESTAMP WITH TIME ZONE

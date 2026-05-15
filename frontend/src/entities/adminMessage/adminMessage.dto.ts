@@ -1,0 +1,26 @@
+import type {UserResponseDto} from '../user/user.dto';
+import type {RoundListResponseDto} from '../round/round.dto';
+
+export type AdminMessageTargetType = 'GENERAL' | 'ROUND';
+
+export interface AdminMessageRequestDto {
+    content: string;
+}
+
+export interface GlobalAdminMessageResponseDto {
+    id: number;
+    creator: UserResponseDto;
+    date: string;
+    targetType: AdminMessageTargetType;
+    content: string;
+    system: boolean;
+}
+
+export interface RoundAdminMessageResponseDto {
+    id: number;
+    creator: UserResponseDto;
+    date: string;
+    targetType: AdminMessageTargetType;
+    content: string;
+    round: RoundListResponseDto;
+}

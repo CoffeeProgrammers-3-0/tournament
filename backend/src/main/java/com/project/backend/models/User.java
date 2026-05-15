@@ -1,9 +1,17 @@
 package com.project.backend.models;
 
+import com.project.backend.models.constants.Role;
+import com.project.backend.models.join_tables.Jury;
+import com.project.backend.models.join_tables.JurySubmission;
+import com.project.backend.models.join_tables.TeamParticipant;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Size;
-import lombok.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+import java.util.HashSet;
+import java.util.Set;
 
 
 @Entity
@@ -24,13 +32,27 @@ public class User {
     @Size(max = 255)
     private String email;
 
-    @Column(nullable = false, length = 100)
-    @Size(max = 100)
-    private String firstName;
+    @Column(nullable = false)
+    @Size(max = 255)
+    private String fullName;
 
-    @Column(nullable = false, length = 100)
-    @Size(max = 100)
-    private String lastName;
+    private Role role;
 
-    private String role;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<TeamParticipant> teamParticipants = new HashSet<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Jury> juries = new HashSet<>();
+
+    @OneToMany(mappedBy = "jury", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<JurySubmission> jurySubmissions = new HashSet<>();
+
+    @OneToMany(mappedBy = "creator", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<TeamTask> tasksAsCreator = new HashSet<>();
+
+    @OneToMany(mappedBy = "assignee")
+    private Set<TeamTask> tasksAsAssignee = new HashSet<>();
+
+    @OneToMany(mappedBy = "creator", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<RoundEvent> roundEvents = new HashSet<>();
 }

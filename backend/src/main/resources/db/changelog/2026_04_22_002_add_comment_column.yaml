@@ -1,0 +1,12 @@
+databaseChangeLog:
+  - changeSet:
+      id: add_comment_column
+      author: vladobrod
+      changes:
+        - addColumn:
+            schemaName: tournament
+            tableName: jury_submission_criteria
+            columns:
+              - column:
+                  name: comment
+                  type: TEXT

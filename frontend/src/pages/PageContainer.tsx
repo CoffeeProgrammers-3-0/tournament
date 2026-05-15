@@ -1,34 +1,59 @@
-import { type ReactNode } from "react";
-import { Box } from "@mui/material";
-import Header from "../components/header/Header";
-import Footer from "../components/footer/Footer";
+import {type ReactNode} from "react";
+import {Box, Container, IconButton, Tooltip} from "@mui/material";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import {useLocation, useNavigate} from "react-router-dom";
+import {AppHeader} from "../components/main/AppHeader";
+import {AppFooter} from "../components/main/AppFooter";
+import {useTranslation} from "react-i18next";
 
 interface PageContainerProps {
     children: ReactNode;
+    showBackButton?: boolean;
 }
 
-const PageContainer = ({ children }: PageContainerProps) => {
+const PageContainer = ({ children, showBackButton = true }: PageContainerProps) => {
+    const navigate = useNavigate();
+    const location = useLocation();
+    const { t } = useTranslation();
+
+
+    const isHomePage = location.pathname === "/" || location.pathname === "/home";
+    const shouldShowBack = showBackButton && !isHomePage;
+
     return (
         <Box
             sx={{
                 minHeight: "100vh",
                 display: "flex",
                 flexDirection: "column",
-                backgroundColor: "var(--bg-color)",
-                color: "var(--text-color)",
+                bgcolor: "background.default",
             }}
         >
-            <Header />
-            <Box
-                component="main"
-                className="main"
-                sx={{ flex: 1 }}
-            >
-                <Box className="main-content">
+            <AppHeader />
+
+            <Box component="main" sx={{ flex: 1 }}>
+                <Container maxWidth="lg" sx={{ py: 2, pb: 4, position: "relative" }}>
+
+                    {shouldShowBack && (
+                        <Tooltip title={t("common.back") || "Back"}>
+                            <IconButton
+                                onClick={() => navigate(-1)}
+                                sx={{
+                                    bgcolor: "background.paper",
+                                    boxShadow: 1,
+                                    "&:hover": { bgcolor: "action.hover" }
+                                }}
+                            >
+                                <ArrowBackIcon />
+                            </IconButton>
+                        </Tooltip>
+                    )}
+
                     {children}
-                </Box>
+                </Container>
             </Box>
-            <Footer />
+
+            <AppFooter />
         </Box>
     );
 };

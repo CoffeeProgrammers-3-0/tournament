@@ -1,0 +1,110 @@
+databaseChangeLog:
+  - changeSet:
+      id: add_team_tasks_table
+      author: vladobrod
+      changes:
+        - createTable:
+            schemaName: tournament
+            tableName: team_tasks
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: team_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: round_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: creator_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: assignee_id
+                  type: bigint
+                  constraints:
+                    nullable: true
+
+              - column:
+                  name: title
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: description
+                  type: text
+                  constraints:
+                    nullable: true
+
+              - column:
+                  name: status
+                  type: bigint
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: type
+                  type: bigint
+                  constraints:
+                    nullable: true
+
+              - column:
+                  name: priority
+                  type: bigint
+                  constraints:
+                    nullable: true
+
+        - addForeignKeyConstraint:
+            constraintName: fk_team_tasks_team
+            baseTableSchemaName: tournament
+            baseTableName: team_tasks
+            baseColumnNames: team_id
+            referencedTableSchemaName: tournament
+            referencedTableName: teams
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+        - addForeignKeyConstraint:
+            constraintName: fk_team_tasks_round
+            baseTableSchemaName: tournament
+            baseTableName: team_tasks
+            baseColumnNames: round_id
+            referencedTableSchemaName: tournament
+            referencedTableName: rounds
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+        - addForeignKeyConstraint:
+            constraintName: fk_team_tasks_creator
+            baseTableSchemaName: tournament
+            baseTableName: team_tasks
+            baseColumnNames: creator_id
+            referencedTableSchemaName: tournament
+            referencedTableName: users
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+        - addForeignKeyConstraint:
+            constraintName: fk_team_tasks_assignee
+            baseTableSchemaName: tournament
+            baseTableName: team_tasks
+            baseColumnNames: assignee_id
+            referencedTableSchemaName: tournament
+            referencedTableName: users
+            referencedColumnNames: id
+            onDelete: SET NULL

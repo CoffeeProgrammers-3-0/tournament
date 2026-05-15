@@ -1,0 +1,34 @@
+databaseChangeLog:
+  - changeSet:
+      id: insert_default_admin_user
+      author: dexipua
+
+      preConditions:
+        - onFail: MARK_RAN
+        - sqlCheck:
+            expectedResult: 0
+            sql: |
+              SELECT COUNT(*)
+              FROM tournament.users
+              WHERE email = 'admin@test-user.com'
+
+      changes:
+        - insert:
+            schemaName: tournament
+            tableName: users
+            columns:
+              - column:
+                  name: email
+                  value: admin@test-user.com
+
+              - column:
+                  name: full_name
+                  value: Admin I am
+
+              - column:
+                  name: role
+                  valueNumeric: 2
+
+              - column:
+                  name: keycloak_user_id
+                  value: a0d7b449-b1dd-461c-9511-3edeb0381157

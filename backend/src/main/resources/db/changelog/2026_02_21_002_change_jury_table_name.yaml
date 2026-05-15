@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - changeSet:
+      id: rename_jury_table
+      author: vladobrod
+      changes:
+        - renameTable:
+            schemaName: tournament
+            newTableName: juries
+            oldTableName: jury
