@@ -86,7 +86,7 @@ export const TeamHeader = ({ team, isAdmin, isEditing, onEdit, onCancel, onSave,
                             fontWeight: 700,
                             "&:hover": { bgcolor: "#eee" },
                             mt: { xs: 1, sm: 0 },
-                            maxWidth: { sm: "160px" } // Обмежує ширину на десктопі, але дозволяє 100% на мобільних
+                            maxWidth: { sm: "160px" } 
                         }}
                     >
                         Edit Team

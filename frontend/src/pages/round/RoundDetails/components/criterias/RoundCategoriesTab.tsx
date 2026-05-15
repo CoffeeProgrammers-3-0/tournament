@@ -76,7 +76,7 @@ export const RoundCategoriesTab = ({
 
                                     <Divider sx={{ mb: 2 }} />
 
-                                    {/* CRITERIA LIST SECTION */}
+                                    
                                     <Stack spacing={1}>
                                         {cat.criteria?.map((crit) => (
                                             <Chip
@@ -88,12 +88,12 @@ export const RoundCategoriesTab = ({
                                                     bgcolor: "grey.100",
                                                     fontWeight: 500,
                                                     width: '100%',
-                                                    justifyContent: 'space-between', // Pushes delete icon to the right
+                                                    justifyContent: 'space-between', 
                                                     height: 'auto',
                                                     py: 1,
                                                     '& .MuiChip-label': {
                                                         display: 'block',
-                                                        whiteSpace: 'normal', // Allows text to wrap if it's long
+                                                        whiteSpace: 'normal', 
                                                         textAlign: 'left',
                                                         width: '100%',
                                                         px: 1

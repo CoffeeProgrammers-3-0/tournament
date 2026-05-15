@@ -20,7 +20,7 @@ export const TeamMembersForm = ({ users, onChange, onAdd, onRemove, limits, isRe
     const [loading, setLoading] = useState(false);
     const debounceTimer = useRef<any>(null);
 
-    // --- NEW: Find indices of duplicate emails ---
+    
     const getDuplicateIndices = () => {
         const indices = new Set<number>();
         users.forEach((user, i) => {

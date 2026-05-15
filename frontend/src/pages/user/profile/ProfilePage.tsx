@@ -14,7 +14,6 @@ export const ProfilePage = () => {
         isEditing, setIsEditing, editName, setEditName,
         isSaving, handleSaveProfile, cancelEditing,
         myCertificates, setMyPage, myPage, myTotalPages, loadingMy, downloadCertificate,
-        // Extract new variables
         tournaments, tournamentsPage, setTournamentsPage, tournamentsTotalPages, loadingTournaments
     } = useProfile();
 

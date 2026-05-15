@@ -21,7 +21,6 @@ export const GradingForm = ({
                                 t
                             }: any) => (
     <>
-        {/* Рендеринг категорій (Стандартні 0-100) */}
         {categories.map((category: any) => (
             <Accordion key={category.id} defaultExpanded sx={accordionStyles}>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ bgcolor: "action.hover", px: 3 }}>
@@ -71,7 +70,6 @@ export const GradingForm = ({
             </Accordion>
         ))}
 
-        {/* Додаткові бали (Custom 0-5) */}
         <Box sx={{ mt: 6, p: 3, borderRadius: '24px', bgcolor: 'grey.50', border: '1px solid', borderColor: 'divider' }}>
             <Typography variant="h6" fontWeight={800} gutterBottom>{t('jury.custom_criteria_title')}</Typography>
 

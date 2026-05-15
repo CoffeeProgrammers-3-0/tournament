@@ -6,7 +6,7 @@ import CalculateIcon from '@mui/icons-material/Calculate';
 export const RoundFormula = ({ t }: { t: any }) => {
     const theme = useTheme();
 
-    // Спільний стиль для карток формул
+    
     const cardStyle = {
         p: 2.5,
         borderRadius: 3,
@@ -16,7 +16,7 @@ export const RoundFormula = ({ t }: { t: any }) => {
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        justifyContent: 'flex-start' // Вирівнювання по верхньому/лівому краю
+        justifyContent: 'flex-start' 
     };
 
     const labelStyle = {
@@ -47,7 +47,6 @@ export const RoundFormula = ({ t }: { t: any }) => {
             </Stack>
 
             <Grid container spacing={3}>
-                {/* 1. TOTAL TEAM SCORE */}
                 <Grid size={{ xs: 12, md: 6 }}>
                     <Box sx={cardStyle}>
                         <Stack direction="row" spacing={1} alignItems="center" mb={2.5}>
@@ -60,7 +59,7 @@ export const RoundFormula = ({ t }: { t: any }) => {
                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
                             <Typography variant="h6" fontWeight={500} sx={{ mr: 2, color: 'text.disabled' }}>=</Typography>
 
-                            {/* Математичний дріб, вирівняний по лівому краю */}
+                            
                             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                                 <Typography
                                     variant="body2"
@@ -85,7 +84,7 @@ export const RoundFormula = ({ t }: { t: any }) => {
                     </Box>
                 </Grid>
 
-                {/* 2. INDIVIDUAL JURY SCORE */}
+                
                 <Grid size={{ xs: 12, md: 6 }}>
                     <Box sx={cardStyle}>
                         <Stack direction="row" spacing={1} alignItems="center" mb={2.5}>

@@ -9,7 +9,7 @@ import {certificateService} from "../../../services/impl/CertificateService.ts";
 import type {CertificateResponseDto} from "../../../entities/certificate/certificate.dto.ts";
 
 const PAGE_SIZE = 8;
-const TOURNAMENTS_PAGE_SIZE = 4; // Display 4 tournaments per page
+const TOURNAMENTS_PAGE_SIZE = 4;
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8081';
 const API_CONFIG = { BASE_URL: API_BASE.replace(/\/api\/?$/, '') };
@@ -23,13 +23,11 @@ export const useProfile = () => {
     const [editName, setEditName] = useState("");
     const [isSaving, setIsSaving] = useState(false);
 
-    // --- Certificates Pagination State ---
     const [loadingMy, setLoadingMy] = useState(false);
     const [myTotalPages, setMyTotalPages] = useState(0);
     const [myPage, setMyPage] = useState(0);
     const [myCertificates, setMyCertificates] = useState<CertificateResponseDto[]>([]);
 
-    // --- Tournaments Pagination State (NEW) ---
     const [tournaments, setTournaments] = useState<TournamentListResponseDto[]>([]);
     const [loadingTournaments, setLoadingTournaments] = useState(false);
     const [tournamentsPage, setTournamentsPage] = useState(0);
@@ -50,7 +48,6 @@ export const useProfile = () => {
         link.remove();
     }, [user]);
 
-    // Fetch Certificates
     const fetchMyCertificates = useCallback(async (currentUser: UserResponseDto) => {
         setLoadingMy(true);
         try {
@@ -64,7 +61,6 @@ export const useProfile = () => {
         }
     }, [myPage]);
 
-    // Fetch Tournaments (Triggered on page change)
     useEffect(() => {
         if (!user) return;
 
@@ -85,9 +81,8 @@ export const useProfile = () => {
         };
 
         fetchTournaments();
-    }, [user, tournamentsPage]); // Runs when user is loaded OR when page changes
+    }, [user, tournamentsPage]);
 
-    // Initial Profile Load
     const fetchProfileData = useCallback(async () => {
         try {
             setLoading(true);
@@ -100,7 +95,6 @@ export const useProfile = () => {
             setEditName(userData.fullName);
             setTeams(teamsData?.content || []);
 
-            // Call certificates with the explicit user data to avoid stale state issues
             fetchMyCertificates(userData);
         } catch (error) {
             console.error("Failed to fetch profile data:", error);
@@ -137,7 +131,6 @@ export const useProfile = () => {
         isEditing, setIsEditing, editName, setEditName,
         isSaving, handleSaveProfile, cancelEditing,
         myCertificates, setMyPage, myPage, myTotalPages, loadingMy, downloadCertificate,
-        // Expose new tournament states
         tournaments, tournamentsPage, setTournamentsPage, tournamentsTotalPages, loadingTournaments
     };
 };

@@ -15,7 +15,7 @@ import {
     Typography,
     useTheme
 } from "@mui/material";
-import {useNavigate} from "react-router-dom"; // Додаємо навігацію
+import {useNavigate} from "react-router-dom";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import PendingActionsIcon from "@mui/icons-material/PendingActions";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";

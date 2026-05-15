@@ -36,7 +36,7 @@ export const useRoundJuryManager = ({
 
     const [autoAssignModalOpen, setAutoAssignModalOpen] = useState(false);
 
-    // --- SEARCH ---
+    
     useEffect(() => {
         if (!juryModalOpen) return;
 
@@ -81,7 +81,7 @@ export const useRoundJuryManager = ({
         return () => clearTimeout(timeout);
     }, [inputValue, subJuryPage, submissionJuryModalOpen, selectedSubmissionId]);
 
-    // --- ACTIONS ---
+    
     const handleAssignJury = useCallback(async () => {
         if (!selectedJuryToAssign) return;
 

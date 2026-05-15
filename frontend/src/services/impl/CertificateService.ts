@@ -12,8 +12,6 @@ class CertificateService extends BaseService {
         super('/certificates');
     }
 
-    // --- Generation Operations ---
-
     public generateSingle(
         templateId: number,
         fileName: string,
@@ -44,8 +42,6 @@ class CertificateService extends BaseService {
         });
     }
 
-    // --- Retrieval Operations ---
-
     public getCertificateMetaById(id: number): Promise<CertificateResponseDto> {
         return this.get<CertificateResponseDto>(`/${id}`);
     }
@@ -65,8 +61,6 @@ class CertificateService extends BaseService {
     public getUserCertificates(userId: number, params: PaginationParams): Promise<PaginationListResponseDto<CertificateResponseDto>> {
         return this.get<PaginationListResponseDto<CertificateResponseDto>>(`/user/${userId}`, { params });
     }
-
-    // --- Status Operations ---
 
     public updateStatus(id: number, status: CertificateStatus): Promise<CertificateResponseDto> {
         return this.patch<CertificateResponseDto>(`/${id}/status`, null, {

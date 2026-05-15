@@ -9,7 +9,6 @@ export const HomePage = () => {
 
     return (
         <Container maxWidth="lg" sx={{pt: 1, pb: 12}}>
-            {/* HERO SECTION */}
             <Box textAlign="center" sx={{mb: 12}}>
                 <Typography
                     variant="h1"
@@ -34,7 +33,6 @@ export const HomePage = () => {
                 </Typography>
             </Box>
 
-            {/* HOW IT WORKS SECTION */}
             <Box>
                 <Typography
                     variant="h3"

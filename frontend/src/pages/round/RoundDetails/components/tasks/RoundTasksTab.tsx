@@ -20,12 +20,12 @@ import AddIcon from '@mui/icons-material/Add';
 import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
-import CheckIcon from '@mui/icons-material/Check'; // ДОДАНО
-import CloseIcon from '@mui/icons-material/Close'; // ДОДАНО
+import CheckIcon from '@mui/icons-material/Check';
+import CloseIcon from '@mui/icons-material/Close';
 import Cookies from "js-cookie";
 import HistoryEduIcon from '@mui/icons-material/HistoryEdu';
-import ReactQuill from "react-quill-new"; // ДОДАНО
-import "react-quill-new/dist/quill.snow.css"; // ДОДАНО
+import ReactQuill from "react-quill-new";
+import "react-quill-new/dist/quill.snow.css";
 import type {
     TaskPriority,
     TaskStatus,
@@ -38,11 +38,11 @@ import type {UserResponseDto} from "../../../../../entities/user/user.dto.ts";
 interface Props {
     tasks: TeamTaskResponseDto[];
     loadingTab: boolean;
-    onOpenTaskModal: () => void; // Змінено: тепер модалка тільки для створення (без аргументів)
+    onOpenTaskModal: () => void; 
     onDeleteTask: (id: number) => void;
     onUpdateMeta: (id: number, meta: { status?: TaskStatus; priority?: TaskPriority; type?: TaskType }) => void;
 
-    // НОВИЙ ПРОП для збереження тексту та опису
+    
     onUpdateTaskText: (id: number, title: string, description: string) => void;
 
     myTeamUsers: UserResponseDto[];
@@ -77,7 +77,7 @@ export const RoundTasksTab = ({ tasks, loadingTab, onOpenTaskModal, onDeleteTask
 
     const [expandedTasks, setExpandedTasks] = useState<number[]>([]);
 
-    // СТАН ДЛЯ INLINE РЕДАГУВАННЯ
+    
     const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
     const [editDraft, setEditDraft] = useState({ title: '', description: '' });
 
@@ -109,11 +109,11 @@ export const RoundTasksTab = ({ tasks, loadingTab, onOpenTaskModal, onDeleteTask
         handleCloseUserMenu();
     };
 
-    // ХЕНДЛЕРИ РЕДАГУВАННЯ
+    
     const handleStartEdit = (task: TeamTaskResponseDto) => {
         setEditingTaskId(task.id);
         setEditDraft({ title: task.title, description: task.description || '' });
-        // Автоматично розгортаємо таску, щоб було видно опис для редагування
+        
         if (!expandedTasks.includes(task.id)) {
             setExpandedTasks(prev => [...prev, task.id]);
         }
@@ -156,7 +156,7 @@ export const RoundTasksTab = ({ tasks, loadingTab, onOpenTaskModal, onDeleteTask
                                                 {isExpanded ? <KeyboardArrowUpIcon fontSize="medium" /> : <KeyboardArrowDownIcon fontSize="medium" />}
                                             </IconButton>
 
-                                            {/* ПОЛЕ ВВОДУ АБО ЗВИЧАЙНИЙ ТЕКСТ ДЛЯ ЗАГОЛОВКА */}
+                                            
                                             {isEditing ? (
                                                 <TextField
                                                     size="small"
@@ -203,7 +203,7 @@ export const RoundTasksTab = ({ tasks, loadingTab, onOpenTaskModal, onDeleteTask
                                         <Chip label={task.status} size="small" color={task.status === 'DONE' ? 'success' : task.status === 'IN_PROGRESS' ? 'primary' : 'default'} onClick={(e) => handleOpenMenu(e, task.id, 'status')} onDelete={(e) => handleOpenMenu(e, task.id, 'status')} deleteIcon={<KeyboardArrowDownIcon sx={{ fontSize: '1rem !important', color: 'inherit !important' }} />} sx={{ borderRadius: '6px', fontWeight: 700, cursor: 'pointer', minWidth: '95px', '&:hover': { filter: 'brightness(0.9)' } }} />
                                     </Stack>
 
-                                    {/* КНОПКИ ЗБЕРЕЖЕННЯ АБО РЕДАГУВАННЯ */}
+                                    
                                     <Stack direction="row" spacing={0.5} sx={{ flexShrink: 0, ml: { md: 2 } }}>
                                         {isEditing ? (
                                             <>
@@ -225,7 +225,7 @@ export const RoundTasksTab = ({ tasks, loadingTab, onOpenTaskModal, onDeleteTask
                                             {t("round_details.tasks.form.description", "Опис")}:
                                         </Typography>
 
-                                        {/* QUILL ДЛЯ РЕДАГУВАННЯ АБО ЗВИЧАЙНИЙ HTML */}
+                                        
                                         {isEditing ? (
                                             <ReactQuill
                                                 theme="snow"
@@ -244,14 +244,14 @@ export const RoundTasksTab = ({ tasks, loadingTab, onOpenTaskModal, onDeleteTask
                 )}
             </Stack>
 
-            {/* МЕНЮ ДЛЯ STATUS/PRIORITY/TYPE (без змін) */}
+            
             <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleCloseMenu} PaperProps={{ elevation: 0, sx: { mt: 0.5, borderRadius: '10px', border: '1px solid', borderColor: 'divider', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', minWidth: '120px' } }} transformOrigin={{ horizontal: 'right', vertical: 'top' }} anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}>
                 {activeMenu?.field === 'status' && TASK_STATUSES.map((status) => (<MenuItem key={status} onClick={() => handleSelectOption(status)} sx={{ fontWeight: 600, fontSize: '0.875rem' }}>{status}</MenuItem>))}
                 {activeMenu?.field === 'priority' && TASK_PRIORITIES.map((priority) => (<MenuItem key={priority} onClick={() => handleSelectOption(priority)} sx={{ fontWeight: 600, fontSize: '0.875rem' }}>{priority}</MenuItem>))}
                 {activeMenu?.field === 'type' && TASK_TYPES.map((type) => (<MenuItem key={type} onClick={() => handleSelectOption(type)} sx={{ fontWeight: 600, fontSize: '0.875rem' }}>{type}</MenuItem>))}
             </Menu>
 
-            {/* МЕНЮ ДЛЯ ВИБОРУ ВИКОНАВЦЯ (без змін) */}
+            
             <Menu anchorEl={userAnchorEl} open={Boolean(userAnchorEl)} onClose={handleCloseUserMenu} PaperProps={{ elevation: 0, sx: { mt: 0.5, borderRadius: '10px', border: '1px solid', borderColor: 'divider', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', minWidth: '200px' } }} transformOrigin={{ horizontal: 'right', vertical: 'top' }} anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}>
                 {myTeamUsers.length === 0 ? (
                     <Typography sx={{ p: 2, fontSize: '0.875rem', color: 'text.secondary' }}>Немає доступних учасників</Typography>

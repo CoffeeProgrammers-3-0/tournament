@@ -325,18 +325,18 @@ export const RoundTeamsTab = ({
                 variant="outlined"
                 sx={{
                     mb: 3,
-                    p: { xs: 2, md: 3 }, // Slightly more padding on desktop for a premium feel
+                    p: { xs: 2, md: 3 }, 
                     borderRadius: 4,
                     background: "linear-gradient(135deg, rgba(15,23,42,0.03) 0%, rgba(59,130,246,0.04) 50%, rgba(255,255,255,1) 100%)",
-                    boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.02)", // Adds depth
+                    boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.02)", 
                 }}
             >
-                {/* Outer stack uses spacing to separate Header from Controls */}
+                
                 <Stack spacing={2.5}>
 
-                    {/* ============================== */}
-                    {/* TOP ROW: Header Context & Data */}
-                    {/* ============================== */}
+                    
+                    
+                    
                     <Stack
                         direction={{ xs: "column", md: "row" }}
                         justifyContent="space-between"
@@ -359,7 +359,7 @@ export const RoundTeamsTab = ({
                             </Typography>
                         </Box>
 
-                        {/* Stat Chips pinned to the right on desktop */}
+                        
                         <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                             <Chip
                                 icon={<ViewListIcon fontSize="small" />}
@@ -382,19 +382,19 @@ export const RoundTeamsTab = ({
                         </Stack>
                     </Stack>
 
-                    {/* Visual Separator */}
+                    
                     <Divider sx={{ borderStyle: "dashed", borderColor: "rgba(0,0,0,0.08)" }} />
 
-                    {/* ============================== */}
-                    {/* BOTTOM ROW: Toolbar & Controls */}
-                    {/* ============================== */}
+                    
+                    
+                    
                     <Stack
                         direction={{ xs: "column", lg: "row" }}
                         justifyContent="space-between"
                         alignItems={{ xs: "stretch", lg: "center" }}
                         spacing={2}
                     >
-                        {/* Left Side: View Toggle */}
+                        
                         <ToggleButtonGroup
                             exclusive
                             value={viewMode}
@@ -402,7 +402,7 @@ export const RoundTeamsTab = ({
                             size="small"
                             sx={{
                                 justifyContent: { xs: "center", lg: "flex-start" },
-                                bgcolor: "background.paper", // Makes toggle pop against the gradient
+                                bgcolor: "background.paper", 
                                 "& .MuiToggleButton-root": {
                                     px: 3,
                                     py: 1,
@@ -420,7 +420,7 @@ export const RoundTeamsTab = ({
                             </ToggleButton>
                         </ToggleButtonGroup>
 
-                        {/* Right Side: Action Buttons */}
+                        
                         <Stack
                             direction="row"
                             flexWrap="wrap"

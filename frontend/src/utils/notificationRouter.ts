@@ -1,4 +1,3 @@
-// utils/notificationRouter.ts
 import type {NotificationResponseDto} from "../entities/notification/notification.dto";
 
 export const getNotificationLink = (notification: NotificationResponseDto | any): string => {

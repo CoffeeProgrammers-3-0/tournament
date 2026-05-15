@@ -56,10 +56,6 @@ public class ExcelExportServiceImpl implements ExcelExportService {
         }
     }
 
-    // =========================
-    // LEADERBOARD
-    // =========================
-
     private void createLeaderboardSheet(Workbook wb,
                                         List<TeamLeaderboardResponse> data,
                                         ExcelStyles styles,
@@ -102,10 +98,6 @@ public class ExcelExportServiceImpl implements ExcelExportService {
 
         finish(sheet, headers.length);
     }
-
-    // =========================
-    // TEAM STAT SHEET
-    // =========================
 
     private String createTeamSheet(Workbook wb,
                                    StatisticResponse stat,
@@ -217,10 +209,6 @@ public class ExcelExportServiceImpl implements ExcelExportService {
 
         return sheetName;
     }
-
-    // =========================
-    // HELPERS
-    // =========================
 
     private double categoryAverage(StatisticResponse stat, String jury, CategoryResponse cat) {
         Map<String, PointResponse> map = safeMap(stat.getPointsPerJury()).get(jury);
@@ -390,10 +378,6 @@ public class ExcelExportServiceImpl implements ExcelExportService {
             sheet.addMergedRegion(new CellRangeAddress(row, row, fromCol, toCol));
         }
     }
-
-    // =========================
-    // STYLES
-    // =========================
 
     private static class ExcelStyles {
 

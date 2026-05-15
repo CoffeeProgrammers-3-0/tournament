@@ -10,20 +10,15 @@ const ITEMS_PER_PAGE = 6;
 export const useTournaments = () => {
     const [searchParams, setSearchParams] = useSearchParams();
 
-    // Explicitly boolean check
     const isLoggedIn = !!Cookies.get("userId");
     const userRole = Cookies.get("role");
 
     const isAdmin = isLoggedIn && userRole === "ADMIN";
     const isJury = isLoggedIn && userRole === "JURY";
 
-    // --- URL SOURCE OF TRUTH ---
-    // If not logged in, force MAIN tab
     const tabValue = !isLoggedIn ? TABS.MAIN : (Number(searchParams.get("tab")) || TABS.MAIN);
     const page = Number(searchParams.get("page")) || 1;
 
-    // Logic for default filter:
-    // Guest/User -> AVAILABLE, Admin -> ALL, Jury -> ACTIVE
     const getDefaultFilter = () => {
         if (tabValue === TABS.ADMIN) return "ALL";
         if (isJury) return "ACTIVE";
@@ -57,23 +52,15 @@ export const useTournaments = () => {
             const baseParams = { page: apiPage, size: ITEMS_PER_PAGE, search: debouncedSearch || undefined };
             let res;
 
-            // 1. ADMIN VIEW
             if (tabValue === TABS.ADMIN && isAdmin) {
                 const reqStatus = filter === "ALL" ? undefined : (filter as TournamentStatus);
                 res = await tournamentService.getAllTournaments({ ...baseParams, status: reqStatus });
             }
-            // 2. GUEST VIEW (Unauthorized)
             else if (!isLoggedIn) {
-                // Guests see "All except DRAFT".
-                // We call getAll without a status filter if the backend defaults to public,
-                // or we pass a specific flag if your API supports 'excludeStatus'
                 res = await tournamentService.getAllTournaments({
                     ...baseParams,
-                    // Assuming your backend 'getAll' with no status returns all non-drafts for public
-                    // If not, you might need a custom param like: excludeStatus: "DRAFT"
                 });
             }
-            // 3. LOGGED IN USER/JURY VIEW
             else {
                 switch (filter) {
                     case "AVAILABLE":
@@ -109,13 +96,12 @@ export const useTournaments = () => {
     }, [fetchTournaments]);
 
     const handleTabChange = (newValue: number) => {
-        if (!isLoggedIn && newValue === TABS.ADMIN) return; // Guard for guests
+        if (!isLoggedIn && newValue === TABS.ADMIN) return;
         const newFilter = newValue === TABS.ADMIN ? "ALL" : "AVAILABLE";
         setSearchParams({ tab: newValue.toString(), page: "1", filter: newFilter });
     };
 
     const setFilter = (newFilter: string) => {
-        // Prevent guests from accessing "My" filters in the URL
         const restrictedFilters = ["REGISTERED", "ACTIVE", "HISTORY"];
         if (!isLoggedIn && restrictedFilters.includes(newFilter)) return;
 

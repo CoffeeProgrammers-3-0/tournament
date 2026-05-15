@@ -14,7 +14,7 @@ export const StepCard = ({ icon, title, description, color }: StepCardProps) => 
         sx={{
             p: 4,
             textAlign: "center",
-            borderRadius: "32px", // Трохи збільшив радіус для м'якості
+            borderRadius: "32px", 
             border: "1px solid #f0f0f0",
             height: "100%",
             transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
@@ -32,7 +32,7 @@ export const StepCard = ({ icon, title, description, color }: StepCardProps) => 
                 mx: "auto",
                 mb: 3,
                 bgcolor: color,
-                boxShadow: `0 8px 24px ${color}33`, // Кольорова тінь в тон іконці
+                boxShadow: `0 8px 24px ${color}33`, 
                 fontSize: "2rem"
             }}
         >

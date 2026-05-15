@@ -29,7 +29,6 @@ class CertificateTemplateService extends BaseService {
         return this.post<TemplateResponseDto>('', formData, {
             params,
             headers: {
-                // Let the browser automatically set the correct Content-Type with the multipart boundary
                 'Content-Type': 'multipart/form-data'
             }
         });

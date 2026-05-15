@@ -34,8 +34,6 @@ class RoundService extends BaseService {
         super('/tournaments');
     }
 
-    // --- Робота з раундами (CRUD) ---
-
     public createRound(tournamentId: number, data: RoundCreateRequestDto): Promise<RoundFullResponseDto> {
         return this.post<RoundFullResponseDto>(`/${tournamentId}/rounds`, data);
     }
@@ -60,7 +58,6 @@ class RoundService extends BaseService {
         return this.get<RoundFullResponseDto>(`/rounds/${roundId}`);
     }
 
-    // --- Керування статусами раундів (Missing Methods) ---
 
     public startRound(roundId: number): Promise<void> {
         return this.get<void>(`/rounds/${roundId}/start-round`);
@@ -86,8 +83,6 @@ class RoundService extends BaseService {
         return this.get<void>(`/rounds/${roundId}/draft`);
     }
 
-    // --- Журі ---
-
     public setJuryToRound(roundId: number, juryId: number): Promise<void> {
         return this.post<void>(`/rounds/${roundId}/juries/${juryId}`);
     }
@@ -104,8 +99,6 @@ class RoundService extends BaseService {
         return this.get<PaginationListResponseDto<UserResponseDto>>(`/rounds/${roundId}/juries`, { params });
     }
 
-    // --- Лідерборд ---
-
     public getLeaderboardForRound(roundId: number, params: LeaderboardQueryParams): Promise<LeaderBoardResponseDto> {
         return this.get<LeaderBoardResponseDto>(`/rounds/${roundId}/leaderboard`, { params });
     }
@@ -114,10 +107,8 @@ class RoundService extends BaseService {
         return this.get<Blob>(`/rounds/${roundId}/leaderboard/export`, { responseType: 'blob' });
     }
 
-    // --- Керування командами в раунді ---
 
     public assignTeams(roundId: number, teamIds: number[]): Promise<void> {
-        // Spring очікує team_ids як RequestParam (масив у URL)
         return this.put<void>(`/rounds/${roundId}/assign-teams`, {}, {
             params: { team_ids: teamIds }
         });

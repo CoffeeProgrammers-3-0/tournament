@@ -27,17 +27,17 @@ export const useRoundAnnouncements = (
 ) => {
     const [actionLoading, setActionLoading] = useState(false);
 
-    // Pagination & Modals
+    
     const [eventsPage, setEventsPage] = useState(1);
     const [messagesPage, setMessagesPage] = useState(1);
     const [eventModalOpen, setEventModalOpen] = useState(false);
     const [messageModalOpen, setMessageModalOpen] = useState(false);
 
-    // Selection for Edit
+    
     const [selectedEvent, setSelectedEvent] = useState<RoundEventFullResponseDto | null>(null);
     const [selectedMessage, setSelectedMessage] = useState<RoundAdminMessageResponseDto | null>(null);
 
-    // Auto-fetch on page change
+    
     useEffect(() => { fetchEvents(eventsPage - 1); }, [eventsPage, fetchEvents]);
     useEffect(() => { fetchMessages(messagesPage - 1); }, [messagesPage, fetchMessages]);
 
@@ -46,7 +46,7 @@ export const useRoundAnnouncements = (
         if (event) {
             setActionLoading(true);
             try {
-                // Отримуємо повні дані для режиму перегляду
+                
                 const fullData = await roundEventService.getEventById(event.id);
                 setSelectedEvent(fullData);
             } catch (e) { shared.handleError(e, "Error loading details"); }
@@ -87,7 +87,7 @@ export const useRoundAnnouncements = (
         });
     }, [eventsPage, fetchEvents, shared]);
 
-    // --- MESSAGES ---
+    
     const handleOpenMessageModal = (msg?: RoundAdminMessageResponseDto) => {
         shared.clearErrors();
         setSelectedMessage(msg || null);

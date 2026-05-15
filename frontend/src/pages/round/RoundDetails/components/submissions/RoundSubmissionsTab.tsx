@@ -1,8 +1,8 @@
-import { Box, Button, CircularProgress, Pagination, Stack, Typography } from "@mui/material";
+import {Box, Button, CircularProgress, Pagination, Stack, Typography} from "@mui/material";
 import AutoModeIcon from "@mui/icons-material/AutoMode";
-import type { SubmissionListResponseDto } from "../../../../../entities/submission/submission.dto";
+import type {SubmissionListResponseDto} from "../../../../../entities/submission/submission.dto";
 import SubmissionItem from "./SubmissionItem.tsx";
- 
+
 type Props = {
     submissions: SubmissionListResponseDto[];
     loadingTab: boolean;
@@ -13,7 +13,7 @@ type Props = {
     onAssignManual: (submissionId: number) => void;
     onRemoveJury: (submissionId: number, juryId: number) => void;
     t: (key: string, options?: any) => string;
-    isEvaluated: boolean; // ADDED: prop to check if round is evaluated
+    isEvaluated: boolean; 
 };
 
 export const RoundSubmissionsTab = ({
@@ -26,7 +26,7 @@ export const RoundSubmissionsTab = ({
     onAssignManual,
     onRemoveJury,
     t,
-    isEvaluated // ADDED
+    isEvaluated 
 }: Props) => {
 
     return (
@@ -38,7 +38,7 @@ export const RoundSubmissionsTab = ({
                     color="secondary" 
                     startIcon={<AutoModeIcon />} 
                     onClick={onAutoAssign}
-                    disabled={isEvaluated} // ADDED: Disables the button if evaluated
+                    disabled={isEvaluated} 
                 >
                     {t("round_details.submissions.auto_assign")}
                 </Button>

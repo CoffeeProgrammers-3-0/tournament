@@ -1,7 +1,7 @@
 import {Box, Button, Container, Typography} from "@mui/material";
 import {useNavigate} from "react-router-dom";
 import {useTranslation} from "react-i18next";
-import errorImage from "../../assets/404.svg"; // Переконайтеся, що шлях правильний
+import errorImage from "../../assets/404.svg";
 
 export const Error404Page = () => {
     const navigate = useNavigate();

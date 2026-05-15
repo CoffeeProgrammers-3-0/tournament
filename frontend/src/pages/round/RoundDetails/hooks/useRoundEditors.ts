@@ -19,8 +19,8 @@ type Params = {
     fetchTasks: (page?: number, showLoader?: boolean) => Promise<void>;
     tasksPage: number;
     leaderboard: TeamLeaderboardResponseDto[];
-    fetchEvents: (page: number) => Promise<void>; // Оновлено
-    fetchMessages: (page: number) => Promise<void>; // Оновлено
+    fetchEvents: (page: number) => Promise<void>; 
+    fetchMessages: (page: number) => Promise<void>; 
     isAdmin: boolean;
     t: any;
     myTeamId: number | string;

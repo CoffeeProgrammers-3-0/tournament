@@ -44,7 +44,7 @@ export const JuryDialog = ({
             <DialogTitle sx={{ fontWeight: 700 }}>{t("round_details.admin.jury_modal.title")}</DialogTitle>
 
             <DialogContent dividers sx={{ display: "flex", flexDirection: "column", gap: 2, minHeight: 400 }}>
-                {/* Поле пошуку */}
+                
                 <ErrorMessages errors={errors}/>
                 <TextField
                     label={t("common.search")}
@@ -57,7 +57,7 @@ export const JuryDialog = ({
                     }}
                 />
 
-                {/* Список журі */}
+                
                 <Box sx={{ flexGrow: 1, overflowY: "auto", border: '1px solid #e0e0e0', borderRadius: 1 }}>
                     {loading && availableJuries.length === 0 ? (
                         <Box display="flex" justifyContent="center" alignItems="center" height="100%">
@@ -93,7 +93,7 @@ export const JuryDialog = ({
                     )}
                 </Box>
 
-                {/* Пагінація */}
+                
                 {totalPages > 1 && (
                     <Box sx={{ display: "flex", justifyContent: "center", mt: 1 }}>
                         <Pagination

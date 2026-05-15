@@ -3,7 +3,7 @@ import {useNavigate,} from "react-router-dom";
 import {useTranslation} from "react-i18next";
 
 import {submissionService} from "../../services/impl/SubmissionService";
-import {roundService} from "../../services/impl/RoundService"; // Припускаємо наявність сервісу раундів
+import {roundService} from "../../services/impl/RoundService";
 import type {SubmissionFullResponseDto, SubmissionRequestDto} from "../../entities/submission/submission.dto.ts";
 import type {RoundFullResponseDto} from "../../entities/round/round.dto.ts";
 
@@ -14,7 +14,7 @@ export const useTeamSubmission = (roundId?: string, submissionId?: string) => {
 
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState(false);
-    const [errors, setErrors] = useState<string[]>([]); // Масив помилок
+    const [errors, setErrors] = useState<string[]>([]); 
     const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
     const [existingSubmission, setExistingSubmission] = useState<SubmissionFullResponseDto | null>(null);

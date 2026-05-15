@@ -8,7 +8,6 @@ const Callback: React.FC = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const effectRan = useRef(false);
-    // Fixed useState destructuring
     const [isProcessing, setIsProcessing] = useState(true);
 
     useEffect(() => {
@@ -33,8 +32,6 @@ const Callback: React.FC = () => {
                 const returnPath = localStorage.getItem('preLoginPath') || '/home';
                 localStorage.removeItem('preLoginPath');
 
-                // Use window.location.href to ensure cookies are fully
-                // registered before the next page loads its state
                 window.location.href = returnPath;
 
             } catch (err) {

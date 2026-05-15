@@ -34,7 +34,7 @@ export const useRoundDetails = (id: string, isUser: boolean) => {
     const [hasMore, setHasMore] = useState(true);
     const [isNextPageLoading, setIsNextPageLoading] = useState(false);
 
-    // Нові стейти для сабмішенів
+    
     const [submissions, setSubmissions] = useState<SubmissionListResponseDto[]>([]);
     const [submissionsPage, setSubmissionsPage] = useState(0);
     const [submissionsTotalPages, setSubmissionsTotalPages] = useState(0);
@@ -53,7 +53,7 @@ export const useRoundDetails = (id: string, isUser: boolean) => {
         if (!id) return;
         try {
             const sid = await submissionService.checkSubmission(Number(id));
-            // Перетворюємо результат у число (про всяк випадок)
+            
             setSubmissionId(Number(sid));
         } catch (error) {
             console.error("Failed to check submission:", error);
@@ -130,27 +130,27 @@ export const useRoundDetails = (id: string, isUser: boolean) => {
 
         try {
             const pageSize = 10;
-            // The response is of type LeaderBoardResponseDto
+            
             const response = await roundService.getLeaderboardForRound(Number(id), {
                 last_team_points: lastTeam ? lastTeam.points : 9999,
                 last_team_id: lastTeam ? lastTeam.id : 0,
                 size: pageSize
             });
 
-            // FIX: Extract the array and the maxPoints separately
+            
             const newTeams = response?.leaderboard || [];
             const mPoints = response?.maxPoints || 0;
 
             setMaxPoints(mPoints);
 
             setLeaderboard(prev => {
-                // Safety: Ensure prev is always an array
+                
                 const safePrev = Array.isArray(prev) ? prev : [];
 
                 if (isFirstLoad) return newTeams;
 
                 const combined = [...safePrev, ...newTeams];
-                // Remove duplicates by ID
+                
                 return combined.filter((v, i, a) => a.findIndex(t => t.id === v.id) === i);
             });
 
@@ -158,7 +158,7 @@ export const useRoundDetails = (id: string, isUser: boolean) => {
 
         } catch (error) {
             console.error("Error fetching leaderboard:", error);
-            setLeaderboard([]); // Reset on error to prevent UI crash
+            setLeaderboard([]); 
         } finally {
             setLoadingTab(false);
             setIsNextPageLoading(false);
@@ -188,12 +188,12 @@ export const useRoundDetails = (id: string, isUser: boolean) => {
 
     useEffect(() => {
         fetchRound();
-        if(Cookies.get("role") === "USER") fetchCheckSubmission(); // Викликаємо перевірку при завантаженні
+        if(Cookies.get("role") === "USER") fetchCheckSubmission(); 
     }, [fetchRound, fetchCheckSubmission]);
 
     const fetchTasks = useCallback(async (page = 0, showLoader = true) => {
         if (!id) return;
-        if (showLoader) setLoadingTab(true); // Показуємо лоадер ТІЛЬКИ якщо це не фонове оновлення
+        if (showLoader) setLoadingTab(true); 
         try {
             const response = await teamTaskService.getTasksForMyTeamAndRound(Number(id), { page, size: 10 });
             setTasks(response.content || []);

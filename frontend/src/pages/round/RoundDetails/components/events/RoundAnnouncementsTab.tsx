@@ -57,7 +57,7 @@ export const RoundAnnouncementsTab: React.FC<Props> = ({
 
     return (
         <Grid container spacing={4} sx={{ mt: 1 }}>
-            {/* ANNOUNCEMENTS */}
+            
             <Grid size={{ xs: 12, md: 4 }}>
                 <Stack spacing={3}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -108,7 +108,7 @@ export const RoundAnnouncementsTab: React.FC<Props> = ({
                 </Stack>
             </Grid>
 
-            {/* SCHEDULE */}
+            
             <Grid size={{ xs: 12, md: 8 }}>
                 <Stack spacing={3}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

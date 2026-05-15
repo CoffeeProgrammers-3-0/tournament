@@ -39,7 +39,7 @@ type AddModalProps = {
     errors: string[];
 };
 
-// Modal 1: Add missing teams to the current round
+
 export const AddMissingTeamsModal = ({
                                          open, onClose, teams, selectedIds, onSelect, onSelectAll, onConfirm, isLoading, t, errors
                                      }: AddModalProps) => {
@@ -123,7 +123,7 @@ type AdvanceModalProps = {
     t: (key: string, options?: any) => string;
 };
 
-// Modal 2: Advance teams
+
 export const AdvanceTeamsModal = ({
                                       open, onClose, leaderboard, selectedIds, onSelect, onConfirm, rounds, targetRound, setTargetRound, isLoading, maxCountOfTeam, t, errors
                                   }: AdvanceModalProps) => {

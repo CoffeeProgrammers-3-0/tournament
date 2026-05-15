@@ -40,14 +40,14 @@ import type {PaginationListResponseDto} from '../../entities/wrappers/wrapper.dt
 
 const PAGE_SIZE = 10;
 
-// --- Мемоізовані під-компоненти ---
+
 
 const AnnouncementItem = React.memo(({msg, isAdmin, onEdit, onDelete, language, t}: any) => {
-    // Safety check to prevent rendering null messages
+    
     if (!msg) return null;
 
     if (msg.system) {
-        // Safe split: handle cases where msg.content might be undefined/null
+        
         const contentStr = msg.content || '';
         const parts = contentStr.split(':').map((p: string) => p.trim());
         const [name, id, key] = parts.length >= 3 ? parts : ['', '', contentStr];
@@ -176,7 +176,7 @@ const NotificationItem = React.memo(({notif, onClick, t, language}: any) => {
     );
 });
 
-// --- Головний Компонент ---
+
 
 export const GlobalAnnouncementsPage: React.FC = () => {
     const {t, i18n} = useTranslation();
@@ -313,7 +313,7 @@ export const GlobalAnnouncementsPage: React.FC = () => {
                             <Box>
                                 <Stack spacing={2.5}>
                                     {tabValue === 0 ? (
-                                        // Fixed: added optional chaining for .length
+                                        
                                         messages?.content?.length ? (
                                             messages.content.map(msg => (
                                                 <AnnouncementItem
@@ -331,7 +331,7 @@ export const GlobalAnnouncementsPage: React.FC = () => {
                                             ))
                                         ) : <EmptyState text={t('announcements.messages.empty')}/>
                                     ) : (
-                                        // Fixed: added optional chaining for .length
+                                        
                                         notifications?.content?.length ? (
                                             notifications.content.map(notif => (
                                                 <NotificationItem

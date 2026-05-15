@@ -17,11 +17,11 @@ import {
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import SendIcon from "@mui/icons-material/Send";
 import EditIcon from "@mui/icons-material/Edit";
-import LockIcon from "@mui/icons-material/Lock"; // Нова іконка
+import LockIcon from "@mui/icons-material/Lock";
 import {SubmissionHeader} from "./components/SubmissionHeader.tsx";
 import {SubmissionFormFields} from "./components/SubmissionFormFields.tsx";
 
-import {ErrorMessages} from "../../components/main/ErrorMessages"; // Ваш універсальний компонент
+import {ErrorMessages} from "../../components/main/ErrorMessages";
 import {useTeamSubmission} from "./useTeamSubmission.tsx";
 
 export const TeamSubmissionPage = () => {
@@ -64,7 +64,7 @@ export const TeamSubmissionPage = () => {
                     isLocked={isLocked}
                     isEditMode={!!existingSubmission}
                     actionLoading={actionLoading}
-                    onDelete={() => setDeleteDialogOpen(true)} // Відкриваємо діалог замість window.confirm
+                    onDelete={() => setDeleteDialogOpen(true)} 
                     t={t}
                 />
 

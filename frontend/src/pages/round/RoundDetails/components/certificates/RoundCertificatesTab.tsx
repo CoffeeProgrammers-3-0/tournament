@@ -102,7 +102,7 @@ const panelSx = {
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8081';
 
 const API_CONFIG = {
-    BASE_URL: API_BASE.replace(/\/api\/?$/, '') // strips /api if present
+    BASE_URL: API_BASE.replace(/\/api\/?$/, '')
 };
 
 export default function RoundCertificatesTab({ roundId, isAdmin = false }: RoundCertificatesTabProps) {
@@ -568,7 +568,7 @@ export default function RoundCertificatesTab({ roundId, isAdmin = false }: Round
                                                         minHeight: { xs: 520, xl: 720 },
                                                     }}
                                                 >
-                                                    {/* Header */}
+
                                                     <Box sx={{ px: 2, py: 1.5, borderBottom: '1px solid', borderColor: 'divider' }}>
                                                         <Stack direction="row" alignItems="center" spacing={1}>
                                                             <EditNoteIcon fontSize="small" />
@@ -585,7 +585,7 @@ export default function RoundCertificatesTab({ roundId, isAdmin = false }: Round
                                                         </Typography>
                                                     </Box>
 
-                                                    {/* Editor */}
+
                                                     <Box
                                                         sx={{
                                                             flex: 1,
@@ -605,7 +605,7 @@ export default function RoundCertificatesTab({ roundId, isAdmin = false }: Round
                                                             placeholder="<html>...</html>"
                                                             variant="outlined"
                                                             sx={{
-                                                               // height: '100%',
+
 
                                                                 '& .MuiInputBase-root': {
                                                                     height: '100%',

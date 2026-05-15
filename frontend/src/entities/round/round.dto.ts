@@ -1,10 +1,6 @@
-// ==== ENUM ====
-
 import type {TournamentListResponseDto} from "../tournament/tournament.dto.ts";
 
 export type RoundStatus = 'DRAFT' | 'ACTIVE' | 'SUBMISSION_CLOSED' | 'EVALUATED';
-
-// ==== CREATE ====
 
 export interface RoundCreateRequestDto {
     name: string;
@@ -15,8 +11,6 @@ export interface RoundCreateRequestDto {
     task: string;
 }
 
-// ==== UPDATE ====
-
 export interface RoundUpdateRequestDto {
     name: string;
     startDate: string;
@@ -25,8 +19,6 @@ export interface RoundUpdateRequestDto {
     requirements: string;
     task: string;
 }
-
-// ==== FULL RESPONSE ====
 
 export interface RoundFullResponseDto {
     id: number;
@@ -39,8 +31,6 @@ export interface RoundFullResponseDto {
     status: RoundStatus;
     tournament: TournamentListResponseDto;
 }
-
-// ==== LIST RESPONSE ====
 
 export interface RoundListResponseDto {
     id: number;

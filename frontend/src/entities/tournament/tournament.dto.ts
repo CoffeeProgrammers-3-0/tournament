@@ -1,8 +1,4 @@
-// ==== ENUM ====
-
 export type TournamentStatus = 'DRAFT' | 'REGISTRATION' | 'RUNNING' | 'FINISHED';
-
-// ==== CREATE ====
 
 export interface TournamentCreateRequestDto {
     name: string;
@@ -14,8 +10,6 @@ export interface TournamentCreateRequestDto {
     countOfRounds: number;
 }
 
-// ==== UPDATE ====
-
 export interface TournamentUpdateRequestDto {
     name: string;
     description: string;
@@ -25,8 +19,6 @@ export interface TournamentUpdateRequestDto {
     maxCountOfTeam: number;
     countOfRounds: number;
 }
-
-// ==== FULL RESPONSE ====
 
 export interface TournamentFullResponseDto {
     id: number;
@@ -39,8 +31,6 @@ export interface TournamentFullResponseDto {
     countOfRounds: number;
     status: TournamentStatus;
 }
-
-// ==== LIST RESPONSE ====
 
 export interface TournamentListResponseDto {
     id: number;

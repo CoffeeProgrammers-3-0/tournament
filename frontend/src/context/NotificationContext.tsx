@@ -18,7 +18,7 @@ const NotificationContext = createContext<NotificationContextType>({
     unseenCount: 0,
     latestNotification: null,
     setUnseenCount: () => {
-    } // <--- Default empty function
+    }
 });
 
 export const useNotification = () => useContext(NotificationContext);
@@ -28,14 +28,11 @@ export const NotificationProvider = ({children}: { children: ReactNode }) => {
     const navigate = useNavigate();
     const isLoggedIn = !!Cookies.get("userId");
 
-    // 1. Get the data from the socket hook
     const {unseenCount: socketUnseenCount, latestNotification} = useNotificationSocket(isLoggedIn);
 
-    // 2. Create a local state to manage the count UI
     const [localUnseenCount, setLocalUnseenCount] = useState(0);
     const [toastOpen, setToastOpen] = useState(false);
 
-    // 3. Sync local state whenever the socket sends a new count
     useEffect(() => {
         setLocalUnseenCount(socketUnseenCount);
     }, [socketUnseenCount]);
@@ -90,7 +87,6 @@ export const NotificationProvider = ({children}: { children: ReactNode }) => {
             }
         }
 
-        // Personal notification logic
         return {
             title: t(latestNotification.key, payloadData) as string,
             body: t('common.click_to_view') as string
@@ -98,7 +94,6 @@ export const NotificationProvider = ({children}: { children: ReactNode }) => {
     }, [latestNotification, payloadData, t]);
 
     return (
-        // 5. Pass the local count and the setter to the Provider
         <NotificationContext.Provider value={{
             unseenCount: localUnseenCount,
             latestNotification,

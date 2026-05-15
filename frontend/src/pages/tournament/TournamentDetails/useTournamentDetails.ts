@@ -18,25 +18,21 @@ export const useTournamentDetails = () => {
     const [errors, setErrors] = useState<string[]>([]);
     const clearErrors = () => setErrors([]);
 
-    // --- СТАН ДАНИХ ---
     const [loading, setLoading] = useState<boolean>(true);
     const [loadingTab, setLoadingTab] = useState<boolean>(false);
     const [tournamentData, setTournamentData] = useState<TournamentFullResponseDto | null>(null);
     const [rounds, setRounds] = useState<RoundListResponseDto[]>([]);
     const [teams, setTeams] = useState<TeamListResponseDto[]>([]);
 
-    // --- UI СТАНИ ---
     const [tabValue, setTabValue] = useState<number>(0);
     const [isEditingInfo, setIsEditingInfo] = useState<boolean>(false);
     const [editFormData, setEditFormData] = useState<Partial<TournamentUpdateRequestDto>>({});
     const [selectedRoundStatus, setSelectedRoundStatus] = useState<RoundStatus>("ACTIVE");
-
-    // --- АВТОРИЗАЦІЯ (Тут має бути ваш Auth Context) ---
+    
     const isAdmin = Cookies.get("role") === "ADMIN";
     const isLoggedIn = Cookies.get("role") !== undefined;
     const [isUserRegistered, setIsUserRegistered] = useState<boolean>(false);
 
-    // --- СТАН МОДАЛКИ РАУНДУ ---
     const [roundModalOpen, setRoundModalOpen] = useState<boolean>(false);
     const [isCreatingRound, setIsCreatingRound] = useState<boolean>(false);
     const [roundFormData, setRoundFormData] = useState({
@@ -66,8 +62,7 @@ export const useTournamentDetails = () => {
     });
 
     const closeDialog = () => setConfirmDialog(prev => ({ ...prev, open: false, isLoading: false }));
-
-    // 1. Завантаження основних даних турніру
+    
     const fetchTournament = useCallback(async () => {
         setLoading(true);
         const id = Number(tournamentId);
@@ -91,8 +86,7 @@ export const useTournamentDetails = () => {
                 endRegistration: toLocalInput(response.endRegistration),
                 startTournament: toLocalInput(response.startTournament),
             });
-
-            // Перевірка чи поточний юзер зареєстрований
+            
             if (isLoggedIn) {
                 const registered = await teamService.checkIfRegistered(tournamentId);
                 setIsUserRegistered(registered);
@@ -108,20 +102,20 @@ export const useTournamentDetails = () => {
         fetchTournament();
     }, [fetchTournament]);
 
-    // 2. Завантаження даних для вкладок (Раунди / Команди)
+    
     useEffect(() => {
         const fetchTabData = async () => {
             if (!tournamentId) return;
             setLoadingTab(true);
             try {
-                if (tabValue === 1) { // Раунди
+                if (tabValue === 1) { 
                     const response = await roundService.getRoundsByTournament(tournamentId, {
                         page: 0,
                         size: 50,
                         status: selectedRoundStatus
                     });
                     setRounds(response.content);
-                } else if (tabValue === 2) { // Команди
+                } else if (tabValue === 2) { 
                     const response = await teamService.getTeamsByTournament(tournamentId, {
                         page: 0,
                         size: 100
@@ -181,7 +175,7 @@ export const useTournamentDetails = () => {
         }
     };
 
-    // --- ХЕНДЛЕРИ РАУНДІВ ---
+    
     const handleRoundFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setRoundFormData(prev => ({ ...prev, [name]: value }));
@@ -192,7 +186,7 @@ export const useTournamentDetails = () => {
         clearErrors();
         setIsCreatingRound(true);
         try {
-            // Convert to UTC before API call
+            
             const payload = {
                 ...roundFormData,
                 startDate: toUtcIso(roundFormData.startDate),

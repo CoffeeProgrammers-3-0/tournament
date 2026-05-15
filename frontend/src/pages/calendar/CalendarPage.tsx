@@ -47,13 +47,13 @@ const ensureUtc = (dateStr: string): string => {
     return (dateStr.includes('Z') || dateStr.includes('+')) ? dateStr : `${dateStr}Z`;
 };
 
-// 1. Extract colors for consistency between events and filters
+
 const EVENT_COLORS: Record<string, string> = {
-    TOURNAMENT_REGISTRATION: '#ed6c02', // Orange
-    TOURNAMENT_RUNNING: '#2e7d32',      // Green
-    ROUND_ACTIVE: '#0288d1',            // Blue
-    ROUND_EVENT_OFFLINE: '#9c27b0',     // Purple
-    ROUND_EVENT_ONLINE: '#00bcd4',      // Cyan
+    TOURNAMENT_REGISTRATION: '#ed6c02', 
+    TOURNAMENT_RUNNING: '#2e7d32',      
+    ROUND_ACTIVE: '#0288d1',            
+    ROUND_EVENT_OFFLINE: '#9c27b0',     
+    ROUND_EVENT_ONLINE: '#00bcd4',      
 };
 
 const FILTER_COLOR_MAP: Record<keyof Omit<CalendarFilters, 'start_date' | 'end_date'>, string> = {
@@ -221,7 +221,7 @@ const CalendarPage: React.FC = () => {
                                     py: 2.5,
                                     px: 1,
                                     borderRadius: '12px',
-                                    backgroundColor: isActive ? `${chipColor}15` : 'transparent', // 15 is hex for ~8% opacity
+                                    backgroundColor: isActive ? `${chipColor}15` : 'transparent', 
                                     color: isActive ? chipColor : 'text.secondary',
                                     border: `1.5px solid ${isActive ? chipColor : theme.palette.divider}`,
                                     transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -251,7 +251,7 @@ const CalendarPage: React.FC = () => {
                 boxShadow: '0 8px 32px rgba(0,0,0,0.04)',
                 overflow: 'hidden',
 
-                // --- Modernizing react-big-calendar via CSS overrides ---
+                
                 '& .rbc-calendar': { fontFamily: 'inherit' },
                 '& .rbc-toolbar': { mb: 3, gap: 2 },
                 '& .rbc-toolbar button': {

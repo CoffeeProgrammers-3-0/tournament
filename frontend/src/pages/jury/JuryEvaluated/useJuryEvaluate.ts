@@ -52,7 +52,7 @@ export const useJuryEvaluate = () => {
             const scoresMap: Record<number, CriteriaScoreForm> = {};
             const existingMap: Record<number, JuryCriteriaResponseDto> = {};
 
-            // Отримуємо тільки додаткові бали
+            
             const fetchedCustom = scoresData.filter(sc => sc.additional).map(sc => {
                 const match = sc.comment?.match(/^\[(.*?)\]\s*(.*)$/);
                 return {
@@ -63,7 +63,7 @@ export const useJuryEvaluate = () => {
                 };
             });
 
-            // Створюємо масив рівно з 4 елементів: заповнюємо тими, що прийшли, решта — пусті
+            
             const finalCustom: CustomCriteriaForm[] = Array.from({ length: 4 }, (_, i) => {
                 return fetchedCustom[i] || { id: `temp-${i}`, text: "", points: "", comment: "" };
             });
@@ -97,7 +97,7 @@ export const useJuryEvaluate = () => {
         try {
             const promises: any[] = [];
 
-            // 1. Стандартні
+            
             categories.forEach(cat => {
                 cat.criteria.forEach(crit => {
                     const score = scores[crit.id];
@@ -117,7 +117,7 @@ export const useJuryEvaluate = () => {
             customCriteria.forEach(custom => {
                 const hasData = custom.points !== "" || custom.text.trim() !== "";
                 if (hasData) {
-                    // Якщо id починається на "temp-", значить це новий запис, шлемо null
+                    
                     const isNew = String(custom.id).startsWith('temp-');
 
                     promises.push(juryCriteriaService.setScore({
@@ -132,7 +132,7 @@ export const useJuryEvaluate = () => {
             });
 
             await Promise.all(promises);
-            await fetchData(); // Оновлюємо все після успішного збереження
+            await fetchData(); 
             setShowSuccessDialog(true);
         } catch (err: any) {
             setErrors([t('jury.errors.save_failed')]);
@@ -151,7 +151,7 @@ export const useJuryEvaluate = () => {
                 } else {
                     const numValue = parseInt(value, 10);
                     if (!isNaN(numValue)) {
-                        // Звичайні критерії оцінюються 0-100
+                        
                         current.points = Math.min(Math.max(numValue, 0), 100);
                     }
                 }
@@ -174,7 +174,7 @@ export const useJuryEvaluate = () => {
                 } else {
                     const numValue = parseInt(value, 10);
                     if (!isNaN(numValue)) {
-                        // Кастомні критерії оцінюються 0-5
+                        
                         updated.points = Math.min(Math.max(numValue, 0), 5);
                     }
                 }

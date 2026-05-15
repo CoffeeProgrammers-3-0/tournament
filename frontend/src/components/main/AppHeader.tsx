@@ -73,7 +73,6 @@ export const AppHeader = () => {
         handleClose();
     };
 
-    // Контент бокового меню (для мобілок)
     const drawer = (
         <Box onClick={handleDrawerToggle} sx={{textAlign: 'center', p: 2}}>
             <Box component="img" src={logo} alt="Star for Life" sx={{height: 40, mb: 2}}/>
@@ -147,7 +146,6 @@ export const AppHeader = () => {
             <Container maxWidth="lg">
                 <Toolbar disableGutters sx={{display: "flex", justifyContent: "space-between"}}>
 
-                    {/* MOBILE: Burger Button */}
                     <IconButton
                         color="inherit"
                         aria-label="open drawer"
@@ -158,7 +156,6 @@ export const AppHeader = () => {
                         <MenuIcon/>
                     </IconButton>
 
-                    {/* LOGO (Centered on mobile, Left on desktop) */}
                     <Box component={RouterLink} to="/" sx={{
                         display: "flex",
                         alignItems: "center",
@@ -169,7 +166,6 @@ export const AppHeader = () => {
                         <Box component="img" src={logo} alt="Star for Life" sx={{height: {xs: 35, md: 45}}}/>
                     </Box>
 
-                    {/* DESKTOP NAVIGATION */}
                     <Box sx={{display: {xs: 'none', md: 'flex'}, gap: 1, alignItems: "center"}}>
                         {(role === 'ADMIN' || role === 'USER') && (
                             <Button color="inherit" onClick={handleTournamentsClick} endIcon={<KeyboardArrowDownIcon/>}
@@ -206,7 +202,6 @@ export const AppHeader = () => {
                         )}
                     </Box>
 
-                    {/* RIGHT ACTIONS (Language, Donate, Profile) */}
                     <Box sx={{display: "flex", alignItems: "center", gap: {xs: 0.5, md: 1.5}}}>
                         <Button
                             href="https://www.sflua.org/donate-1"
@@ -229,7 +224,6 @@ export const AppHeader = () => {
                             {language.toUpperCase()}
                         </Button>
 
-                        {/* НОВА ІКОНКА СПОВІЩЕНЬ */}
                         {isLoggedIn && (
                             <IconButton
                                 component={RouterLink}
@@ -275,7 +269,6 @@ export const AppHeader = () => {
                 </Toolbar>
             </Container>
 
-            {/* MOBILE DRAWER */}
             <Drawer
                 variant="temporary"
                 open={mobileOpen}
@@ -286,7 +279,6 @@ export const AppHeader = () => {
                 {drawer}
             </Drawer>
 
-            {/* DROPDOWN MENUS (Tournaments, Lang, Profile) - Same as before but with slightly better mobile spacing */}
             <Menu anchorEl={langAnchorEl} open={Boolean(langAnchorEl)} onClose={handleClose}>
                 <MenuItem onClick={() => handleLangSelect("uk")}>🇺🇦 УКР</MenuItem>
                 <MenuItem onClick={() => handleLangSelect("en")}>🇺🇸 ENG</MenuItem>

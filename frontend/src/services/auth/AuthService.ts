@@ -86,7 +86,7 @@ class AuthService {
                     console.warn(`Refresh attempt ${attempt} failed`);
 
                     if (attempt < MAX_RETRIES) {
-                        await this.delay(300 * attempt); // smoother backoff
+                        await this.delay(300 * attempt);
                     }
                 }
             }

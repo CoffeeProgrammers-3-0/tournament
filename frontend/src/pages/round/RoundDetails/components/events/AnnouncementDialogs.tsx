@@ -41,7 +41,7 @@ export const CreateMessageDialog: React.FC<{
                 {initialData?.id ? `✏️ ${t('announcements.messages.edit_title')}` : `📢 ${t('announcements.messages.create_title')}`}
             </DialogTitle>
             <DialogContent dividers sx={{ p: 0, minHeight: '300px', display: 'flex', flexDirection: 'column' }}>
-                {/* 👈 Render errors if they exist. Wrapped in Box for padding since Content has p: 0 */}
+                
                 {errors.length > 0 && (
                     <Box sx={{ p: 2, pb: 0 }}>
                         <ErrorMessages errors={errors} />
@@ -61,7 +61,7 @@ export const CreateMessageDialog: React.FC<{
                 <Button onClick={onClose} color="inherit" sx={{ fontWeight: 700 }}>{t('common.cancel')}</Button>
                 <Button
                     variant="contained"
-                    onClick={handleSubmit} // 👈 Use the wrapped handler
+                    onClick={handleSubmit} 
                     disabled={isLoading || !content.replace(/<(.|\n)*?>/g, '').trim()}
                     sx={{ fontWeight: 700, borderRadius: 2 }}
                 >
@@ -164,7 +164,7 @@ export const CreateEventDialog: React.FC<{
             </DialogTitle>
             <Divider />
             <DialogContent dividers>
-                {/* 👈 Render errors at the top of the modal content */}
+                
                 <ErrorMessages errors={errors} />
 
                 <Grid container spacing={3}>

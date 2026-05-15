@@ -21,7 +21,6 @@ class SubmissionService extends BaseService {
         super('/submissions');
     }
 
-    // Повертає ID сабмішну або -1, тому краще number (з маленької літери)
     public checkSubmission(roundId: number): Promise<number> {
         return this.get<number>(`/check/${roundId}`);
     }
@@ -49,8 +48,6 @@ class SubmissionService extends BaseService {
     public getSubmissionsByRound(roundId: number, params: PaginationParams): Promise<PaginationListResponseDto<SubmissionListResponseDto>> {
         return this.get<PaginationListResponseDto<SubmissionListResponseDto>>(`/rounds/${roundId}`, { params });
     }
-
-    // --- Керування журі для сабмішну ---
 
     public assignJury(submissionId: number, juryId: number): Promise<SubmissionFullResponseDto> {
         return this.post<SubmissionFullResponseDto>(`/${submissionId}/juries/${juryId}`);

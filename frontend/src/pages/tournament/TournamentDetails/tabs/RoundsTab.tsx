@@ -15,7 +15,7 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import type {RoundStatus} from "../../../../entities/round/round.dto.ts";
-import {toLocalInput} from "../../../../utils/data.ts"; // Перевір правильність шляху імпорту
+import {toLocalInput} from "../../../../utils/data.ts";
 
 const ROUND_STATUSES: RoundStatus[] = ['DRAFT', 'ACTIVE', 'SUBMISSION_CLOSED', 'EVALUATED'];
 

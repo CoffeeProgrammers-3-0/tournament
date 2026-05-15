@@ -29,7 +29,7 @@ export const JuryEvaluatePage = () => {
     if (loading) return <Box sx={{display: "flex", justifyContent: "center", py: 10}}><CircularProgress thickness={5}/></Box>;
     if (!submission) return <Typography align="center" sx={{mt: 10}}>{t('common.no_data')}</Typography>;
 
-    // Визначаємо, чи доступне оцінювання
+    
     const isReadOnly = submission.round.status === "EVALUATED";
 
     return (
@@ -58,12 +58,11 @@ export const JuryEvaluatePage = () => {
                     categories={categories}
                     scores={scores}
                     onScoreChange={handleScoreChange}
-                    disabled={isReadOnly || saving} // Блокуємо під час збереження
+                    disabled={isReadOnly || saving} 
                     customCriteria={customCriteria}
                     onCustomCriteriaChange={handleCustomCriteriaChange}
                     t={t}
                 />
-                {/* Показуємо кнопку збереження ТІЛЬКИ якщо раунд не завершено */}
                 {!isReadOnly && (
                     <Box sx={{mt: 4, display: "flex", justifyContent: "flex-end"}}>
                         <Button

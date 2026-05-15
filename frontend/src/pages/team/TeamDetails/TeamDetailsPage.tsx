@@ -40,7 +40,7 @@ const TeamDetailsPage = () => {
 
     const [memberModal, setMemberModal] = useState<{ open: boolean, tournamentId: number | null }>({ open: false, tournamentId: null });
     const [newMember, setNewMember] = useState({ fullName: "", email: "", isLeader: false });
-    const [isExistingUser, setIsExistingUser] = useState(false); // <--- Added this state
+    const [isExistingUser, setIsExistingUser] = useState(false); 
     const [emailSearchLoading, setEmailSearchLoading] = useState(false);
     const [emailOptions, setEmailOptions] = useState<any[]>([]);
     const [searchError, setSearchError] = useState<string | null>(null);
@@ -91,7 +91,7 @@ const TeamDetailsPage = () => {
     const closeMemberModal = () => {
         setMemberModal({ open: false, tournamentId: null });
         setNewMember({ fullName: "", email: "", isLeader: false });
-        setIsExistingUser(false); // <--- Reset state on close
+        setIsExistingUser(false); 
         setEmailOptions([]);
         setSearchError(null);
         clearErrors();
@@ -203,7 +203,7 @@ const TeamDetailsPage = () => {
                         getOptionLabel={(option) => (typeof option === 'string' ? option : option.email)}
                         loading={emailSearchLoading}
                         onInputChange={(_, value, reason) => {
-                            // If user is actively typing or clearing, unlock the field
+                            
                             if (reason === 'input' || reason === 'clear') {
                                 setNewMember({ ...newMember, email: value });
                                 setIsExistingUser(false);
@@ -216,7 +216,7 @@ const TeamDetailsPage = () => {
                                     email: newValue.email,
                                     fullName: newValue.fullName || ""
                                 });
-                                setIsExistingUser(true); // <--- Lock the field when an existing user is chosen
+                                setIsExistingUser(true); 
                             } else {
                                 setIsExistingUser(false);
                             }
@@ -254,7 +254,7 @@ const TeamDetailsPage = () => {
                         value={newMember.fullName}
                         onChange={e => setNewMember({...newMember, fullName: e.target.value})}
                         variant="outlined"
-                        disabled={isExistingUser} // <--- Disable if existing user
+                        disabled={isExistingUser} 
                     />
 
                     <FormControlLabel

@@ -23,7 +23,7 @@ export interface TeamTaskResponseDto {
     team: TeamListResponseDto;
     round: RoundListResponseDto;
     creator: UserResponseDto;
-    assignee: UserResponseDto | null; // Може бути порожнім, якщо нікого не призначено
+    assignee: UserResponseDto | null;
     title: string;
     description: string;
     status: TaskStatus;

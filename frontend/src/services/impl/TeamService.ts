@@ -20,8 +20,6 @@ class TeamService extends BaseService {
         super('/teams');
     }
 
-    // --- Core Team Management ---
-
     public checkIfRegistered(tournamentId: number): Promise<boolean> {
         return this.get<boolean>(`/check/${tournamentId}`);
     }
@@ -42,8 +40,6 @@ class TeamService extends BaseService {
         return this.get<TeamFullResponseDto>(`/${teamId}`);
     }
 
-    // --- Lists & Filtering ---
-
     public getAllTeams(params: TeamQueryParams): Promise<PaginationListResponseDto<TeamListResponseDto>> {
         return this.get<PaginationListResponseDto<TeamListResponseDto>>('', { params });
     }
@@ -56,8 +52,6 @@ class TeamService extends BaseService {
         return this.get<PaginationListResponseDto<TeamListResponseDto>>(`/tournament/${tournamentId}`, { params });
     }
 
-    // --- Statistics ---
-
     public getTeamStats(teamId: number, roundId: number): Promise<StatisticResponseDto> {
         return this.get<StatisticResponseDto>(`/${teamId}/statistics/${roundId}`);
     }
@@ -66,19 +60,14 @@ class TeamService extends BaseService {
         return this.get<StatisticResponseDto>(`/statistics/${roundId}`);
     }
 
-    // --- Member Management ---
-
-// У контролері: @PostMapping("/{team_id}/tournaments/{tournament_id}/members")
     public addMember(teamId: number, tournamentId: number, data: UserCreateRequestForTeamDto): Promise<TeamFullResponseDto> {
         return this.post<TeamFullResponseDto>(`/${teamId}/tournaments/${tournamentId}/members`, data);
     }
 
-    // У контролері: @DeleteMapping("/{team_id}/tournaments/{tournament_id}/members/{user_id}")
     public removeMember(teamId: number, userId: number, tournamentId: number): Promise<TeamFullResponseDto> {
         return this.delete<TeamFullResponseDto>(`/${teamId}/tournaments/${tournamentId}/members/${userId}`);
     }
 
-    // У контролері: @PatchMapping("/{team_id}/tournaments/{tournament_id}/set-leader/{user_id}")
     public setTeamLeader(teamId: number, userId: number, tournamentId: number): Promise<TeamFullResponseDto> {
         return this.patch<TeamFullResponseDto>(`/${teamId}/tournaments/${tournamentId}/set-leader/${userId}`);
     }

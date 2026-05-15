@@ -8,7 +8,6 @@ import type {
 } from "../../entities/teamTask/teamTask.dto.ts";
 import type {PaginationListResponseDto} from "../../entities/wrappers/wrapper.dto.ts";
 
-// Базові параметри для фільтрації та пошуку
 interface TaskQueryParams {
     page: number;
     size: number;

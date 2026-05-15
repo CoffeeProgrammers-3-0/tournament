@@ -20,8 +20,6 @@ class TournamentService extends BaseService {
         super('/tournaments');
     }
 
-    // --- Основні CRUD операції ---
-
     public createTournament(data: TournamentCreateRequestDto): Promise<TournamentFullResponseDto> {
         return this.post<TournamentFullResponseDto>('', data);
     }
@@ -33,8 +31,6 @@ class TournamentService extends BaseService {
     public deleteTournament(tournamentId: number): Promise<void> {
         return this.delete<void>(`/${tournamentId}`);
     }
-
-    // --- Отримання списків ---
 
     public getAllTournaments(params: TournamentQueryParams): Promise<PaginationListResponseDto<TournamentListResponseDto>> {
         return this.get<PaginationListResponseDto<TournamentListResponseDto>>('', { params });
@@ -48,8 +44,6 @@ class TournamentService extends BaseService {
         return this.get<PaginationListResponseDto<TournamentListResponseDto>>('/available-for-me', { params });
     }
 
-    // --- Детальна інформація ---
-
     public getTournamentById(tournamentId: number): Promise<TournamentFullResponseDto> {
         return this.get<TournamentFullResponseDto>(`/${tournamentId}`);
     }
@@ -57,8 +51,6 @@ class TournamentService extends BaseService {
     public getTournamentByIdAdmin(tournamentId: number): Promise<TournamentFullResponseDto> {
         return this.get<TournamentFullResponseDto>(`/admin/${tournamentId}`);
     }
-
-    // --- Керування статусами турніру (Status Transitions) ---
 
     public startRegistration(tournamentId: number): Promise<void> {
         return this.get<void>(`/${tournamentId}/start-registration`);

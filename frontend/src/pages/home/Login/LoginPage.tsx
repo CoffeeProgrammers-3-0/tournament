@@ -7,7 +7,7 @@ const LoginPage = () => {
     const { t } = useTranslation();
 
     useEffect(() => {
-        // Як тільки гість зайшов на /login, ми штовхаємо його в Keycloak
+        
         AuthService.redirectToKeycloak();
     }, []);
 

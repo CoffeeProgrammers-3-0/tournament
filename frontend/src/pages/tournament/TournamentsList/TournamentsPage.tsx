@@ -42,7 +42,6 @@ export const TournamentsPage = () => {
         );
     }
 
-    // Доступні фільтри для користувача (використовуємо старі ключі перекладу з табів)
     const userFilters = isLoggedIn
         ? [
             { value: "AVAILABLE", label: t("tournaments.tabs.available") },
@@ -85,14 +84,12 @@ export const TournamentsPage = () => {
                 bgcolor: "background.paper", p: 1, borderRadius: "20px", border: "1px solid #eee"
             }}>
 
-                {/* Показуємо вкладки ТІЛЬКИ для адміна */}
                 {isAdmin ? (
                     <Tabs value={tabValue} onChange={(_, v) => handleTabChange(v)} sx={{ minHeight: 48 }}>
                         {!isAdmin ? <Tab value={TABS.MAIN} label={t("tournaments.tabs.available")} /> :
                         <Tab value={TABS.ADMIN} label={t("tournaments.tabs.admin")} sx={{ color: "error.main", fontWeight: 700 }} />}
                     </Tabs>
                 ) : (
-                    // Заглушка для звичайного користувача, щоб зберегти Flex-вирівнювання
                     <Typography variant="subtitle1" fontWeight={700} sx={{ px: 2 }}>
                         {t("tournaments.title")}
                     </Typography>

@@ -75,7 +75,7 @@ export const useCreateTeam = () => {
 
     useEffect(() => { initData(); }, [initData]);
 
-    // НОВА ЛОГІКА: Отримуємо повні дані команди по ID
+    
     useEffect(() => {
         const fetchFullTeamData = async () => {
             if (!isExistingTeam || !selectedTeamId) return;
@@ -88,7 +88,7 @@ export const useCreateTeam = () => {
                     const leader = prev.users[0];
                     const combinedUsers = [leader];
 
-                    // Дозаповнюємо до мінімуму порожніми слотами
+                    
                     const finalUsers = Array.from({ length: Math.max(combinedUsers.length, limits.min) }, (_, i) => {
                         return combinedUsers[i] || { fullName: "", email: "", isLeader: false };
                     }).slice(0, limits.max);

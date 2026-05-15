@@ -21,7 +21,6 @@ export const TournamentCreateForm = ({ onCancel, onSuccess }: { onCancel: () => 
     const { t } = useTranslation();
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Стан для масиву помилок
     const [errors, setErrors] = useState<string[]>([]);
 
     const now = new Date().toISOString().slice(0, 16);
@@ -34,7 +33,6 @@ export const TournamentCreateForm = ({ onCancel, onSuccess }: { onCancel: () => 
 
     const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        // Очищуємо помилки, коли користувач починає щось виправляти
         if (errors.length > 0) setErrors([]);
 
         setFormData(prev => ({
@@ -45,7 +43,7 @@ export const TournamentCreateForm = ({ onCancel, onSuccess }: { onCancel: () => 
 
     const handleSubmit = async () => {
         setIsSubmitting(true);
-        setErrors([]); // Скидаємо старі помилки
+        setErrors([]);
 
         try {
             const payload = {
@@ -58,7 +56,6 @@ export const TournamentCreateForm = ({ onCancel, onSuccess }: { onCancel: () => 
             onSuccess();
         } catch (e: any) {
             console.error(e);
-            // Витягуємо масив повідомлень з відповіді сервера
             const serverMessages = e.response?.data?.messages;
             if (Array.isArray(serverMessages)) {
                 setErrors(serverMessages);
@@ -83,7 +80,6 @@ export const TournamentCreateForm = ({ onCancel, onSuccess }: { onCancel: () => 
 
                 <Divider sx={{ mb: 4 }} />
 
-                {/* Вивід помилок через Alert */}
                 {errors.length > 0 && (
                     <Alert severity="error" sx={{ mb: 4, borderRadius: "12px" }}>
                         <AlertTitle>{t("common.errors.title") || "Помилка валідації"}</AlertTitle>

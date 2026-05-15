@@ -14,13 +14,13 @@ export const useTeamDetails = () => {
     const [loading, setLoading] = useState(true);
     const [tabValue, setTabValue] = useState(0);
 
-    // Editing & Error State
+    
     const [isEditingHeader, setIsEditingHeader] = useState(false);
     const [headerForm, setHeaderForm] = useState<TeamUpdateRequestDto>({ name: "", organization: "", contact: "" });
     const [errors, setErrors] = useState<string[]>([]);
     const [isActionLoading, setIsActionLoading] = useState(false);
 
-    // Helper to safely extract error messages from Axios responses
+    
     const extractErrors = (err: any): string[] => {
         const messages = err?.response?.data?.messages || err?.response?.data?.message;
         if (Array.isArray(messages)) return messages;

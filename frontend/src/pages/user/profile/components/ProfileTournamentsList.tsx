@@ -5,7 +5,7 @@ import {useNavigate} from "react-router-dom";
 
 interface ProfileTournamentsListProps {
     tournaments: any[];
-    page: number; // 0-indexed backend page
+    page: number;
     totalPages: number;
     onPageChange: (newPage: number) => void;
     loading: boolean;
@@ -22,7 +22,6 @@ export const ProfileTournamentsList = ({
     const navigate = useNavigate();
 
     const handlePageChange = (_event: React.ChangeEvent<unknown>, value: number) => {
-        // MUI is 1-indexed, backend is 0-indexed
         onPageChange(value - 1);
     };
 
@@ -49,7 +48,7 @@ export const ProfileTournamentsList = ({
                 <Button
                     size="small"
                     sx={{ fontWeight: 600, borderRadius: "10px" }}
-                    onClick={() => navigate("/tournaments")} // Path to full list page
+                    onClick={() => navigate("/tournaments")}
                 >
                     {t("profile.view_all") || "View All"}
                 </Button>
@@ -101,17 +100,16 @@ export const ProfileTournamentsList = ({
                 )}
             </Box>
 
-            {/* Pagination Controls */}
             {totalPages > 1 && (
                 <Box sx={{ display: "flex", justifyContent: "center", mt: 3, pt: 2, borderTop: "1px solid #f0f0f0" }}>
                     <Pagination
                         count={totalPages}
-                        page={page + 1} // Display page is 1-indexed
+                        page={page + 1}
                         onChange={handlePageChange}
                         color="primary"
                         size="small"
                         shape="rounded"
-                        disabled={loading} // Prevent clicking while fetching
+                        disabled={loading}
                     />
                 </Box>
             )}
