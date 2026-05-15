@@ -61,8 +61,9 @@ public class EvaluationServiceImpl implements EvaluationService {
         HashSet<String> assignedPairs = new HashSet<>();
         int juryIndex = 0;
 
+        int attempts = 0;
         for (Submission sub : pool) {
-            int attempts = 0;
+            attempts = 0;
             while (true) {
                 User jury = juries.get(juryIndex % juries.size());
                 String pairKey = sub.getId() + "-" + jury.getId();
